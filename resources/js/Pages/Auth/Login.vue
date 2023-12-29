@@ -65,7 +65,7 @@
     </GuestLayout>
 </template>
 
-<script setup>
+<script>
 import Checkbox from '@/Components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
@@ -75,28 +75,42 @@ import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import SecondaryButton from '@/Components/PrimaryButton.vue';
 
-defineProps({
-    canResetPassword: {
-        type: Boolean,
+export default {
+    components: {
+        Checkbox,
+        GuestLayout,
+        InputError,
+        InputLabel,
+        Link,
+        PrimaryButton,
+        TextInput,
+        SecondaryButton,
     },
-    status: {
-        type: String,
+
+    props: {
+        canResetPassword: Boolean,
+        status: String,
     },
-});
 
-const form = useForm({
-    email: '',
-    password: '',
-    remember: false,
-});
+    data() {
+        return {
+            form: useForm({
+                email: '',
+                password: '',
+                remember: false,
+            }),
+        };
+    },
 
-const submit = () => {
-    form.post(route('login'), {
-        onFinish: () => form.reset('password'),
-    });
+    methods: {
+        submit() {
+            this.form.post(route('login'), {
+                onFinish: () => this.form.reset('password'),
+            });
+        },
+        redirect(route) {
+            window.location.href = route;
+        }
+    },
 };
-
-const redirect = (route) => {
-    window.location.href = route;
-}
 </script>
