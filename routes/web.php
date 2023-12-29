@@ -17,12 +17,14 @@ use Inertia\Inertia;
 */
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    //check if user is logged in
+    if (Auth::check()) {
+        //user is logged in
+        return redirect('/dashboard');
+    } else {
+        //user is not logged in
+        return redirect('/login');
+    }
 });
 
 Route::get('/dashboard', function () {
@@ -35,4 +37,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
