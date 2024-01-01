@@ -80,12 +80,12 @@
 
                             <div class="row mb-0">
                                 <div class="col-md-6 d-grid">
-                                    <button type="submit" class="btn btn-primary btn-block">
+                                    <button type="submit" class="btn btn-primary">
                                         {{ __('Login') }}
                                     </button>
                                 </div>
                                 <div class="col-md-6 d-grid">
-                                    <a href="{{ route('register') }}" class="btn btn-secondary btn-block">
+                                    <a href="{{ route('register') }}" class="btn btn-secondary">
                                         {{ __('Register') }}
                                     </a>
                                 </div>
