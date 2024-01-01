@@ -17,7 +17,7 @@ Route::get('/', function () {
     //check if user is logged in
     if (Auth::check()) {
         //user is logged in
-        return redirect('/dashboard');
+        return redirect('/home');
     } else {
         //user is not logged in
         return redirect('/login');
