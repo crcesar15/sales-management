@@ -101,7 +101,6 @@
                                 </div>
                             </div>
                         </form>
-                        <!-- already have an account -->
                         <div class="row mt-3" style="text-align: right">
                             <a href="{{ route('login') }}">
                                 {{ __('Already have an account?') }}
