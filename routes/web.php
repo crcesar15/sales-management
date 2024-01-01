@@ -14,15 +14,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
     //check if user is logged in
-    // if (Auth::check()) {
-    //     //user is logged in
-    //     return redirect('/dashboard');
-    // } else {
-    //     //user is not logged in
-    //     return redirect('/login');
-    // }
+    if (Auth::check()) {
+        //user is logged in
+        return redirect('/dashboard');
+    } else {
+        //user is not logged in
+        return redirect('/login');
+    }
 });
 
 Auth::routes();
