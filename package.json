@@ -22,10 +22,10 @@
         "eslint-plugin-vue": "^7.20.0",
         "laravel-vite-plugin": "^1.0.0",
         "sass": "^1.56.1",
-        "vite": "^5.0.0",
-        "vue": "^3.2.37"
+        "vite": "^5.0.0"
     },
     "dependencies": {
+        "vue": "^3.2.37",
         "@inertiajs/vue3": "^1.0.0"
     }
 }
