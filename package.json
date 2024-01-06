@@ -12,7 +12,6 @@
         "@tailwindcss/forms": "^0.5.3",
         "@vitejs/plugin-vue": "^4.5.0",
         "autoprefixer": "^10.4.12",
-        "axios": "^1.6.1",
         "babel-plugin-istanbul": "^6.1.1",
         "bootstrap": "^5.2.3",
         "eslint": "^8.2.0",
@@ -25,7 +24,7 @@
         "vite": "^5.0.0"
     },
     "dependencies": {
-        "vue": "^3.2.37",
-        "@inertiajs/vue3": "^1.0.0"
+        "axios": "^1.6.1",
+        "vue": "^3.2.37"
     }
 }
