@@ -22,3 +22,4 @@ if (token) {
 
 window.axios.defaults.baseURL = "/api";
 window.axios.defaults.withCredentials = true;
+window.axios.defaults.withXSRFToken = true;

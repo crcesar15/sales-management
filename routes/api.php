@@ -19,8 +19,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 //Routes for Products
-Route::get('/products', 'App\Http\Controllers\Api\ProductsController@index');
-Route::get('/products/{id}', 'App\Http\Controllers\Api\ProductsController@show');
-Route::post('/products', 'App\Http\Controllers\Api\ProductsController@store');
-Route::put('/products/{id}', 'App\Http\Controllers\Api\ProductsController@update');
-Route::delete('/products/{id}', 'App\Http\Controllers\Api\ProductsController@destroy');
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::get('/products', 'App\Http\Controllers\Api\ProductsController@index');
+    Route::get('/products/{id}', 'App\Http\Controllers\Api\ProductsController@show');
+    Route::post('/products', 'App\Http\Controllers\Api\ProductsController@store');
+    Route::put('/products/{id}', 'App\Http\Controllers\Api\ProductsController@update');
+    Route::delete('/products/{id}', 'App\Http\Controllers\Api\ProductsController@destroy');
+});
