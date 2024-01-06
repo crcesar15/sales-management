@@ -10,9 +10,8 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
-    <!-- Fonts -->
-    <link rel="dns-prefetch" href="//fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
+    <!-- CSS yield -->
+    @yield('css')
 
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
@@ -35,13 +34,13 @@
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#">{{ __('Products') }}</a>
+                            <a class="nav-link" aria-current="page" href="/products">{{ __('Products') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#">{{ __('Inventory') }}</a>
+                            <a class="nav-link" aria-current="page" href="#">{{ __('Inventory') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#">{{ __('Admin') }}</a>
+                            <a class="nav-link" aria-current="page" href="#">{{ __('Admin') }}</a>
                         </li>
                     </ul>
 
@@ -56,8 +55,7 @@
 
                             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <a class="dropdown-item" href="{{ route('logout') }}"
-                                    onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                     {{ __('Logout') }}
                                 </a>
 
@@ -75,6 +73,7 @@
             @yield('content')
         </main>
     </div>
+    @yield('js')
 </body>
 
 </html>
