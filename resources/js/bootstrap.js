@@ -20,6 +20,6 @@ if (token) {
   console.error("CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token");
 }
 
-window.axios.defaults.baseURL = "/api";
+window.axios.defaults.baseURL = `${window.location.protocol}//${window.location.hostname}/api/`;
 window.axios.defaults.withCredentials = true;
 window.axios.defaults.withXSRFToken = true;
