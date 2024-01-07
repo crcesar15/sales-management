@@ -67,6 +67,69 @@
         </tr>
       </tbody>
     </table>
+    <div class="row">
+      <div class="col-12 col-sm-6 offset-sm-6">
+        <nav aria-label="product navigation">
+          <ul class="pagination justify-content-md-end justify-content-center">
+            <li
+              class="page-item"
+              @click="fetchProducts(current_page - 1)"
+            >
+              <a
+                class="page-link"
+                :class="{ disabled: pagination.current_page === 1 }"
+                aria-label="Previous"
+              >
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            <template
+              v-if="pagination.total_pages < 10"
+            >
+              <li
+                v-for="(current_page, index) in pagination.total_pages"
+                :key="index"
+                class="page-item"
+                :class="{ active: pagination.current_page - 1 === index }"
+                style="cursor: pointer"
+                @click="fetchProducts(index + 1)"
+              >
+                <a
+                  class="page-link"
+                >{{ current_page }}</a>
+              </li>
+            </template>
+            <template
+              v-if="pagination.total_pages >= 10"
+            >
+              <li
+                v-for="index in pagination.last_page"
+                :key="index"
+                class="page-item"
+                :class="{ active: pagination.current_page === index }"
+                @click="fetchProducts(index)"
+              >
+                <a
+                  class="page-link"
+                >{{ index }}</a>
+              </li>
+            </template>
+            <li
+              class="page-item"
+              style="cursor: pointer;"
+              @click="fetchProducts(pagination.current_page + 1)"
+            >
+              <a
+                class="page-link"
+                aria-label="Next"
+              >
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -76,17 +139,29 @@ export default {
   data() {
     return {
       products: [],
+      pagination: {
+        current_page: 1,
+        last_page: 1,
+        total_pages: 1,
+      },
     };
   },
   mounted() {
     this.fetchProducts();
   },
   methods: {
-    fetchProducts() {
-      axios.get("products")
+    fetchProducts(page = false) {
+      const url = page ? `/products?page=${page}` : "/products";
+
+      axios.get(url)
         .then((response) => {
-          console.log(response.data.data);
           this.products = response.data.data;
+          this.pagination = {
+            current_page: response.data.meta.current_page,
+            last_page: response.data.meta.last_page,
+            total_pages: response.data.meta.total_pages,
+          };
+          console.log(this.pagination);
         })
         .catch((error) => {
           console.log(error);
