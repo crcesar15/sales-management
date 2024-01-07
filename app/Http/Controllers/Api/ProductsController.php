@@ -3,15 +3,41 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ApiCollection;
 use App\Models\Products;
 use Illuminate\Http\Request;
 
 class ProductsController extends Controller
 {
     //Get all products
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(['data' => Products::all()], 200);
+        $query = Products::query();
+
+        $filter = $request->input('filter', '');
+
+        if (!empty($filter)) {
+            $filter = '%' . $filter . '%';
+            $query->where(
+                function ($query) use ($filter) {
+                    $query->where('name', 'like', $filter);
+                }
+            );
+        }
+
+        $order_by = $request->has('order_by')
+            ? $order_by = $request->get('order_by')
+            : 'name';
+        $order_direction = $request->has('order_direction')
+            ? $request->get('order_direction')
+            : 'ASC';
+
+        $response = $query->orderBy(
+            $request->input('order_by', $order_by),
+            $request->input('order_direction', $order_direction)
+        )->paginate($request->input('per_page', 10));
+
+        return new ApiCollection($response);
     }
 
     //Get a product by id
