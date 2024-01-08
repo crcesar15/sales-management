@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import PrimeVue from "primevue/config";
 import ProductsContainer from "./components/ProductsContainer.vue";
 
 const app = createApp({
@@ -6,5 +7,7 @@ const app = createApp({
     ProductsContainer,
   },
 });
+
+app.use(PrimeVue);
 
 app.mount("#app");

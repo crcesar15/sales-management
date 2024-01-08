@@ -5,3 +5,5 @@
  */
 
 import "./bootstrap";
+import "primevue/resources/primevue.css";
+import "primevue/resources/themes/bootstrap4-light-blue/theme.css";
