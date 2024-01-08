@@ -1,167 +1,199 @@
 <template>
   <div>
     <h1>Products</h1>
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">
-            # Serie
-          </th>
-          <th scope="col">
-            Name
-          </th>
-          <th scope="col">
-            Description
-          </th>
-          <th scope="col">
-            Price
-          </th>
-          <th scope="col">
-            Brand
-          </th>
-          <th scope="col">
-            Stock
-          </th>
-          <th scope="col">
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="product in products"
-          :key="product.id"
+    <div class="card">
+      <div class="card-body table-responsive">
+        <DataTable
+          :value="products"
+          lazy
+          :total-records="pagination.total"
+          :rows="pagination.rows"
+          :first="pagination.first"
+          :loading="loading"
+          paginator
+          sort-field="name"
+          :sort-order="1"
+          :pt="tableStyle"
+          @page="onPage($event)"
+          @sort="onSort($event)"
         >
-          <td>{{ product.identifier }}</td>
-          <td>{{ product.name }}</td>
-          <td>{{ product.description }}</td>
-          <td>{{ product.price }}</td>
-          <td>{{ product.brand }}</td>
-          <td>{{ product.stock }}</td>
-          <td>
-            <div
-              class="btn-group btn-group-sm"
-              role="group"
-              aria-label="Basic example"
-            >
-              <button
-                type="button"
-                class="btn btn-primary"
-              >
-                Show
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary"
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary"
-              >
-                Delete
-              </button>
+          <template #header>
+            <div class="row">
+              <div class="col-12 col-md-9">
+                <input
+                  v-model="pagination.filter"
+                  type="text"
+                  class="form-control"
+                  placeholder="Search"
+                >
+              </div>
+              <div class="col-12 col-md-3">
+                <Button
+                  label="Add Product"
+                  icon="pi pi-plus"
+                  class="btn btn-primary d-block w-100"
+                />
+              </div>
             </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="row">
-      <div class="col-12 col-sm-6 offset-sm-6">
-        <nav aria-label="product navigation">
-          <ul class="pagination justify-content-md-end justify-content-center">
-            <li
-              class="page-item"
-              @click="fetchProducts(current_page - 1)"
-            >
-              <a
-                class="page-link"
-                :class="{ disabled: pagination.current_page === 1 }"
-                aria-label="Previous"
-              >
-                <span aria-hidden="true">&laquo;</span>
-              </a>
-            </li>
+          </template>
+          <Column
+            field="identifier"
+            header="# Serie"
+            sortable
+          />
+          <Column
+            field="name"
+            header="Name"
+            sortable
+          />
+          <Column
+            field="description"
+            header="Description"
+          />
+          <Column
+            field="price"
+            header="Price"
+            sortable
+          />
+          <Column
+            field="brand"
+            header="Brand"
+            sortable
+          />
+          <Column
+            field="stock"
+            header="Stock"
+            sortable
+          />
+          <Column
+            header="Actions"
+          >
             <template
-              v-if="pagination.total_pages < 10"
+              #body="{ data }"
             >
-              <li
-                v-for="(current_page, index) in pagination.total_pages"
-                :key="index"
-                class="page-item"
-                :class="{ active: pagination.current_page - 1 === index }"
-                style="cursor: pointer"
-                @click="fetchProducts(index + 1)"
+              <div
+                class="btn-group"
+                role="group"
               >
-                <a
-                  class="page-link"
-                >{{ current_page }}</a>
-              </li>
+                <button
+                  type="button"
+                  class="btn btn-link btn-sm"
+                  @click="showProduct(data)"
+                >
+                  <i class="fa-solid fa-eye fa-xl" />
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-link btn-sm"
+                  @click="editProduct(data)"
+                >
+                  <i class="fa-solid fa-edit fa-xl" />
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-link btn-sm"
+                  @click="deleteProduct(data.id)"
+                >
+                  <i class="fa-solid fa-trash fa-xl" />
+                </button>
+              </div>
             </template>
-            <template
-              v-if="pagination.total_pages >= 10"
-            >
-              <li
-                v-for="index in pagination.last_page"
-                :key="index"
-                class="page-item"
-                :class="{ active: pagination.current_page === index }"
-                @click="fetchProducts(index)"
-              >
-                <a
-                  class="page-link"
-                >{{ index }}</a>
-              </li>
-            </template>
-            <li
-              class="page-item"
-              style="cursor: pointer;"
-              @click="fetchProducts(pagination.current_page + 1)"
-            >
-              <a
-                class="page-link"
-                aria-label="Next"
-              >
-                <span aria-hidden="true">&raquo;</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
+          </Column>
+        </DataTable>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
+import Button from "primevue/button";
 
 export default {
+  components: {
+    DataTable,
+    Column,
+    Button,
+  },
   data() {
     return {
+      tableStyle: {
+        table: {
+          class: "table mt-3",
+          style: "border: 1px solid #dee2e6;",
+        },
+        thead: {
+          class: "table-light",
+        },
+      },
       products: [],
       pagination: {
-        current_page: 1,
-        last_page: 1,
-        total_pages: 1,
+        total: 0,
+        first: 0,
+        rows: 10,
+        page: 1,
+        sortField: "name",
+        sortOrder: 1,
+        filter: "",
       },
+      loading: false,
     };
+  },
+  watch: {
+    "pagination.filter": {
+      handler() {
+        this.pagination.page = 1;
+        this.fetchProducts();
+      },
+    },
   },
   mounted() {
     this.fetchProducts();
   },
   methods: {
-    fetchProducts(page = false) {
-      const url = page ? `/products?page=${page}` : "/products";
+    fetchProducts() {
+      this.loading = true;
+      let url = `/products?per_page=${this.pagination.rows}&page=${this.pagination.page}&order_by=${this.pagination.sortField}`;
+
+      if (this.pagination.sortOrder === -1) {
+        url += "&order_direction=desc";
+      } else {
+        url += "&order_direction=asc";
+      }
+
+      if (this.pagination.filter) {
+        url += `&filter=${this.pagination.filter}`;
+      }
 
       axios.get(url)
         .then((response) => {
           this.products = response.data.data;
-          this.pagination = {
-            current_page: response.data.meta.current_page,
-            last_page: response.data.meta.last_page,
-            total_pages: response.data.meta.total_pages,
-          };
-          console.log(this.pagination);
+          this.pagination.total = response.data.meta.total;
+          this.loading = false;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+    onPage(event) {
+      this.pagination.page = event.page + 1;
+      this.pagination.per_page = event.rows;
+      this.pagination.sortField = event.sortField;
+      this.pagination.sortOrder = event.sortOrder;
+      this.fetchProducts();
+    },
+    onSort(event) {
+      this.pagination.page = event.page + 1;
+      this.pagination.per_page = event.rows;
+      this.pagination.sortField = event.sortField;
+      this.pagination.sortOrder = event.sortOrder;
+      this.fetchProducts();
+    },
+    deleteProduct(id) {
+      axios.delete(`/products/${id}`)
+        .then(() => {
+          this.fetchProducts();
         })
         .catch((error) => {
           console.log(error);
@@ -171,3 +203,18 @@ export default {
 };
 
 </script>
+
+<style>
+.sortable-column [data-pc-section="sort"] {
+  padding-left: 0.2rem;
+}
+
+.sortable-column [data-pc-section="headercontent"] {
+  display: flex;
+  align-items: center;
+}
+.sortable-column th:hover {
+  cursor: pointer;
+  background-color: #ccc;
+}
+</style>
