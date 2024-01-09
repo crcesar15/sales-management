@@ -8,4 +8,8 @@
 
 @section('js')
     @vite(['resources/js/products/index.js'])
+    <script>
+        //add active class to nav link
+        document.getElementById('products').classList.add('active');
+    </script>
 @endsection

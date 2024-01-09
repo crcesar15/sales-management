@@ -34,7 +34,8 @@
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" aria-current="page" href="/products">{{ __('Products') }}</a>
+                            <a class="nav-link" aria-current="page" id="products"
+                                href="/products">{{ __('Products') }}</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" aria-current="page" href="#">{{ __('Inventory') }}</a>

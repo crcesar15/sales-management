@@ -30,7 +30,7 @@
               <div class="col-12 col-md-3">
                 <Button
                   label="Add Product"
-                  icon="pi pi-plus"
+                  icon="fa fa-plus"
                   class="btn btn-primary d-block w-100"
                 />
               </div>
