@@ -2,6 +2,7 @@
 
 @section('content')
     <div id="app">
+        <the-navbar></the-navbar>
         <products-container></products-container>
     </div>
 @endsection

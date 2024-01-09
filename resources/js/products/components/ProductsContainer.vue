@@ -1,23 +1,31 @@
 <template>
-  <div>
-    <h1>Products</h1>
-    <div class="card">
-      <div class="card-body table-responsive">
-        <DataTable
-          :value="products"
-          lazy
-          :total-records="pagination.total"
-          :rows="pagination.rows"
-          :first="pagination.first"
-          :loading="loading"
-          paginator
-          sort-field="name"
-          :sort-order="1"
-          :pt="tableStyle"
-          @page="onPage($event)"
-          @sort="onSort($event)"
+  <div style="padding: 16px !important;">
+    <q-table
+      ref="tableRef"
+      v-model:pagination="pagination"
+      title="Products"
+      :rows="products"
+      :columns="columns"
+      row-key="id"
+      :loading="loading"
+      :filter="filter"
+      :rows-per-page-options="[10, 20, 50]"
+      @request="onRequest"
+    >
+      <template #top-right>
+        <q-input
+          v-model="filter"
+          borderless
+          dense
+          debounce="300"
+          placeholder="Search"
         >
-          <template #header>
+          <template #append>
+            <q-icon name="fa fa-search" />
+          </template>
+        </q-input>
+      </template>
+      <!--<template #header>
             <div class="row">
               <div class="col-12 col-md-9">
                 <input
@@ -98,46 +106,49 @@
                 </button>
               </div>
             </template>
-          </Column>
-        </DataTable>
-      </div>
-    </div>
+          </Column>-->
+    </q-table>
   </div>
 </template>
 
 <script>
-import DataTable from "primevue/datatable";
-import Column from "primevue/column";
-import Button from "primevue/button";
 
 export default {
-  components: {
-    DataTable,
-    Column,
-    Button,
-  },
   data() {
     return {
-      tableStyle: {
-        table: {
-          class: "table mt-3",
-          style: "border: 1px solid #dee2e6;",
-        },
-        thead: {
-          class: "table-light",
-        },
-      },
       products: [],
       pagination: {
-        total: 0,
-        first: 0,
-        rows: 10,
+        sortBy: "name",
+        descending: false,
         page: 1,
-        sortField: "name",
-        sortOrder: 1,
-        filter: "",
+        rowsPerPage: 10,
+        rowsNumber: 0,
       },
+      filter: null,
       loading: false,
+      columns: [
+        {
+          name: "identifier", label: "# Serie", field: "identifier", sortable: true,
+        },
+        {
+          name: "name", label: "Name", field: "name", sortable: true,
+        },
+        {
+          name: "description", label: "Description", field: "description",
+        },
+        {
+          name: "price", label: "Price", field: "price", sortable: true,
+        },
+        {
+          name: "brand", label: "Brand", field: "brand", sortable: true,
+        },
+        {
+          name: "stock", label: "Stock", field: "stock", sortable: true,
+        },
+        {
+          name: "actions", label: "Actions", field: "actions",
+        },
+      ],
     };
   },
   watch: {
@@ -154,40 +165,40 @@ export default {
   methods: {
     fetchProducts() {
       this.loading = true;
-      let url = `/products?per_page=${this.pagination.rows}&page=${this.pagination.page}&order_by=${this.pagination.sortField}`;
+      let url = `/products?per_page=${this.pagination.rowsPerPage}&page=${this.pagination.page}`;
 
-      if (this.pagination.sortOrder === -1) {
-        url += "&order_direction=desc";
-      } else {
-        url += "&order_direction=asc";
+      if (this.pagination.sortBy) {
+        url += `&order_by=${this.pagination.sortBy}`;
       }
 
-      if (this.pagination.filter) {
-        url += `&filter=${this.pagination.filter}`;
+      if (!this.pagination.descending) {
+        url += "&order_direction=asc";
+      } else {
+        url += "&order_direction=desc";
+      }
+
+      if (this.filter) {
+        url += `&filter=${this.filter}`;
       }
 
       axios.get(url)
         .then((response) => {
           this.products = response.data.data;
-          this.pagination.total = response.data.meta.total;
+          this.pagination.rowsNumber = response.data.meta.total;
           this.loading = false;
         })
         .catch((error) => {
           console.log(error);
         });
     },
-    onPage(event) {
-      this.pagination.page = event.page + 1;
-      this.pagination.per_page = event.rows;
-      this.pagination.sortField = event.sortField;
-      this.pagination.sortOrder = event.sortOrder;
-      this.fetchProducts();
-    },
-    onSort(event) {
-      this.pagination.page = event.page + 1;
-      this.pagination.per_page = event.rows;
-      this.pagination.sortField = event.sortField;
-      this.pagination.sortOrder = event.sortOrder;
+    onRequest(requestProp) {
+      this.pagination.descending = requestProp.pagination.descending;
+      this.filter = requestProp.filter;
+      this.pagination.page = requestProp.pagination.page;
+      this.pagination.rowsNumber = requestProp.pagination.rowsNumber;
+      this.pagination.rowsPerPage = requestProp.pagination.rowsPerPage;
+      this.pagination.sortBy = requestProp.pagination.sortBy;
+
       this.fetchProducts();
     },
     deleteProduct(id) {

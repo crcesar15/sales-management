@@ -5,5 +5,8 @@
  */
 
 import "./bootstrap";
-import "primevue/resources/primevue.css";
-import "primevue/resources/themes/bootstrap4-light-blue/theme.css";
+// Import icon libraries
+import "@quasar/extras/fontawesome-v6/fontawesome-v6.css";
+
+// Import Quasar css
+import "quasar/dist/quasar.css";
