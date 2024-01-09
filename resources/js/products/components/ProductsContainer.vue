@@ -78,6 +78,8 @@
                 <button
                   type="button"
                   class="btn btn-link btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#exampleModal"
                   @click="showProduct(data)"
                 >
                   <i class="fa-solid fa-eye fa-xl" />
@@ -102,6 +104,9 @@
         </DataTable>
       </div>
     </div>
+    <product-viewer
+      :product="selectedProduct"
+    />
   </div>
 </template>
 
@@ -109,12 +114,14 @@
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Button from "primevue/button";
+import ProductViewer from "./ProductViewer.vue";
 
 export default {
   components: {
     DataTable,
     Column,
     Button,
+    ProductViewer,
   },
   data() {
     return {
@@ -138,6 +145,7 @@ export default {
         filter: "",
       },
       loading: false,
+      selectedProduct: null,
     };
   },
   watch: {
@@ -198,6 +206,9 @@ export default {
         .catch((error) => {
           console.log(error);
         });
+    },
+    showProduct(product) {
+      this.selectedProduct = product;
     },
   },
 };
