@@ -7,22 +7,23 @@
 import "./bootstrap";
 
 import { createApp } from "vue";
+import Ripple from "primevue/ripple";
+import StyleClass from "primevue/styleclass";
 import PrimeVue from "primevue/config";
 import Menubar from "primevue/menubar";
+import PMenu from "primevue/menu";
+import PButton from "primevue/button";
+import Sidebar from "primevue/sidebar";
 
 const app = createApp({
   components: {
     Menubar,
+    PMenu,
+    PButton,
+    Sidebar,
   },
   data() {
     return {
-      navbarStyles: {
-        root: ["navbar navbar-expand-lg navbar-dark bg-primary"],
-        menu: ["navbar-nav"],
-        menuitem: ["nav-item"],
-        content: ["nav-link"],
-        action: ["nav-link"],
-      },
       items: [
         {
           label: "Home",
@@ -40,10 +41,28 @@ const app = createApp({
           to: "/about",
         },
       ],
+      sidebarVisibility: false,
     };
+  },
+  mounted() {
+    this.$primevue.config.ripple = true;
+  },
+  methods: {
+    toggleUserActions(event) {
+      console.log(this.$refs.userActions);
+      this.$refs.userActions.toggle(event);
+    },
+    toggleSidebar() {
+      this.sidebarVisibility = !this.sidebarVisibility;
+    },
+    redirect(url) {
+      window.location.href = url;
+    },
   },
 });
 
-app.use(PrimeVue);
+app.use(PrimeVue, { ripple: true });
+app.directive("ripple", Ripple);
+app.directive("styleclass", StyleClass);
 
 app.mount("#navbar");

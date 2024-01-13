@@ -18,59 +18,81 @@
 </head>
 
 <body>
-    <div id="app">
-        <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
-            <div class="container">
-                <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.name', 'Laravel') }}
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <!-- Left Side Of Navbar -->
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" aria-current="page" id="products"
-                                href="/products">{{ __('Products') }}</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" aria-current="page" href="#">{{ __('Inventory') }}</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" aria-current="page" href="#">{{ __('Admin') }}</a>
-                        </li>
-                    </ul>
-
-                    <!-- Right Side Of Navbar -->
-                    <ul class="navbar-nav ms-auto">
-                        <!-- Authentication Links -->
-                        <li class="nav-item dropdown">
-                            <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                {{ Auth::user()->name }}
-                            </a>
-
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="{{ route('logout') }}"
-                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    {{ __('Logout') }}
-                                </a>
-
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                    @csrf
-                                </form>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-
-        <main class="py-4 container-fluid container-md">
+    <div id="navbar">
+        <div>
+            <Sidebar v-model:visible="sidebarVisibility">
+                <template #container="{ closeCallback }">
+                    <div class="flex flex-column h-full">
+                        <div class="flex align-items-center justify-content-between px-4 pt-3 flex-shrink-0">
+                            <span class="inline-flex align-items-center gap-2">
+                                <span
+                                    class="font-semibold text-2xl text-primary">{{ config('app.name', 'Laravel') }}</span>
+                            </span>
+                            <span>
+                                <p-button type="button" @click="toggleSidebar" icon="fa fa-xmark" rounded></p-button>
+                            </span>
+                        </div>
+                        <div class="overflow-y-auto">
+                            <ul class="list-none p-3 m-0">
+                                <li>
+                                    <div v-ripple
+                                        v-styleclass="{
+                                        selector: '@next',
+                                        enterClass: 'hidden',
+                                        enterActiveClass: 'slidedown',
+                                        leaveToClass: 'hidden',
+                                        leaveActiveClass: 'slideup'
+                                    }"
+                                        class="p-3 flex align-items-center justify-content-between text-600 cursor-pointer p-ripple">
+                                        <span class="font-medium"><i class="fa fa-cube pr-2"></i>PRODUCTS</span>
+                                        <i class="fa fa-angle-down"></i>
+                                    </div>
+                                    <ul class="list-none py-0 pl-3 pr-0 m-0 overflow-hidden">
+                                        <li>
+                                            <a v-ripple
+                                                class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
+                                                <i class="fa fa-grip mr-2"></i>
+                                                <span class="font-medium">Galery</span>
+                                            </a>
+                                        </li>
+                                        <li @click=redirect("/products")>
+                                            <a v-ripple
+                                                class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
+                                                <i class="fa fa-box-open mr-2"></i>
+                                                <span class="font-medium">Inventory</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <a v-ripple class="p-3 flex align-items-center text-600 cursor-pointer p-ripple">
+                                        <i class="fa fa-table-list mr-2"></i>
+                                        <span class="font-medium">REPORTS</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </template>
+            </Sidebar>
+            <Menubar :model="[]">
+                <template #start>
+                    <div class="flex flex-row flex-wrap">
+                        <div class="flex">
+                            <p-button icon="fa fa-bars" @click="toggleSidebar" />
+                        </div>
+                    </div>
+                </template>
+                <template #end>
+                    <div class="card flex justify-content-center">
+                        <p-button type="button" icon="fa fa-user" @click="toggleUserActions" aria-haspopup="true"
+                            aria-controls="overlay_menu" />
+                    </div>
+                    <p-menu ref="userActions" id="overlay_menu" :model="items" :popup="true" />
+                </template>
+            </Menubar>
+        </div>
+        <main class="md:m-4 sm:m-0">
             @yield('content')
         </main>
     </div>
