@@ -14,7 +14,6 @@ import Menubar from "primevue/menubar";
 import PMenu from "primevue/menu";
 import PButton from "primevue/button";
 import Sidebar from "primevue/sidebar";
-import axios from "axios";
 
 const app = createApp({
   components: {

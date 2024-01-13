@@ -20,86 +20,49 @@
 @endsection
 
 @section('content')
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card login-container">
-                    <div class="card-body">
-                        <form method="POST" action="{{ route('login') }}">
-                            @csrf
-                            <!--Add logo from public storage-->
-                            <div class="logo-container">
-                                <img src="{{ asset('images/logo.png') }}" alt="logo">
-                            </div>
-                            <div class="row mb-3">
-                                <label for="email"
-                                    class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
-
-                                <div class="col-md-6">
-                                    <input id="email" type="email"
-                                        class="form-control @error('email') is-invalid @enderror" name="email"
-                                        value="{{ old('email') }}" required autocomplete="email" autofocus>
-
-                                    @error('email')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <label for="password"
-                                    class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
-
-                                <div class="col-md-6">
-                                    <input id="password" type="password"
-                                        class="form-control @error('password') is-invalid @enderror" name="password"
-                                        required autocomplete="current-password">
-
-                                    @error('password')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-md-6 offset-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="remember" id="remember"
-                                            {{ old('remember') ? 'checked' : '' }}>
-
-                                        <label class="form-check-label" for="remember">
-                                            {{ __('Remember Me') }}
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row mb-0">
-                                <div class="col-md-6 d-grid">
-                                    <button type="submit" class="btn btn-primary">
-                                        {{ __('Login') }}
-                                    </button>
-                                </div>
-                                <div class="col-md-6 d-grid">
-                                    <a href="{{ route('register') }}" class="btn btn-secondary">
-                                        {{ __('Register') }}
-                                    </a>
-                                </div>
-                            </div>
-                            <div style="text-align: right">
-                                @if (Route::has('password.request'))
-                                    <a class="btn btn-link" href="{{ route('password.request') }}">
-                                        {{ __('Forgot Your Password?') }}
-                                    </a>
-                                @endif
-                            </div>
-                        </form>
+    <div class="grid">
+        <div class="col-12 md:col-4 md:col-offset-4">
+            <div class="surface-100 p-4 shadow-2 border-round w-full">
+                <form method="POST" action="{{ route('login') }}">
+                    <!--Add logo from public storage-->
+                    <div class="logo-container">
+                        <img src="{{ asset('images/logo.png') }}" alt="logo">
                     </div>
-                </div>
+                    <div class="col">
+                        <label for="email">E-Mail</label>
+                        <input-text class="w-full" v-model="email" input-id="email" :required="true" />
+                    </div>
+                    <div class="col">
+                        <label for="password">Password</label>
+                        <p-password class="w-full" input-class="w-full" toggle-mask v-model="password" input-id="password"
+                            :required="true" :feedback="false" />
+                    </div>
+                    <div class="col flex">
+                        <div class="flex">
+                            <checkbox class="" :binary="true" v-model="remember" input-id="remember" />
+                        </div>
+                        <label class="ml-2 text-color-secondary" for="remember">Remember Me</label>
+                    </div>
+                    <div class="col">
+                        <div class="grid">
+                            <div class="col-6">
+                                <p-button type="button" class="w-full" label="{{ __('Login') }}"
+                                    @click="login"></p-button>
+                            </div>
+                            <div class="col-6">
+                                <p-button type="button" severity="primary" class="w-full" outlined
+                                    label="{{ __('Register') }}" @click="redirect('/register')"></p-button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: right">
+                        @if (Route::has('password.request'))
+                            <a class="btn btn-link text-primary" href="{{ route('password.request') }}">
+                                {{ __('Forgot Your Password?') }}
+                            </a>
+                        @endif
+                    </div>
+                </form>
             </div>
         </div>
     </div>
