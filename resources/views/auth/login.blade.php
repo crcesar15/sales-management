@@ -30,7 +30,8 @@
                     </div>
                     <div class="col">
                         <label for="email">E-Mail</label>
-                        <input-text class="w-full" v-model="email" input-id="email" :required="true" />
+                        <input-text class="w-full" v-model="email" autocomplete="email" input-id="email"
+                            :required="true" />
                     </div>
                     <div class="col">
                         <label for="password">Password</label>
@@ -48,6 +49,7 @@
                             <div class="col-6">
                                 <p-button type="button" class="w-full" label="{{ __('Login') }}"
                                     @click="login"></p-button>
+                                <Toast />
                             </div>
                             <div class="col-6">
                                 <p-button type="button" severity="primary" class="w-full" outlined

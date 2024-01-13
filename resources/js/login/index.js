@@ -37,7 +37,11 @@ const app = createApp({
           this.redirect("/");
         })
         .catch((error) => {
-          console.log(error);
+          this.$toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: error.response.data.message,
+          });
         });
     },
     sentResetLink() {
@@ -60,9 +64,21 @@ const app = createApp({
           this.$toast.add({
             severity: "error",
             summary: "Error",
-            detail: error,
+            detail: error.response.data.message,
             life: 3000,
           });
+        });
+    },
+    register() {
+      axios.post(`${window.location.origin}/register`, {
+        email: this.email,
+        password: this.password,
+      })
+        .then(() => {
+          this.redirect("/");
+        })
+        .catch((error) => {
+          console.log(error);
         });
     },
     redirect(url) {
