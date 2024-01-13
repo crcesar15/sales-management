@@ -14,6 +14,7 @@ import Menubar from "primevue/menubar";
 import PMenu from "primevue/menu";
 import PButton from "primevue/button";
 import Sidebar from "primevue/sidebar";
+import axios from "axios";
 
 const app = createApp({
   components: {
@@ -24,21 +25,13 @@ const app = createApp({
   },
   data() {
     return {
-      items: [
+      userActions: [
         {
-          label: "Home",
-          icon: "fa fa-home",
-          to: "/",
-        },
-        {
-          label: "Products",
-          icon: "fa fa-shopping-cart",
-          to: "/products",
-        },
-        {
-          label: "About",
-          icon: "fa fa-exclamation-circle",
-          to: "/about",
+          label: "Logout",
+          icon: "fa fa-fw fa-sign-out",
+          command: () => {
+            this.logout();
+          },
         },
       ],
       sidebarVisibility: false,
@@ -49,7 +42,6 @@ const app = createApp({
   },
   methods: {
     toggleUserActions(event) {
-      console.log(this.$refs.userActions);
       this.$refs.userActions.toggle(event);
     },
     toggleSidebar() {
@@ -57,6 +49,11 @@ const app = createApp({
     },
     redirect(url) {
       window.location.href = url;
+    },
+    logout() {
+      axios.post(`${window.location.origin}/logout`).then(() => {
+        window.location.href = "/";
+      });
     },
   },
 });

@@ -88,7 +88,7 @@
                         <p-button type="button" icon="fa fa-user" @click="toggleUserActions" aria-haspopup="true"
                             aria-controls="overlay_menu" />
                     </div>
-                    <p-menu ref="userActions" id="overlay_menu" :model="items" :popup="true" />
+                    <p-menu ref="userActions" id="overlay_menu" :model="userActions" :popup="true" />
                 </template>
             </Menubar>
         </div>
