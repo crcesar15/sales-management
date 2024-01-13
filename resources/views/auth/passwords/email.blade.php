@@ -20,55 +20,35 @@
 @endsection
 
 @section('content')
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card register-container">
-                    <div class="logo-container">
-                        <img src="{{ asset('images/logo.png') }}">
-                    </div>
-
-                    <div class="card-body">
-                        @if (session('status'))
-                            <div class="alert alert-success" role="alert">
-                                {{ session('status') }}
-                            </div>
-                        @endif
-
-                        <form method="POST" action="{{ route('password.email') }}">
-                            @csrf
-
-                            <div class="row mb-3">
-                                <label for="email"
-                                    class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
-
-                                <div class="col-md-6">
-                                    <input id="email" type="email"
-                                        class="form-control @error('email') is-invalid @enderror" name="email"
-                                        value="{{ old('email') }}" required autocomplete="email" autofocus>
-
-                                    @error('email')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="row mb-0">
-                                <div class="col-md-6 offset-md-4">
-                                    <button type="submit" class="btn btn-primary">
-                                        {{ __('Send Password Reset Link') }}
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                        <div class="row mt-3" style="text-align: right">
-                            <a href="{{ route('login') }}">
-                                {{ __('Go Back') }}
-                            </a>
+    <div class="grid">
+        <div class="md:col-6 col-12 md:col-offset-3">
+            <div class="surface-100 p-4 shadow-2 border-round">
+                <div class="logo-container">
+                    <img src="{{ asset('images/logo.png') }}">
+                </div>
+                <form method="POST" @submit.prevent="sentResetLink">
+                    <div class="grid">
+                        <div class="md:col-4 flex flex-wrap align-content-center justify-content-end">
+                            <label for="email">{{ __('Email Address') }}</label>
+                        </div>
+                        <div class="md:col-6">
+                            <input-text class="w-full" id="email" required autocomplete="email" v-model="email">
                         </div>
                     </div>
+
+                    <div class="grid mt-2">
+                        <div class="md:col-8 md:col-offset-2 flex flex-wrap justify-content-center">
+                            <p-button type="submit" :loading="btnLoading">
+                                {{ __('Send Password Reset Link') }}
+                            </p-button>
+                            <Toast />
+                        </div>
+                    </div>
+                </form>
+                <div class="mt-3" style="text-align: right">
+                    <a class="text-primary" href="{{ route('login') }}">
+                        {{ __('Go Back') }}
+                    </a>
                 </div>
             </div>
         </div>

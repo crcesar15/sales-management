@@ -6,6 +6,8 @@ import InputText from "primevue/inputtext";
 import PPassword from "primevue/password";
 import Checkbox from "primevue/checkbox";
 import PButton from "primevue/button";
+import ToastService from "primevue/toastservice";
+import Toast from "primevue/toast";
 
 const app = createApp({
   components: {
@@ -13,13 +15,14 @@ const app = createApp({
     PPassword,
     Checkbox,
     PButton,
+    Toast,
   },
   data() {
     return {
       email: "",
       password: "",
       remember: false,
-      pizza: "",
+      btnLoading: false,
     };
   },
   methods: {
@@ -37,12 +40,37 @@ const app = createApp({
           console.log(error);
         });
     },
+    sentResetLink() {
+      this.btnLoading = true;
+      axios
+        .post(`${window.location.origin}/password/email`, {
+          email: this.email,
+        })
+        .then(() => {
+          this.btnLoading = false;
+          this.$toast.add({
+            severity: "success",
+            summary: "Success",
+            detail: "Reset link sent to your email.",
+            life: 3000,
+          });
+        })
+        .catch((error) => {
+          this.btnLoading = false;
+          this.$toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: error,
+            life: 3000,
+          });
+        });
+    },
     redirect(url) {
       window.location.href = url;
     },
   },
 });
 
-app.use(PrimeVue);
+app.use(PrimeVue).use(ToastService);
 
 app.mount("#app");
