@@ -22,7 +22,7 @@
 @section('content')
     <div class="grid">
         <div class="md:col-6 col-12 md:col-offset-3">
-            <div class="surface-100 p-4 shadow-2 border-round">
+            <div class="surface-card p-4 shadow-2 border-round">
                 <div class="logo-container">
                     <img src="{{ asset('images/logo.png') }}">
                 </div>
