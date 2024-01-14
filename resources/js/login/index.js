@@ -19,8 +19,10 @@ const app = createApp({
   },
   data() {
     return {
+      name: "",
       email: "",
       password: "",
+      password_confirmation: "",
       remember: false,
       btnLoading: false,
     };
@@ -71,14 +73,20 @@ const app = createApp({
     },
     register() {
       axios.post(`${window.location.origin}/register`, {
+        name: this.name,
         email: this.email,
         password: this.password,
+        password_confirmation: this.password_confirmation,
       })
         .then(() => {
           this.redirect("/");
         })
         .catch((error) => {
-          console.log(error);
+          this.$toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: error.response.data.message,
+          });
         });
     },
     redirect(url) {
