@@ -21,11 +21,15 @@ const app = createApp({
     return {
       name: "",
       email: "",
+      token: "",
       password: "",
       password_confirmation: "",
       remember: false,
       btnLoading: false,
     };
+  },
+  mounted() {
+    this.token = document.getElementById("token")?.value ?? "";
   },
   methods: {
     login() {
@@ -82,6 +86,28 @@ const app = createApp({
           this.redirect("/");
         })
         .catch((error) => {
+          this.$toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: error.response.data.message,
+          });
+        });
+    },
+    resetPassword() {
+      this.btnLoading = true;
+      axios
+        .post(`${window.location.origin}/password/reset`, {
+          token: this.token,
+          email: this.email,
+          password: this.password,
+          password_confirmation: this.password_confirmation,
+        })
+        .then(() => {
+          this.btnLoading = false;
+          this.redirect("/");
+        })
+        .catch((error) => {
+          this.btnLoading = false;
           this.$toast.add({
             severity: "error",
             summary: "Error",
