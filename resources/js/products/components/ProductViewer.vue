@@ -2,7 +2,7 @@
   <!-- Modal -->
   <div>
     <Dialog
-      v-model:visible="showModal"
+      v-model:visible="visible"
       header="Product Viewer"
       modal
       @hide="clearSelection"
@@ -82,17 +82,19 @@ export default {
       type: Object,
       required: true,
     },
+    showDialog: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
-      showModal: false,
+      visible: false,
     };
   },
   watch: {
-    product() {
-      if (this.product.id) {
-        this.showModal = true;
-      }
+    showDialog(value) {
+      this.visible = value;
     },
   },
   methods: {

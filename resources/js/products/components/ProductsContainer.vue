@@ -31,7 +31,7 @@
               </div>
               <div class="col-12 md:col-2">
                 <p-button
-                  label="Add Product"
+                  label="Product"
                   icon="fa fa-plus"
                   class="w-full"
                 />
@@ -82,7 +82,7 @@
                   icon="fa fa-eye"
                   text
                   size="sm"
-                  @click="showProduct(data)"
+                  @click="viewProduct(data)"
                 />
                 <p-button
                   icon="fa fa-edit"
@@ -105,7 +105,14 @@
     </div>
     <product-viewer
       :product="selectedProduct"
-      @clearSelection="selectedProduct = {}"
+      :show-dialog="viewerToggle"
+      @clearSelection="selectedProduct = {}; viewerToggle = false;"
+    />
+    <product-editor
+      :product="selectedProduct"
+      :show-dialog="editorToggle"
+      @clearSelection="selectedProduct = {}; editorToggle = false;"
+      @save="updateProduct"
     />
   </div>
 </template>
@@ -117,7 +124,9 @@ import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import ConfirmDialog from "primevue/confirmdialog";
+import axios from "axios";
 import ProductViewer from "./ProductViewer.vue";
+import ProductEditor from "./ProductEditor.vue";
 
 export default {
   components: {
@@ -128,9 +137,12 @@ export default {
     Toast,
     ConfirmDialog,
     ProductViewer,
+    ProductEditor,
   },
   data() {
     return {
+      viewerToggle: false,
+      editorToggle: false,
       tableStyle: {
         table: {
           class: "table mt-3",
@@ -200,6 +212,34 @@ export default {
       this.pagination.sortOrder = event.sortOrder;
       this.fetchProducts();
     },
+    viewProduct(product) {
+      this.viewerToggle = true;
+      this.selectedProduct = product;
+    },
+    editProduct(product) {
+      this.editorToggle = true;
+      this.selectedProduct = product;
+    },
+    updateProduct(id, product) {
+      axios.put(`/products/${id}`, product)
+        .then(() => {
+          this.$toast.add({
+            severity: "success",
+            summary: "Success",
+            detail: "Product updated successfully",
+            life: 3000,
+          });
+          this.fetchProducts();
+        })
+        .catch((error) => {
+          this.$toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: error.response.data.message,
+            life: 3000,
+          });
+        });
+    },
     deleteProduct(id) {
       this.$confirm.require({
         message: "Are you sure you want to delete this product?",
@@ -234,9 +274,6 @@ export default {
           });
         },
       });
-    },
-    showProduct(product) {
-      this.selectedProduct = product;
     },
   },
 };
