@@ -103,6 +103,7 @@
     </div>
     <product-viewer
       :product="selectedProduct"
+      @clearSelection="selectedProduct = {}"
     />
   </div>
 </template>

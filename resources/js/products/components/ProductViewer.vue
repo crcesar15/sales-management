@@ -1,103 +1,103 @@
 <template>
   <!-- Modal -->
-  <div
-    id="exampleModal"
-    class="modal fade"
-    tabindex="-1"
-    aria-labelledby="exampleModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1
-            id="exampleModalLabel"
-            class="modal-title fs-5"
-          >
-            {{ product?.name }}
-          </h1>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          />
-        </div>
-        <div class="modal-body">
-          <div
-            class="row"
-          >
-            <div
-              class="col-md-6"
-            >
-              <img
-                :src="product?.image"
-                :alt="product?.name"
-                class="img-fluid"
-              >
-            </div>
-            <div
-              class="col-md-6"
-            >
-              <p>
-                <strong>
-                  # Serie:
-                </strong>
-                {{ product?.identifier }}
-              </p>
-              <p>
-                <strong>
-                  Description:
-                </strong>
-                {{ product?.description }}
-              </p>
-              <p>
-                <strong>
-                  Price:
-                </strong>
-                {{ product?.price }}
-              </p>
-              <p>
-                <strong>
-                  Brand:
-                </strong>
-                {{ product?.brand }}
-              </p>
-              <p>
-                <strong>
-                  Stock:
-                </strong>
-                {{ product?.stock }}
-              </p>
-            </div>
+  <div>
+    <Dialog
+      v-model:visible="showModal"
+      header="Product Viewer"
+      modal
+      @hide="clearSelection"
+    >
+      <div
+        class="grid"
+      >
+        <div
+          class="md:col-6 col-12"
+        >
+          <div v-if="product.image">
+            <Image
+              src="product.image"
+              alt="Image"
+              height="250px"
+            />
+          </div>
+          <div v-else>
+            <Skeleton
+              width="100%"
+              height="250px"
+            />
           </div>
         </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            data-bs-dismiss="modal"
-          >
-            Close
-          </button>
-          <button
-            type="button"
-            class="btn btn-primary"
-          >
-            Save changes
-          </button>
+        <div
+          class="md:col-6 col-12"
+        >
+          <p>
+            <strong>
+              # Serie:
+            </strong>
+            {{ product?.identifier }}
+          </p>
+          <p>
+            <strong>
+              Description:
+            </strong>
+            {{ product?.description }}
+          </p>
+          <p>
+            <strong>
+              Price:
+            </strong>
+            {{ product?.price }}
+          </p>
+          <p>
+            <strong>
+              Brand:
+            </strong>
+            {{ product?.brand }}
+          </p>
+          <p>
+            <strong>
+              Stock:
+            </strong>
+            {{ product?.stock }}
+          </p>
         </div>
       </div>
-    </div>
+    </Dialog>
   </div>
 </template>
 
 <script>
+import Dialog from "primevue/dialog";
+import Skeleton from "primevue/skeleton";
+import Image from "primevue/image";
+
 export default {
+  components: {
+    Dialog,
+    Skeleton,
+    Image,
+  },
   props: {
     product: {
       type: Object,
       required: true,
+    },
+  },
+  data() {
+    return {
+      showModal: false,
+    };
+  },
+  watch: {
+    product() {
+      if (this.product.id) {
+        this.showModal = true;
+      }
+    },
+  },
+  methods: {
+    clearSelection() {
+      this.$emit("clearSelection");
     },
   },
 };
