@@ -22,8 +22,8 @@
 @section('content')
     <div class="grid">
         <div class="col-12 md:col-4 md:col-offset-4">
-            <div class="surface-100 p-4 shadow-2 border-round w-full">
-                <form method="POST" action="{{ route('login') }}">
+            <div class="surface-card p-4 shadow-2 border-round w-full">
+                <form method="POST" @submit.prevent="login">
                     <!--Add logo from public storage-->
                     <div class="logo-container">
                         <img src="{{ asset('images/logo.png') }}" alt="logo">
@@ -47,8 +47,7 @@
                     <div class="col">
                         <div class="grid">
                             <div class="col-6">
-                                <p-button type="button" class="w-full" label="{{ __('Login') }}"
-                                    @click="login"></p-button>
+                                <p-button type="submit" class="w-full" label="{{ __('Login') }}"></p-button>
                                 <Toast />
                             </div>
                             <div class="col-6">
