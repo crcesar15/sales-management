@@ -1,5 +1,7 @@
 <template>
   <div>
+    <ConfirmDialog />
+    <Toast />
     <h1>Inventory</h1>
     <div class="card">
       <div class="card-body table-responsive">
@@ -114,6 +116,7 @@ import Column from "primevue/column";
 import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
+import ConfirmDialog from "primevue/confirmdialog";
 import ProductViewer from "./ProductViewer.vue";
 
 export default {
@@ -123,6 +126,7 @@ export default {
     PButton,
     InputText,
     Toast,
+    ConfirmDialog,
     ProductViewer,
   },
   data() {
@@ -197,13 +201,39 @@ export default {
       this.fetchProducts();
     },
     deleteProduct(id) {
-      axios.delete(`/products/${id}`)
-        .then(() => {
-          this.fetchProducts();
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+      this.$confirm.require({
+        message: "Are you sure you want to delete this product?",
+        header: "Delete Confirmation",
+        icon: "pi pi-exclamation-triangle",
+        accept: () => {
+          axios.delete(`/products/${id}`)
+            .then(() => {
+              this.fetchProducts();
+              this.$toast.add({
+                severity: "success",
+                summary: "Success",
+                detail: "Product deleted successfully",
+                life: 3000,
+              });
+            })
+            .catch((error) => {
+              this.$toast.add({
+                severity: "error",
+                summary: "Error",
+                detail: error.response.data.message,
+                life: 3000,
+              });
+            });
+        },
+        reject: () => {
+          this.$toast.add({
+            severity: "info",
+            summary: "Info",
+            detail: "Product deletion canceled",
+            life: 3000,
+          });
+        },
+      });
     },
     showProduct(product) {
       this.selectedProduct = product;

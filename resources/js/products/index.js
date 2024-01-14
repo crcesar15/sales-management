@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
 import ToastService from "primevue/toastservice";
+import ConfirmationService from "primevue/confirmationservice";
 import ProductsContainer from "./components/ProductsContainer.vue";
 
 const app = createApp({
@@ -9,6 +10,6 @@ const app = createApp({
   },
 });
 
-app.use(PrimeVue).use(ToastService);
+app.use(PrimeVue).use(ToastService).use(ConfirmationService);
 
 app.mount("#app");
