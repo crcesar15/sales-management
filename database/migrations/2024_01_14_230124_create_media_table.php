@@ -12,8 +12,7 @@ return new class extends Migration {
     {
         Schema::create('media', function (Blueprint $table) {
             $table->id();
-            $table->integer('model_id');
-            $table->string('model');
+            $table->morphs('model');
             $table->string('filename');
             $table->json('meta')->nullable();
             $table->timestamps();

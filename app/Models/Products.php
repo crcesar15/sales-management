@@ -17,4 +17,9 @@ class Products extends Model
         'stock',
         'brand',
     ];
+
+    public function media()
+    {
+        return $this->morphMany(Media::class, 'model');
+    }
 }
