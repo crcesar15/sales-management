@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>Products</h1>
+    <h1>Inventory</h1>
     <div class="card">
       <div class="card-body table-responsive">
         <DataTable
@@ -18,20 +18,20 @@
           @sort="onSort($event)"
         >
           <template #header>
-            <div class="row">
-              <div class="col-12 col-md-9">
-                <input
+            <div class="grid">
+              <div class="col-12 md:col-10">
+                <input-text
                   v-model="pagination.filter"
                   type="text"
-                  class="form-control"
                   placeholder="Search"
-                >
+                  class="w-full"
+                />
               </div>
-              <div class="col-12 col-md-3">
-                <Button
+              <div class="col-12 md:col-2">
+                <p-button
                   label="Add Product"
                   icon="fa fa-plus"
-                  class="btn btn-primary d-block w-100"
+                  class="w-full"
                 />
               </div>
             </div>
@@ -67,38 +67,35 @@
           />
           <Column
             header="Actions"
+            style="min-width: 178px;"
+            header-class="flex justify-content-center"
           >
             <template
               #body="{ data }"
             >
-              <div
-                class="btn-group"
-                role="group"
+              <span
+                class="p-buttonset"
               >
-                <button
-                  type="button"
-                  class="btn btn-link btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#exampleModal"
+                <p-button
+                  icon="fa fa-eye"
+                  text
+                  size="sm"
                   @click="showProduct(data)"
-                >
-                  <i class="fa-solid fa-eye fa-xl" />
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-link btn-sm"
+                />
+                <p-button
+                  icon="fa fa-edit"
+                  text
+                  size="sm"
                   @click="editProduct(data)"
-                >
-                  <i class="fa-solid fa-edit fa-xl" />
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-link btn-sm"
+                />
+                <p-button
+                  icon="fa fa-trash"
+                  text
+                  size="sm"
+                  class="btn-danger"
                   @click="deleteProduct(data.id)"
-                >
-                  <i class="fa-solid fa-trash fa-xl" />
-                </button>
-              </div>
+                />
+              </span>
             </template>
           </Column>
         </DataTable>
@@ -113,14 +110,18 @@
 <script>
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
-import Button from "primevue/button";
+import Toast from "primevue/toast";
+import PButton from "primevue/button";
+import InputText from "primevue/inputtext";
 import ProductViewer from "./ProductViewer.vue";
 
 export default {
   components: {
     DataTable,
     Column,
-    Button,
+    PButton,
+    InputText,
+    Toast,
     ProductViewer,
   },
   data() {
@@ -145,7 +146,7 @@ export default {
         filter: "",
       },
       loading: false,
-      selectedProduct: null,
+      selectedProduct: {},
     };
   },
   watch: {
@@ -187,13 +188,9 @@ export default {
     onPage(event) {
       this.pagination.page = event.page + 1;
       this.pagination.per_page = event.rows;
-      this.pagination.sortField = event.sortField;
-      this.pagination.sortOrder = event.sortOrder;
       this.fetchProducts();
     },
     onSort(event) {
-      this.pagination.page = event.page + 1;
-      this.pagination.per_page = event.rows;
       this.pagination.sortField = event.sortField;
       this.pagination.sortOrder = event.sortOrder;
       this.fetchProducts();
