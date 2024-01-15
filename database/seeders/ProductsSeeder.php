@@ -2,9 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Media;
 use App\Models\Products;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 
 class ProductsSeeder extends Seeder
 {
@@ -13,7 +14,15 @@ class ProductsSeeder extends Seeder
      */
     public function run(): void
     {
+        Storage::deleteDirectory('products');
+        Storage::makeDirectory('products');
         //create 10 products
-        Products::factory()->count(100)->create();
+        Products::factory(10)->create()->each(function ($product) {
+            //create 3 media for each product
+            Media::factory(rand(0, 3))->create([
+                'model_id' => $product->id,
+                'model_type' => Products::class,
+            ]);
+        });
     }
 }
