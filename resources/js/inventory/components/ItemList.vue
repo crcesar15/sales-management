@@ -180,7 +180,9 @@ export default {
   methods: {
     fetchProducts() {
       this.loading = true;
-      let url = `/products?per_page=${this.pagination.rows}&page=${this.pagination.page}&order_by=${this.pagination.sortField}`;
+      let url = `/products?&per_page=${this.pagination.rows}&page=${this.pagination.page}&order_by=${this.pagination.sortField}`;
+
+      url += "&includes=media";
 
       if (this.pagination.sortOrder === -1) {
         url += "&order_direction=desc";

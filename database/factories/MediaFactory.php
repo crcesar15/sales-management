@@ -17,7 +17,7 @@ class MediaFactory extends Factory
     public function definition(): array
     {
         return [
-            'filename' => $this->faker->image(storage_path() . '/app/products', 200, 200, 'technics', false),
+            'filename' => $this->faker->image(storage_path() . '/app/public/products', 200, 200, 'technics', false),
         ];
     }
 }

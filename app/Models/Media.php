@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Media extends Model
 {
@@ -19,6 +20,15 @@ class Media extends Model
     protected $casts = [
         'meta' => 'array',
     ];
+
+    //add url attribute
+    protected $appends = ['url'];
+
+    //add url attribute
+    public function getUrlAttribute()
+    {
+        return Storage::url('products/' . $this->filename);
+    }
 
     public function product()
     {

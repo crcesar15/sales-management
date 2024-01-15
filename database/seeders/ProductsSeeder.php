@@ -14,8 +14,8 @@ class ProductsSeeder extends Seeder
      */
     public function run(): void
     {
-        Storage::deleteDirectory('products');
-        Storage::makeDirectory('products');
+        Storage::deleteDirectory('public/products');
+        Storage::makeDirectory('public/products');
         //create 10 products
         Products::factory(10)->create()->each(function ($product) {
             //create 3 media for each product
@@ -24,5 +24,8 @@ class ProductsSeeder extends Seeder
                 'model_type' => Products::class,
             ]);
         });
+
+        //Set permissions to storage folder
+        exec('sudo chmod -R 777 storage/app/public/products');
     }
 }
