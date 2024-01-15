@@ -2,11 +2,11 @@ import { createApp } from "vue";
 import PrimeVue from "primevue/config";
 import ToastService from "primevue/toastservice";
 import ConfirmationService from "primevue/confirmationservice";
-import ProductsContainer from "./components/ProductsContainer.vue";
+import ItemList from "./components/ItemList.vue";
 
 const app = createApp({
   components: {
-    ProductsContainer,
+    ItemList,
   },
 });
 

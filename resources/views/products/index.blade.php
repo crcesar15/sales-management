@@ -2,10 +2,10 @@
 
 @section('content')
     <div id="app">
-        <products-container></products-container>
+        <item-list></item-list>
     </div>
 @endsection
 
 @section('js')
-    @vite(['resources/js/products/index.js'])
+    @vite(['resources/js/inventory/index.js'])
 @endsection

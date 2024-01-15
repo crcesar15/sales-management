@@ -103,12 +103,12 @@
         </DataTable>
       </div>
     </div>
-    <product-viewer
+    <item-viewer
       :product="selectedProduct"
       :show-dialog="viewerToggle"
       @clearSelection="selectedProduct = {}; viewerToggle = false;"
     />
-    <product-editor
+    <item-editor
       :product="selectedProduct"
       :show-dialog="editorToggle"
       @clearSelection="selectedProduct = {}; editorToggle = false;"
@@ -125,8 +125,8 @@ import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import ConfirmDialog from "primevue/confirmdialog";
 import axios from "axios";
-import ProductViewer from "./ProductViewer.vue";
-import ProductEditor from "./ProductEditor.vue";
+import ItemViewer from "./ItemViewer.vue";
+import ItemEditor from "./ItemEditor.vue";
 
 export default {
   components: {
@@ -136,8 +136,8 @@ export default {
     InputText,
     Toast,
     ConfirmDialog,
-    ProductViewer,
-    ProductEditor,
+    ItemViewer,
+    ItemEditor,
   },
   data() {
     return {
