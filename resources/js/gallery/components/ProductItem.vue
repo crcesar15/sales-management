@@ -1,6 +1,6 @@
 <template>
   <div
-    class="card border-round shadow-2 flex flex-wrap justify-content-center align-items-center p-2 flex-column"
+    class="surface-card border-round shadow-2 flex flex-wrap justify-content-center align-items-center p-2 flex-column mb-4 sm:mb-1"
     style="height: 500px;"
   >
     <h4>{{ product.name }}</h4>
@@ -19,6 +19,9 @@
       >
         <p><i class="fa fa-image" /> No images yet</p>
       </div>
+    </div>
+    <div class="w-full flex flex-wrap justify-content-start pl-3">
+      <span class="text-primary font-bold mt-1">Price: {{ product.price }} BOB</span>
     </div>
     <p
       class="text-sm pr-3 pl-3"
