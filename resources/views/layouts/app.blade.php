@@ -92,10 +92,10 @@
                 </template>
             </Menubar>
         </div>
-        <main class="md:m-4 sm:m-0">
-            @yield('content')
-        </main>
     </div>
+    <main class="md:m-4 m-3">
+        @yield('content')
+    </main>
     @yield('js')
 </body>
 
