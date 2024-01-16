@@ -48,11 +48,11 @@
                                         <i class="fa fa-angle-down"></i>
                                     </div>
                                     <ul class="list-none py-0 pl-3 pr-0 m-0 overflow-hidden">
-                                        <li>
+                                        <li @click=redirect("/gallery")>
                                             <a v-ripple
                                                 class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                                 <i class="fa fa-grip mr-2"></i>
-                                                <span class="font-medium">Galery</span>
+                                                <span class="font-medium">Gallery</span>
                                             </a>
                                         </li>
                                         <li @click=redirect("/products")>

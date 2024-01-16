@@ -10,6 +10,7 @@ export default defineConfig({
         "resources/js/login/index.js",
         "resources/css/app.css",
         "resources/js/inventory/index.js",
+        "resources/js/gallery/index.js",
       ],
       refresh: true,
     }),

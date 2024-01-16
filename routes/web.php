@@ -31,4 +31,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/products', function () {
         return view('products.index');
     })->name('products');
+    Route::get('/gallery', function () {
+        return view('gallery.index');
+    })->name('gallery');
 });
