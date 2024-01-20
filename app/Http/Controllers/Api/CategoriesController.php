@@ -4,15 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
-use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
-class ProductsController extends Controller
+class CategoriesController extends Controller
 {
     //Get all products
     public function index(Request $request)
     {
-        $query = Product::query();
+        $query = Categories::query();
 
         $filter = $request->input('filter', '');
 
@@ -46,10 +46,10 @@ class ProductsController extends Controller
         return new ApiCollection($response);
     }
 
-    //Get a product by id
+    //Get a category by id
     public function show($id)
     {
-        $product = Product::find($id);
+        $product = Category::find($id);
         if ($product) {
             return response()->json(['data' => $product], 200);
         } else {
@@ -57,18 +57,18 @@ class ProductsController extends Controller
         }
     }
 
-    //Create a new product
+    //Create a new category
     public function store(Request $request)
     {
-        $product = Product::create($request->all());
+        $product = Category::create($request->all());
 
         return response()->json(['data' => $product], 201);
     }
 
-    //Update a product
+    //Update a category
     public function update(Request $request, $id)
     {
-        $product = Product::find($id);
+        $product = Category::find($id);
         if ($product) {
             $product->update($request->all());
 
@@ -78,10 +78,10 @@ class ProductsController extends Controller
         }
     }
 
-    //Delete a product
+    //Delete a category
     public function destroy($id)
     {
-        $product = Product::find($id);
+        $product = Category::find($id);
         if ($product) {
             $product->delete();
 
