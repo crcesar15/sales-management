@@ -34,17 +34,25 @@
                         </div>
                         <div class="overflow-y-auto">
                             <ul class="list-none p-3 m-0">
+                                <li @click=redirect("/")>
+                                    <a v-ripple class="p-3 flex align-items-center text-600 cursor-pointer p-ripple">
+                                        <i class="fas fa-cubes mr-2"></i>
+                                        <span class="font-medium">{{ __('DASHBORAD') }}</span>
+                                    </a>
+                                </li>
                                 <li>
                                     <div v-ripple
                                         v-styleclass="{
-                                        selector: '@next',
-                                        enterClass: 'hidden',
-                                        enterActiveClass: 'slidedown',
-                                        leaveToClass: 'hidden',
-                                        leaveActiveClass: 'slideup'
-                                    }"
+                                            selector: '@next',
+                                            enterClass: 'hidden',
+                                            enterActiveClass: 'slidedown',
+                                            leaveToClass: 'hidden',
+                                            leaveActiveClass: 'slideup'
+                                        }"
                                         class="p-3 flex align-items-center justify-content-between text-600 cursor-pointer p-ripple">
-                                        <span class="font-medium"><i class="fa fa-cube pr-2"></i>PRODUCTS</span>
+                                        <span class="font-medium">
+                                            <i class="fa fa-cube pr-2"></i>{{ __('PRODUCTS') }}
+                                        </span>
                                         <i class="fa fa-angle-down"></i>
                                     </div>
                                     <ul class="list-none py-0 pl-3 pr-0 m-0 overflow-hidden">
@@ -52,23 +60,74 @@
                                             <a v-ripple
                                                 class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                                 <i class="fa fa-grip mr-2"></i>
-                                                <span class="font-medium">Gallery</span>
+                                                <span class="font-medium">{{ __('Gallery') }}</span>
                                             </a>
                                         </li>
                                         <li @click=redirect("/products")>
                                             <a v-ripple
                                                 class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                                 <i class="fa fa-box-open mr-2"></i>
-                                                <span class="font-medium">Inventory</span>
+                                                <span class="font-medium">{{ __('Inventory') }}</span>
+                                            </a>
+                                        </li>
+                                        <li @click=redirect("/categories")>
+                                            <a v-ripple
+                                                class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
+                                                <i class="fa fa-list mr-2"></i>
+                                                <span class="font-medium">{{ __('Categories') }}</span>
                                             </a>
                                         </li>
                                     </ul>
                                 </li>
                                 <li>
                                     <a v-ripple class="p-3 flex align-items-center text-600 cursor-pointer p-ripple">
-                                        <i class="fa fa-table-list mr-2"></i>
-                                        <span class="font-medium">REPORTS</span>
+                                        <i class="fa fa-dollar-sign mr-2"></i>
+                                        <span class="font-medium">{{ __('SALES') }}</span>
                                     </a>
+                                </li>
+                                <li>
+                                    <a v-ripple class="p-3 flex align-items-center text-600 cursor-pointer p-ripple">
+                                        <i class="fas fa-wallet mr-2"></i>
+                                        <span class="font-medium">{{ __('BUYS') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a v-ripple class="p-3 flex align-items-center text-600 cursor-pointer p-ripple">
+                                        <i class="fa fa-table-list mr-2"></i>
+                                        <span class="font-medium">{{ __('REPORTS') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <div v-ripple
+                                        v-styleclass="{
+                                            selector: '@next',
+                                            enterClass: 'hidden',
+                                            enterActiveClass: 'slidedown',
+                                            leaveToClass: 'hidden',
+                                            leaveActiveClass: 'slideup'
+                                        }"
+                                        class="p-3 flex align-items-center justify-content-between text-600 cursor-pointer p-ripple">
+                                        <span class="font-medium">
+                                            <i class="fa fa-gear pr-2"></i>{{ __('ADMIN') }}
+                                        </span>
+                                        <i class="fa fa-angle-down"></i>
+                                    </div>
+                                    <ul class="list-none py-0 pl-3 pr-0 m-0 overflow-hidden">
+                                        <li @click=redirect("/users")>
+                                            <a v-ripple
+                                                class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
+                                                <i class="fa fa-grip mr-2"></i>
+                                                <span class="font-medium">{{ __('User') }}</span>
+                                            </a>
+                                        </li>
+                                        <li @click=redirect("/permissions")>
+                                            <a v-ripple
+                                                class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
+                                                <i class="fa fa-box-open mr-2"></i>
+                                                <span class="font-medium">{{ __('Permissions') }}</span>
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </li>
                             </ul>
                         </div>
