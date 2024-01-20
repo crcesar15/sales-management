@@ -15,7 +15,6 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          :pt="tableStyle"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -143,15 +142,6 @@ export default {
     return {
       viewerToggle: false,
       editorToggle: false,
-      tableStyle: {
-        table: {
-          class: "table mt-3",
-          style: "border: 1px solid #dee2e6;",
-        },
-        thead: {
-          class: "table-light",
-        },
-      },
       products: [],
       pagination: {
         total: 0,
@@ -246,7 +236,7 @@ export default {
       this.$confirm.require({
         message: "Are you sure you want to delete this product?",
         header: "Delete Confirmation",
-        icon: "pi pi-exclamation-triangle",
+        icon: "fas fa-exclamation-triangle",
         accept: () => {
           axios.delete(`/products/${id}`)
             .then(() => {

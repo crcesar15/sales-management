@@ -11,6 +11,7 @@ export default defineConfig({
         "resources/css/app.css",
         "resources/js/inventory/index.js",
         "resources/js/gallery/index.js",
+        "resources/js/category/index.js",
       ],
       refresh: true,
     }),

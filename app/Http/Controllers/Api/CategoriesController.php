@@ -12,7 +12,7 @@ class CategoriesController extends Controller
     //Get all products
     public function index(Request $request)
     {
-        $query = Categories::query();
+        $query = Category::query();
 
         $filter = $request->input('filter', '');
 
@@ -23,12 +23,6 @@ class CategoriesController extends Controller
                     $query->where('name', 'like', $filter);
                 }
             );
-        }
-
-        $includes = $request->input('includes', '');
-
-        if (!empty($includes)) {
-            $query->with(explode(',', $includes));
         }
 
         $order_by = $request->has('order_by')
