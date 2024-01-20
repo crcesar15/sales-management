@@ -35,7 +35,8 @@
                         <div class="overflow-y-auto">
                             <ul class="list-none p-3 m-0">
                                 <li @click=redirect("/")>
-                                    <a v-ripple class="p-3 flex align-items-center text-600 cursor-pointer p-ripple">
+                                    <a v-ripple
+                                        class="p-3 flex align-items-center hover:surface-100 text-600 cursor-pointer p-ripple">
                                         <i class="fas fa-cubes mr-2"></i>
                                         <span class="font-medium">{{ __('DASHBORAD') }}</span>
                                     </a>
@@ -80,19 +81,22 @@
                                     </ul>
                                 </li>
                                 <li>
-                                    <a v-ripple class="p-3 flex align-items-center text-600 cursor-pointer p-ripple">
+                                    <a v-ripple
+                                        class="p-3 flex align-items-center hover:surface-100 text-600 cursor-pointer p-ripple">
                                         <i class="fa fa-dollar-sign mr-2"></i>
                                         <span class="font-medium">{{ __('SALES') }}</span>
                                     </a>
                                 </li>
                                 <li>
-                                    <a v-ripple class="p-3 flex align-items-center text-600 cursor-pointer p-ripple">
+                                    <a v-ripple
+                                        class="p-3 flex align-items-center hover:surface-100 text-600 cursor-pointer p-ripple">
                                         <i class="fas fa-wallet mr-2"></i>
                                         <span class="font-medium">{{ __('BUYS') }}</span>
                                     </a>
                                 </li>
                                 <li>
-                                    <a v-ripple class="p-3 flex align-items-center text-600 cursor-pointer p-ripple">
+                                    <a v-ripple
+                                        class="p-3 flex align-items-center hover:surface-100 text-600 cursor-pointer p-ripple">
                                         <i class="fa fa-table-list mr-2"></i>
                                         <span class="font-medium">{{ __('REPORTS') }}</span>
                                     </a>
