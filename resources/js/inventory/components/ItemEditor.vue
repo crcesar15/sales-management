@@ -1,10 +1,20 @@
 <template>
-  <div>
-    <Card>
-      <template #title>
-        <h3>Item Editor</h3>
-      </template>
-      <template #content>
+  <div class="p-card">
+    <TabView>
+      <TabPanel header="General Info">
+        <div class="flex justify-content-between flex-wrap">
+          <div class="flex align-items-center justify-content-center">
+            <h3>Item Editor</h3>
+          </div>
+          <div class="flex align-items-center justify-content-center">
+            <router-link
+              to="/products"
+              class="p-button p-button-text"
+            >
+              <i class="fas fa-arrow-left" /> <span>Back</span>
+            </router-link>
+          </div>
+        </div>
         <div class="grid">
           <div class="col-12 md:col-6 flex flex-column gap-2">
             <label for="identifier">Identifier</label>
@@ -28,10 +38,12 @@
             />
           </div>
           <div class="col-12 md:col-6 flex flex-column gap-2">
-            <label for="price">Price</label>
+            <label for="price">Price (Bs.)</label>
             <InputNumber
               id="price"
               v-model="price"
+              :min-fraction-digits="2"
+              :max-fraction-digits="2"
             />
           </div>
           <div class="col-12 md:col-6 flex flex-column gap-2">
@@ -55,24 +67,42 @@
               v-model="category"
             />
           </div>
+          <div class="col-12 flex justify-content-center mt-2">
+            <PButton
+              label="Save"
+              icon="fas fa-save"
+            />
+          </div>
         </div>
-      </template>
-    </Card>
+      </TabPanel>
+      <TabPanel header="Media">
+        <FilesManager
+          :files="media"
+          @delete-file="deleteFile"
+        />
+      </TabPanel>
+    </TabView>
   </div>
 </template>
 
 <script>
-import Card from "primevue/card";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 import InputNumber from "primevue/inputnumber";
+import PButton from "primevue/button";
+import TabView from "primevue/tabview";
+import TabPanel from "primevue/tabpanel";
+import FilesManager from "./FilesManager.vue";
 
 export default {
   components: {
-    Card,
     InputText,
     Textarea,
     InputNumber,
+    PButton,
+    TabView,
+    TabPanel,
+    FilesManager,
   },
   data() {
     return {
@@ -84,6 +114,7 @@ export default {
       stock: 0,
       brand: "",
       category: "",
+      media: [],
     };
   },
   mounted() {
@@ -103,12 +134,34 @@ export default {
           this.stock = product.stock;
           this.brand = product.brand;
           this.category = product.category.name;
+          this.media = product.media;
         })
         .catch(() => {
           this.$toast.add({
             severity: "error",
             summary: "Error",
             detail: "Failed to fetch product",
+            life: 3000,
+          });
+        });
+    },
+    deleteFile(fileId) {
+      // Delete file from API
+      axios.delete(`/products/${this.productId}/media/${fileId}`)
+        .then(() => {
+          this.$toast.add({
+            severity: "success",
+            summary: "Success",
+            detail: "File deleted",
+            life: 3000,
+          });
+          this.getProduct();
+        })
+        .catch(() => {
+          this.$toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: "Failed to delete file",
             life: 3000,
           });
         });
