@@ -19,6 +19,8 @@ class Media extends Model
 
     protected $casts = [
         'meta' => 'array',
+        'created_at' => 'datetime:Y-m-d H:i',
+        'updated_at' => 'datetime:Y-m-d H:i',
     ];
 
     //add url attribute

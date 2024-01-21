@@ -18,6 +18,11 @@ class Product extends Model
         'brand',
     ];
 
+    //cast price to float
+    protected $casts = [
+        'price' => 'float',
+    ];
+
     public function media()
     {
         return $this->morphMany(Media::class, 'model');

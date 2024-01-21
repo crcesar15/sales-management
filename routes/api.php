@@ -33,4 +33,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/categories', 'App\Http\Controllers\Api\CategoriesController@store');
     Route::put('/categories/{id}', 'App\Http\Controllers\Api\CategoriesController@update');
     Route::delete('/categories/{id}', 'App\Http\Controllers\Api\CategoriesController@destroy');
+
+    //Products Media
+    Route::post('/products/{id}/media', 'App\Http\Controllers\Api\ProductsMediaController@store');
+    Route::delete('/products/{id}/media/{media_id}', 'App\Http\Controllers\Api\ProductsMediaController@destroy');
 });
