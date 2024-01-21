@@ -49,7 +49,16 @@ class ProductsController extends Controller
     //Get a product by id
     public function show($id)
     {
-        $product = Product::find($id);
+        $product = Product::query();
+
+        $includes = request()->input('includes', '');
+
+        if (!empty($includes)) {
+            $product->with(explode(',', $includes));
+        }
+
+        $product = $product->find($id);
+
         if ($product) {
             return response()->json(['data' => $product], 200);
         } else {
