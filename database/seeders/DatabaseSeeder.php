@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
                 //create between 0 to 2 media for each product
                 Media::factory(rand(0, 2))->create([
                     'model_id' => $product->id,
-                    'model_type' => Products::class,
+                    'model_type' => Product::class,
                 ]);
             });
         });
