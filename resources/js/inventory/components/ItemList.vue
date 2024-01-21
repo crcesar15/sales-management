@@ -87,7 +87,7 @@
                   icon="fa fa-edit"
                   text
                   size="sm"
-                  @click="editProduct(data)"
+                  @click="editProduct(data.id)"
                 />
                 <p-button
                   icon="fa fa-trash"
@@ -107,12 +107,6 @@
       :show-dialog="viewerToggle"
       @clearSelection="selectedProduct = {}; viewerToggle = false;"
     />
-    <item-editor
-      :product="selectedProduct"
-      :show-dialog="editorToggle"
-      @clearSelection="selectedProduct = {}; editorToggle = false;"
-      @save="updateProduct"
-    />
   </div>
 </template>
 
@@ -123,9 +117,7 @@ import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import ConfirmDialog from "primevue/confirmdialog";
-import axios from "axios";
 import ItemViewer from "./ItemViewer.vue";
-import ItemEditor from "./ItemEditor.vue";
 
 export default {
   components: {
@@ -136,7 +128,6 @@ export default {
     Toast,
     ConfirmDialog,
     ItemViewer,
-    ItemEditor,
   },
   data() {
     return {
@@ -208,9 +199,8 @@ export default {
       this.viewerToggle = true;
       this.selectedProduct = product;
     },
-    editProduct(product) {
-      this.editorToggle = true;
-      this.selectedProduct = product;
+    editProduct(productId) {
+      this.$router.push(`/products/${productId}/edit`);
     },
     updateProduct(id, product) {
       axios.put(`/products/${id}`, product)

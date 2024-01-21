@@ -1,111 +1,117 @@
 <template>
   <div>
-    <Dialog
-      v-model:visible="visible"
-      header="Product Editor"
-      modal
-      @hide="clearSelection"
-    >
-      <div
-        class="p-fluid"
-      >
-        <div
-          class="p-field"
-        >
-          <label
-            for="price"
-          >
-            Price
-          </label>
-          <InputText
-            id="price"
-            v-model="price"
-          />
-        </div>
-        <div
-          class="p-field"
-        >
-          <label
-            for="stock"
-          >
-            Stock
-          </label>
-          <InputText
-            id="stock"
-            v-model="stock"
-          />
-        </div>
-      </div>
-      <template #footer>
-        <div
-          class="flex flex-wrap justify-content-end"
-        >
-          <PButton
-            severity="secondary"
-            label="Close"
-            @click="closeModal"
-          />
-          <PButton
-            severity="primary"
-            label="Save"
-            @click="save"
-          />
+    <Card>
+      <template #title>
+        <h3>Item Editor</h3>
+      </template>
+      <template #content>
+        <div class="grid">
+          <div class="col-12 md:col-6 flex flex-column gap-2">
+            <label for="identifier">Identifier</label>
+            <InputText
+              id="identifier"
+              v-model="identifier"
+            />
+          </div>
+          <div class="col-12 md:col-6 flex flex-column gap-2">
+            <label for="name">Name</label>
+            <InputText
+              id="name"
+              v-model="name"
+            />
+          </div>
+          <div class="col-12 flex flex-column gap-2">
+            <label for="description">Description</label>
+            <Textarea
+              id="description"
+              v-model="description"
+            />
+          </div>
+          <div class="col-12 md:col-6 flex flex-column gap-2">
+            <label for="price">Price</label>
+            <InputNumber
+              id="price"
+              v-model="price"
+            />
+          </div>
+          <div class="col-12 md:col-6 flex flex-column gap-2">
+            <label for="stock">Stock</label>
+            <InputNumber
+              id="stock"
+              v-model="stock"
+            />
+          </div>
+          <div class="col-12 md:col-6 flex flex-column gap-2">
+            <label for="brand">Brand</label>
+            <InputText
+              id="brand"
+              v-model="brand"
+            />
+          </div>
+          <div class="col-12 md:col-6 flex flex-column gap-2">
+            <label for="category">Category</label>
+            <InputText
+              id="category"
+              v-model="category"
+            />
+          </div>
         </div>
       </template>
-    </Dialog>
+    </Card>
   </div>
 </template>
 
 <script>
-import PButton from "primevue/button";
+import Card from "primevue/card";
 import InputText from "primevue/inputtext";
-import Dialog from "primevue/dialog";
+import Textarea from "primevue/textarea";
+import InputNumber from "primevue/inputnumber";
 
 export default {
   components: {
-    PButton,
+    Card,
     InputText,
-    Dialog,
-  },
-  props: {
-    product: {
-      type: Object,
-      required: true,
-    },
-    showDialog: {
-      type: Boolean,
-      required: true,
-    },
+    Textarea,
+    InputNumber,
   },
   data() {
     return {
-      visible: false,
+      productId: null,
+      identifier: "",
+      name: "",
+      description: "",
       price: 0,
       stock: 0,
+      brand: "",
+      category: "",
     };
   },
-  watch: {
-    showDialog(value) {
-      this.visible = value;
-      if (value) {
-        this.price = this.product.price;
-        this.stock = this.product.stock;
-      }
-    },
+  mounted() {
+    this.productId = this.$route.params.id;
+    this.getProduct();
   },
   methods: {
-    closeModal() {
-      this.visible = false;
-    },
-    clearSelection() {
-      this.$emit("clearSelection");
-    },
-    save() {
-      this.$emit("save", this.product.id, {
-        price: this.price,
-        stock: this.stock,
-      });
-      this.visible = false;
+    getProduct() {
+      // Fetch product from API
+      axios.get(`/products/${this.productId}?includes=media,category`)
+        .then((response) => {
+          const product = response.data.data;
+          this.identifier = product.identifier;
+          this.name = product.name;
+          this.description = product.description;
+          this.price = product.price;
+          this.stock = product.stock;
+          this.brand = product.brand;
+          this.category = product.category.name;
+        })
+        .catch(() => {
+          this.$toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: "Failed to fetch product",
+            life: 3000,
+          });
+        });
     },
   },
 };

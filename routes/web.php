@@ -31,6 +31,11 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/products', function () {
         return view('products.index');
     })->name('products');
+
+    Route::get('/products/{any?}', function () {
+        return view('products.index');
+    })->name('products')->where('any', '.*');
+
     Route::get('/gallery', function () {
         return view('gallery.index');
     })->name('gallery');
