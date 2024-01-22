@@ -8,7 +8,7 @@ export default defineConfig({
       input: [
         "resources/js/app.js",
         "resources/js/login/index.js",
-        "resources/css/app.css",
+        "resources/sass/app.scss",
         "resources/js/inventory/index.js",
         "resources/js/gallery/index.js",
         "resources/js/category/index.js",
