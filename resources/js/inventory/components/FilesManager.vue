@@ -11,7 +11,7 @@
             mode="basic"
             :auto="true"
             accept="image/*"
-            :max-file-size="1000000"
+            :max-file-size="10000000"
             :multiple="false"
             :custom-upload="true"
             @uploader="uploader"
