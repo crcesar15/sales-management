@@ -5,6 +5,36 @@
     <DataTable
       :value="elements"
     >
+      <template #header>
+        <div class="flex justify-content-end">
+          <FileUpload
+            mode="basic"
+            :auto="true"
+            accept="image/*"
+            :max-file-size="1000000"
+            :multiple="false"
+            :custom-upload="true"
+            @uploader="uploader"
+          />
+        </div>
+      </template>
+      <template #empty>
+        <h5 class="flex flex-wrap justify-content-center">
+          No images yet.
+        </h5>
+      </template>
+      <Column
+        field="image"
+        header="Image"
+      >
+        <template #body="item">
+          <img
+            :src="item.data.url"
+            alt="File"
+            class="w-10rem shadow-2 border-round"
+          >
+        </template>
+      </Column>
       <Column
         field="filename"
         header="Filename"
@@ -25,7 +55,6 @@
           <PButton
             icon="fas fa-trash"
             text
-            size="small"
             @click="deleteFile(data.data.id)"
           />
         </template>
@@ -72,9 +101,6 @@ export default {
     },
   },
   methods: {
-    onUpload(event) {
-      this.elements = event.files;
-    },
     deleteFile(fileId) {
       this.$confirm.require({
         message: "Are you sure that you want to delete this file?",
@@ -84,6 +110,12 @@ export default {
           this.$emit("delete-file", fileId);
         },
       });
+    },
+    uploader(event) {
+      const { files } = event;
+      const formData = new FormData();
+      formData.append("file", files[0]);
+      this.$emit("upload-file", formData);
     },
   },
 };

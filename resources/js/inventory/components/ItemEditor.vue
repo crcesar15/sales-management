@@ -78,6 +78,7 @@
       <TabPanel header="Media">
         <FilesManager
           :files="media"
+          @upload-file="uploadFile"
           @delete-file="deleteFile"
         />
       </TabPanel>
@@ -141,6 +142,31 @@ export default {
             severity: "error",
             summary: "Error",
             detail: "Failed to fetch product",
+            life: 3000,
+          });
+        });
+    },
+    uploadFile(formData) {
+      axios
+        .post(`products/${this.productId}/media`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then(() => {
+          this.$toast.add({
+            severity: "success",
+            summary: "Success",
+            detail: "File uploaded",
+            life: 3000,
+          });
+          this.getProduct();
+        })
+        .catch(() => {
+          this.$toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: "File not uploaded",
             life: 3000,
           });
         });

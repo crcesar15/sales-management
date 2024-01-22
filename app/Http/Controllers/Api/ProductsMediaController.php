@@ -23,4 +23,26 @@ class ProductsMediaController extends Controller
 
         return response()->json(['message' => 'Media not found'], 404);
     }
+
+    public function store($id)
+    {
+        $product = Product::find($id);
+
+        if ($product) {
+            $file = request()->file('file');
+
+            if ($file) {
+                $path = $file->store('products', 'public');
+                $media = Media::create([
+                    'model_id' => $product->id,
+                    'model_type' => Product::class,
+                    'filename' => explode('/', $path)[1],
+                ]);
+
+                return response()->json(['data' => $media], 201);
+            }
+        }
+
+        return response()->json(['message' => 'Product not found'], 404);
+    }
 }
