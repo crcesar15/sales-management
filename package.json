@@ -27,7 +27,7 @@
         "primevue": "^3.45.0",
         "vite": "^5.0.0",
         "vue": "^3.2.37",
-        "vue-picture-cropper": "^0.7.0",
+        "vue-cropperjs": "^5.0.0",
         "vue-router": "^4.2.5"
     }
 }
