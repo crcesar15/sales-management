@@ -66,11 +66,11 @@
       :closable="false"
     >
       <template #footer>
-        <div class="flex align-items-center justify-content-center gap-2">
+        <div class="flex align-items-center justify-content-center gap-2 mt-2">
           <PButton
             icon="fas fa-check"
             label="Save"
-            @click="getResult"
+            @click="saveCropped"
           />
           <PButton
             icon="fas fa-times"
@@ -80,20 +80,15 @@
           />
         </div>
       </template>
-      <VuePictureCropper
-        :box-style="{
-          width: '100%',
-          height: '100%',
-          backgroundColor: '#f8f8f8',
-          margin: 'auto',
-        }"
-        :img="imageAddress"
-        :options="{
-          viewMode: 1,
-          aspectRatio: 1,
-          dragMode: 'crop',
-        }"
-      />
+      <div class="cropper-area">
+        <div class="img-cropper">
+          <VueCropper
+            ref="cropper"
+            :aspect-ratio="1"
+            :src="imageAddress"
+          />
+        </div>
+      </div>
     </Dialog>
   </div>
 </template>
@@ -106,7 +101,10 @@ import PButton from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 import Toast from "primevue/toast";
 import Dialog from "primevue/dialog";
-import VuePictureCropper, { cropper } from "vue-picture-cropper";
+
+// cropper component
+import VueCropper from "vue-cropperjs";
+import "cropperjs/dist/cropper.css";
 
 export default {
   components: {
@@ -116,7 +114,7 @@ export default {
     PButton,
     ConfirmDialog,
     Toast,
-    VuePictureCropper,
+    VueCropper,
     Dialog,
   },
   props: {
@@ -160,18 +158,17 @@ export default {
 
       reader.onload = () => {
         this.imageAddress = String(reader.result);
+        this.$refs.cropper.replace(reader.result);
       };
       this.cropperToggle = true;
-      // this.$emit("upload-file", formData);
     },
-    async getResult() {
+    saveCropped() {
       const formData = new FormData();
-
-      const blob = await cropper.getBlob();
-
-      formData.append("file", blob);
-      this.$emit("upload-file", formData);
-      this.cropperToggle = false;
+      this.$refs.cropper.getCroppedCanvas().toBlob((blob) => {
+        formData.append("file", blob);
+        this.$emit("upload-file", formData);
+        this.cropperToggle = false;
+      });
     },
   },
 };

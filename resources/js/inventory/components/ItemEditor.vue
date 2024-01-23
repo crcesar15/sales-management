@@ -162,11 +162,11 @@ export default {
           });
           this.getProduct();
         })
-        .catch(() => {
+        .catch((error) => {
           this.$toast.add({
             severity: "error",
             summary: "Error",
-            detail: "File not uploaded",
+            detail: error.response.data.message,
             life: 3000,
           });
         });
