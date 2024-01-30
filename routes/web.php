@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,7 +38,7 @@ Route::group(['middleware' => ['auth']], function () {
     })->name('products')->where('any', '.*');
 
     Route::get('/gallery', function () {
-        return view('gallery.index');
+        return Inertia::render('gallery/index');
     })->name('gallery');
     Route::get('/categories', function () {
         return view('categories.index');

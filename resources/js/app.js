@@ -6,59 +6,33 @@
 
 import "./bootstrap";
 
-import { createApp } from "vue";
+import { createApp, h } from "vue";
+import { createInertiaApp } from "@inertiajs/inertia-vue3";
+import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
+
 import Ripple from "primevue/ripple";
 import StyleClass from "primevue/styleclass";
 import PrimeVue from "primevue/config";
+
 import Menubar from "primevue/menubar";
 import PMenu from "primevue/menu";
 import PButton from "primevue/button";
 import Sidebar from "primevue/sidebar";
 
-const app = createApp({
-  components: {
-    Menubar,
-    PMenu,
-    PButton,
-    Sidebar,
-  },
-  data() {
-    return {
-      userActions: [
-        {
-          label: "Logout",
-          icon: "fa fa-fw fa-sign-out",
-          command: () => {
-            this.logout();
-          },
-        },
-      ],
-      sidebarVisibility: false,
-    };
-  },
-  mounted() {
-    this.$primevue.config.ripple = true;
-  },
-  methods: {
-    toggleUserActions(event) {
-      this.$refs.userActions.toggle(event);
-    },
-    toggleSidebar() {
-      this.sidebarVisibility = !this.sidebarVisibility;
-    },
-    redirect(url) {
-      window.location.href = url;
-    },
-    logout() {
-      axios.post(`${window.location.origin}/logout`).then(() => {
-        window.location.href = "/";
-      });
-    },
+createInertiaApp({
+  resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, import.meta.glob("./pages/**/*.vue")),
+  setup({
+    el, App, props, plugin,
+  }) {
+    createApp({ render: () => h(App, props) })
+      .use(plugin)
+      .component("Menubar", Menubar)
+      .component("PMenu", PMenu)
+      .component("PButton", PButton)
+      .component("Sidebar", Sidebar)
+      .use(PrimeVue, { ripple: true })
+      .directive("ripple", Ripple)
+      .directive("styleclass", StyleClass)
+      .mount(el);
   },
 });
-
-app.use(PrimeVue, { ripple: true });
-app.directive("ripple", Ripple);
-app.directive("styleclass", StyleClass);
-
-app.mount("#navbar");
