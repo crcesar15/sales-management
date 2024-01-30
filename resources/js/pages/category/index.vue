@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <AppLayout>
     <ConfirmDialog />
     <Toast />
     <h1>Categories</h1>
@@ -79,7 +79,7 @@
       @clearSelection="selectedCategory = {}; editorToggle = false;"
       @submitted="saveCategory"
     />
-  </div>
+  </AppLayout>
 </template>
 
 <script>
@@ -89,10 +89,12 @@ import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import ConfirmDialog from "primevue/confirmdialog";
+import AppLayout from "../../layouts/admin.vue";
 import CategoryEditor from "./CategoryEditor.vue";
 
 export default {
   components: {
+    AppLayout,
     DataTable,
     Column,
     PButton,

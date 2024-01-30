@@ -13,6 +13,8 @@ import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import Ripple from "primevue/ripple";
 import StyleClass from "primevue/styleclass";
 import PrimeVue from "primevue/config";
+import ToastService from "primevue/toastservice";
+import ConfirmationService from "primevue/confirmationservice";
 
 import Menubar from "primevue/menubar";
 import PMenu from "primevue/menu";
@@ -31,6 +33,8 @@ createInertiaApp({
       .component("PButton", PButton)
       .component("Sidebar", Sidebar)
       .use(PrimeVue, { ripple: true })
+      .use(ToastService)
+      .use(ConfirmationService)
       .directive("ripple", Ripple)
       .directive("styleclass", StyleClass)
       .mount(el);
