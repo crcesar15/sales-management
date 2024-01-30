@@ -40,6 +40,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/gallery', function () {
         return Inertia::render('gallery/index');
     })->name('gallery');
+    Route::get('/dashboard', function () {
+        return Inertia::render('dashboard/index');
+    })->name('dashboard');
     Route::get('/categories', function () {
         return view('categories.index');
     })->name('categories');
