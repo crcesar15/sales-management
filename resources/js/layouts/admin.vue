@@ -22,15 +22,17 @@
               </div>
               <div class="overflow-y-auto">
                 <ul class="list-none p-3 m-0">
-                  <li @click="redirect(&quot;/&quot;)">
-                    <a
-                      v-ripple
-                      class="p-3 flex align-items-center hover:surface-100 text-600 cursor-pointer p-ripple"
-                    >
-                      <i class="fas fa-cubes mr-2" />
-                      <span class="font-medium">{{ __('DASHBORAD') }}</span>
-                    </a>
-                  </li>
+                  <Link href="/dashboard">
+                    <li>
+                      <a
+                        v-ripple
+                        class="p-3 flex align-items-center hover:surface-100 text-600 cursor-pointer p-ripple"
+                      >
+                        <i class="fas fa-cubes mr-2" />
+                        <span class="font-medium">DASHBORAD</span>
+                      </a>
+                    </li>
+                  </Link>
                   <li>
                     <div
                       v-ripple
@@ -49,33 +51,39 @@
                       <i class="fa fa-angle-down" />
                     </div>
                     <ul class="list-none py-0 pl-3 pr-0 m-0 overflow-hidden">
-                      <li @click="redirect(&quot;/gallery&quot;)">
-                        <a
-                          v-ripple
-                          class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                        >
-                          <i class="fa fa-grip mr-2" />
-                          <span class="font-medium">Gallery</span>
-                        </a>
-                      </li>
-                      <li @click="redirect(&quot;/products&quot;)">
-                        <a
-                          v-ripple
-                          class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                        >
-                          <i class="fa fa-box-open mr-2" />
-                          <span class="font-medium">Inventory</span>
-                        </a>
-                      </li>
-                      <li @click="redirect(&quot;/categories&quot;)">
-                        <a
-                          v-ripple
-                          class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                        >
-                          <i class="fa fa-list mr-2" />
-                          <span class="font-medium">Categories</span>
-                        </a>
-                      </li>
+                      <Link href="/gallery">
+                        <li>
+                          <a
+                            v-ripple
+                            class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
+                          >
+                            <i class="fa fa-grip mr-2" />
+                            <span class="font-medium">Gallery</span>
+                          </a>
+                        </li>
+                      </Link>
+                      <Link href="/products">
+                        <li>
+                          <a
+                            v-ripple
+                            class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
+                          >
+                            <i class="fa fa-box-open mr-2" />
+                            <span class="font-medium">Inventory</span>
+                          </a>
+                        </li>
+                      </Link>
+                      <Link href="/categories">
+                        <li>
+                          <a
+                            v-ripple
+                            class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
+                          >
+                            <i class="fa fa-list mr-2" />
+                            <span class="font-medium">Categories</span>
+                          </a>
+                        </li>
+                      </Link>
                     </ul>
                   </li>
                   <li>
@@ -123,24 +131,28 @@
                       <i class="fa fa-angle-down" />
                     </div>
                     <ul class="list-none py-0 pl-3 pr-0 m-0 overflow-hidden">
-                      <li @click="redirect(&quot;/users&quot;)">
-                        <a
-                          v-ripple
-                          class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                        >
-                          <i class="fa fa-grip mr-2" />
-                          <span class="font-medium">User</span>
-                        </a>
-                      </li>
-                      <li @click="redirect(&quot;/permissions&quot;)">
-                        <a
-                          v-ripple
-                          class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                        >
-                          <i class="fa fa-box-open mr-2" />
-                          <span class="font-medium">Permissions</span>
-                        </a>
-                      </li>
+                      <Link href="/users">
+                        <li>
+                          <a
+                            v-ripple
+                            class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
+                          >
+                            <i class="fa fa-grip mr-2" />
+                            <span class="font-medium">User</span>
+                          </a>
+                        </li>
+                      </Link>
+                      <Link href="/permissions">
+                        <li>
+                          <a
+                            v-ripple
+                            class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
+                          >
+                            <i class="fa fa-box-open mr-2" />
+                            <span class="font-medium">Permissions</span>
+                          </a>
+                        </li>
+                      </Link>
                     </ul>
                   </li>
                 </ul>
@@ -185,10 +197,15 @@
   </div>
 </template>
 <script>
+import { Link } from "@inertiajs/inertia-vue3";
+
 export default {
+  components: {
+    Link,
+  },
   data() {
     return {
-      sidebarVisibility: true,
+      sidebarVisibility: false,
       userActions: [
         {
           label: "Profile",
