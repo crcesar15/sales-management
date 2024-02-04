@@ -30,7 +30,7 @@ Auth::routes();
 Route::group(['middleware' => ['auth']], function () {
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::get('/products', function () {
-        return view('products.index');
+        return Inertia::render('products/index');
     })->name('products');
 
     Route::get('/products/{any?}', function () {

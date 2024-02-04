@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <AppLayout>
     <ConfirmDialog />
     <Toast />
     <h1>Inventory</h1>
@@ -107,20 +107,23 @@
       :show-dialog="viewerToggle"
       @clearSelection="selectedProduct = {}; viewerToggle = false;"
     />
-  </div>
+  </AppLayout>
 </template>
 
 <script>
+
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import ConfirmDialog from "primevue/confirmdialog";
+import AppLayout from "../../layouts/admin.vue";
 import ItemViewer from "./ItemViewer.vue";
 
 export default {
   components: {
+    AppLayout,
     DataTable,
     Column,
     PButton,
