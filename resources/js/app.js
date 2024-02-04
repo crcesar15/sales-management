@@ -21,6 +21,10 @@ import PMenu from "primevue/menu";
 import PButton from "primevue/button";
 import Sidebar from "primevue/sidebar";
 
+import { InertiaProgress } from "@inertiajs/progress";
+
+InertiaProgress.init();
+
 createInertiaApp({
   resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, import.meta.glob("./pages/**/*.vue")),
   setup({
