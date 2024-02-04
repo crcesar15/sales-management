@@ -22,14 +22,14 @@
               </div>
               <div class="overflow-y-auto">
                 <ul class="list-none p-3 m-0">
-                  <Link href="/dashboard">
+                  <Link href="/home">
                     <li>
                       <a
                         v-ripple
                         class="p-3 flex align-items-center hover:surface-100 text-600 cursor-pointer p-ripple"
                       >
                         <i class="fas fa-cubes mr-2" />
-                        <span class="font-medium">DASHBORAD</span>
+                        <span class="font-medium">DASHBOARD</span>
                       </a>
                     </li>
                   </Link>
@@ -198,10 +198,17 @@
 </template>
 <script>
 import { Link } from "@inertiajs/inertia-vue3";
+import Sidebar from "primevue/sidebar";
+import Menubar from "primevue/menubar";
+import PMenu from "primevue/menu";
+import axios from "axios";
 
 export default {
   components: {
     Link,
+    PMenu,
+    Sidebar,
+    Menubar,
   },
   data() {
     return {
@@ -211,14 +218,18 @@ export default {
           label: "Profile",
           icon: "fa fa-user",
           command: () => {
-            this.$router.push("/profile");
+            this.$inertia.visit("/profile");
           },
         },
         {
           label: "Logout",
           icon: "fa fa-sign-out-alt",
           command: () => {
-            this.$store.dispatch("auth/logout");
+            const domain = window.location.origin;
+
+            axios.post(`${domain}/logout`).then(() => {
+              window.location = "/";
+            });
           },
         },
       ],
@@ -228,8 +239,8 @@ export default {
     toggleSidebar() {
       this.sidebarVisibility = !this.sidebarVisibility;
     },
-    toggleUserActions() {
-      this.$refs.userActions.toggle();
+    toggleUserActions(event) {
+      this.$refs.userActions.toggle(event);
     },
     redirect(path) {
       this.$router.push(path);

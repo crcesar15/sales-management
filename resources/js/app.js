@@ -16,10 +16,7 @@ import PrimeVue from "primevue/config";
 import ToastService from "primevue/toastservice";
 import ConfirmationService from "primevue/confirmationservice";
 
-import Menubar from "primevue/menubar";
-import PMenu from "primevue/menu";
 import PButton from "primevue/button";
-import Sidebar from "primevue/sidebar";
 
 import { InertiaProgress } from "@inertiajs/progress";
 
@@ -32,10 +29,7 @@ createInertiaApp({
   }) {
     createApp({ render: () => h(App, props) })
       .use(plugin)
-      .component("Menubar", Menubar)
-      .component("PMenu", PMenu)
       .component("PButton", PButton)
-      .component("Sidebar", Sidebar)
       .component("Link", Link)
       .use(PrimeVue, { ripple: true })
       .use(ToastService)

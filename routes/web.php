@@ -28,7 +28,9 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::group(['middleware' => ['auth']], function () {
-    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/home', function () {
+        return Inertia::render('dashboard/index');
+    })->name('home');
     Route::get('/products', function () {
         return Inertia::render('products/index');
     })->name('products');
@@ -40,9 +42,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/gallery', function () {
         return Inertia::render('gallery/index');
     })->name('gallery');
-    Route::get('/dashboard', function () {
-        return Inertia::render('dashboard/index');
-    })->name('dashboard');
     Route::get('/categories', function () {
         return Inertia::render('category/index');
     })->name('categories');
