@@ -203,7 +203,7 @@ export default {
       this.selectedProduct = product;
     },
     editProduct(productId) {
-      this.$router.push(`/products/${productId}/edit`);
+      this.$inertia.visit(`/products/${productId}/edit`);
     },
     updateProduct(id, product) {
       axios.put(`/products/${id}`, product)

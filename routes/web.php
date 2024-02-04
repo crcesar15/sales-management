@@ -33,9 +33,9 @@ Route::group(['middleware' => ['auth']], function () {
         return Inertia::render('products/index');
     })->name('products');
 
-    Route::get('/products/{any?}', function () {
-        return view('products.index');
-    })->name('products')->where('any', '.*');
+    Route::get('/products/{id}/edit', function () {
+        return Inertia::render('products/ItemEditor');
+    })->name('products.edit');
 
     Route::get('/gallery', function () {
         return Inertia::render('gallery/index');

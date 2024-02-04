@@ -7,12 +7,12 @@
             <h3>Item Editor</h3>
           </div>
           <div class="flex align-items-center justify-content-center">
-            <router-link
-              to="/products"
+            <Link
+              href="/products"
               class="p-button p-button-text"
             >
               <i class="fas fa-arrow-left" /> <span>Back</span>
-            </router-link>
+            </Link>
           </div>
         </div>
         <div class="grid">
@@ -119,7 +119,7 @@ export default {
     };
   },
   mounted() {
-    this.productId = this.$route.params.id;
+    this.productId = 1;
     this.getProduct();
   },
   methods: {
