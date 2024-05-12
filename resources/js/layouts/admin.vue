@@ -208,11 +208,16 @@ export default {
               icon: "fa fa-file-lines",
               to: "/sales/orders",
             },
+            {
+              label: "Customers",
+              icon: "fa fa-users",
+              to: "/customers",
+            },
           ],
         },
         {
           label: "Purchases",
-          icon: "fa fa-money-bill-transfer",
+          icon: "fas fa-coins",
           type: "multiple",
           items: [
             {
@@ -222,7 +227,7 @@ export default {
             },
             {
               label: "Orders",
-              icon: "fa-solid fa-coins",
+              icon: "fa fa-file-lines",
               to: "/purchases",
             },
             {
