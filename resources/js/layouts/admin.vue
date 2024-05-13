@@ -14,8 +14,7 @@
                 <span>
                   <p-button
                     type="button"
-                    icon="fa fa-xmark"
-                    rounded
+                    icon="fa fa-arrow-left"
                     @click="toggleSidebar"
                   />
                 </span>
@@ -39,7 +38,7 @@
                           >
                             <i
                               :class="item.icon"
-                              class="mr-2"
+                              class="mr-2 sidebar-icons"
                             />
                             <span class="font-medium">{{ item.label }}</span>
                           </a>
@@ -62,7 +61,7 @@
                           <span class="font-medium">
                             <i
                               :class="item.icon"
-                              class="mr-2"
+                              class="mr-2 sidebar-icons"
                             />
                             {{ item.label }}
                           </span>
@@ -92,7 +91,7 @@
                               >
                                 <i
                                   :class="subitem.icon"
-                                  class="mr-2"
+                                  class="mr-2 sidebar-icons"
                                 />
                                 <span class="font-medium">{{ subitem.label }}</span>
                               </a>
@@ -240,7 +239,7 @@ export default {
 
         {
           label: "Inventory",
-          icon: "fa fa-boxes-stacked",
+          icon: "fa fa-box-open",
           type: "multiple",
           items: [
             {
@@ -325,3 +324,17 @@ export default {
   },
 };
 </script>
+<style>
+.sidebar-icons {
+  border-radius: 5px;
+  padding: 2px;
+  border: solid 1px #4b5563;
+  width: 28px;
+  text-align: center;
+  height: 28px;
+}
+
+.sidebar-icons::before {
+  vertical-align: sub;
+}
+</style>
