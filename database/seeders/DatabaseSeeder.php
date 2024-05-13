@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use App\Models\Category;
 use App\Models\Media;
 use App\Models\Product;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
@@ -18,6 +19,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Roles Admin
+        Role::factory(1)->create([
+            'name' => 'Administrator',
+        ]);
+
+        //Roles Salesman
+        Role::factory(1)->create([
+            'name' => 'Salesman',
+        ]);
+
         // Admin user
         User::factory(1)->create([
             'name' => 'Cesar Rodriguez',
