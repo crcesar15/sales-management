@@ -31,9 +31,20 @@ class DatabaseSeeder extends Seeder
 
         // Admin user
         User::factory(1)->create([
-            'name' => 'Cesar Rodriguez',
+            'first_name' => 'Cesar',
+            'last_name' => 'Rodriguez',
             'email' => 'crcesar15@gmail.com',
-            'password' => bcrypt('sample123'),
+            'username' => 'admin',
+            'phone' => '123456789',
+            'status' => 'ACTIVE',
+            'date_of_birth' => '1990-01-01',
+            'role_id' => 1,
+            'password' => bcrypt('123456'),
+        ]);
+
+        // Create 10 Salesman users
+        User::factory(10)->create([
+            'role_id' => 2,
         ]);
 
         //Delete and create products folder
