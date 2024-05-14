@@ -29,8 +29,8 @@
                         <img src="{{ asset('images/logo.png') }}" alt="logo">
                     </div>
                     <div class="col">
-                        <label for="email">E-Mail</label>
-                        <input-text class="w-full" v-model="email" autocomplete="email" input-id="email"
+                        <label for="username">Username</label>
+                        <input-text class="w-full" v-model="username" autocomplete="username" input-id="username"
                             :required="true" />
                     </div>
                     <div class="col">

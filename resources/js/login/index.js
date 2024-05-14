@@ -35,7 +35,7 @@ const app = createApp({
     login() {
       axios
         .post(`${window.location.origin}/login`, {
-          email: this.email,
+          username: this.username,
           password: this.password,
           remember: this.remember,
         })
