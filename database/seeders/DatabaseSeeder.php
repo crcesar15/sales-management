@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Media;
 use App\Models\Product;
@@ -46,6 +47,9 @@ class DatabaseSeeder extends Seeder
         User::factory(10)->create([
             'role_id' => 2,
         ]);
+
+        //Create 10 Brands
+        Brand::factory(10)->create();
 
         //Delete and create products folder
         Storage::deleteDirectory('public/products');
