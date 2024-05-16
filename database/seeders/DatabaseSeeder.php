@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\MeasureUnit;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\Role;
@@ -50,6 +51,9 @@ class DatabaseSeeder extends Seeder
 
         //Create 10 Brands
         Brand::factory(10)->create();
+
+        //Create 10 Measure Units
+        MeasureUnit::factory(10)->create();
 
         //Delete and create products folder
         Storage::deleteDirectory('public/products');
