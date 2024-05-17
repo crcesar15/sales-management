@@ -16,6 +16,11 @@ class Product extends Model
         'price',
         'stock',
         'brand',
+        'measure_unit',
+        'category',
+        'status',
+        'options',
+        'correlation_hash',
     ];
 
     //cast price to float

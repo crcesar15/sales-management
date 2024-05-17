@@ -12,13 +12,17 @@ return new class extends Migration {
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('identifier')->unique();
-            $table->string('name');
-            $table->string('description');
-            $table->decimal('price', 8, 2);
-            $table->integer('stock');
-            $table->string('brand');
             $table->foreignId('category_id')->constrained();
+            $table->foreignId('brand_id')->constrained();
+            $table->foreignId('measure_unit_id')->constrained();
+            $table->string('identifier');
+            $table->string('name');
+            $table->string('description')->nullable();
+            $table->decimal('price', 8, 2)->nullable();
+            $table->json('options')->nullable();
+            $table->string('correlation_hash')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
