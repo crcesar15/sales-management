@@ -14,6 +14,8 @@ class ProductsController extends Controller
     {
         $query = Product::query();
 
+        sleep(2);
+
         $filter = $request->input('filter', '');
 
         if (!empty($filter)) {

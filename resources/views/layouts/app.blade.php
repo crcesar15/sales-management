@@ -18,7 +18,7 @@
     @inertiaHead
 </head>
 
-<body>
+<body class="surface-50">
     @inertia
 </body>
 

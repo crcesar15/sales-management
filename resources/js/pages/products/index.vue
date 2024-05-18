@@ -2,12 +2,12 @@
   <AppLayout>
     <ConfirmDialog />
     <Toast />
-    <h1>Inventory</h1>
-    <div class="card">
-      <div class="card-body table-responsive">
+    <Card>
+      <template #content>
         <DataTable
           :value="products"
           lazy
+          :page-link-size="3"
           :total-records="pagination.total"
           :rows="pagination.rows"
           :first="pagination.first"
@@ -19,7 +19,15 @@
           @sort="onSort($event)"
         >
           <template #header>
-            <div class="grid">
+            <div class="flex flex-wrap align-items-center justify-content-between gap-2">
+              <span class="text-xl text-900 font-bold">Products</span>
+              <PButton
+                icon="fa fa-refresh"
+                rounded
+                raised
+              />
+            </div>
+            <!-- <div class="grid">
               <div class="col-12 md:col-10">
                 <input-text
                   v-model="pagination.filter"
@@ -35,36 +43,75 @@
                   class="w-full"
                 />
               </div>
-            </div>
+            </div> -->
           </template>
           <Column
-            field="identifier"
-            header="# Serie"
-            sortable
-          />
-          <Column
             field="name"
-            header="Name"
+            header="Product"
             sortable
           />
           <Column
-            field="description"
-            header="Description"
-          />
+            field="media"
+            header="Image"
+            style="padding: 4px 12px; margin: 0px;"
+          >
+            <template
+              #body="{ data }"
+            >
+              <img
+                v-if="data.media.length"
+                :src="data.media[0].url"
+                alt="Product Image"
+                class="border-round"
+                style="height: 55px; width: 55px;"
+              >
+              <div
+                v-else
+                class="bg-gray-200 border-round"
+                style="height: 55px; width: 55px;"
+              />
+            </template>
+          </Column>
+          <Column
+            field="status"
+            header="Status"
+          >
+            <template
+              #body="{ data }"
+            >
+              <span
+                v-if="data.status === 'active'"
+                class="p-tag p-tag-success"
+              >
+                Active
+              </span>
+              <span
+                v-else
+                class="p-tag p-tag-danger"
+              >
+                Inactive
+              </span>
+            </template>
+          </Column>
           <Column
             field="price"
             header="Price"
-            sortable
-          />
+          >
+            <template
+              #body="{ data }"
+            >
+              <span>
+                Bs. {{ data.price }}
+              </span>
+            </template>
+          </Column>
           <Column
-            field="brand"
+            field="brand.name"
             header="Brand"
-            sortable
           />
           <Column
-            field="stock"
-            header="Stock"
-            sortable
+            field="category.name"
+            header="Category"
           />
           <Column
             header="Actions"
@@ -100,8 +147,8 @@
             </template>
           </Column>
         </DataTable>
-      </div>
-    </div>
+      </template>
+    </Card>
     <item-viewer
       :product="selectedProduct"
       :show-dialog="viewerToggle"
@@ -113,6 +160,7 @@
 <script>
 
 import DataTable from "primevue/datatable";
+import Card from "primevue/card";
 import Column from "primevue/column";
 import Toast from "primevue/toast";
 import PButton from "primevue/button";
@@ -131,6 +179,7 @@ export default {
     Toast,
     ConfirmDialog,
     ItemViewer,
+    Card,
   },
   data() {
     return {
@@ -166,7 +215,7 @@ export default {
       this.loading = true;
       let url = `/products?&per_page=${this.pagination.rows}&page=${this.pagination.page}&order_by=${this.pagination.sortField}`;
 
-      url += "&includes=media";
+      url += "&includes=media,brand,category";
 
       if (this.pagination.sortOrder === -1) {
         url += "&order_direction=desc";

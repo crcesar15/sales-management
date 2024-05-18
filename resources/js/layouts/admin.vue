@@ -106,7 +106,10 @@
             </div>
           </template>
         </Sidebar>
-        <Menubar :model="[]">
+        <Menubar
+          :model="[]"
+          style="position: fixed; width: 100%; z-index: 1000; left: 0; top: 0;"
+        >
           <template #start>
             <div class="flex flex-row flex-wrap">
               <div class="flex">
@@ -137,7 +140,10 @@
         </Menubar>
       </div>
     </div>
-    <main class="md:m-4 m-3">
+    <main
+      class="md:m-3 m-0"
+      style="margin-top: 60px !important;"
+    >
       <slot />
     </main>
   </div>
