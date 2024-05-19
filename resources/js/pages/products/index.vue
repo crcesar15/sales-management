@@ -49,7 +49,19 @@
             field="name"
             header="Product"
             sortable
-          />
+          >
+            <template
+              #body="{ data }"
+            >
+              <span
+                style="cursor: pointer;"
+                class="text-900 font-medium hover:text-primary-500 transition-colors"
+                @click="viewProduct(data)"
+              >
+                {{ data.name }}
+              </span>
+            </template>
+          </Column>
           <Column
             field="media"
             header="Image"
@@ -106,6 +118,10 @@
             </template>
           </Column>
           <Column
+            field="stock"
+            header="Stock"
+          />
+          <Column
             field="brand.name"
             header="Brand"
           />
@@ -115,21 +131,14 @@
           />
           <Column
             header="Actions"
-            style="min-width: 178px;"
             header-class="flex justify-content-center"
           >
             <template
               #body="{ data }"
             >
               <span
-                class="p-buttonset"
+                class="p-buttonset flex justify-content-center"
               >
-                <p-button
-                  icon="fa fa-eye"
-                  text
-                  size="sm"
-                  @click="viewProduct(data)"
-                />
                 <p-button
                   icon="fa fa-edit"
                   text
@@ -215,7 +224,7 @@ export default {
       this.loading = true;
       let url = `/products?&per_page=${this.pagination.rows}&page=${this.pagination.page}&order_by=${this.pagination.sortField}`;
 
-      url += "&includes=media,brand,category";
+      url += "&includes=media,brand,category,measureUnit";
 
       if (this.pagination.sortOrder === -1) {
         url += "&order_direction=desc";

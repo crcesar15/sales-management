@@ -3,27 +3,43 @@
   <div>
     <Dialog
       v-model:visible="visible"
-      header="Product Viewer"
       modal
+      :style="{ width: '30vw' }"
+      :breakpoints="{ '1199px': '60vw', '575px': '90vw' }"
       @hide="clearSelection"
     >
       <div
         class="grid"
       >
         <div
-          class="md:col-4 col-12 flex flex-wrap justify-content-center"
+          class="
+            flex flex-wrap justify-content-center align-content-center
+            col-12
+            "
         >
-          <div v-if="product.media[0]?.url">
-            <Image
-              :src="product.media[0].url"
-              alt="Image"
-              height="250px"
-            />
+          <div
+            v-if="product.media[0]?.url"
+            class="flex flex-wrap justify-content-center align-content-center"
+          >
+            <Carousel
+              :value="product.media"
+              :num-visible="1"
+              :num-scroll="3"
+              class="lg:w-8 md:w-10 w-12"
+            >
+              <template #item="image">
+                <Image
+                  :src="image.data.url"
+                  class="border-round"
+                  image-class="w-full"
+                />
+              </template>
+            </Carousel>
           </div>
           <div v-else>
             <!-- not found div -->
             <div
-              class="flex flex-wrap justify-content-center align-content-center text-primary shadow-2 border-round"
+              class="flex flex-wrap justify-content-center align-content-center text-primary shadow-2 border-round mb-4"
               style="height: 250px; width: 250px;"
             >
               <p>
@@ -32,39 +48,55 @@
             </div>
           </div>
         </div>
-        <div
-          class="md:col-8 col-12"
-        >
-          <p>
-            <strong>
-              # Serie:
-            </strong>
-            {{ product?.identifier }}
-          </p>
-          <p>
-            <strong>
-              Description:
-            </strong>
-            {{ product?.description }}
-          </p>
-          <p>
-            <strong>
-              Price:
-            </strong>
-            {{ product?.price }}
-          </p>
-          <p>
-            <strong>
-              Brand:
-            </strong>
-            {{ product?.brand }}
-          </p>
-          <p>
-            <strong>
-              Stock:
-            </strong>
-            {{ product?.stock }}
-          </p>
+        <div class="surface-100 border-round grid p-2">
+          <div class="md:col-6 col-12 pt-0 pb-0">
+            <p>
+              <strong>
+                Name:
+              </strong>
+              {{ product?.name }}
+            </p>
+            <p>
+              <strong>
+                Price:
+              </strong>
+              Bs. {{ product?.price }}
+            </p>
+            <p>
+              <strong>
+                Brand:
+              </strong>
+              {{ product?.brand?.name }}
+            </p>
+          </div>
+          <div class="md:col-6 col-12 pt-0 pb-0">
+            <p>
+              <strong>
+                Measure Unit:
+              </strong>
+              {{ product?.measure_unit?.name }}
+            </p>
+            <p>
+              <strong>
+                Stock:
+              </strong>
+              {{ product?.stock }}
+            </p>
+            <p>
+              <strong>
+                Category:
+              </strong>
+              {{ product?.category?.name }}
+            </p>
+          </div>
+          <div class="col-12 pt-0">
+            <p>
+              <strong>
+                Description:
+              </strong>
+              {{ product?.description }}
+            </p>
+          </div>
         </div>
       </div>
     </Dialog>
@@ -73,12 +105,14 @@
 
 <script>
 import Dialog from "primevue/dialog";
+import Carousel from "primevue/carousel";
 import Image from "primevue/image";
 
 export default {
   components: {
     Dialog,
     Image,
+    Carousel,
   },
   props: {
     product: {

@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->string('name');
             $table->string('description')->nullable();
             $table->decimal('price', 8, 2)->nullable();
+            $table->decimal('stock', 8, 2)->nullable()->default(0);
             $table->json('options')->nullable();
             $table->string('correlation_hash')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
