@@ -15,10 +15,9 @@ import StyleClass from "primevue/styleclass";
 import PrimeVue from "primevue/config";
 import ToastService from "primevue/toastservice";
 import ConfirmationService from "primevue/confirmationservice";
-
 import PButton from "primevue/button";
-
 import { InertiaProgress } from "@inertiajs/progress";
+import { ZiggyVue } from "ziggy-js";
 
 InertiaProgress.init();
 
@@ -31,6 +30,7 @@ createInertiaApp({
       .use(plugin)
       .component("PButton", PButton)
       .component("Link", Link)
+      .use(ZiggyVue)
       .use(PrimeVue, { ripple: true })
       .use(ToastService)
       .use(ConfirmationService)

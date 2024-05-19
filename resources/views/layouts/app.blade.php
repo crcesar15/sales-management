@@ -13,6 +13,8 @@
     <!-- CSS yield -->
     @yield('css')
 
+    @routes
+
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     @inertiaHead

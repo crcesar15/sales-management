@@ -261,7 +261,8 @@ export default {
       this.selectedProduct = product;
     },
     editProduct(productId) {
-      this.$inertia.visit(`/products/${productId}/edit`);
+      // inertia visit
+      this.$inertia.visit(route("products.edit", { id: productId }));
     },
     updateProduct(id, product) {
       axios.put(`/products/${id}`, product)
@@ -289,7 +290,7 @@ export default {
         header: "Delete Confirmation",
         icon: "fas fa-exclamation-triangle",
         accept: () => {
-          axios.delete(`/products/${id}`)
+          axios.delete(route("api.products.destroy", { id }))
             .then(() => {
               this.fetchProducts();
               this.$toast.add({

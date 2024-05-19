@@ -12,6 +12,8 @@
 
     @yield('css')
 
+    @routes
+
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/login/index.js'])
 </head>

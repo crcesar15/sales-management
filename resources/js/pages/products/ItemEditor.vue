@@ -109,9 +109,14 @@ export default {
     FilesManager,
     AppLayout,
   },
+  props: {
+    productId: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
-      productId: null,
       identifier: "",
       name: "",
       description: "",
@@ -123,7 +128,6 @@ export default {
     };
   },
   mounted() {
-    this.productId = 1;
     this.getProduct();
   },
   methods: {

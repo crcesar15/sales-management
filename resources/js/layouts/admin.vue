@@ -28,7 +28,7 @@
                     <div v-if="item.type === 'single'">
                       <Link
                         :key="item.label"
-                        :href="item.to"
+                        :href="route('products')"
                         style="text-decoration: none"
                       >
                         <li>
