@@ -1,100 +1,137 @@
 <template>
-  <AppLayout>
-    <div class="p-card">
-      <TabView>
-        <TabPanel header="General Info">
-          <div class="flex justify-content-between flex-wrap">
-            <div class="flex align-items-center justify-content-center">
-              <h3>Item Editor</h3>
-            </div>
-            <div class="flex align-items-center justify-content-center">
-              <Link
-                href="/products"
-                class="p-button p-button-text"
-              >
-                <i class="fas fa-arrow-left" /> <span>Back</span>
-              </Link>
-            </div>
+  <AppLayout class="md:col-10 md:col-offset-1 col-12">
+    <Card>
+      <template #header>
+        <div class="grid">
+          <div class="col-12 flex justify-content-end pt-5 pr-5">
+            <PButton
+              type="button"
+              label="Discard"
+              icon="fas fa-close"
+              outlined
+              severity="primary"
+              @click="discardChanges"
+            />
+            <PButton
+              class="ml-2"
+              type="button"
+              label="Save"
+              icon="fas fa-save"
+              severity="primary"
+              @click="updateProduct"
+            />
           </div>
-          <div class="grid">
-            <div class="col-12 md:col-6 flex flex-column gap-2">
-              <label for="identifier">Identifier</label>
-              <InputText
-                id="identifier"
-                v-model="identifier"
-              />
+        </div>
+      </template>
+      <template #content>
+        <TabView>
+          <TabPanel header="General Info">
+            <div class="grid">
+              <div class="col-12 md:col-6 flex flex-column gap-2">
+                <label for="identifier">Identifier</label>
+                <InputText
+                  id="identifier"
+                  v-model="identifier"
+                />
+              </div>
+              <div class="col-12 md:col-6 flex flex-column gap-2">
+                <label for="name">Name</label>
+                <InputText
+                  id="name"
+                  v-model="name"
+                />
+              </div>
+              <div class="col-12 flex flex-column gap-2">
+                <label for="description">Description</label>
+                <Textarea
+                  id="description"
+                  v-model="description"
+                />
+              </div>
+              <div class="col-12 md:col-6 flex flex-column gap-2">
+                <label for="price">Price (Bs.)</label>
+                <InputNumber
+                  id="price"
+                  v-model="price"
+                  :min-fraction-digits="2"
+                  :max-fraction-digits="2"
+                />
+              </div>
+              <div class="col-12 md:col-6 flex flex-column gap-2">
+                <label for="stock">Stock</label>
+                <InputNumber
+                  id="stock"
+                  v-model="stock"
+                />
+              </div>
+              <div class="col-12 md:col-6 flex flex-column gap-2">
+                <label for="brand">Brand</label>
+                <Dropdown
+                  id="brand"
+                  v-model="brand"
+                  filter
+                  :options="brands"
+                  option-label="name"
+                  option-value="id"
+                />
+              </div>
+              <div class="col-12 md:col-6 flex flex-column gap-2">
+                <label for="category">Category</label>
+                <Dropdown
+                  id="category"
+                  v-model="category"
+                  filter
+                  :options="categories"
+                  option-label="name"
+                  option-value="id"
+                />
+              </div>
+              <div class="col-12 md:col-6 flex flex-column gap-2">
+                <label for="measure_unit">Measure Unit</label>
+                <Dropdown
+                  id="measure_unit"
+                  v-model="measureUnit"
+                  :options="measureUnits"
+                  option-label="name"
+                  option-value="id"
+                />
+              </div>
+              <div class="col-12 md:col-6 flex flex-column gap-2">
+                <label for="status">Status</label>
+                <Dropdown
+                  id="status"
+                  v-model="status"
+                  :options="statusOptions"
+                  option-label="label"
+                  option-value="value"
+                />
+              </div>
             </div>
-            <div class="col-12 md:col-6 flex flex-column gap-2">
-              <label for="name">Name</label>
-              <InputText
-                id="name"
-                v-model="name"
-              />
-            </div>
-            <div class="col-12 flex flex-column gap-2">
-              <label for="description">Description</label>
-              <Textarea
-                id="description"
-                v-model="description"
-              />
-            </div>
-            <div class="col-12 md:col-6 flex flex-column gap-2">
-              <label for="price">Price (Bs.)</label>
-              <InputNumber
-                id="price"
-                v-model="price"
-                :min-fraction-digits="2"
-                :max-fraction-digits="2"
-              />
-            </div>
-            <div class="col-12 md:col-6 flex flex-column gap-2">
-              <label for="stock">Stock</label>
-              <InputNumber
-                id="stock"
-                v-model="stock"
-              />
-            </div>
-            <div class="col-12 md:col-6 flex flex-column gap-2">
-              <label for="brand">Brand</label>
-              <InputText
-                id="brand"
-                v-model="brand"
-              />
-            </div>
-            <div class="col-12 md:col-6 flex flex-column gap-2">
-              <label for="category">Category</label>
-              <InputText
-                id="category"
-                v-model="category"
-              />
-            </div>
-            <div class="col-12 flex justify-content-center mt-2">
-              <PButton
-                label="Save"
-                icon="fas fa-save"
-              />
-            </div>
-          </div>
-        </TabPanel>
-        <TabPanel header="Media">
-          <FilesManager
-            :files="media"
-            @upload-file="uploadFile"
-            @delete-file="deleteFile"
-          />
-        </TabPanel>
-      </TabView>
-    </div>
+          </TabPanel>
+          <TabPanel header="Media">
+            <FilesManager
+              :files="media"
+              @upload-file="uploadFile"
+              @delete-file="deleteFile"
+            />
+          </TabPanel>
+        </TabView>
+      </template>
+    </Card>
   </AppLayout>
 </template>
 
 <script>
+import Card from "primevue/card";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 import InputNumber from "primevue/inputnumber";
 import PButton from "primevue/button";
 import TabView from "primevue/tabview";
 import TabPanel from "primevue/tabpanel";
+import Dropdown from "primevue/dropdown";
+import { Inertia } from "@inertiajs/inertia";
+import axios from "axios";
 import FilesManager from "./FilesManager.vue";
 import AppLayout from "../../layouts/admin.vue";
 
@@ -108,11 +145,25 @@ export default {
     TabPanel,
     FilesManager,
     AppLayout,
+    Card,
+    Dropdown,
   },
   props: {
-    productId: {
-      type: Number,
-      default: 0,
+    product: {
+      type: Object,
+      default: () => ({}),
+    },
+    measureUnits: {
+      type: Array,
+      default: () => [],
+    },
+    brands: {
+      type: Array,
+      default: () => [],
+    },
+    categories: {
+      type: Array,
+      default: () => [],
     },
   },
   data() {
@@ -124,32 +175,65 @@ export default {
       stock: 0,
       brand: "",
       category: "",
+      measure_unit: "",
       media: [],
+      status: "active",
+      statusOptions: [
+        { label: "ACTIVE", value: "active" },
+        { label: "INACTIVE", value: "inactive" },
+        { label: "ARCHIVED", value: "archived" },
+      ],
     };
   },
   mounted() {
-    this.getProduct();
+    const { product } = this;
+
+    this.identifier = product.identifier;
+    this.name = product.name;
+    this.description = product.description;
+    this.price = product.price;
+    this.stock = product.stock;
+    this.brand = product.brand_id;
+    this.category = product.category_id;
+    this.measureUnit = product.measure_unit_id;
+    this.media = product.media;
+    this.status = product.status;
   },
   methods: {
-    getProduct() {
-      // Fetch product from API
-      axios.get(`/products/${this.productId}?includes=media,category`)
-        .then((response) => {
-          const product = response.data.data;
-          this.identifier = product.identifier;
-          this.name = product.name;
-          this.description = product.description;
-          this.price = product.price;
-          this.stock = product.stock;
-          this.brand = product.brand;
-          this.category = product.category.name;
-          this.media = product.media;
+    discardChanges() {
+      this.$inertia.visit(route("products"));
+    },
+    updateProduct() {
+      const data = {
+        identifier: this.identifier,
+        name: this.name,
+        description: this.description,
+        price: this.price,
+        stock: this.stock,
+        brand_id: this.brand,
+        category_id: this.category,
+        measure_unit_id: this.measureUnit,
+        status: this.status,
+      };
+
+      axios
+        .put(route("api.products.update", { id: this.product.id }), data)
+        .then(() => {
+          this.$toast.add({
+            severity: "success",
+            summary: "Success",
+            detail: "Product updated",
+            life: 3000,
+          });
+          setTimeout(() => {
+            this.$inertia.visit(route("products"));
+          }, 3000);
         })
-        .catch(() => {
+        .catch((error) => {
           this.$toast.add({
             severity: "error",
             summary: "Error",
-            detail: "Failed to fetch product",
+            detail: error.response.data.message,
             life: 3000,
           });
         });
@@ -203,3 +287,8 @@ export default {
   },
 };
 </script>
+<style>
+.p-card-body {
+  padding-top: 0px !important;
+}
+</style>

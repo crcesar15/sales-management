@@ -22,7 +22,7 @@ return new class extends Migration {
             $table->decimal('stock', 8, 2)->nullable()->default(0);
             $table->json('options')->nullable();
             $table->string('correlation_hash')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->softDeletes();
             $table->timestamps();
         });

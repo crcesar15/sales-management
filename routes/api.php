@@ -24,7 +24,7 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::get('/products', 'App\Http\Controllers\Api\ProductsController@index');
     Route::get('/products/{id}', 'App\Http\Controllers\Api\ProductsController@show');
     Route::post('/products', 'App\Http\Controllers\Api\ProductsController@store');
-    Route::put('/products/{id}', 'App\Http\Controllers\Api\ProductsController@update');
+    Route::put('/products/{id}', 'App\Http\Controllers\Api\ProductsController@update')->name('products.update');
     Route::delete('/products/{id}', 'App\Http\Controllers\Api\ProductsController@destroy')->name('products.destroy');
 
     //Routes for Categories

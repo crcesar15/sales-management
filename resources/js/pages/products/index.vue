@@ -50,9 +50,7 @@
             header="Product"
             sortable
           >
-            <template
-              #body="{ data }"
-            >
+            <template #body="{ data }">
               <span
                 style="cursor: pointer;"
                 class="text-900 font-medium hover:text-primary-500 transition-colors"
@@ -67,9 +65,7 @@
             header="Image"
             style="padding: 4px 12px; margin: 0px;"
           >
-            <template
-              #body="{ data }"
-            >
+            <template #body="{ data }">
               <img
                 v-if="data.media.length"
                 :src="data.media[0].url"
@@ -87,10 +83,10 @@
           <Column
             field="status"
             header="Status"
+            header-class="flex justify-content-center"
+            class="flex justify-content-center"
           >
-            <template
-              #body="{ data }"
-            >
+            <template #body="{ data }">
               <span
                 v-if="data.status === 'active'"
                 class="p-tag p-tag-success"
@@ -98,10 +94,16 @@
                 Active
               </span>
               <span
+                v-else-if="data.status === 'inactive'"
+                class="p-tag p-tag-warning"
+              >
+                Inactive
+              </span>
+              <span
                 v-else
                 class="p-tag p-tag-danger"
               >
-                Inactive
+                Archived
               </span>
             </template>
           </Column>
@@ -109,9 +111,7 @@
             field="price"
             header="Price"
           >
-            <template
-              #body="{ data }"
-            >
+            <template #body="{ data }">
               <span>
                 Bs. {{ data.price }}
               </span>
@@ -133,12 +133,8 @@
             header="Actions"
             header-class="flex justify-content-center"
           >
-            <template
-              #body="{ data }"
-            >
-              <span
-                class="p-buttonset flex justify-content-center"
-              >
+            <template #body="{ data }">
+              <span class="p-buttonset flex justify-content-center">
                 <p-button
                   icon="fa fa-edit"
                   text

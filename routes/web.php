@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -28,18 +29,14 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::group(['middleware' => ['auth']], function () {
+    // Home Routes
     Route::get('/home', function () {
         return Inertia::render('dashboard/index');
     })->name('home');
-    Route::get('/products', function () {
-        return Inertia::render('products/index');
-    })->name('products');
 
-    Route::get('/products/{id}/edit', function () {
-        return Inertia::render('products/ItemEditor', [
-            'productId' => request()->route('id'),
-        ]);
-    })->name('products.edit');
+    // Products Routes
+    Route::get('/products', [ProductsController::class, 'index'])->name('products');
+    Route::get('/products/{product}/edit', [ProductsController::class, 'edit'])->name('products.edit');
 
     Route::get('/gallery', function () {
         return Inertia::render('gallery/index');
