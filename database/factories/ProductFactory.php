@@ -20,11 +20,7 @@ class ProductFactory extends Factory
             'category_id' => 1,
             'brand_id' => rand(1, 10),
             'measure_unit_id' => rand(1, 10),
-            'identifier' => fake()->ean13(),
             'name' => fake()->text(20),
-            'description' => fake()->paragraph(2),
-            'price' => fake()->randomFloat(2, 0, 3000),
-            'stock' => 0,
         ];
     }
 }

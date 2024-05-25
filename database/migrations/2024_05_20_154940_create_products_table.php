@@ -15,13 +15,8 @@ return new class extends Migration {
             $table->foreignId('category_id')->constrained();
             $table->foreignId('brand_id')->constrained();
             $table->foreignId('measure_unit_id')->constrained();
-            $table->string('identifier');
             $table->string('name');
-            $table->string('description')->nullable();
-            $table->decimal('price', 8, 2)->nullable();
-            $table->decimal('stock', 8, 2)->nullable()->default(0);
             $table->json('options')->nullable();
-            $table->string('correlation_hash')->nullable();
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->softDeletes();
             $table->timestamps();
