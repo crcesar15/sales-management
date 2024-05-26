@@ -17,7 +17,9 @@ return new class extends Migration {
             $table->enum('status', ['draft', 'pending', 'paid', 'cancelled'])->default('draft');
             $table->date('order_date')->nullable();
             $table->date('expected_arrival_date')->nullable();
-            $table->float('total_amount', 8, 2)->nullable();
+            $table->float('sub_total', 8, 2)->nullable();
+            $table->float('discount', 8, 2)->nullable();
+            $table->float('total', 8, 2)->nullable();
             $table->text('notes')->nullable();
             $table->string('proof_of_payment_type')->nullable();
             $table->string('proof_of_payment_number')->nullable();

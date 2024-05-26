@@ -18,7 +18,6 @@ class ReceptionOrderFactory extends Factory
     {
         return [
             'reception_date' => $this->faker->date(),
-            'total_amount' => $this->faker->randomFloat(2, 0, 999999.99),
             'status' => $this->faker->randomElement(['pending', 'completed', 'cancelled']),
         ];
     }

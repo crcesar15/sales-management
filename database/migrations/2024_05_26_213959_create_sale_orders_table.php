@@ -10,14 +10,16 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('reception_orders', function (Blueprint $table) {
+        Schema::create('sale_orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('purchase_order_id')->constrained();
+            $table->foreignId('customer_id')->constrained();
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('supplier_id')->constrained();
-            $table->date('reception_date')->nullable();
+            $table->enum('status', ['draft', 'sent', 'paid', 'canceled'])->default('draft');
+            $table->enum('payment_method', ['cash', 'credit_card', 'qr', 'stripe', 'transfer'])->default('cash');
             $table->text('notes')->nullable();
-            $table->enum('status', ['pending', 'uncompleted', 'completed', 'cancelled'])->default('pending');
+            $table->float('sub_total', 10, 2);
+            $table->float('discount', 10, 2)->default(0);
+            $table->float('total', 10, 2);
             $table->timestamps();
         });
     }
@@ -27,6 +29,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('reception_orders');
+        Schema::dropIfExists('sale_orders');
     }
 };
