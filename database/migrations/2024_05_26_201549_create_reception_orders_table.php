@@ -10,17 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('purchase_orders', function (Blueprint $table) {
+        Schema::create('reception_orders', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('purchase_order_id')->constrained();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('supplier_id')->constrained();
-            $table->enum('status', ['draft', 'pending', 'paid', 'cancelled'])->default('draft');
-            $table->date('order_date')->nullable();
-            $table->date('expected_arrival_date')->nullable();
+            $table->date('reception_date')->nullable();
             $table->float('total_amount', 8, 2)->nullable();
-            $table->text('notes')->nullable();
-            $table->string('proof_of_payment_type')->nullable();
-            $table->string('proof_of_payment_number')->nullable();
+            $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
             $table->timestamps();
         });
     }
@@ -30,6 +27,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchase_orders');
+        Schema::dropIfExists('reception_orders');
     }
 };
