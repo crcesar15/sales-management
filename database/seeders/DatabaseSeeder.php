@@ -80,6 +80,17 @@ class DatabaseSeeder extends Seeder
             });
         });
 
+        //Create 10 suppliers
+        Supplier::factory(10)->create();
+
+        //Create 10 catalogs
+        Catalog::factory(10)->create(
+            [
+                'supplier_id' => Supplier::all()->random()->id,
+                'product_id' => Product::all()->random()->id,
+            ]
+        );
+
         //Set permissions to storage folder
         exec('sudo chmod -R 777 storage/app/public/products');
     }
