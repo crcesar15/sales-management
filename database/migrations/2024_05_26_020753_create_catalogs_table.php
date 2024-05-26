@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('catalogs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
             $table->float('price', 8, 2);
             $table->timestamps();
         });

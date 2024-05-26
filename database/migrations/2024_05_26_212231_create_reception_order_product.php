@@ -10,10 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('purchase_order_product', function (Blueprint $table) {
+        Schema::create('reception_order_product', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('purchase_order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
+            $table->foreignId('reception_order_id')->constrained();
+            $table->foreignId('product_variant_id')->constrained();
             $table->float('quantity', 8, 2);
             $table->float('price', 8, 2);
             $table->float('total', 8, 2);
@@ -26,6 +26,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchase_order_product');
+        Schema::dropIfExists('reception_order_product');
     }
 };
