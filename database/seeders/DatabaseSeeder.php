@@ -91,6 +91,14 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        //Create 10 purchase orders
+        PurchaseOrder::factory(10)->create(
+            [
+                'user_id' => User::all()->random()->id,
+                'supplier_id' => Supplier::all()->random()->id,
+            ]
+        );
+
         //Set permissions to storage folder
         exec('sudo chmod -R 777 storage/app/public/products');
     }
