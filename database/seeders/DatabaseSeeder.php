@@ -5,12 +5,15 @@ namespace Database\Seeders;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 use App\Models\Brand;
+use App\Models\Catalog;
 use App\Models\Category;
 use App\Models\MeasureUnit;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\PurchaseOrder;
 use App\Models\Role;
+use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
@@ -74,7 +77,7 @@ class DatabaseSeeder extends Seeder
                     //create between 0 to 2 media for each variant
                     Media::factory(rand(0, 2))->create([
                         'model_id' => $variant->id,
-                        'model_type' => Product::class,
+                        'model_type' => ProductVariant::class,
                     ]);
                 });
             });
@@ -87,7 +90,7 @@ class DatabaseSeeder extends Seeder
         Catalog::factory(10)->create(
             [
                 'supplier_id' => Supplier::all()->random()->id,
-                'product_id' => Product::all()->random()->id,
+                'product_variant_id' => Product::all()->random()->id,
             ]
         );
 

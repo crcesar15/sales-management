@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ApiCollection;
+use App\Http\Resources\Products as ApiCollection;
 use App\Models\Product;
 use Illuminate\Http\Request;
 

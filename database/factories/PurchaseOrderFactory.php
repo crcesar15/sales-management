@@ -19,7 +19,7 @@ class PurchaseOrderFactory extends Factory
         return [
             'order_date' => $this->faker->date(),
             'expected_arrival_date' => $this->faker->date(),
-            'total_amount' => 0,
+            'total' => 0,
             'status' => 'draft',
         ];
     }
