@@ -60,7 +60,7 @@ class Products extends ResourceCollection
                     });
                 } else {
                     if (count($variants[0]['media']) > 0) {
-                        $formattedProduct['media'] = [$variants[0]['media'][0]];
+                        $formattedProduct['media'] = $variants[0]['media'];
                     } else {
                         $formattedProduct['media'] = [];
                     }

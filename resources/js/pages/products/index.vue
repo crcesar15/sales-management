@@ -5,6 +5,7 @@
     <Card>
       <template #content>
         <DataTable
+          v-model:expandedRows="expandedRows"
           :value="products"
           lazy
           :page-link-size="3"
@@ -15,6 +16,7 @@
           paginator
           sort-field="name"
           :sort-order="1"
+          :row-class="rowClass"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -87,24 +89,29 @@
             class="flex justify-content-center"
           >
             <template #body="{ data }">
-              <span
-                v-if="data.status === 'active'"
-                class="p-tag p-tag-success"
+              <div
+                style="height: 55px;"
+                class="flex align-items-center"
               >
-                Active
-              </span>
-              <span
-                v-else-if="data.status === 'inactive'"
-                class="p-tag p-tag-warning"
-              >
-                Inactive
-              </span>
-              <span
-                v-else
-                class="p-tag p-tag-danger"
-              >
-                Archived
-              </span>
+                <span
+                  v-if="data.status === 'active'"
+                  class="p-tag p-tag-success"
+                >
+                  Active
+                </span>
+                <span
+                  v-else-if="data.status === 'inactive'"
+                  class="p-tag p-tag-warning"
+                >
+                  Inactive
+                </span>
+                <span
+                  v-else
+                  class="p-tag p-tag-danger"
+                >
+                  Archived
+                </span>
+              </div>
             </template>
           </Column>
           <Column
@@ -151,6 +158,89 @@
               </span>
             </template>
           </Column>
+          <Column
+            expander
+            style="width: 5rem"
+          />
+          <template #expansion="product">
+            <div>
+              <DataTable
+                show-gridlines
+                :value="product.data.variants"
+              >
+                <Column
+                  field="name"
+                  header="Product Variant"
+                />
+                <Column
+                  field="media"
+                  header="Image"
+                  style="padding: 4px 12px; margin: 0px;"
+                >
+                  <template #body="{ data }">
+                    <img
+                      v-if="data.media.length"
+                      :src="data.media[0].url"
+                      alt="Product Image"
+                      class="border-round"
+                      style="height: 55px; width: 55px;"
+                    >
+                    <div
+                      v-else
+                      class="bg-gray-200 border-round"
+                      style="height: 55px; width: 55px;"
+                    />
+                  </template>
+                </Column>
+                <Column
+                  field="status"
+                  header="Status"
+                  header-class="flex justify-content-center"
+                  class="flex justify-content-center"
+                >
+                  <template #body="{ data }">
+                    <div
+                      style="height: 55px;"
+                      class="flex align-items-center"
+                    >
+                      <span
+                        v-if="data.status === 'active'"
+                        class="p-tag p-tag-success"
+                      >
+                        Active
+                      </span>
+                      <span
+                        v-else-if="data.status === 'inactive'"
+                        class="p-tag p-tag-warning"
+                      >
+                        Inactive
+                      </span>
+                      <span
+                        v-else
+                        class="p-tag p-tag-danger"
+                      >
+                        Archived
+                      </span>
+                    </div>
+                  </template>
+                </Column>
+                <Column
+                  field="price"
+                  header="Price"
+                >
+                  <template #body="{ data }">
+                    <span>
+                      Bs. {{ data.price }}
+                    </span>
+                  </template>
+                </Column>
+                <Column
+                  field="stock"
+                  header="Stock"
+                />
+              </DataTable>
+            </div>
+          </template>
         </DataTable>
       </template>
     </Card>
@@ -188,6 +278,7 @@ export default {
   },
   data() {
     return {
+      expandedRows: [],
       viewerToggle: false,
       editorToggle: false,
       products: [],
@@ -216,6 +307,9 @@ export default {
     this.fetchProducts();
   },
   methods: {
+    rowClass(rowData) {
+      return rowData.variants.length > 1 ? "" : "no-expander";
+    },
     fetchProducts() {
       this.loading = true;
       let url = `/products?&per_page=${this.pagination.rows}&page=${this.pagination.page}&order_by=${this.pagination.sortField}`;
@@ -332,5 +426,8 @@ export default {
 .sortable-column th:hover {
   cursor: pointer;
   background-color: #ccc;
+}
+.p-datatable .p-datatable-tbody>tr.no-expander>td .p-row-toggler {
+  display: none;
 }
 </style>

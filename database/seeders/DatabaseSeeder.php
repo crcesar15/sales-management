@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
                 'category_id' => $category->id,
             ])->each(function ($product) {
                 // create 1 variant for each product
-                ProductVariant::factory(1)->create([
+                ProductVariant::factory(rand(1, 3))->create([
                     'product_id' => $product->id,
                     'name' => $product->name,
                 ])->each(function ($variant) {

@@ -18,7 +18,7 @@
             "
         >
           <div
-            v-if="product.media[0]?.url"
+            v-if="product.media.length > 1"
             class="flex flex-wrap justify-content-center align-content-center"
           >
             <Carousel
@@ -35,6 +35,13 @@
                 />
               </template>
             </Carousel>
+          </div>
+          <div v-else-if="product.media.length === 1">
+            <Image
+              :src="product.media[0].url"
+              class="border-round"
+              image-class="w-full"
+            />
           </div>
           <div v-else>
             <!-- not found div -->
