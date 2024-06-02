@@ -17,12 +17,16 @@ class ProductsController extends Controller
         $filter = $request->input('filter', '');
 
         if (!empty($filter)) {
+            $filter_by = $request->input('filter_by', 'name');
+
             $filter = '%' . $filter . '%';
-            $query->where(
-                function ($query) use ($filter) {
-                    $query->where('name', 'like', $filter);
-                }
-            );
+            $query->where($filter_by, 'like', $filter);
+        }
+
+        $status = $request->input('status', 'all');
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
         }
 
         $includes = $request->input('includes', '');

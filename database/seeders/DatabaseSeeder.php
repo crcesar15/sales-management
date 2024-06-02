@@ -69,6 +69,11 @@ class DatabaseSeeder extends Seeder
             Product::factory(5)->create([
                 'category_id' => $category->id,
             ])->each(function ($product) {
+                Media::factory(rand(0, 1))->create([
+                    'model_id' => $product->id,
+                    'model_type' => Product::class,
+                ]);
+
                 // create 1 variant for each product
                 ProductVariant::factory(rand(1, 3))->create([
                     'product_id' => $product->id,

@@ -1,5 +1,19 @@
 <template>
   <AppLayout>
+    <div class="flex">
+      <div class="col-2">
+        <h2 class="text-2xl font-bold">
+          Products
+        </h2>
+      </div>
+      <div class="col-10 flex align-items-center justify-content-end">
+        <p-button
+          label="Add Product"
+          class="ml-2"
+          @click="$inertia.visit(route('products.create'))"
+        />
+      </div>
+    </div>
     <ConfirmDialog />
     <Toast />
     <Card>
@@ -21,36 +35,51 @@
           @sort="onSort($event)"
         >
           <template #header>
-            <div class="flex flex-wrap align-items-center justify-content-between gap-2">
-              <span class="text-xl text-900 font-bold">Products</span>
-              <PButton
-                icon="fa fa-refresh"
-                rounded
-                raised
-              />
+            <div class="flex">
+              <div class="col-4">
+                <ButtonGroup>
+                  <p-button
+                    :severity="status === 'all' ? 'primary' : 'secondary'"
+                    @click="status = 'all'"
+                  >
+                    All
+                  </p-button>
+                  <p-button
+                    :severity="status === 'active' ? 'primary' : 'secondary'"
+                    @click="status = 'active'"
+                  >
+                    Active
+                  </p-button>
+                  <p-button
+                    :severity="status === 'inactive' ? 'primary' : 'secondary'"
+                    @click="status = 'inactive'"
+                  >
+                    Inactive
+                  </p-button>
+                  <p-button
+                    :severity="status === 'archived' ? 'primary' : 'secondary'"
+                    @click="status = 'archived'"
+                  >
+                    Archived
+                  </p-button>
+                </ButtonGroup>
+              </div>
+              <div class="col-8 flex justify-content-end">
+                <IconField icon-position="left">
+                  <InputIcon class="fa fa-search" />
+                  <InputText
+                    v-model="pagination.filter"
+                    placeholder="Search"
+                  />
+                </IconField>
+              </div>
             </div>
-            <!-- <div class="grid">
-              <div class="col-12 md:col-10">
-                <input-text
-                  v-model="pagination.filter"
-                  type="text"
-                  placeholder="Search"
-                  class="w-full"
-                />
-              </div>
-              <div class="col-12 md:col-2">
-                <p-button
-                  label="Product"
-                  icon="fa fa-plus"
-                  class="w-full"
-                />
-              </div>
-            </div> -->
           </template>
           <Column
             field="name"
             header="Product"
             sortable
+            header-class="surface-100"
           >
             <template #body="{ data }">
               <span
@@ -66,6 +95,7 @@
             field="media"
             header="Image"
             style="padding: 4px 12px; margin: 0px;"
+            header-class="surface-100"
           >
             <template #body="{ data }">
               <img
@@ -77,15 +107,17 @@
               >
               <div
                 v-else
-                class="bg-gray-200 border-round"
+                class="bg-gray-200 border-round flex justify-content-center align-items-center"
                 style="height: 55px; width: 55px;"
-              />
+              >
+                <h2>{{ data.name.substring(0, 2) }}</h2>
+              </div>
             </template>
           </Column>
           <Column
             field="status"
             header="Status"
-            header-class="flex justify-content-center"
+            header-class="flex justify-content-center surface-100"
             class="flex justify-content-center"
           >
             <template #body="{ data }">
@@ -117,6 +149,7 @@
           <Column
             field="price"
             header="Price"
+            header-class="surface-100"
           >
             <template #body="{ data }">
               <span>
@@ -127,18 +160,21 @@
           <Column
             field="stock"
             header="Stock"
+            header-class="surface-100"
           />
           <Column
             field="brand.name"
             header="Brand"
+            header-class="surface-100"
           />
           <Column
             field="category.name"
             header="Category"
+            header-class="surface-100"
           />
           <Column
             header="Actions"
-            header-class="flex justify-content-center"
+            header-class="flex justify-content-center surface-100"
           >
             <template #body="{ data }">
               <span class="p-buttonset flex justify-content-center">
@@ -161,6 +197,7 @@
           <Column
             expander
             style="width: 5rem"
+            header-class="surface-100"
           />
           <template #expansion="product">
             <div>
@@ -171,11 +208,13 @@
                 <Column
                   field="name"
                   header="Product Variant"
+                  header-class="surface-100"
                 />
                 <Column
                   field="media"
                   header="Image"
                   style="padding: 4px 12px; margin: 0px;"
+                  header-class="surface-100"
                 >
                   <template #body="{ data }">
                     <img
@@ -187,15 +226,17 @@
                     >
                     <div
                       v-else
-                      class="bg-gray-200 border-round"
+                      class="bg-gray-200 border-round flex justify-content-center align-items-center"
                       style="height: 55px; width: 55px;"
-                    />
+                    >
+                      <h2>{{ data.name.substring(0, 2) }}</h2>
+                    </div>
                   </template>
                 </Column>
                 <Column
                   field="status"
                   header="Status"
-                  header-class="flex justify-content-center"
+                  header-class="flex justify-content-center surface-100"
                   class="flex justify-content-center"
                 >
                   <template #body="{ data }">
@@ -227,6 +268,7 @@
                 <Column
                   field="price"
                   header="Price"
+                  header-class="surface-100"
                 >
                   <template #body="{ data }">
                     <span>
@@ -237,6 +279,7 @@
                 <Column
                   field="stock"
                   header="Stock"
+                  header-class="surface-100"
                 />
               </DataTable>
             </div>
@@ -259,8 +302,11 @@ import Card from "primevue/card";
 import Column from "primevue/column";
 import Toast from "primevue/toast";
 import PButton from "primevue/button";
+import ButtonGroup from "primevue/buttongroup";
 import InputText from "primevue/inputtext";
 import ConfirmDialog from "primevue/confirmdialog";
+import IconField from "primevue/iconfield";
+import InputIcon from "primevue/inputicon";
 import AppLayout from "../../layouts/admin.vue";
 import ItemViewer from "./ItemViewer.vue";
 
@@ -271,6 +317,9 @@ export default {
     Column,
     PButton,
     InputText,
+    IconField,
+    InputIcon,
+    ButtonGroup,
     Toast,
     ConfirmDialog,
     ItemViewer,
@@ -278,6 +327,7 @@ export default {
   },
   data() {
     return {
+      status: "all",
       expandedRows: [],
       viewerToggle: false,
       editorToggle: false,
@@ -302,6 +352,11 @@ export default {
         this.fetchProducts();
       },
     },
+    status() {
+      this.expandedRows = [];
+      this.pagination.page = 1;
+      this.fetchProducts();
+    },
   },
   mounted() {
     this.fetchProducts();
@@ -312,7 +367,11 @@ export default {
     },
     fetchProducts() {
       this.loading = true;
-      let url = `/products?&per_page=${this.pagination.rows}&page=${this.pagination.page}&order_by=${this.pagination.sortField}`;
+      let url = `/products?per_page=${this.pagination.rows}
+        &page=${this.pagination.page}
+        &order_by=${this.pagination.sortField}
+        &status=${this.status}
+      `;
 
       url += "&includes=media,brand,category,measureUnit";
 

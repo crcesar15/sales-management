@@ -41,7 +41,7 @@ class Products extends ResourceCollection
                             return [
                                 'id' => $media->id,
                                 'url' => $media->url,
-                                'type' => $media->type,
+                                'type' => $media->model_type,
                             ];
                         }),
                     ];
@@ -55,7 +55,7 @@ class Products extends ResourceCollection
                         return [
                             'id' => $media->id,
                             'url' => $media->url,
-                            'type' => $media->type,
+                            'type' => $media->model_type,
                         ];
                     });
                 } else {

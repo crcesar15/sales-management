@@ -21,6 +21,7 @@ class ProductFactory extends Factory
             'brand_id' => rand(1, 10),
             'measure_unit_id' => rand(1, 10),
             'name' => fake()->text(20),
+            'status' => $this->faker->randomElement(['active', 'inactive', 'archived']),
         ];
     }
 }

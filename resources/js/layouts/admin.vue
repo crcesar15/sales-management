@@ -142,7 +142,7 @@
     </div>
     <main
       class="md:m-3 m-0"
-      style="margin-top: 70px !important;"
+      style="margin-top: 50px !important;"
     >
       <slot />
     </main>
