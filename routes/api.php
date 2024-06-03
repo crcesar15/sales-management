@@ -35,6 +35,8 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::delete('/categories/{id}', 'App\Http\Controllers\Api\CategoriesController@destroy');
 
     //Products Media
+    Route::post('/products/media', 'App\Http\Controllers\Api\ProductsMediaController@draft');
     Route::post('/products/{id}/media', 'App\Http\Controllers\Api\ProductsMediaController@store');
     Route::delete('/products/{id}/media/{media_id}', 'App\Http\Controllers\Api\ProductsMediaController@destroy');
+    Route::delete('products/media/{media_id}', 'App\Http\Controllers\Api\ProductsMediaController@destroyDraft')->name('products.media.destroy-draft');
 });

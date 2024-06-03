@@ -37,6 +37,7 @@ Route::group(['middleware' => ['auth']], function () {
     // Products Routes
     Route::get('/products', [ProductsController::class, 'index'])->name('products');
     Route::get('/products/{product}/edit', [ProductsController::class, 'edit'])->name('products.edit');
+    Route::get('/products/create', [ProductsController::class, 'create'])->name('products.create');
 
     Route::get('/gallery', function () {
         return Inertia::render('gallery/index');

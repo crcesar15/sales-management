@@ -23,7 +23,7 @@ class ProductsController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('products/ItemCreator');
     }
 
     /**
