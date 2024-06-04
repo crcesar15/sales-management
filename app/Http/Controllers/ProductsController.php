@@ -23,7 +23,20 @@ class ProductsController extends Controller
      */
     public function create()
     {
-        return Inertia::render('products/ItemCreator');
+        // List of Categories
+        $categories = Category::all();
+
+        // List of Measure Units
+        $measureUnits = MeasureUnit::all();
+
+        // List of Brands
+        $brands = Brand::all();
+
+        return Inertia::render('products/ItemCreator', [
+            'categories' => $categories,
+            'measureUnits' => $measureUnits,
+            'brands' => $brands,
+        ]);
     }
 
     /**

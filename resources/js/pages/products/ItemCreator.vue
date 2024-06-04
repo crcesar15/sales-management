@@ -34,7 +34,7 @@
         </Card>
         <Card class="mb-4">
           <template #title>
-            <h3>Media</h3>
+            Media
           </template>
           <template #content>
             <div class="flex flex-column">
@@ -48,7 +48,7 @@
         </Card>
       </div>
       <div class="md:col-4 col-12">
-        <Card>
+        <Card class="mb-4">
           <template #content>
             <div class="flex flex-column gap-2 mb-3">
               <label for="status">Status</label>
@@ -60,6 +60,47 @@
                   { name: 'Archived', value: 'archived' }
                 ]"
                 option-label="name"
+                option-value="value"
+              />
+            </div>
+          </template>
+        </Card>
+        <Card class="mb-4">
+          <template #title>
+            Product Organization
+          </template>
+          <template #content>
+            <div class="flex flex-column gap-2 mb-3">
+              <label for="category">Category</label>
+              <MultiSelect
+                id="category"
+                v-model="category"
+                display="chip"
+                filter
+                :options="categories"
+                option-label="name"
+                option-value="id"
+              />
+            </div>
+            <div class="flex flex-column gap-2 mb-3">
+              <label for="brand">Brand</label>
+              <Dropdown
+                id="brand"
+                v-model="brand"
+                filter
+                :options="brands"
+                option-label="name"
+                option-value="id"
+              />
+            </div>
+            <div class="flex flex-column gap-2 mb-3">
+              <label for="measure_unit">Measure Unit</label>
+              <Dropdown
+                id="measure_unit"
+                v-model="measureUnit"
+                :options="measureUnits"
+                option-label="name"
+                option-value="id"
               />
             </div>
           </template>
@@ -76,6 +117,7 @@ import InputText from "primevue/inputtext";
 import { Inertia } from "@inertiajs/inertia";
 import Textarea from "primevue/textarea";
 import Dropdown from "primevue/dropdown";
+import MultiSelect from "primevue/multiselect";
 import Toast from "primevue/toast";
 import AppLayout from "../../layouts/admin.vue";
 import MediaManager from "./MediaManager.vue";
@@ -89,19 +131,32 @@ export default {
     Textarea,
     Dropdown,
     MediaManager,
+    MultiSelect,
     Toast,
+  },
+  props: {
+    measureUnits: {
+      type: Array,
+      default: () => [],
+    },
+    brands: {
+      type: Array,
+      default: () => [],
+    },
+    categories: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
     return {
       name: "",
       description: "",
       status: "active",
-      files: [
-        {
-          id: 14,
-          url: "https://picsum.photos/200",
-        },
-      ],
+      brand: "",
+      measureUnit: "",
+      files: [],
+      category: [],
     };
   },
   methods: {
