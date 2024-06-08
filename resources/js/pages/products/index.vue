@@ -35,36 +35,41 @@
           @sort="onSort($event)"
         >
           <template #header>
-            <div class="flex">
-              <div class="col-4">
-                <ButtonGroup>
-                  <p-button
-                    :severity="status === 'all' ? 'primary' : 'secondary'"
-                    @click="status = 'all'"
-                  >
-                    All
-                  </p-button>
-                  <p-button
-                    :severity="status === 'active' ? 'primary' : 'secondary'"
-                    @click="status = 'active'"
-                  >
-                    Active
-                  </p-button>
-                  <p-button
-                    :severity="status === 'inactive' ? 'primary' : 'secondary'"
-                    @click="status = 'inactive'"
-                  >
-                    Inactive
-                  </p-button>
-                  <p-button
-                    :severity="status === 'archived' ? 'primary' : 'secondary'"
-                    @click="status = 'archived'"
-                  >
-                    Archived
-                  </p-button>
-                </ButtonGroup>
+            <div class="grid">
+              <div class="xl:col-4 lg:col-5 md:col-6 col-12 flex md:justify-content-start justify-content-center">
+                <SelectButton
+                  v-model="status"
+                  :options="[{
+                    label: 'All',
+                    value: 'all',
+                  }, {
+                    label: 'Active',
+                    value: 'active',
+                  }, {
+                    label: 'Inactive',
+                    value: 'inactive',
+                  }, {
+                    label: 'Archived',
+                    value: 'archived',
+                  }]"
+                  option-label="label"
+                  option-value="value"
+                  aria-labelledby="basic"
+                />
               </div>
-              <div class="col-8 flex justify-content-end">
+              <div
+                class="
+                  flex
+                  xl:col-4
+                  xl:col-offset-4
+                  lg:col-5
+                  lg:col-offset-2
+                  md:col-6
+                  col-12
+                  md:justify-content-end
+                  justify-content-center
+                "
+              >
                 <IconField icon-position="left">
                   <InputIcon class="fa fa-search" />
                   <InputText
@@ -307,6 +312,7 @@ import InputText from "primevue/inputtext";
 import ConfirmDialog from "primevue/confirmdialog";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
+import SelectButton from "primevue/selectbutton";
 import AppLayout from "../../layouts/admin.vue";
 import ItemViewer from "./ItemViewer.vue";
 
@@ -324,6 +330,7 @@ export default {
     ConfirmDialog,
     ItemViewer,
     Card,
+    SelectButton,
   },
   data() {
     return {

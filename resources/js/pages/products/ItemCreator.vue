@@ -120,7 +120,7 @@ import Dropdown from "primevue/dropdown";
 import MultiSelect from "primevue/multiselect";
 import Toast from "primevue/toast";
 import AppLayout from "../../layouts/admin.vue";
-import MediaManager from "./MediaManager.vue";
+import MediaManager from "../../UI/MediaManager.vue";
 
 export default {
   components: {

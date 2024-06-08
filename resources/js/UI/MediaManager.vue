@@ -2,10 +2,9 @@
   <div>
     <div
       v-if="files.length === 0"
-      class="flex flex-wrap justify-content-center gap-2 m-6"
+      class="grid justify-content-center mt-4"
     >
       <PButton
-        icon="fas fa-upload"
         label="Upload Image"
         outlined
         @click="openFileUpload"
@@ -44,6 +43,7 @@
     <div class="flex justify-content-center mt-4">
       <FileUpload
         v-show="files.length > 0"
+        ref="fileUpload"
         choose-label="Upload Image"
         mode="basic"
         :auto="true"

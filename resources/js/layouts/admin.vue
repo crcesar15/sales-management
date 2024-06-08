@@ -141,7 +141,7 @@
       </div>
     </div>
     <main
-      class="md:m-3 m-0"
+      class="md:m-3 m-0 layout-wrapper layout-news-active p-ripple-disabled layout-light"
       style="margin-top: 50px !important;"
     >
       <slot />

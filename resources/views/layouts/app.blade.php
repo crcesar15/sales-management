@@ -10,6 +10,7 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
+
     <!-- CSS yield -->
     @yield('css')
 
