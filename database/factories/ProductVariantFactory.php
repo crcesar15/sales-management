@@ -19,7 +19,6 @@ class ProductVariantFactory extends Factory
         return [
             'identifier' => $this->faker->unique()->ean13(8),
             'name' => $this->faker->sentence(3),
-            'description' => $this->faker->sentence(10),
             'price' => $this->faker->randomFloat(2, 10, 1000),
             'stock' => $this->faker->numberBetween(0, 100),
             'status' => $this->faker->randomElement(['active', 'inactive', 'archived']),

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Media;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
@@ -20,16 +21,18 @@ class Products extends ResourceCollection
                     'id' => $product->id,
                     'category' => $product->category,
                     'brand' => $product->brand,
-                    'measure_unit' => $product->measure_unit,
+                    'measure_unit' => $product->measureUnit,
                     'name' => $product->name,
                     'options' => $product->options,
                     'status' => $product->status,
                     'price' => $product->variants->min('price'),
                     'stock' => $product->variants->sum('stock'),
+                    'description' => $product->description,
+                    'media' => $product->media,
                 ];
 
                 $variants = $product->variants->map(function ($variant) {
-                    return [
+                    $formattedVariant = [
                         'id' => $variant->id,
                         'identifier' => $variant->identifier,
                         'name' => $variant->name,
@@ -37,34 +40,16 @@ class Products extends ResourceCollection
                         'price' => $variant->price,
                         'stock' => $variant->stock,
                         'status' => $variant->status,
-                        'media' => $variant->media->map(function ($media) {
-                            return [
-                                'id' => $media->id,
-                                'url' => $media->url,
-                                'type' => $media->model_type,
-                            ];
-                        }),
                     ];
+
+                    foreach ($variant->media as $media) {
+                        $formattedVariant['media'][] = Media::where('id', $media['id'])->first();
+                    }
+
+                    return $formattedVariant;
                 });
 
                 $formattedProduct['variants'] = $variants;
-
-                // Check if the product has media
-                if ($product->media->isNotEmpty()) {
-                    $formattedProduct['media'] = $product->media->map(function ($media) {
-                        return [
-                            'id' => $media->id,
-                            'url' => $media->url,
-                            'type' => $media->model_type,
-                        ];
-                    });
-                } else {
-                    if (count($variants[0]['media']) > 0) {
-                        $formattedProduct['media'] = $variants[0]['media'];
-                    } else {
-                        $formattedProduct['media'] = [];
-                    }
-                }
 
                 return $formattedProduct;
             }),

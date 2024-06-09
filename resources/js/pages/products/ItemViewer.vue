@@ -9,12 +9,12 @@
       @hide="clearSelection"
     >
       <div
-        class="grid"
+        class="grid flex-column"
       >
         <div
           class="
             flex flex-wrap justify-content-center align-content-center
-            col-12
+            col
             "
         >
           <div
@@ -24,7 +24,7 @@
             <Carousel
               :value="product.media"
               :num-visible="1"
-              :num-scroll="3"
+              :num-scroll="1"
               class="lg:w-8 md:w-10 w-12"
             >
               <template #item="image">
@@ -40,7 +40,7 @@
             <Image
               :src="product.media[0].url"
               class="border-round"
-              image-class="w-full"
+              image-class="col"
             />
           </div>
           <div v-else>
@@ -55,7 +55,7 @@
             </div>
           </div>
         </div>
-        <div class="surface-100 border-round grid p-2">
+        <div class="surface-100 border-round grid p-2 col">
           <div class="md:col-6 col-12 pt-0 pb-0">
             <p>
               <strong>

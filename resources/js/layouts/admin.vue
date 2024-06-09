@@ -7,9 +7,7 @@
             <div class="flex flex-column h-full">
               <div class="flex align-items-center justify-content-between px-4 pt-3 flex-shrink-0">
                 <span class="inline-flex align-items-center gap-2">
-                  <span
-                    class="font-semibold text-2xl text-primary"
-                  >Laravel</span>
+                  <span class="font-semibold text-2xl text-primary">Laravel</span>
                 </span>
                 <span>
                   <p-button
@@ -40,7 +38,9 @@
                               :class="item.icon"
                               class="mr-2 sidebar-icons"
                             />
-                            <span class="font-medium">{{ item.label }}</span>
+                            <span class="font-medium">{{
+                              item.label
+                            }}</span>
                           </a>
                         </li>
                       </Link>
@@ -52,9 +52,11 @@
                           v-styleclass="{
                             selector: '@next',
                             enterClass: 'hidden',
-                            enterActiveClass: 'slidedown',
+                            enterActiveClass:
+                              'slidedown',
                             leaveToClass: 'hidden',
-                            leaveActiveClass: 'slideup'
+                            leaveActiveClass:
+                              'slideup',
                           }"
                           class="p-3 flex align-items-center justify-content-between text-600 cursor-pointer p-ripple"
                         >
@@ -72,28 +74,23 @@
                             v-for="subitem in item.items"
                             :key="subitem.label"
                             :href="subitem.to"
-                            style="text-decoration: none"
+                            style="
+                                                            text-decoration: none;
+                                                        "
                           >
                             <li>
                               <a
                                 v-ripple
-                                class="
-                                  flex
-                                  align-items-center
-                                  cursor-pointer p-3
-                                  border-round
-                                  text-700
-                                  hover:surface-100
-                                  transition-duration-150
-                                  transition-colors
-                                  p-ripple
-                                "
+                                class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
                               >
                                 <i
-                                  :class="subitem.icon"
+                                  :class="subitem.icon
+                                  "
                                   class="mr-2 sidebar-icons"
                                 />
-                                <span class="font-medium">{{ subitem.label }}</span>
+                                <span class="font-medium">{{
+                                  subitem.label
+                                }}</span>
                               </a>
                             </li>
                           </Link>
@@ -108,7 +105,13 @@
         </Sidebar>
         <Menubar
           :model="[]"
-          style="position: fixed; width: 100%; z-index: 1000; left: 0; top: 0;"
+          style="
+                        position: fixed;
+                        width: 100%;
+                        z-index: 1000;
+                        left: 0;
+                        top: 0;
+                    "
         >
           <template #start>
             <div class="flex flex-row flex-wrap">
@@ -142,7 +145,7 @@
     </div>
     <main
       class="md:m-3 m-0 layout-wrapper layout-news-active p-ripple-disabled layout-light"
-      style="margin-top: 50px !important;"
+      style="margin-top: 50px !important"
     >
       <slot />
     </main>

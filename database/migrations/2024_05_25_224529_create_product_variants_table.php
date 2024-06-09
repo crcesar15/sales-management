@@ -15,9 +15,9 @@ return new class extends Migration {
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->string('identifier', 50)->unique();
             $table->string('name', 150);
-            $table->string('description', 250)->nullable();
             $table->decimal('price', 10, 2);
             $table->integer('stock');
+            $table->json('media')->nullable();
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->timestamps();
         });

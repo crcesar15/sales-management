@@ -46,6 +46,62 @@
             </div>
           </template>
         </Card>
+        <Card class="mb-4">
+          <template #title>
+            Pricing
+          </template>
+          <template #content>
+            <div class="grid">
+              <div class="lg:col-4 md:col-6 col-12 flex flex-column gap-2 mb-3">
+                <label for="price">Price</label>
+                <InputNumber
+                  id="price"
+                  v-model="price"
+                  mode="currency"
+                  currency="BOB"
+                />
+              </div>
+            </div>
+            <div class="grid">
+              <div class="lg:col-4 md:col-6 col-12 flex flex-column gap-2 mb-3">
+                <label for="cost">Cost Per Item</label>
+                <InputNumber
+                  id="cost"
+                  v-model="cost"
+                  mode="currency"
+                  currency="BOB"
+                />
+              </div>
+              <div class="lg:col-4 md:col-6 col-12 flex flex-column gap-2 mb-3">
+                <label for="profit">Profit</label>
+                <InputText
+                  id="profit"
+                  :value="profit"
+                  disabled
+                />
+              </div>
+              <div class="lg:col-4 md:col-6 col-12 flex flex-column gap-2 mb-3">
+                <label for="margin">Margin</label>
+                <InputText
+                  id="margin"
+                  :value="margin"
+                  disabled
+                />
+              </div>
+            </div>
+          </template>
+        </Card>
+        <Card class="mb-4">
+          <template #title>
+            Variants
+          </template>
+          <template #content>
+            <OptionsEditor
+              :input="options"
+              @update="updateOptions"
+            />
+          </template>
+        </Card>
       </div>
       <div class="md:col-4 col-12">
         <Card class="mb-4">
@@ -119,8 +175,10 @@ import Textarea from "primevue/textarea";
 import Dropdown from "primevue/dropdown";
 import MultiSelect from "primevue/multiselect";
 import Toast from "primevue/toast";
+import InputNumber from "primevue/inputnumber";
 import AppLayout from "../../layouts/admin.vue";
 import MediaManager from "../../UI/MediaManager.vue";
+import OptionsEditor from "../../UI/OptionsEditor.vue";
 
 export default {
   components: {
@@ -128,11 +186,13 @@ export default {
     PButton,
     Card,
     InputText,
+    InputNumber,
     Textarea,
     Dropdown,
     MediaManager,
     MultiSelect,
     Toast,
+    OptionsEditor,
   },
   props: {
     measureUnits: {
@@ -152,14 +212,39 @@ export default {
     return {
       name: "",
       description: "",
+      price: 0,
+      cost: 0,
       status: "active",
       brand: "",
       measureUnit: "",
       files: [],
       category: [],
+      margin: "--",
+      profit: "--",
+      options: [],
     };
   },
+  watch: {
+    price() {
+      this.calculateProfit();
+    },
+    cost() {
+      this.calculateProfit();
+    },
+  },
   methods: {
+    calculateProfit() {
+      if (this.price !== 0 || this.cost !== 0) {
+        this.profit = `BOB ${(this.price - this.cost).toFixed(2)}`;
+        this.margin = `${(((this.price - this.cost) / this.price) * 100).toFixed(2)} %`;
+      } else {
+        this.profit = "--";
+        this.margin = "--";
+      }
+    },
+    updateOptions(val) {
+      this.options = val;
+    },
     uploadFile(formData) {
       axios
         .post("products/media", formData, {
