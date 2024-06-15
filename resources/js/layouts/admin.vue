@@ -104,14 +104,15 @@
           </template>
         </Sidebar>
         <Menubar
+          class="col-11"
           :model="[]"
           style="
-                        position: fixed;
-                        width: 100%;
-                        z-index: 1000;
-                        left: 0;
-                        top: 0;
-                    "
+                          position: fixed;
+                          width: 100%;
+                          z-index: 1000;
+                          left: 0;
+                          top: 0;
+                      "
         >
           <template #start>
             <div class="flex flex-row flex-wrap">
@@ -143,12 +144,46 @@
         </Menubar>
       </div>
     </div>
-    <main
-      class="md:m-3 m-0 layout-wrapper layout-news-active p-ripple-disabled layout-light"
+    <div
+      class="grid"
       style="margin-top: 50px !important"
     >
-      <slot />
-    </main>
+      <div class="col-2">
+        <PMenu
+          :model="menuitems"
+        >
+          <template #item="{item, props}">
+            <Link
+              :key="item.label"
+              :href="route('products')"
+              style="text-decoration: none"
+            >
+              <li>
+                <a
+                  v-ripple
+                  class="p-3 flex align-items-center hover:surface-100 text-600 cursor-pointer p-ripple"
+                >
+                  <i
+                    :class="item.icon"
+                    class="mr-2 sidebar-icons"
+                  />
+                  <span class="font-medium">{{
+                    item.label
+                  }}</span>
+                </a>
+              </li>
+            </Link>
+          </template>
+        </PMenu>
+      </div>
+      <div class="col-10">
+        <main
+          class="md:m-3 m-0 layout-wrapper layout-news-active p-ripple-disabled layout-light"
+        >
+          <slot />
+        </main>
+      </div>
+    </div>
   </div>
 </template>
 <script>

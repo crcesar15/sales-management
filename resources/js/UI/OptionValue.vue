@@ -1,7 +1,8 @@
 <template>
   <AutoComplete
-    :input="name"
+    :model-value="name"
     :suggestions="suggestions"
+    :disabled="!editable"
     multiple
     class="w-full block"
     @complete="search"
@@ -18,9 +19,13 @@ export default {
     AutoComplete,
   },
   props: {
-    input: {
+    value: {
       type: String,
       default: () => "",
+    },
+    editable: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -31,7 +36,7 @@ export default {
     };
   },
   mounted() {
-    this.name = this.input;
+    this.name = this.value;
   },
   methods: {
     search(e) {
@@ -42,14 +47,14 @@ export default {
       }
     },
     addValue(e) {
-      this.selectedItems.push(e.value);
-      this.$emit("update", this.selectedItems);
+      this.name.push(e.value);
+      this.$emit("update:modelValue", this.name);
     },
     removeValue(e) {
-      this.selectedItems = this.selectedItems.filter(
+      this.name = this.name.filter(
         (item) => item !== e.value,
       );
-      this.$emit("update", this.selectedItems);
+      this.$emit("update:modelValue", this.name);
     },
   },
 };

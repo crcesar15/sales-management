@@ -97,9 +97,17 @@
           </template>
           <template #content>
             <OptionsEditor
-              :input="options"
-              @update="updateOptions"
+              :value="options"
+              @update:modelValue="(val) => { options = val; console.log('parent'); }"
             />
+            <DataTable
+              :value="variants"
+            >
+              <Column
+                field="name"
+                header="Name"
+              />
+            </DataTable>
           </template>
         </Card>
       </div>
@@ -173,6 +181,8 @@ import InputText from "primevue/inputtext";
 import { Inertia } from "@inertiajs/inertia";
 import Textarea from "primevue/textarea";
 import Dropdown from "primevue/dropdown";
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
 import MultiSelect from "primevue/multiselect";
 import Toast from "primevue/toast";
 import InputNumber from "primevue/inputnumber";
@@ -193,6 +203,8 @@ export default {
     MultiSelect,
     Toast,
     OptionsEditor,
+    DataTable,
+    Column,
   },
   props: {
     measureUnits: {
@@ -224,6 +236,35 @@ export default {
       options: [],
     };
   },
+  computed: {
+    variants() {
+      const formattedOptions = [];
+      // merge all the option values
+      const values = this.options.map((option) => option.values);
+
+      if (this.options.length === 1) {
+        values[0].forEach((value) => {
+          formattedOptions.push({ name: `${value}` });
+        });
+      } else if (this.options.length === 2) {
+        values[0].forEach((value) => {
+          values[1].forEach((v) => {
+            formattedOptions.push({ name: `${value} - ${v}` });
+          });
+        });
+      } else if (this.options.length === 3) {
+        values[0].forEach((value) => {
+          values[1].forEach((v) => {
+            values[2].forEach((val) => {
+              formattedOptions.push({ name: `${value} - ${v} - ${val}` });
+            });
+          });
+        });
+      }
+
+      return formattedOptions;
+    },
+  },
   watch: {
     price() {
       this.calculateProfit();
@@ -241,9 +282,6 @@ export default {
         this.profit = "--";
         this.margin = "--";
       }
-    },
-    updateOptions(val) {
-      this.options = val;
     },
     uploadFile(formData) {
       axios

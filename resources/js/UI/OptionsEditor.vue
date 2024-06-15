@@ -18,7 +18,7 @@
         :key="index"
         class="w-full grid flex-row mb-3"
       >
-        <div class="col-5 flex flex-column gap-3">
+        <div class="md:col-5 col-4 flex flex-column gap-3">
           <label>Option Name</label>
           <div class="grid flex-row">
             <div class="col">
@@ -30,23 +30,36 @@
             </div>
           </div>
         </div>
-        <div class="col-6 flex flex-column gap-3">
+        <div class="md:col-6 col-6 flex flex-column gap-3">
           <label>Option Values</label>
           <div class="grid flex-row">
             <div class="col">
               <OptionValue
-                v-model="option.values"
+                :value="option.values"
+                :editable="option.name.length > 0"
                 class="w-full"
+                @update:modelValue="updateOption(index)"
               />
             </div>
           </div>
         </div>
-        <div class="col-1 flex flex-column justify-content-center">
+        <div class="md:col-1 col-2 flex flex-wrap flex-row justify-content-center align-content-center">
+          <Button
+            v-show="option.edited"
+            icon="fa fa-check"
+            severity="success"
+            outlined
+            rounded
+            size="small"
+            @click="saveOption(index)"
+          />
           <Button
             icon="fa fa-trash"
-            severity="contrast"
-            text
-            @click="() => options.splice(index, 1)"
+            severity="danger"
+            outlined
+            rounded
+            size="small"
+            @click="deleteOption(index)"
           />
         </div>
       </div>
@@ -76,7 +89,7 @@ export default {
     InputText,
   },
   props: {
-    input: {
+    value: {
       type: Array,
       default: () => [],
     },
@@ -96,24 +109,32 @@ export default {
       return names.some((name, index) => names.indexOf(name) !== index);
     },
   },
-  watch: {
-    options: {
-      handler(val) {
-        console.log(val);
-        this.$emit("custom", val);
-      },
-      deep: true,
-    },
-  },
   mounted() {
-    this.options = this.input;
+    this.options = this.value;
   },
   methods: {
     addOption() {
       this.options.push({
         name: "",
         values: [],
+        edited: false,
       });
+    },
+    updateOption(value, index) {
+      console.log(index);
+      this.options[index].values = value;
+      this.options[index].edited = true;
+    },
+    saveOption(index) {
+      const originalOptions = this.value;
+      originalOptions[index] = this.options[index];
+      this.options[index].edited = false;
+
+      this.$emit("update:modelValue", originalOptions);
+    },
+    deleteOption(index) {
+      this.options.splice(index, 1);
+      this.$emit("update:modelValue", this.options);
     },
   },
 };
