@@ -7,19 +7,14 @@
 import "./bootstrap";
 
 import { createApp, h } from "vue";
+import { createVuetify } from "vuetify";
 import { createInertiaApp, Link } from "@inertiajs/inertia-vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
-
-import Ripple from "primevue/ripple";
-import StyleClass from "primevue/styleclass";
-import PrimeVue from "primevue/config";
-import ToastService from "primevue/toastservice";
-import ConfirmationService from "primevue/confirmationservice";
-import PButton from "primevue/button";
-import { InertiaProgress } from "@inertiajs/progress";
 import { ZiggyVue } from "ziggy-js";
 
 InertiaProgress.init();
+
+const vuetify = createVuetify();
 
 createInertiaApp({
   resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, import.meta.glob("./pages/**/*.vue")),
@@ -28,14 +23,8 @@ createInertiaApp({
   }) {
     createApp({ render: () => h(App, props) })
       .use(plugin)
-      .component("PButton", PButton)
-      .component("Link", Link)
+      .use(vuetify)
       .use(ZiggyVue)
-      .use(PrimeVue, { ripple: true })
-      .use(ToastService)
-      .use(ConfirmationService)
-      .directive("ripple", Ripple)
-      .directive("styleclass", StyleClass)
       .mount(el);
   },
 });

@@ -1,22 +1,33 @@
 import "../bootstrap";
 
 import { createApp } from "vue";
-import PrimeVue from "primevue/config";
-import InputText from "primevue/inputtext";
-import PPassword from "primevue/password";
-import Checkbox from "primevue/checkbox";
-import PButton from "primevue/button";
-import ToastService from "primevue/toastservice";
-import Toast from "primevue/toast";
+import { createVuetify } from "vuetify";
+import {
+  VBtn, VContainer, VCol, VRow, VCard, VTextField,
+} from "vuetify/components";
+import { aliases, fa } from "vuetify/iconsets/fa";
+
+const vuetify = createVuetify(
+  {
+    components: {
+      VBtn,
+      VContainer,
+      VCol,
+      VRow,
+      VCard,
+      VTextField,
+    },
+    icons: {
+      defaultSet: "fa",
+      aliases,
+      sets: {
+        fa,
+      },
+    },
+  },
+);
 
 const app = createApp({
-  components: {
-    InputText,
-    PPassword,
-    Checkbox,
-    PButton,
-    Toast,
-  },
   data() {
     return {
       name: "",
@@ -26,6 +37,7 @@ const app = createApp({
       password_confirmation: "",
       remember: false,
       btnLoading: false,
+      password_visible: false,
     };
   },
   mounted() {
@@ -121,6 +133,6 @@ const app = createApp({
   },
 });
 
-app.use(PrimeVue).use(ToastService);
+app.use(vuetify);
 
 app.mount("#app");
