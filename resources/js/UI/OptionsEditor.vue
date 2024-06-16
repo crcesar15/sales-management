@@ -18,36 +18,14 @@
         :key="index"
         class="w-full grid flex-row mb-3"
       >
-        <div class="md:col-5 col-4 flex flex-column gap-3">
-          <label>Option Name</label>
-          <div class="grid flex-row">
-            <div class="col">
-              <InputText
-                v-model="option.name"
-                class="w-full"
-                :invalid="checkAvailability"
-              />
-            </div>
-          </div>
-        </div>
-        <div class="md:col-6 col-6 flex flex-column gap-3">
-          <label>Option Values</label>
-          <div class="grid flex-row">
-            <div class="col">
-              <OptionValue
-                :value="option.values"
-                :editable="option.name.length > 0"
-                class="w-full"
-                @update:modelValue="updateOption(index)"
-              />
-            </div>
-          </div>
-        </div>
-        <div class="md:col-1 col-2 flex flex-wrap flex-row justify-content-center align-content-center">
+        <div
+          class="col-12 flex flex-wrap flex-row justify-content-end"
+          style="margin-bottom: -35px;"
+        >
           <Button
-            v-show="option.edited"
-            icon="fa fa-check"
-            severity="success"
+            v-show="!option.saved"
+            icon="fa fa-floppy-disk"
+            style="width: 25px; height: 25px; padding: 0px; margin-right: 4px;"
             outlined
             rounded
             size="small"
@@ -55,12 +33,41 @@
           />
           <Button
             icon="fa fa-trash"
-            severity="danger"
+            style="width: 25px; height: 25px; padding: 0px;"
             outlined
             rounded
             size="small"
             @click="deleteOption(index)"
           />
+        </div>
+        <div class="md:col-6 col-12 flex flex-column gap-3">
+          <label :for="`option-${index}`">Option Name</label>
+          <div class="grid flex-row">
+            <div class="col">
+              <InputText
+                :id="`option-${index}`"
+                v-model="option.name"
+                class="w-full"
+                :invalid="checkAvailability"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="md:col-6 col-12 flex flex-column gap-3">
+          <label :for="`values-${index}`">Option Values</label>
+          <div class="grid flex-row">
+            <div class="col">
+              <Chips
+                v-model="option.values"
+                :input-id="`values-${index}`"
+                :disabled="option.name.length === 0"
+                separator=","
+                class="w-full block"
+                @add="option.saved = false"
+                @remove="option.saved = false"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div class="grid">
@@ -78,15 +85,17 @@
 </template>
 
 <script>
+import ButtonGroup from "primevue/buttongroup";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
-import OptionValue from "./OptionValue.vue";
+import Chips from "primevue/chips";
 
 export default {
   components: {
     Button,
-    OptionValue,
+    Chips,
     InputText,
+    ButtonGroup,
   },
   props: {
     value: {
@@ -109,6 +118,14 @@ export default {
       return names.some((name, index) => names.indexOf(name) !== index);
     },
   },
+  watch: {
+    options: {
+      handler(value) {
+        this.$emit("update:modelValue", value);
+      },
+      deep: true,
+    },
+  },
   mounted() {
     this.options = this.value;
   },
@@ -117,24 +134,16 @@ export default {
       this.options.push({
         name: "",
         values: [],
-        edited: false,
+        saved: false,
       });
-    },
-    updateOption(value, index) {
-      console.log(index);
-      this.options[index].values = value;
-      this.options[index].edited = true;
     },
     saveOption(index) {
       const originalOptions = this.value;
       originalOptions[index] = this.options[index];
-      this.options[index].edited = false;
-
-      this.$emit("update:modelValue", originalOptions);
+      this.options[index].saved = true;
     },
     deleteOption(index) {
       this.options.splice(index, 1);
-      this.$emit("update:modelValue", this.options);
     },
   },
 };

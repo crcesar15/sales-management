@@ -63,16 +63,17 @@
               </div>
             </div>
             <div class="grid">
-              <div class="lg:col-4 md:col-6 col-12 flex flex-column gap-2 mb-3">
+              <div class="flex flex-column lg:col-4 md:col-6 col-12 gap-2 mb-3">
                 <label for="cost">Cost Per Item</label>
                 <InputNumber
                   id="cost"
                   v-model="cost"
+                  input-class="w-full"
                   mode="currency"
                   currency="BOB"
                 />
               </div>
-              <div class="lg:col-4 md:col-6 col-12 flex flex-column gap-2 mb-3">
+              <div class="flex flex-column lg:col-4 md:col-6 col-12 gap-2 mb-3">
                 <label for="profit">Profit</label>
                 <InputText
                   id="profit"
@@ -80,7 +81,7 @@
                   disabled
                 />
               </div>
-              <div class="lg:col-4 md:col-6 col-12 flex flex-column gap-2 mb-3">
+              <div class="flex flex-column lg:col-4 md:col-6 col-12 gap-2 mb-3">
                 <label for="margin">Margin</label>
                 <InputText
                   id="margin"
@@ -97,8 +98,7 @@
           </template>
           <template #content>
             <OptionsEditor
-              :value="options"
-              @update:modelValue="(val) => { options = val; console.log('parent'); }"
+              v-model="options"
             />
             <DataTable
               :value="variants"
@@ -240,19 +240,25 @@ export default {
     variants() {
       const formattedOptions = [];
       // merge all the option values
+      const options = this.options.filter((option) => option.saved === true);
+
+      if (options.length === 0) {
+        return [];
+      }
+
       const values = this.options.map((option) => option.values);
 
-      if (this.options.length === 1) {
+      if (options.length === 1) {
         values[0].forEach((value) => {
           formattedOptions.push({ name: `${value}` });
         });
-      } else if (this.options.length === 2) {
+      } else if (options.length === 2) {
         values[0].forEach((value) => {
           values[1].forEach((v) => {
             formattedOptions.push({ name: `${value} - ${v}` });
           });
         });
-      } else if (this.options.length === 3) {
+      } else if (options.length === 3) {
         values[0].forEach((value) => {
           values[1].forEach((v) => {
             values[2].forEach((val) => {
@@ -274,6 +280,9 @@ export default {
     },
   },
   methods: {
+    updateOptions(options) {
+      this.options = options;
+    },
     calculateProfit() {
       if (this.price !== 0 || this.cost !== 0) {
         this.profit = `BOB ${(this.price - this.cost).toFixed(2)}`;

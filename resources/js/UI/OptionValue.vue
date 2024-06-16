@@ -1,22 +1,18 @@
 <template>
-  <AutoComplete
-    :model-value="name"
-    :suggestions="suggestions"
+  <Chips
+    :model-value="options"
     :disabled="!editable"
     multiple
     class="w-full block"
-    @complete="search"
-    @item-select="addValue"
-    @item-unselect="removeValue"
   />
 </template>
 
 <script>
-import AutoComplete from "primevue/autocomplete";
+import Chips from "primevue/chips";
 
 export default {
   components: {
-    AutoComplete,
+    Chips,
   },
   props: {
     value: {
@@ -30,13 +26,12 @@ export default {
   },
   data() {
     return {
-      name: [],
-      suggestions: [],
+      options: "",
       selectedItems: [],
     };
   },
   mounted() {
-    this.name = this.value;
+    this.options = this.value;
   },
   methods: {
     search(e) {
@@ -45,16 +40,6 @@ export default {
       } else {
         this.suggestions = [e.query];
       }
-    },
-    addValue(e) {
-      this.name.push(e.value);
-      this.$emit("update:modelValue", this.name);
-    },
-    removeValue(e) {
-      this.name = this.name.filter(
-        (item) => item !== e.value,
-      );
-      this.$emit("update:modelValue", this.name);
     },
   },
 };

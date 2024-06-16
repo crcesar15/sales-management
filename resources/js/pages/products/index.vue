@@ -396,7 +396,6 @@ export default {
 
       axios.get(url)
         .then((response) => {
-          console.log(response.data.data);
           this.products = response.data.data;
           this.pagination.total = response.data.meta.total;
           this.loading = false;
