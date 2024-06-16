@@ -64,24 +64,37 @@ class DatabaseSeeder extends Seeder
         Storage::makeDirectory('public/products');
 
         //Product categories
+        // Category::factory(10)->create()->each(function ($category) use ($medias) {
+        //     //create 5 products for each category
+        //     Product::factory(5)->create([
+        //         'category_id' => $category->id,
+        //     ])->each(function ($product) use ($medias) {
+        //         Media::factory(rand(1, 2))->create([
+        //             'filename' => $medias->random()->filename,
+        //             'model_id' => $product->id,
+        //             'model_type' => Product::class,
+        //         ])->each(function ($media) use ($product) {
+        //             ProductVariant::factory(1)->create([
+        //                 'product_id' => $product->id,
+        //                 'media' => [
+        //                     [
+        //                         'id' => $media->id,
+        //                     ],
+        //                 ],
+        //             ]);
+        //         });
+        //     });
+        // });
+
         Category::factory(10)->create()->each(function ($category) {
             //create 5 products for each category
             Product::factory(5)->create([
                 'category_id' => $category->id,
             ])->each(function ($product) {
-                Media::factory(rand(0, 3))->create([
-                    'model_id' => $product->id,
-                    'model_type' => Product::class,
-                ])->each(function ($media) use ($product) {
-                    ProductVariant::factory(1)->create([
-                        'product_id' => $product->id,
-                        'media' => json_encode([
-                            [
-                                'id' => $media->id,
-                            ],
-                        ]),
-                    ]);
-                });
+                ProductVariant::factory(rand(1, 3))->create([
+                    'product_id' => $product->id,
+                    'media' => null,
+                ]);
             });
         });
 

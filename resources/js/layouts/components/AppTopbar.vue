@@ -1,6 +1,10 @@
 <script >
+import { Link } from "@inertiajs/inertia-vue3";
 
 export default {
+  components: {
+    Link,
+  },
   data() {
     return {
       outsideClickListener: null,
@@ -60,12 +64,12 @@ export default {
 
 <template>
   <div class="layout-topbar">
-    <router-link
+    <Link
       to="/"
       class="layout-topbar-logo"
     >
       <span>SAKAI</span>
-    </router-link>
+    </Link>
 
     <button
       class="p-link layout-menu-button layout-topbar-button"

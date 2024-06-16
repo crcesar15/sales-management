@@ -42,8 +42,12 @@ class Products extends ResourceCollection
                         'status' => $variant->status,
                     ];
 
-                    foreach ($variant->media as $media) {
-                        $formattedVariant['media'][] = Media::where('id', $media['id'])->first();
+                    if ($variant->media) {
+                        foreach ($variant->media as $media) {
+                            $formattedVariant['media'][] = Media::where('id', $media['id'])->first();
+                        }
+                    } else {
+                        $formattedVariant['media'] = [];
                     }
 
                     return $formattedVariant;

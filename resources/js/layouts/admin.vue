@@ -5,15 +5,18 @@
     >
       <slot />
     </main>
+    <Toast />
   </app-layout>
 </template>
 <script>
 import axios from "axios";
+import Toast from "primevue/toast";
 import AppLayout from "./components/AppLayout.vue";
 
 export default {
   components: {
     AppLayout,
+    Toast,
   },
   provide() {
     return {

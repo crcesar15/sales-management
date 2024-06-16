@@ -112,10 +112,12 @@
               >
               <div
                 v-else
-                class="bg-gray-200 border-round flex justify-content-center align-items-center"
+                class="bg-gray-200 border-round justify-content-center align-items-center flex"
                 style="height: 55px; width: 55px;"
               >
-                <h2>{{ data.name.substring(0, 2) }}</h2>
+                <p style="font-size: 18px; font-weight: bold;">
+                  {{ data.name.substring(0, 2).toUpperCase() }}
+                </p>
               </div>
             </template>
           </Column>
@@ -394,6 +396,7 @@ export default {
 
       axios.get(url)
         .then((response) => {
+          console.log(response.data.data);
           this.products = response.data.data;
           this.pagination.total = response.data.meta.total;
           this.loading = false;

@@ -132,7 +132,6 @@ export default {
     </div>
     <div class="layout-mask" />
   </div>
-  <Toast />
 </template>
 
 <style lang="scss" scoped></style>
