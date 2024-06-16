@@ -36,7 +36,7 @@
         >
           <template #header>
             <div class="grid">
-              <div class="xl:col-4 lg:col-5 md:col-6 col-12 flex md:justify-content-start justify-content-center">
+              <div class="xl:col-6 lg:col-6 md:col-6 col-12 flex md:justify-content-start justify-content-center">
                 <SelectButton
                   v-model="status"
                   :options="[{
@@ -60,10 +60,8 @@
               <div
                 class="
                   flex
-                  xl:col-4
-                  xl:col-offset-4
-                  lg:col-5
-                  lg:col-offset-2
+                  xl:col-6
+                  lg:col-6
                   md:col-6
                   col-12
                   md:justify-content-end
@@ -236,7 +234,9 @@
                       class="bg-gray-200 border-round flex justify-content-center align-items-center"
                       style="height: 55px; width: 55px;"
                     >
-                      <h2>{{ data.name.substring(0, 2) }}</h2>
+                      <p style="font-size:18px; font-weight: bold">
+                        {{ data.name.substring(0, 2).toUpperCase() }}
+                      </p>
                     </div>
                   </template>
                 </Column>
