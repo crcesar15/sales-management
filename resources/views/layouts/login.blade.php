@@ -18,7 +18,7 @@
 
 <body>
     <div id="app">
-        <main class="py-4">
+        <main class="py-4 md:mx-4 lg:mx-4 mx-0" style="height: 100vh">
             @yield('content')
         </main>
     </div>

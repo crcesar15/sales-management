@@ -6,16 +6,17 @@
 @import "primevue/resources/primevue.min.css";
 @import "primeflex/primeflex.scss";
 @import "@fortawesome/fontawesome-free/css/all.min.css";
+@import "./layout/layout.scss";
 
 /* adjust the font size for mobile */
 @media (max-width: 768px) {
     html {
-        font-size: 14px !important;
+        font-size: 12px !important;
     }
 }
 
 html {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .layout-light {

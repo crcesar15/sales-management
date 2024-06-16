@@ -8,9 +8,9 @@
         severity="secondary"
         @click="$inertia.visit(route('products'))"
       />
-      <h2 class="ml-2">
+      <h4 class="ml-2">
         Add Product
-      </h2>
+      </h4>
     </div>
     <div class="grid">
       <div class="md:col-8 col-12">
