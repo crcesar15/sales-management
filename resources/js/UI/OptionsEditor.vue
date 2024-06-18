@@ -27,7 +27,6 @@
             icon="fa fa-floppy-disk"
             style="width: 25px; height: 25px; padding: 0px; margin-right: 4px;"
             outlined
-            rounded
             size="small"
             @click="saveOption(index)"
           />
@@ -35,7 +34,6 @@
             icon="fa fa-trash"
             style="width: 25px; height: 25px; padding: 0px;"
             outlined
-            rounded
             size="small"
             @click="deleteOption(index)"
           />

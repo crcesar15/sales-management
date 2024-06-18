@@ -101,12 +101,65 @@
               v-model="options"
             />
             <DataTable
+              v-show="variants.length > 0"
               :value="variants"
             >
               <Column
+                field="media"
+                header="Media"
+              >
+                <template #body="slotProps">
+                  <img
+                    v-if="slotProps.data.media.length > 0"
+                    :src="slotProps.data.media[0].url"
+                    alt="product"
+                    style="width: 50px; height: 50px;"
+                  >
+                  <div v-else>
+                    No image
+                  </div>
+                </template>
+              </Column>
+              <Column
+                style="font-weight: 500;"
                 field="name"
-                header="Name"
+                header="Variant"
               />
+              <Column
+                field="price"
+                header="Price"
+              >
+                <template #body="slotProps">
+                  <InputNumber
+                    v-model="slotProps.data.price"
+                    mode="currency"
+                    currency="BOB"
+                  />
+                </template>
+              </Column>
+              <Column
+                field="identifier"
+                header="Identifier"
+              >
+                <template #body="slotProps">
+                  <InputText
+                    v-model="slotProps.data.identifier"
+                  />
+                </template>
+              </Column>
+              <Column
+                field="actions"
+                header="Actions"
+              >
+                <template #body="slotProps">
+                  <PButton
+                    icon="fa fa-trash"
+                    severity="danger"
+                    outlined
+                    @click="removeVariant(slotProps.data.hash)"
+                  />
+                </template>
+              </Column>
             </DataTable>
           </template>
         </Card>
@@ -234,10 +287,11 @@ export default {
       margin: "--",
       profit: "--",
       options: [],
+      variants: [],
     };
   },
   computed: {
-    variants() {
+    formattedVariants() {
       const formattedOptions = [];
       // merge all the option values
       const options = this.options.filter((option) => option.saved === true);
@@ -255,14 +309,14 @@ export default {
       } else if (options.length === 2) {
         values[0].forEach((value) => {
           values[1].forEach((v) => {
-            formattedOptions.push({ name: `${value} - ${v}` });
+            formattedOptions.push({ name: `${value} / ${v}` });
           });
         });
       } else if (options.length === 3) {
         values[0].forEach((value) => {
           values[1].forEach((v) => {
             values[2].forEach((val) => {
-              formattedOptions.push({ name: `${value} - ${v} - ${val}` });
+              formattedOptions.push({ name: `${value} / ${v} / ${val}` });
             });
           });
         });
@@ -278,8 +332,30 @@ export default {
     cost() {
       this.calculateProfit();
     },
+    formattedVariants() {
+      this.variants = this.formattedVariants.map((variant) => {
+        // hash the variant name, get all only the letters and numbers then sort them
+        const hash = variant.name
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toLowerCase()
+          .split("")
+          .sort()
+          .join("");
+
+        return {
+          hash,
+          name: variant.name,
+          price: 0,
+          identifier: null,
+          media: [],
+        };
+      });
+    },
   },
   methods: {
+    removeVariant(hash) {
+      this.variants = this.variants.filter((variant) => variant.hash !== hash);
+    },
     updateOptions(options) {
       this.options = options;
     },
