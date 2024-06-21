@@ -142,6 +142,7 @@ export default {
       this.options[index].saved = true;
     },
     deleteOption(index) {
+      this.$emit("option-deleted", this.options[index]);
       this.options.splice(index, 1);
     },
   },

@@ -114,6 +114,7 @@
             <OptionsEditor
               v-show="hasVariants"
               v-model="options"
+              @option-deleted="removeItemVariantByOption"
             />
           </template>
         </Card>
@@ -137,7 +138,7 @@
                 <PButton
                   outlined
                   label="Generate Variants"
-                  @click="generateVariants"
+                  @click="generateVariants()"
                 />
               </div>
             </div>
@@ -411,7 +412,7 @@ export default {
           });
         });
     },
-    generateVariants() {
+    generateVariants(allowedOptions = false) {
       const formattedOptions = [];
       // merge all the option values
       const options = this.options.filter((option) => option.saved === true);
@@ -442,22 +443,76 @@ export default {
         });
       }
 
-      this.variants = formattedOptions.map((variant) => {
-        // hash the variant name, get all only the letters and numbers then sort them
-        const hash = variant.name
-          .replace(/[^a-zA-Z0-9]/g, "")
-          .toLowerCase()
-          .split("")
-          .sort()
-          .join("");
+      const variants = [];
 
-        return {
-          hash,
-          name: variant.name,
-          price: 0,
-          identifier: null,
-          media: [],
-        };
+      formattedOptions.forEach((variant) => {
+        let formattedVariant;
+        // hash the variant name, get all only the letters and numbers then sort them
+        if (allowedOptions === false) {
+          const hash = variant.name
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .toLowerCase()
+            .split("")
+            .sort()
+            .join("");
+
+          formattedVariant = {
+            hash,
+            name: variant.name,
+            options: variant.options,
+            price: 0,
+            identifier: null,
+            media: [],
+          };
+
+          variants.push(formattedVariant);
+        } else {
+          allowedOptions.forEach((option) => {
+            if (variant.options.includes(option)) {
+              const hash = variant.name
+                .replace(/[^a-zA-Z0-9]/g, "")
+                .toLowerCase()
+                .split("")
+                .sort()
+                .join("");
+
+              formattedVariant = {
+                hash,
+                name: variant.name,
+                options: variant.options,
+                price: 0,
+                identifier: null,
+                media: [],
+              };
+              variants.push(formattedVariant);
+            }
+          });
+        }
+      });
+
+      this.variants = variants;
+    },
+    removeItemVariantByOption(option) {
+      let allowedOptions = [];
+
+      this.variants.forEach((variant) => {
+        option.values.forEach((value) => {
+          // remove value from the variant options
+          const index = variant.options.indexOf(value);
+
+          if (index > -1) {
+            variant.options.splice(index, 1);
+            // merge the allowed options
+            allowedOptions = allowedOptions.concat(variant.options);
+          }
+        });
+      });
+
+      // remove duplicates
+      allowedOptions = [...new Set(allowedOptions)];
+
+      this.$nextTick(() => {
+        this.generateVariants(allowedOptions);
       });
     },
   },
