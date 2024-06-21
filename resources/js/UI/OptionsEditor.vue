@@ -28,6 +28,7 @@
             style="width: 25px; height: 25px; padding: 0px; margin-right: 4px;"
             outlined
             size="small"
+            :disabled="option.name.length === 0 || option.values.length === 0"
             @click="saveOption(index)"
           />
           <Button

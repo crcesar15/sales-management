@@ -94,12 +94,55 @@
         </Card>
         <Card class="mb-4">
           <template #title>
-            Variants
+            <div class="flex justify-content-between flex-wrap">
+              <div>
+                Options
+              </div>
+              <div class="flex align-items-center">
+                <label
+                  for="hasVariants"
+                  class="mr-3"
+                  style="font-weight: lighter; font-size: 14px;"
+                >
+                  This product has variants?
+                </label>
+                <InputSwitch v-model="hasVariants" />
+              </div>
+            </div>
           </template>
           <template #content>
             <OptionsEditor
+              v-show="hasVariants"
               v-model="options"
             />
+          </template>
+        </Card>
+        <Card
+          v-show="options.length > 0"
+          class="mb-4"
+        >
+          <template #title>
+            <div class="flex justify-content-between flex-wrap">
+              <div>
+                Variants
+              </div>
+              <div>
+                <PButton
+                  label="Add Variant"
+                  class="mr-2"
+                  @click="addVariant"
+                >
+                  Add Variant
+                </PButton>
+                <PButton
+                  outlined
+                  label="Generate Variants"
+                  @click="generateVariants"
+                />
+              </div>
+            </div>
+          </template>
+          <template #content>
             <DataTable
               v-show="variants.length > 0"
               :value="variants"
@@ -239,6 +282,7 @@ import Column from "primevue/column";
 import MultiSelect from "primevue/multiselect";
 import Toast from "primevue/toast";
 import InputNumber from "primevue/inputnumber";
+import InputSwitch from "primevue/inputswitch";
 import AppLayout from "../../layouts/admin.vue";
 import MediaManager from "../../UI/MediaManager.vue";
 import OptionsEditor from "../../UI/OptionsEditor.vue";
@@ -258,6 +302,7 @@ export default {
     OptionsEditor,
     DataTable,
     Column,
+    InputSwitch,
   },
   props: {
     measureUnits: {
@@ -288,42 +333,8 @@ export default {
       profit: "--",
       options: [],
       variants: [],
+      hasVariants: false,
     };
-  },
-  computed: {
-    formattedVariants() {
-      const formattedOptions = [];
-      // merge all the option values
-      const options = this.options.filter((option) => option.saved === true);
-
-      if (options.length === 0) {
-        return [];
-      }
-
-      const values = this.options.map((option) => option.values);
-
-      if (options.length === 1) {
-        values[0].forEach((value) => {
-          formattedOptions.push({ name: `${value}` });
-        });
-      } else if (options.length === 2) {
-        values[0].forEach((value) => {
-          values[1].forEach((v) => {
-            formattedOptions.push({ name: `${value} / ${v}` });
-          });
-        });
-      } else if (options.length === 3) {
-        values[0].forEach((value) => {
-          values[1].forEach((v) => {
-            values[2].forEach((val) => {
-              formattedOptions.push({ name: `${value} / ${v} / ${val}` });
-            });
-          });
-        });
-      }
-
-      return formattedOptions;
-    },
   },
   watch: {
     price() {
@@ -331,25 +342,6 @@ export default {
     },
     cost() {
       this.calculateProfit();
-    },
-    formattedVariants() {
-      this.variants = this.formattedVariants.map((variant) => {
-        // hash the variant name, get all only the letters and numbers then sort them
-        const hash = variant.name
-          .replace(/[^a-zA-Z0-9]/g, "")
-          .toLowerCase()
-          .split("")
-          .sort()
-          .join("");
-
-        return {
-          hash,
-          name: variant.name,
-          price: 0,
-          identifier: null,
-          media: [],
-        };
-      });
     },
   },
   methods: {
@@ -418,6 +410,55 @@ export default {
             life: 3000,
           });
         });
+    },
+    generateVariants() {
+      const formattedOptions = [];
+      // merge all the option values
+      const options = this.options.filter((option) => option.saved === true);
+
+      if (options.length === 0) {
+        this.variants = [];
+      }
+
+      const values = this.options.map((option) => option.values);
+
+      if (options.length === 1) {
+        values[0].forEach((value) => {
+          formattedOptions.push({ name: `${value}`, options: [value] });
+        });
+      } else if (options.length === 2) {
+        values[0].forEach((value) => {
+          values[1].forEach((v) => {
+            formattedOptions.push({ name: `${value} / ${v}`, options: [value, v] });
+          });
+        });
+      } else if (options.length === 3) {
+        values[0].forEach((value) => {
+          values[1].forEach((v) => {
+            values[2].forEach((val) => {
+              formattedOptions.push({ name: `${value} / ${v} / ${val}`, options: [value, v, val] });
+            });
+          });
+        });
+      }
+
+      this.variants = formattedOptions.map((variant) => {
+        // hash the variant name, get all only the letters and numbers then sort them
+        const hash = variant.name
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toLowerCase()
+          .split("")
+          .sort()
+          .join("");
+
+        return {
+          hash,
+          name: variant.name,
+          price: 0,
+          identifier: null,
+          media: [],
+        };
+      });
     },
   },
 };
