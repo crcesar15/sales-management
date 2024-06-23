@@ -46,13 +46,16 @@
             </div>
           </template>
         </Card>
-        <Card class="mb-4">
+        <Card
+          v-show="hasVariants === false"
+          class="mb-4"
+        >
           <template #title>
-            Pricing
+            Details
           </template>
           <template #content>
             <div class="grid">
-              <div class="lg:col-4 md:col-6 col-12 flex flex-column gap-2 mb-3">
+              <div class="flex flex-column lg:col-6 md:col-6 col-12 gap-2 mb-3">
                 <label for="price">Price</label>
                 <InputNumber
                   id="price"
@@ -61,32 +64,11 @@
                   currency="BOB"
                 />
               </div>
-            </div>
-            <div class="grid">
-              <div class="flex flex-column lg:col-4 md:col-6 col-12 gap-2 mb-3">
-                <label for="cost">Cost Per Item</label>
-                <InputNumber
-                  id="cost"
-                  v-model="cost"
-                  input-class="w-full"
-                  mode="currency"
-                  currency="BOB"
-                />
-              </div>
-              <div class="flex flex-column lg:col-4 md:col-6 col-12 gap-2 mb-3">
-                <label for="profit">Profit</label>
+              <div class="flex flex-column lg:col-6 md:col-6 col-12 gap-2 mb-3">
+                <label for="profit">Bar Code or Identifier</label>
                 <InputText
                   id="profit"
-                  :value="profit"
-                  disabled
-                />
-              </div>
-              <div class="flex flex-column lg:col-4 md:col-6 col-12 gap-2 mb-3">
-                <label for="margin">Margin</label>
-                <InputText
-                  id="margin"
-                  :value="margin"
-                  disabled
+                  :value="identifier"
                 />
               </div>
             </div>
@@ -119,7 +101,7 @@
           </template>
         </Card>
         <Card
-          v-show="options.length > 0"
+          v-show="options.length > 0 && hasVariants === true"
           class="mb-4"
         >
           <template #title>
@@ -170,6 +152,28 @@
                 header="Variant"
               />
               <Column
+                field="identifier"
+                header="Identifier"
+              >
+                <template #body="slotProps">
+                  <InputText
+                    v-model="slotProps.data.identifier"
+                  />
+                </template>
+              </Column>
+              <Column
+                field="cost"
+                header="Cost"
+              >
+                <template #body="slotProps">
+                  <InputNumber
+                    v-model="slotProps.data.cost"
+                    mode="currency"
+                    currency="BOB"
+                  />
+                </template>
+              </Column>
+              <Column
                 field="price"
                 header="Price"
               >
@@ -182,23 +186,13 @@
                 </template>
               </Column>
               <Column
-                field="identifier"
-                header="Identifier"
-              >
-                <template #body="slotProps">
-                  <InputText
-                    v-model="slotProps.data.identifier"
-                  />
-                </template>
-              </Column>
-              <Column
                 field="actions"
                 header="Actions"
               >
                 <template #body="slotProps">
                   <PButton
                     icon="fa fa-trash"
-                    severity="danger"
+                    severity="primary"
                     outlined
                     @click="removeVariant(slotProps.data.hash)"
                   />
@@ -324,26 +318,16 @@ export default {
       name: "",
       description: "",
       price: 0,
-      cost: 0,
+      identifier: "",
       status: "active",
       brand: "",
       measureUnit: "",
       files: [],
       category: [],
-      margin: "--",
-      profit: "--",
       options: [],
       variants: [],
       hasVariants: false,
     };
-  },
-  watch: {
-    price() {
-      this.calculateProfit();
-    },
-    cost() {
-      this.calculateProfit();
-    },
   },
   methods: {
     removeVariant(hash) {
@@ -351,15 +335,6 @@ export default {
     },
     updateOptions(options) {
       this.options = options;
-    },
-    calculateProfit() {
-      if (this.price !== 0 || this.cost !== 0) {
-        this.profit = `BOB ${(this.price - this.cost).toFixed(2)}`;
-        this.margin = `${(((this.price - this.cost) / this.price) * 100).toFixed(2)} %`;
-      } else {
-        this.profit = "--";
-        this.margin = "--";
-      }
     },
     uploadFile(formData) {
       axios

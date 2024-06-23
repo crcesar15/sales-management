@@ -84,7 +84,7 @@
 </template>
 
 <script>
-import ButtonGroup from "primevue/buttongroup";
+
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Chips from "primevue/chips";
@@ -94,7 +94,7 @@ export default {
     Button,
     Chips,
     InputText,
-    ButtonGroup,
+
   },
   props: {
     value: {
