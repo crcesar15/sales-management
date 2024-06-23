@@ -135,14 +135,22 @@
                 header="Media"
               >
                 <template #body="slotProps">
-                  <img
-                    v-if="slotProps.data.media.length > 0"
-                    :src="slotProps.data.media[0].url"
-                    alt="product"
-                    style="width: 50px; height: 50px;"
+                  <div
+                    class="cursor-pointer"
+                    @click="addImagesToVariant(slotProps.index, slotProps.data.media)"
                   >
-                  <div v-else>
-                    No image
+                    <img
+                      v-if="slotProps.data.media.length > 0"
+                      :src="slotProps.data.media[0].url"
+                      alt="product"
+                      class="border-round border-1 h-5rem w-5rem"
+                    >
+                    <div
+                      v-else
+                      class="border-dashed h-5rem w-5rem flex justify-content-center align-items-center"
+                    >
+                      <i class="fa fa-file-circle-plus" />
+                    </div>
                   </div>
                 </template>
               </Column>
@@ -158,18 +166,6 @@
                 <template #body="slotProps">
                   <InputText
                     v-model="slotProps.data.identifier"
-                  />
-                </template>
-              </Column>
-              <Column
-                field="cost"
-                header="Cost"
-              >
-                <template #body="slotProps">
-                  <InputNumber
-                    v-model="slotProps.data.cost"
-                    mode="currency"
-                    currency="BOB"
                   />
                 </template>
               </Column>
@@ -261,6 +257,52 @@
           </template>
         </Card>
       </div>
+      <Dialog
+        v-model:visible="showVariantImages"
+        modal
+        position="top"
+        header="Add Images to Variant"
+        :style="{ width: '50vw' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+      >
+        <div class="grid">
+          <div
+            v-for="file in files"
+            :key="file.id"
+            class="col-3"
+          >
+            <div class="flex flex-column gap-2">
+              <img
+                :src="file.url"
+                alt="product"
+                style="border: solid 1px var(--surface-400)"
+                class="border-round"
+              >
+              <div
+                class="flex justify-content-center"
+              >
+                <Checkbox
+                  v-model="selectedVariantImages"
+                  :value="file.id"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <template #footer>
+          <PButton
+            label="Cancel"
+            outlined
+            severity="primary"
+            @click="toggleVariantImages"
+          />
+          <PButton
+            label="Save"
+            severity="primary"
+            @click="saveSelectedVariantImages"
+          />
+        </template>
+      </Dialog>
     </div>
   </AppLayout>
 </template>
@@ -278,6 +320,8 @@ import MultiSelect from "primevue/multiselect";
 import Toast from "primevue/toast";
 import InputNumber from "primevue/inputnumber";
 import InputSwitch from "primevue/inputswitch";
+import Checkbox from "primevue/checkbox";
+import Dialog from "primevue/dialog";
 import AppLayout from "../../layouts/admin.vue";
 import MediaManager from "../../UI/MediaManager.vue";
 import OptionsEditor from "../../UI/OptionsEditor.vue";
@@ -298,6 +342,8 @@ export default {
     DataTable,
     Column,
     InputSwitch,
+    Dialog,
+    Checkbox,
   },
   props: {
     measureUnits: {
@@ -327,6 +373,9 @@ export default {
       options: [],
       variants: [],
       hasVariants: false,
+      showVariantImages: false,
+      selectedVariantImages: [],
+      selectedVariantId: null,
     };
   },
   methods: {
@@ -489,6 +538,24 @@ export default {
       this.$nextTick(() => {
         this.generateVariants(allowedOptions);
       });
+    },
+    addImagesToVariant(index, media) {
+      this.selectedVariantImages = media.map((file) => file.id);
+      this.selectedVariantId = index;
+      this.toggleVariantImages();
+    },
+    toggleVariantImages() {
+      this.showVariantImages = !this.showVariantImages;
+    },
+    saveSelectedVariantImages() {
+      const variant = this.variants[this.selectedVariantId];
+      const media = this.selectedVariantImages.map((id) => this.files.find((file) => file.id === id));
+
+      variant.media = media;
+      this.variants[this.selectedVariantId] = variant;
+      this.selectedVariantId = null;
+      this.selectedVariantImages = [];
+      this.toggleVariantImages();
     },
   },
 };
