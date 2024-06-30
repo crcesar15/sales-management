@@ -594,6 +594,62 @@ export default {
       this.toggleVariantEditor();
       this.selectedOptions = [];
     },
+    saveVariant() {
+      console.log(this.selectedOptions);
+
+      switch (this.selectedOptions.length) {
+        case 1:
+          this.variants.push({
+            hash: this.selectedOptions[0]
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase()
+              .split("")
+              .sort()
+              .join(""),
+            name: this.selectedOptions[0],
+            options: [this.selectedOptions[0]],
+            price: 0,
+            identifier: null,
+            media: [],
+          });
+          break;
+        case 2:
+          this.variants.push({
+            hash: this.selectedOptions.join(" / ")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase()
+              .split("")
+              .sort()
+              .join(""),
+            name: this.selectedOptions.join(" / "),
+            options: this.selectedOptions,
+            price: 0,
+            identifier: null,
+            media: [],
+          });
+          break;
+        case 3:
+          this.variants.push({
+            hash: this.selectedOptions.join(" / ")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase()
+              .split("")
+              .sort()
+              .join(""),
+            name: this.selectedOptions.join(" / "),
+            options: this.selectedOptions,
+            price: 0,
+            identifier: null,
+            media: [],
+          });
+          break;
+        default:
+          break;
+      }
+
+      this.selectedOptions = [];
+      this.toggleVariantEditor();
+    },
   },
 };
 </script>
