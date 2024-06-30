@@ -113,10 +113,8 @@
                 <PButton
                   label="Add Variant"
                   class="mr-2"
-                  @click="addVariant"
-                >
-                  Add Variant
-                </PButton>
+                  @click="addVariant()"
+                />
                 <PButton
                   outlined
                   label="Generate Variants"
@@ -258,9 +256,39 @@
         </Card>
       </div>
       <Dialog
+        v-model:visible="showVariantEditor"
+        modal
+        header="Add Variant"
+      >
+        <div
+          v-for="(option, index) in options"
+          :key="index"
+          class="flex flex-column gap-2 mb-3"
+        >
+          <label>{{ option.name }}</label>
+          <Dropdown
+            v-model="selectedOptions[index]"
+            :options="option.values"
+            class="w-full md:w-14rem"
+          />
+        </div>
+        <template #footer>
+          <PButton
+            label="Cancel"
+            outlined
+            severity="primary"
+            @click="toggleVariantEditor"
+          />
+          <PButton
+            label="Save"
+            severity="primary"
+            @click="saveVariant"
+          />
+        </template>
+      </Dialog>
+      <Dialog
         v-model:visible="showVariantImages"
         modal
-        position="top"
         header="Add Images to Variant"
         :style="{ width: '50vw' }"
         :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
@@ -376,6 +404,8 @@ export default {
       showVariantImages: false,
       selectedVariantImages: [],
       selectedVariantId: null,
+      showVariantEditor: false,
+      selectedOptions: [],
     };
   },
   methods: {
@@ -556,6 +586,13 @@ export default {
       this.selectedVariantId = null;
       this.selectedVariantImages = [];
       this.toggleVariantImages();
+    },
+    toggleVariantEditor() {
+      this.showVariantEditor = !this.showVariantEditor;
+    },
+    addVariant() {
+      this.toggleVariantEditor();
+      this.selectedOptions = [];
     },
   },
 };
