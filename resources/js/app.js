@@ -18,6 +18,26 @@ import ConfirmationService from "primevue/confirmationservice";
 import PButton from "primevue/button";
 import { InertiaProgress } from "@inertiajs/progress";
 import { ZiggyVue } from "ziggy-js";
+import { defineRule, configure } from "vee-validate";
+import * as rules from "@vee-validate/rules";
+import { localize } from "@vee-validate/i18n";
+
+// Define VeeValidate rules
+Object.keys(rules).forEach((rule) => {
+  if (rule !== "all") {
+    defineRule(rule, rules[rule]);
+  }
+});
+
+// Set up VeeValidate configuration
+configure({
+  generateMessage: localize("en", {
+    messages: {
+      required: "This field is required",
+      // other messages
+    },
+  }),
+});
 
 InertiaProgress.init();
 

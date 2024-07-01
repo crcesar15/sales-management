@@ -1,16 +1,24 @@
 <template>
   <AppLayout>
     <Toast />
-    <div class="col-12 flex">
-      <PButton
-        icon="fa fa-arrow-left"
-        text
-        severity="secondary"
-        @click="$inertia.visit(route('products'))"
-      />
-      <h4 class="ml-2">
-        Add Product
-      </h4>
+    <div class="col-12 flex flex-row justify-content-between">
+      <div class="flex">
+        <PButton
+          icon="fa fa-arrow-left"
+          text
+          severity="secondary"
+          @click="$inertia.visit(route('products'))"
+        />
+        <h4 class="ml-2">
+          Add Product
+        </h4>
+      </div>
+      <div class="flex align-items-center">
+        <PButton
+          label="Save"
+          @click="saveProduct"
+        />
+      </div>
     </div>
     <div class="grid">
       <div class="md:col-8 col-12">
@@ -21,6 +29,7 @@
               <InputText
                 id="name"
                 v-model="name"
+                :invalid="errors?.name?.length > 0"
               />
             </div>
             <div class="flex flex-column gap-2 mb-3">
@@ -350,6 +359,8 @@ import InputNumber from "primevue/inputnumber";
 import InputSwitch from "primevue/inputswitch";
 import Checkbox from "primevue/checkbox";
 import Dialog from "primevue/dialog";
+import * as Yup from "yup";
+import { useForm } from "vee-validate";
 import AppLayout from "../../layouts/admin.vue";
 import MediaManager from "../../UI/MediaManager.vue";
 import OptionsEditor from "../../UI/OptionsEditor.vue";
@@ -388,6 +399,10 @@ export default {
     },
   },
   data() {
+    const schema = Yup.object().shape({
+      name: Yup.string().required(),
+    });
+
     return {
       name: "",
       description: "",
@@ -406,8 +421,23 @@ export default {
       selectedVariantId: null,
       showVariantEditor: false,
       selectedOptions: [],
+      schema,
+      errors: {},
+      form: {},
     };
   },
+  // mounted() {
+  //   const { validate, errors, values } = useForm({
+  //     // initial values (no readonly)
+  //     initialValues: {
+  //       name: this.name,
+  //     },
+  //     validationSchema: this.schema,
+  //   });
+
+  //   this.validate = validate;
+  //   this.errors = errors;
+  // },
   methods: {
     removeVariant(hash) {
       this.variants = this.variants.filter((variant) => variant.hash !== hash);
@@ -649,6 +679,11 @@ export default {
 
       this.selectedOptions = [];
       this.toggleVariantEditor();
+    },
+    async saveProduct() {
+      // check if the schema is va;id before submitting
+
+      console.log(isValid, this.errors);
     },
   },
 };
