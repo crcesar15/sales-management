@@ -11,6 +11,10 @@
       <h4 class="ml-2">
         Add Product
       </h4>
+      <PButton
+        label="submit"
+        @click="submit()"
+      />
     </div>
     <div class="grid">
       <div class="md:col-8 col-12">
@@ -21,7 +25,15 @@
               <InputText
                 id="name"
                 v-model="name"
+                :class="{'p-invalid': $v.name.$invalid && $v.name.$dirty}"
+                @blur="$v.name.$touch"
               />
+              <small
+                v-if="$v.name.$invalid && $v.name.$dirty"
+                class="p-error"
+              >
+                {{ $v.name.$errors[0].$message }}
+              </small>
             </div>
             <div class="flex flex-column gap-2 mb-3">
               <label for="description">Description</label>
@@ -350,6 +362,8 @@ import InputNumber from "primevue/inputnumber";
 import InputSwitch from "primevue/inputswitch";
 import Checkbox from "primevue/checkbox";
 import Dialog from "primevue/dialog";
+import { useVuelidate } from "@vuelidate/core";
+import { required, minLength, email } from "@vuelidate/validators";
 import AppLayout from "../../../layouts/admin.vue";
 import MediaManager from "../../../UI/MediaManager.vue";
 import OptionsEditor from "../../../UI/OptionsEditor.vue";
@@ -387,6 +401,9 @@ export default {
       default: () => [],
     },
   },
+  setup() {
+    return { $v: useVuelidate() };
+  },
   data() {
     return {
       name: "",
@@ -408,7 +425,18 @@ export default {
       selectedOptions: [],
     };
   },
+  validations() {
+    return {
+      name: { required, minLength: minLength(10) },
+      email: { required, email },
+      password: { required, minLength: minLength(6) },
+    };
+  },
   methods: {
+    submit() {
+      console.log(this.$v.$errors);
+      console.log(this.$v.name.$invalid);
+    },
     removeVariant(hash) {
       this.variants = this.variants.filter((variant) => variant.hash !== hash);
     },
