@@ -350,9 +350,9 @@ import InputNumber from "primevue/inputnumber";
 import InputSwitch from "primevue/inputswitch";
 import Checkbox from "primevue/checkbox";
 import Dialog from "primevue/dialog";
-import AppLayout from "../../layouts/admin.vue";
-import MediaManager from "../../UI/MediaManager.vue";
-import OptionsEditor from "../../UI/OptionsEditor.vue";
+import AppLayout from "../../../layouts/admin.vue";
+import MediaManager from "../../../UI/MediaManager.vue";
+import OptionsEditor from "../../../UI/OptionsEditor.vue";
 
 export default {
   components: {

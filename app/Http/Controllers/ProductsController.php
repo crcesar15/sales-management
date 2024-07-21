@@ -32,7 +32,7 @@ class ProductsController extends Controller
         // List of Brands
         $brands = Brand::all();
 
-        return Inertia::render('products/ItemCreator', [
+        return Inertia::render('products/create/index', [
             'categories' => $categories,
             'measureUnits' => $measureUnits,
             'brands' => $brands,
@@ -56,7 +56,7 @@ class ProductsController extends Controller
         // List of Brands
         $brands = Brand::all();
 
-        return Inertia::render('products/ItemEditor', [
+        return Inertia::render('products/edit/index', [
             'product' => $product,
             'categories' => $categories,
             'measureUnits' => $measureUnits,
