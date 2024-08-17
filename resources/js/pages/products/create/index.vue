@@ -1,20 +1,25 @@
 <template>
   <AppLayout>
     <Toast />
-    <div class="col-12 flex">
-      <PButton
-        icon="fa fa-arrow-left"
-        text
-        severity="secondary"
-        @click="$inertia.visit(route('products'))"
-      />
-      <h4 class="ml-2">
-        Add Product
-      </h4>
-      <PButton
-        label="submit"
-        @click="submit()"
-      />
+    <div class="flex justify-content-between">
+      <div class="flex ">
+        <PButton
+          icon="fa fa-arrow-left"
+          text
+          severity="secondary"
+          @click="$inertia.visit(route('products'))"
+        />
+        <h4 class="ml-2">
+          Add Product
+        </h4>
+      </div>
+      <div class="flex flex-column">
+        <PButton
+          icon="fa fa-save"
+          label="SAVE"
+          @click="submit()"
+        />
+      </div>
     </div>
     <div class="grid">
       <div class="md:col-8 col-12">
@@ -25,14 +30,14 @@
               <InputText
                 id="name"
                 v-model="name"
-                :class="{'p-invalid': $v.name.$invalid && $v.name.$dirty}"
-                @blur="$v.name.$touch"
+                :class="{'p-invalid': v$.name.$invalid && v$.name.$dirty}"
+                @blur="v$.name.$touch"
               />
               <small
-                v-if="$v.name.$invalid && $v.name.$dirty"
+                v-if="v$.name.$invalid && v$.name.$dirty"
                 class="p-error"
               >
-                {{ $v.name.$errors[0].$message }}
+                {{ v$.name.$errors[0].$message }}
               </small>
             </div>
             <div class="flex flex-column gap-2 mb-3">
@@ -74,14 +79,30 @@
                   v-model="price"
                   mode="currency"
                   currency="BOB"
+                  :class="{'p-invalid': v$.price.$invalid && v$.price.$dirty}"
+                  @blur="v$.price.$touch"
                 />
+                <small
+                  v-if="v$.price.$invalid && v$.price.$dirty"
+                  class="p-error"
+                >
+                  {{ v$.price.$errors[0].$message }}
+                </small>
               </div>
               <div class="flex flex-column lg:col-6 md:col-6 col-12 gap-2 mb-3">
                 <label for="profit">Bar Code or Identifier</label>
                 <InputText
                   id="profit"
                   :value="identifier"
+                  :class="{'p-invalid': v$.identifier.$invalid && v$.identifier.$dirty}"
+                  @blur="v$.identifier.$touch"
                 />
+                <small
+                  v-if="v$.identifier.$invalid && v$.identifier.$dirty"
+                  class="p-error"
+                >
+                  {{ v$.identifier.$errors[0].$message }}
+                </small>
               </div>
             </div>
           </template>
@@ -100,7 +121,10 @@
                 >
                   This product has variants?
                 </label>
-                <InputSwitch v-model="hasVariants" />
+                <InputSwitch
+                  v-model="hasVariants"
+                  @change="price = null; identifier = null;"
+                />
               </div>
             </div>
           </template>
@@ -174,9 +198,19 @@
                 header="Identifier"
               >
                 <template #body="slotProps">
-                  <InputText
-                    v-model="slotProps.data.identifier"
-                  />
+                  <div class="flex flex-column">
+                    <InputText
+                      v-model="slotProps.data.identifier"
+                      :class="{'p-invalid': v$.variants.$each.$response.$errors[slotProps.index].identifier.length > 0}"
+                      @blur="v$.variants.$each.$response.$errors[slotProps.index].identifier.$touch"
+                    />
+                    <small
+                      v-if="v$.variants.$each.$response.$errors[slotProps.index].identifier.length > 0"
+                      class="p-error"
+                    >
+                      {{ v$.variants.$each.$response.$errors[slotProps.index].identifier[0].$message }}
+                    </small>
+                  </div>
                 </template>
               </Column>
               <Column
@@ -184,11 +218,21 @@
                 header="Price"
               >
                 <template #body="slotProps">
-                  <InputNumber
-                    v-model="slotProps.data.price"
-                    mode="currency"
-                    currency="BOB"
-                  />
+                  <div class="flex flex-column">
+                    <InputNumber
+                      v-model="slotProps.data.price"
+                      mode="currency"
+                      currency="BOB"
+                      :class="{'p-invalid': v$.variants.$each.$response.$errors[slotProps.index].price.length > 0}"
+                      @blur="v$.variants.$each.$response.$errors[slotProps.index].price.$touch"
+                    />
+                    <small
+                      v-if="v$.variants.$each.$response.$errors[slotProps.index].price.length > 0"
+                      class="p-error"
+                    >
+                      {{ v$.variants.$each.$response.$errors[slotProps.index].price[0].$message }}
+                    </small>
+                  </div>
                 </template>
               </Column>
               <Column
@@ -241,7 +285,15 @@
                 :options="categories"
                 option-label="name"
                 option-value="id"
+                :class="{'p-invalid': v$.category.$invalid && v$.category.$dirty}"
+                @blur="v$.category.$touch"
               />
+              <small
+                v-if="v$.category.$invalid && v$.category.$dirty"
+                class="p-error"
+              >
+                {{ v$.category.$errors[0].$message }}
+              </small>
             </div>
             <div class="flex flex-column gap-2 mb-3">
               <label for="brand">Brand</label>
@@ -252,7 +304,15 @@
                 :options="brands"
                 option-label="name"
                 option-value="id"
+                :class="{'p-invalid': v$.brand.$invalid && v$.brand.$dirty}"
+                @blur="v$.brand.$touch"
               />
+              <small
+                v-if="v$.brand.$invalid && v$.brand.$dirty"
+                class="p-error"
+              >
+                {{ v$.brand.$errors[0].$message }}
+              </small>
             </div>
             <div class="flex flex-column gap-2 mb-3">
               <label for="measure_unit">Measure Unit</label>
@@ -363,7 +423,10 @@ import InputSwitch from "primevue/inputswitch";
 import Checkbox from "primevue/checkbox";
 import Dialog from "primevue/dialog";
 import { useVuelidate } from "@vuelidate/core";
-import { required, minLength, email } from "@vuelidate/validators";
+import {
+  helpers, required, minLength, minValue, requiredIf,
+  requiredUnless,
+} from "@vuelidate/validators";
 import AppLayout from "../../../layouts/admin.vue";
 import MediaManager from "../../../UI/MediaManager.vue";
 import OptionsEditor from "../../../UI/OptionsEditor.vue";
@@ -402,7 +465,9 @@ export default {
     },
   },
   setup() {
-    return { $v: useVuelidate() };
+    return {
+      v$: useVuelidate(),
+    };
   },
   data() {
     return {
@@ -428,14 +493,31 @@ export default {
   validations() {
     return {
       name: { required, minLength: minLength(10) },
-      email: { required, email },
-      password: { required, minLength: minLength(6) },
+      category: { required },
+      brand: { required },
+      price: {
+        required: requiredIf(() => !this.hasVariants),
+        minValue: minValue(0.5),
+      },
+      identifier: { minLength: minLength(5) },
+      variants: {
+        required: requiredIf(() => this.hasVariants),
+        $each: helpers.forEach({
+          identifier: { required, minLength: minLength(5) },
+          price: { required, minValue: minValue(0.5) },
+        }),
+      },
     };
   },
   methods: {
+    validateRow(rowIndex) {
+      this.$v.variants[rowIndex].$touch();
+    },
     submit() {
-      console.log(this.$v.$errors);
-      console.log(this.$v.name.$invalid);
+      this.v$.$touch();
+      if (!this.v$.$invalid) {
+        alert("Form submitted!");
+      }
     },
     removeVariant(hash) {
       this.variants = this.variants.filter((variant) => variant.hash !== hash);
@@ -623,8 +705,6 @@ export default {
       this.selectedOptions = [];
     },
     saveVariant() {
-      console.log(this.selectedOptions);
-
       switch (this.selectedOptions.length) {
         case 1:
           this.variants.push({
