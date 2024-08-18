@@ -19,10 +19,6 @@ class ProductVariant extends Model
         'status',
     ];
 
-    protected $casts = [
-        'media' => 'array',
-    ];
-
     public function product()
     {
         return $this->belongsTo(Product::class);

@@ -89,12 +89,14 @@ class DatabaseSeeder extends Seeder
         Category::factory(10)->create()->each(function ($category) {
             //create 5 products for each category
             Product::factory(5)->create([
-                'category_id' => $category->id,
-            ])->each(function ($product) {
+                'measure_unit_id' => MeasureUnit::all()->random()->id,
+                'brand_id' => Brand::all()->random()->id,
+            ])->each(function ($product) use ($category) {
                 ProductVariant::factory(rand(1, 3))->create([
                     'product_id' => $product->id,
-                    'media' => null,
                 ]);
+                // Add category to product
+                $product->categories()->attach($category->id);
             });
         });
 
