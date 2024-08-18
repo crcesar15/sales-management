@@ -173,8 +173,8 @@
             header-class="surface-100"
           />
           <Column
-            field="category.name"
-            header="Category"
+            field="category"
+            header="Categories"
             header-class="surface-100"
           />
           <Column
@@ -382,7 +382,7 @@ export default {
         &status=${this.status}
       `;
 
-      url += "&includes=media,brand,category,measureUnit";
+      url += "&includes=media,brand,categories,measureUnit";
 
       if (this.pagination.sortOrder === -1) {
         url += "&order_direction=desc";
@@ -396,7 +396,14 @@ export default {
 
       axios.get(url)
         .then((response) => {
-          this.products = response.data.data;
+          this.products = response.data.data.map((product) => {
+            const categories = product.categories ?? [];
+            const categoryString = categories.map((category) => category.name).join(", ");
+            return {
+              ...product,
+              category: categoryString,
+            };
+          });
           this.pagination.total = response.data.meta.total;
           this.loading = false;
         })

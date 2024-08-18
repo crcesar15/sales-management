@@ -12,23 +12,12 @@ class Product extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'identifier',
+        'brand_id',
+        'measure_unit_id',
         'name',
         'description',
-        'price',
-        'stock',
-        'brand',
-        'measure_unit',
-        'category',
-        'status',
         'options',
-        'correlation_hash',
-    ];
-
-    //cast price to float
-    protected $casts = [
-        'price' => 'float',
-        'stock' => 'float',
+        'status',
     ];
 
     public function media()
@@ -36,9 +25,9 @@ class Product extends Model
         return $this->morphMany(Media::class, 'model');
     }
 
-    public function category()
+    public function categories()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsToMany(Category::class);
     }
 
     public function brand()
