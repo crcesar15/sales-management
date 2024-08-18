@@ -11,6 +11,8 @@ module.exports = {
     Dispatcher: true,
     ProcessMaker: true,
     _: true,
+    axios: true,
+    route: true,
   },
   extends: ["eslint:recommended", "plugin:vue/recommended", "airbnb-base"],
   parserOptions: {

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Media;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
@@ -17,9 +18,11 @@ class Products extends ResourceCollection
     {
         return [
             'data' => $this->collection->map(function ($product) {
+                $productMedia = [];
+
                 $formattedProduct = [
                     'id' => $product->id,
-                    'category' => $product->category,
+                    'categories' => $product->categories,
                     'brand' => $product->brand,
                     'measure_unit' => $product->measureUnit,
                     'name' => $product->name,
@@ -28,7 +31,6 @@ class Products extends ResourceCollection
                     'price' => $product->variants->min('price'),
                     'stock' => $product->variants->sum('stock'),
                     'description' => $product->description,
-                    'media' => $product->media,
                 ];
 
                 $variants = $product->variants->map(function ($variant) {
@@ -40,19 +42,21 @@ class Products extends ResourceCollection
                         'price' => $variant->price,
                         'stock' => $variant->stock,
                         'status' => $variant->status,
+                        'media' => $variant->media,
                     ];
 
-                    if ($variant->media) {
-                        foreach ($variant->media as $media) {
-                            $formattedVariant['media'][] = Media::where('id', $media['id'])->first();
-                        }
-                    } else {
+                    if (!$variant->media) {
                         $formattedVariant['media'] = [];
                     }
 
                     return $formattedVariant;
                 });
 
+                $productMedia = $variants->map(function ($variant) {
+                    return $variant['media'];
+                })->flatten();
+
+                $formattedProduct['media'] = $productMedia;
                 $formattedProduct['variants'] = $variants;
 
                 return $formattedProduct;

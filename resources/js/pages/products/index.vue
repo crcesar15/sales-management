@@ -34,6 +34,9 @@
           @page="onPage($event)"
           @sort="onSort($event)"
         >
+          <template #empty>
+            No products found.
+          </template>
           <template #header>
             <div class="grid">
               <div class="xl:col-6 lg:col-6 md:col-6 col-12 flex md:justify-content-start justify-content-center">

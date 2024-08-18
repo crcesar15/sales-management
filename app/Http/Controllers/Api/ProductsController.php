@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Products as ApiCollection;
+use App\Models\Media;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -73,7 +74,46 @@ class ProductsController extends Controller
     //Create a new product
     public function store(Request $request)
     {
-        $product = Product::create($request->all());
+        // create product
+        $product = Product::create([
+            'brand_id' => $request->input('brand_id'),
+            'measure_unit_id' => $request->input('measure_unit_id'),
+            'name' => $request->input('name'),
+            'description' => $request->input('description'),
+            'options' => json_encode($request->input('options')),
+            'status' => $request->input('status'),
+        ]);
+
+        // save categories
+        $categories = $request->input('categories', []);
+
+        if (count($categories) > 0) {
+            $product->categories()->attach($categories);
+        }
+
+        // save variants
+        $variants = $request->input('variants', []);
+
+        if (count($variants) > 0) {
+            foreach ($variants as $variant) {
+                $storedVariant = $product->variants()->create([
+                    'identifier' => $variant['identifier'],
+                    'name' => $variant['name'],
+                    'price' => $variant['price'],
+                    'stock' => $variant['stock'] ?? 0,
+                    'status' => $variant['status'],
+                ]);
+
+                // associate media
+                if (isset($variant['media']) && count($variant['media']) > 0) {
+                    foreach ($variant['media'] as $media) {
+                        Media::find($media['id'])->update([
+                            'model_id' => $storedVariant->id,
+                        ]);
+                    }
+                }
+            }
+        }
 
         return response()->json(['data' => $product], 201);
     }

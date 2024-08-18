@@ -93,7 +93,7 @@
                 <label for="profit">Bar Code or Identifier</label>
                 <InputText
                   id="profit"
-                  :value="identifier"
+                  v-model="identifier"
                   :class="{'p-invalid': v$.identifier.$invalid && v$.identifier.$dirty}"
                   @blur="v$.identifier.$touch"
                 />
@@ -425,8 +425,8 @@ import Dialog from "primevue/dialog";
 import { useVuelidate } from "@vuelidate/core";
 import {
   helpers, required, minLength, minValue, requiredIf,
-  requiredUnless,
 } from "@vuelidate/validators";
+import { capitalize } from "vue";
 import AppLayout from "../../../layouts/admin.vue";
 import MediaManager from "../../../UI/MediaManager.vue";
 import OptionsEditor from "../../../UI/OptionsEditor.vue";
@@ -516,7 +516,60 @@ export default {
     submit() {
       this.v$.$touch();
       if (!this.v$.$invalid) {
-        alert("Form submitted!");
+        const body = {
+          name: this.name,
+          description: this.description,
+          status: this.status,
+          brand_id: this.brand,
+          measure_unit_id: this.measureUnit,
+          categories: this.category,
+          options: this.options,
+        };
+
+        if (this.hasVariants) {
+          body.variants = this.variants.map((variant) => ({
+            name: variant.name,
+            identifier: variant.identifier,
+            price: variant.price,
+            status: this.status,
+            media: variant.media,
+          }));
+        } else {
+          body.variants = [{
+            name: this.name,
+            identifier: this.identifier,
+            price: this.price,
+            status: this.status,
+            media: this.files,
+          }];
+        }
+
+        axios
+          .post("products", body)
+          .then(() => {
+            this.$toast.add({
+              severity: "success",
+              summary: "Success",
+              detail: "Product created",
+              life: 3000,
+            });
+            Inertia.visit(route("products"));
+          })
+          .catch((error) => {
+            this.$toast.add({
+              severity: "error",
+              summary: "Error",
+              detail: error,
+              life: 3000,
+            });
+          });
+      } else {
+        this.$toast.add({
+          severity: "error",
+          summary: "Missing fields",
+          detail: `${this.capitalize(this.v$.$errors[0].$property)}: ${this.v$.$errors[0].$message}`,
+          life: 3000,
+        });
       }
     },
     removeVariant(hash) {
@@ -757,6 +810,16 @@ export default {
 
       this.selectedOptions = [];
       this.toggleVariantEditor();
+    },
+    capitalize(words) {
+      // separate words by capitalized letter
+      let formatted = words.replace(/([A-Z])/g, " $1")
+        // capitalize the first letter
+        .replace(/^./, (str) => str.toUpperCase());
+      // capitalize the first letter of each word
+      formatted = formatted.replace(/\b\w/g, (l) => l.toUpperCase());
+
+      return formatted;
     },
   },
 };
