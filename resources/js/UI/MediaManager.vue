@@ -5,7 +5,7 @@
       class="grid justify-content-center mt-4"
     >
       <PButton
-        label="Upload Image"
+        :label="$t('Upload Image')"
         outlined
         @click="openFileUpload"
       />
@@ -63,12 +63,12 @@
         <div class="flex align-items-center justify-content-center gap-2 mt-2">
           <PButton
             icon="fas fa-check"
-            label="Save"
+            :label="$t('Save')"
             @click="saveCropped"
           />
           <PButton
             icon="fas fa-times"
-            label="Cancel"
+            :label="$t('Cancel')"
             outlined=""
             @click="cropperToggle = false"
           />

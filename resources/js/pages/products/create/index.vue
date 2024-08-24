@@ -10,13 +10,14 @@
           @click="$inertia.visit(route('products'))"
         />
         <h4 class="ml-2">
-          Add Product
+          {{ $t('Add Product') }}
         </h4>
       </div>
       <div class="flex flex-column">
         <PButton
           icon="fa fa-save"
-          label="SAVE"
+          :label="$t('Save')"
+          style="text-transform: uppercase"
           @click="submit()"
         />
       </div>
@@ -26,7 +27,7 @@
         <Card class="mb-4">
           <template #content>
             <div class="flex flex-column gap-2 mb-3">
-              <label for="name">Name</label>
+              <label for="name">{{ $t('Name') }}</label>
               <InputText
                 id="name"
                 v-model="name"
@@ -41,7 +42,7 @@
               </small>
             </div>
             <div class="flex flex-column gap-2 mb-3">
-              <label for="description">Description</label>
+              <label for="description">{{ $t('Description') }}</label>
               <Textarea
                 id="description"
                 v-model="description"
@@ -51,7 +52,7 @@
         </Card>
         <Card class="mb-4">
           <template #title>
-            Media
+            {{ $t('Images') }}
           </template>
           <template #content>
             <div class="flex flex-column">
@@ -68,12 +69,12 @@
           class="mb-4"
         >
           <template #title>
-            Details
+            {{ $t('Details') }}
           </template>
           <template #content>
             <div class="grid">
               <div class="flex flex-column lg:col-6 md:col-6 col-12 gap-2 mb-3">
-                <label for="price">Price</label>
+                <label for="price">{{ $t('Price') }}</label>
                 <InputNumber
                   id="price"
                   v-model="price"
@@ -90,7 +91,7 @@
                 </small>
               </div>
               <div class="flex flex-column lg:col-6 md:col-6 col-12 gap-2 mb-3">
-                <label for="profit">Bar Code or Identifier</label>
+                <label for="profit">{{ $t('Bar Code or Identifier') }}</label>
                 <InputText
                   id="profit"
                   v-model="identifier"
@@ -111,7 +112,7 @@
           <template #title>
             <div class="flex justify-content-between flex-wrap">
               <div>
-                Options
+                {{ $t('Options') }}
               </div>
               <div class="flex align-items-center">
                 <label
@@ -119,7 +120,7 @@
                   class="mr-3"
                   style="font-weight: lighter; font-size: 14px;"
                 >
-                  This product has variants?
+                  {{ $t('This product has variants?') }}
                 </label>
                 <InputSwitch
                   v-model="hasVariants"
@@ -143,17 +144,17 @@
           <template #title>
             <div class="flex justify-content-between flex-wrap">
               <div>
-                Variants
+                {{ $t('Variants') }}
               </div>
               <div>
                 <PButton
-                  label="Add Variant"
+                  :label="$t('Add Variant')"
                   class="mr-2"
                   @click="addVariant()"
                 />
                 <PButton
                   outlined
-                  label="Generate Variants"
+                  :label="$t('Generate Variants')"
                   @click="generateVariants()"
                 />
               </div>
@@ -166,7 +167,7 @@
             >
               <Column
                 field="media"
-                header="Media"
+                :header="$t('Images')"
               >
                 <template #body="slotProps">
                   <div
@@ -191,11 +192,11 @@
               <Column
                 style="font-weight: 500;"
                 field="name"
-                header="Variant"
+                :header="$t('Variant')"
               />
               <Column
                 field="identifier"
-                header="Identifier"
+                :header="$t('Bar Code or Identifier')"
               >
                 <template #body="slotProps">
                   <div class="flex flex-column">
@@ -215,7 +216,7 @@
               </Column>
               <Column
                 field="price"
-                header="Price"
+                :header="$t('Price')"
               >
                 <template #body="slotProps">
                   <div class="flex flex-column">
@@ -237,7 +238,7 @@
               </Column>
               <Column
                 field="actions"
-                header="Actions"
+                :header="$t('Actions')"
               >
                 <template #body="slotProps">
                   <PButton
@@ -256,13 +257,13 @@
         <Card class="mb-4">
           <template #content>
             <div class="flex flex-column gap-2 mb-3">
-              <label for="status">Status</label>
+              <label for="status">{{ $t('Status') }}</label>
               <Dropdown
                 v-model="status"
                 :options="[
-                  { name: 'Active', value: 'active' },
-                  { name: 'Inactive', value: 'inactive' },
-                  { name: 'Archived', value: 'archived' }
+                  { name: $t('Active'), value: 'active' },
+                  { name: $t('Inactive'), value: 'inactive' },
+                  { name: $t('Archived'), value: 'archived' }
                 ]"
                 option-label="name"
                 option-value="value"
@@ -272,11 +273,11 @@
         </Card>
         <Card class="mb-4">
           <template #title>
-            Product Organization
+            {{ $t('Product Organization') }}
           </template>
           <template #content>
             <div class="flex flex-column gap-2 mb-3">
-              <label for="category">Category</label>
+              <label for="category">{{ $t('Category') }}</label>
               <MultiSelect
                 id="category"
                 v-model="category"
@@ -296,7 +297,7 @@
               </small>
             </div>
             <div class="flex flex-column gap-2 mb-3">
-              <label for="brand">Brand</label>
+              <label for="brand">{{ $t('Brand') }}</label>
               <Dropdown
                 id="brand"
                 v-model="brand"
@@ -315,7 +316,7 @@
               </small>
             </div>
             <div class="flex flex-column gap-2 mb-3">
-              <label for="measure_unit">Measure Unit</label>
+              <label for="measure_unit">{{ $t('Measure Unit') }}</label>
               <Dropdown
                 id="measure_unit"
                 v-model="measureUnit"
@@ -330,7 +331,7 @@
       <Dialog
         v-model:visible="showVariantEditor"
         modal
-        header="Add Variant"
+        :header="$t('Add Variant')"
       >
         <div
           v-for="(option, index) in options"
@@ -346,13 +347,13 @@
         </div>
         <template #footer>
           <PButton
-            label="Cancel"
+            :label="$t('Cancel')"
             outlined
             severity="primary"
             @click="toggleVariantEditor"
           />
           <PButton
-            label="Save"
+            :label="$t('Save')"
             severity="primary"
             @click="saveVariant"
           />
@@ -361,7 +362,7 @@
       <Dialog
         v-model:visible="showVariantImages"
         modal
-        header="Add Images to Variant"
+        :header="$t('Add Images to Variant')"
         :style="{ width: '50vw' }"
         :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
       >
@@ -391,13 +392,13 @@
         </div>
         <template #footer>
           <PButton
-            label="Cancel"
+            :label="$t('Cancel')"
             outlined
             severity="primary"
             @click="toggleVariantImages"
           />
           <PButton
-            label="Save"
+            :label="$t('Save')"
             severity="primary"
             @click="saveSelectedVariantImages"
           />
@@ -426,7 +427,6 @@ import { useVuelidate } from "@vuelidate/core";
 import {
   helpers, required, minLength, minValue, requiredIf,
 } from "@vuelidate/validators";
-import { capitalize } from "vue";
 import AppLayout from "../../../layouts/admin.vue";
 import MediaManager from "../../../UI/MediaManager.vue";
 import OptionsEditor from "../../../UI/OptionsEditor.vue";

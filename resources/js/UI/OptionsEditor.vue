@@ -6,7 +6,7 @@
           <PButton
             icon="fa fa-plus"
             text
-            label="Add options like size or color"
+            :label="$t('Add options like size or color')"
             @click="addOption"
           />
         </div>
@@ -40,7 +40,7 @@
           />
         </div>
         <div class="md:col-6 col-12 flex flex-column gap-3">
-          <label :for="`option-${index}`">Option Name</label>
+          <label :for="`option-${index}`">{{ $t('Option Name') }}</label>
           <div class="grid flex-row">
             <div class="col">
               <InputText
@@ -53,7 +53,7 @@
           </div>
         </div>
         <div class="md:col-6 col-12 flex flex-column gap-3">
-          <label :for="`values-${index}`">Option Values</label>
+          <label :for="`values-${index}`">{{ $t('Option Values') }}</label>
           <div class="grid flex-row">
             <div class="col">
               <Chips
@@ -74,7 +74,7 @@
           <PButton
             icon="fa fa-plus"
             text
-            label="Add another option"
+            :label="$t('Add another option')"
             @click="addOption"
           />
         </div>
