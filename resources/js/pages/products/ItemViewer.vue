@@ -50,7 +50,7 @@
               style="height: 250px; width: 250px;"
             >
               <p>
-                <i class="fa fa-image" /> No image yet
+                <i class="fa fa-image" /> {{ $t('No Image') }}
               </p>
             </div>
           </div>
@@ -59,19 +59,19 @@
           <div class="md:col-6 col-12 pt-0 pb-0">
             <p>
               <strong>
-                Name:
+                {{ $t('Name') }}:
               </strong>
               {{ product?.name }}
             </p>
             <p>
               <strong>
-                Price:
+                {{ $t('Price') }}:
               </strong>
               Bs. {{ product?.price }}
             </p>
             <p>
               <strong>
-                Brand:
+                {{ $t('Brand') }}:
               </strong>
               {{ product?.brand?.name }}
             </p>
@@ -79,19 +79,19 @@
           <div class="md:col-6 col-12 pt-0 pb-0">
             <p>
               <strong>
-                Measure Unit:
+                {{ $t('Measure Unit') }}:
               </strong>
               {{ product?.measure_unit?.name }}
             </p>
             <p>
               <strong>
-                Stock:
+                {{ $t('Stock') }}:
               </strong>
               {{ product?.stock }}
             </p>
             <p>
               <strong>
-                Category:
+                {{ $t('Category') }}:
               </strong>
               {{ product?.category?.name }}
             </p>
@@ -99,7 +99,7 @@
           <div class="col-12 pt-0">
             <p>
               <strong>
-                Description:
+                {{ $t('Description') }}:
               </strong>
               {{ product?.description }}
             </p>

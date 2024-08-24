@@ -13,5 +13,10 @@
     "Brand": "Marca",
     "Category": "Categoría",
     "Actions": "Acciones",
-    "Search": "Buscar"
+    "Search": "Buscar",
+    "Measure Unit": "Unidad de Medida",
+    "Name": "Nombre",
+    "Description": "Descripción",
+    "No Image": "Sin Imagen",
+    "Variant": "Variante"
 }

@@ -12,6 +12,11 @@
     "Stock": "Stock",
     "Brand": "Brand",
     "Category": "Category",
+    "Measure Unit": "Measure Unit",
+    "Name": "Name",
+    "Description": "Description",
     "Actions": "Actions",
-    "Search": "Search"
+    "Search": "Search",
+    "No Image": "No Image",
+    "Variant": "Variant"
 }

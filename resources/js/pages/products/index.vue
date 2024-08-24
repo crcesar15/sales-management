@@ -1,14 +1,14 @@
 <template>
-  <AppLayout>
+  <div>
     <div class="flex">
       <div class="col-2">
         <h2 class="text-2xl font-bold">
-          Products
+          {{ $t("Products") }}
         </h2>
       </div>
       <div class="col-10 flex align-items-center justify-content-end">
         <p-button
-          label="Add Product"
+          :label="$t('Add Product')"
           class="ml-2"
           @click="$inertia.visit(route('products.create'))"
         />
@@ -43,16 +43,16 @@
                 <SelectButton
                   v-model="status"
                   :options="[{
-                    label: 'All',
+                    label: $t('All'),
                     value: 'all',
                   }, {
-                    label: 'Active',
+                    label: $t('Active'),
                     value: 'active',
                   }, {
-                    label: 'Inactive',
+                    label: $t('Inactive'),
                     value: 'inactive',
                   }, {
-                    label: 'Archived',
+                    label: $t('Archived'),
                     value: 'archived',
                   }]"
                   option-label="label"
@@ -75,7 +75,7 @@
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
-                    placeholder="Search"
+                    :placeholder="$t('Search')"
                   />
                 </IconField>
               </div>
@@ -83,7 +83,7 @@
           </template>
           <Column
             field="name"
-            header="Product"
+            :header="$t('Product')"
             sortable
             header-class="surface-100"
           >
@@ -99,7 +99,7 @@
           </Column>
           <Column
             field="media"
-            header="Image"
+            :header="$t('Image')"
             style="padding: 4px 12px; margin: 0px;"
             header-class="surface-100"
           >
@@ -124,7 +124,7 @@
           </Column>
           <Column
             field="status"
-            header="Status"
+            :header="$t('Status')"
             header-class="flex justify-content-center surface-100"
             class="flex justify-content-center"
           >
@@ -137,26 +137,26 @@
                   v-if="data.status === 'active'"
                   class="p-tag p-tag-success"
                 >
-                  Active
+                  {{ $t('Active') }}
                 </span>
                 <span
                   v-else-if="data.status === 'inactive'"
                   class="p-tag p-tag-warning"
                 >
-                  Inactive
+                  {{ $t('Inactive') }}
                 </span>
                 <span
                   v-else
                   class="p-tag p-tag-danger"
                 >
-                  Archived
+                  {{ $t('Archived') }}
                 </span>
               </div>
             </template>
           </Column>
           <Column
             field="price"
-            header="Price"
+            :header="$t('Price')"
             header-class="surface-100"
           >
             <template #body="{ data }">
@@ -167,21 +167,21 @@
           </Column>
           <Column
             field="stock"
-            header="Stock"
+            :header="$t('Stock')"
             header-class="surface-100"
           />
           <Column
             field="brand.name"
-            header="Brand"
+            :header="$t('Brand')"
             header-class="surface-100"
           />
           <Column
             field="category"
-            header="Categories"
+            :header="$t('Category')"
             header-class="surface-100"
           />
           <Column
-            header="Actions"
+            :header="$t('Actions')"
             header-class="flex justify-content-center surface-100"
           >
             <template #body="{ data }">
@@ -215,12 +215,12 @@
               >
                 <Column
                   field="name"
-                  header="Product Variant"
+                  :header="$t('Variant')"
                   header-class="surface-100"
                 />
                 <Column
                   field="media"
-                  header="Image"
+                  :header="$t('Image')"
                   style="padding: 4px 12px; margin: 0px;"
                   header-class="surface-100"
                 >
@@ -245,7 +245,7 @@
                 </Column>
                 <Column
                   field="status"
-                  header="Status"
+                  :header="$t('Status')"
                   header-class="flex justify-content-center surface-100"
                   class="flex justify-content-center"
                 >
@@ -258,26 +258,26 @@
                         v-if="data.status === 'active'"
                         class="p-tag p-tag-success"
                       >
-                        Active
+                        {{ $t('Active') }}
                       </span>
                       <span
                         v-else-if="data.status === 'inactive'"
                         class="p-tag p-tag-warning"
                       >
-                        Inactive
+                        {{ $t('Inactive') }}
                       </span>
                       <span
                         v-else
                         class="p-tag p-tag-danger"
                       >
-                        Archived
+                        {{ $t('Archived') }}
                       </span>
                     </div>
                   </template>
                 </Column>
                 <Column
                   field="price"
-                  header="Price"
+                  :header="$t('Price')"
                   header-class="surface-100"
                 >
                   <template #body="{ data }">
@@ -288,7 +288,7 @@
                 </Column>
                 <Column
                   field="stock"
-                  header="Stock"
+                  :header="$t('Stock')"
                   header-class="surface-100"
                 />
               </DataTable>
@@ -302,7 +302,7 @@
       :show-dialog="viewerToggle"
       @clearSelection="selectedProduct = {}; viewerToggle = false;"
     />
-  </AppLayout>
+  </div>
 </template>
 
 <script>
@@ -312,31 +312,30 @@ import Card from "primevue/card";
 import Column from "primevue/column";
 import Toast from "primevue/toast";
 import PButton from "primevue/button";
-import ButtonGroup from "primevue/buttongroup";
 import InputText from "primevue/inputtext";
 import ConfirmDialog from "primevue/confirmdialog";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import SelectButton from "primevue/selectbutton";
+import i18n from "../../app";
 import AppLayout from "../../layouts/admin.vue";
 import ItemViewer from "./ItemViewer.vue";
 
 export default {
   components: {
-    AppLayout,
     DataTable,
     Column,
     PButton,
     InputText,
     IconField,
     InputIcon,
-    ButtonGroup,
     Toast,
     ConfirmDialog,
     ItemViewer,
     Card,
     SelectButton,
   },
+  layout: AppLayout,
   data() {
     return {
       status: "all",
@@ -486,6 +485,9 @@ export default {
           });
         },
       });
+    },
+    switchLanguage() {
+      i18n.global.locale = "es";
     },
   },
 };

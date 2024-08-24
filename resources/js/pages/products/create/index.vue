@@ -1,5 +1,5 @@
 <template>
-  <AppLayout>
+  <div>
     <Toast />
     <div class="flex justify-content-between">
       <div class="flex ">
@@ -404,7 +404,7 @@
         </template>
       </Dialog>
     </div>
-  </AppLayout>
+  </div>
 </template>
 
 <script>
@@ -433,7 +433,6 @@ import OptionsEditor from "../../../UI/OptionsEditor.vue";
 
 export default {
   components: {
-    AppLayout,
     PButton,
     Card,
     InputText,
@@ -450,6 +449,7 @@ export default {
     Dialog,
     Checkbox,
   },
+  layout: AppLayout,
   props: {
     measureUnits: {
       type: Array,
