@@ -1,18 +1,37 @@
 <script >
 import { Link } from "@inertiajs/inertia-vue3";
+import Dropdown from "primevue/dropdown";
 
 export default {
   components: {
     Link,
+    Dropdown,
   },
   data() {
     return {
       outsideClickListener: null,
       topbarMenuActive: false,
       logoUrl: "",
+      selectedLanguage: "en",
+      languages: [
+        { name: "EN", code: "en" },
+        { name: "ES", code: "es" },
+      ],
     };
   },
-  Methods: {
+  computed: {
+    topbarMenuClasses() {
+      return {
+        "layout-topbar-menu-mobile-active": this.topbarMenuActive,
+      };
+    },
+  },
+  watch: {
+    selectedLanguage(newVal) {
+      this.$i18n.locale = newVal;
+    },
+  },
+  methods: {
     onTopBarMenuButton() {
       this.topbarMenuActive = !this.topbarMenuActive;
     },
@@ -46,13 +65,6 @@ export default {
         || topbarEl.contains(event.target));
     },
   },
-  computed: {
-    topbarMenuClasses() {
-      return {
-        "layout-topbar-menu-mobile-active": this.topbarMenuActive.value,
-      };
-    },
-  },
   onMounted() {
     this.bindOutsideClickListener();
   },
@@ -61,9 +73,14 @@ export default {
   },
 };
 </script>
-
 <template>
   <div class="layout-topbar">
+    <button
+      class="p-link layout-menu-button layout-topbar-button"
+      @click="$emit('on-menu-toggle')"
+    >
+      <i class="fa fa-bars" />
+    </button>
     <Link
       to="/"
       class="layout-topbar-logo"
@@ -72,17 +89,10 @@ export default {
     </Link>
 
     <button
-      class="p-link layout-menu-button layout-topbar-button"
-      @click="$emit('on-menu-toggle')"
-    >
-      <i class="fa fa-bars" />
-    </button>
-
-    <button
       class="p-link layout-topbar-menu-button layout-topbar-button"
       @click="onTopBarMenuButton()"
     >
-      <i class="pi pi-ellipsis-v" />
+      <i class="fa fa-ellipsis-v" />
     </button>
 
     <div
@@ -93,25 +103,39 @@ export default {
         class="p-link layout-topbar-button"
         @click="onTopBarMenuButton()"
       >
-        <i class="pi pi-calendar" />
+        <i class="fa fa-calendar" />
         <span>Calendar</span>
       </button>
       <button
         class="p-link layout-topbar-button"
         @click="onTopBarMenuButton()"
       >
-        <i class="pi pi-user" />
+        <i class="fa fa-user" />
         <span>Profile</span>
       </button>
       <button
         class="p-link layout-topbar-button"
         @click="onSettingsClick()"
       >
-        <i class="pi pi-cog" />
+        <i class="fa fa-cog" />
         <span>Settings</span>
       </button>
+      <Dropdown
+        id="topbarLanguage"
+        v-model="selectedLanguage"
+        :options="languages"
+        option-label="name"
+        option-value="code"
+        placeholder="Language"
+        class="w-full md:w-auto"
+      />
     </div>
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style>
+#topbarLanguage > span {
+  display: flex;
+  align-items: center;
+}
+</style>

@@ -7,6 +7,7 @@
 import "./bootstrap";
 
 import { createApp, h } from "vue";
+import { createI18n } from "vue-i18n";
 import { createInertiaApp, Link } from "@inertiajs/inertia-vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 
@@ -19,6 +20,20 @@ import PButton from "primevue/button";
 import { InertiaProgress } from "@inertiajs/progress";
 import { ZiggyVue } from "ziggy-js";
 
+import en from "../lang/en.json";
+import es from "../lang/es.json";
+
+const messages = {
+  en,
+  es,
+};
+
+const i18n = createI18n({
+  locale: "en", // default locale
+  fallbackLocale: "en",
+  messages,
+});
+
 InertiaProgress.init();
 
 createInertiaApp({
@@ -28,6 +43,7 @@ createInertiaApp({
   }) {
     createApp({ render: () => h(App, props) })
       .use(plugin)
+      .use(i18n)
       .component("PButton", PButton)
       .component("Link", Link)
       .use(ZiggyVue)
@@ -39,3 +55,5 @@ createInertiaApp({
       .mount(el);
   },
 });
+
+export default i18n;
