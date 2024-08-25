@@ -426,10 +426,12 @@ import Dialog from "primevue/dialog";
 import { useVuelidate } from "@vuelidate/core";
 import {
   helpers, required, minLength, minValue, requiredIf,
+  createI18nMessage,
 } from "@vuelidate/validators";
 import AppLayout from "../../../layouts/admin.vue";
 import MediaManager from "../../../UI/MediaManager.vue";
 import OptionsEditor from "../../../UI/OptionsEditor.vue";
+import i18n from "../../../app";
 
 export default {
   components: {
@@ -491,20 +493,38 @@ export default {
     };
   },
   validations() {
+    const { t } = i18n.global;
+
+    const withI18nMessage = createI18nMessage({
+      t,
+      messagesPath: "validations",
+    });
+
     return {
-      name: { required, minLength: minLength(10) },
-      category: { required },
-      brand: { required },
-      price: {
-        required: requiredIf(() => !this.hasVariants),
-        minValue: minValue(0.5),
+      name: {
+        required: withI18nMessage(required),
+        minLength: withI18nMessage(minLength(10)),
       },
-      identifier: { minLength: minLength(5) },
+      category: { required: withI18nMessage(required) },
+      brand: { required: withI18nMessage(required) },
+      price: {
+        required: withI18nMessage(requiredIf(() => !this.hasVariants)),
+        minValue: withI18nMessage(minValue(0.5)),
+      },
+      identifier: {
+        minLength: withI18nMessage(minLength(5)),
+      },
       variants: {
-        required: requiredIf(() => this.hasVariants),
+        required: withI18nMessage(requiredIf(() => this.hasVariants)),
         $each: helpers.forEach({
-          identifier: { required, minLength: minLength(5) },
-          price: { required, minValue: minValue(0.5) },
+          identifier: {
+            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+            minLength: withI18nMessage(minLength(5), { messagePath: () => ("validations.minLength") }),
+          },
+          price: {
+            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+            minValue: withI18nMessage(minValue(0.5), { messagePath: () => ("validations.minValue") }),
+          },
         }),
       },
     };
@@ -515,6 +535,7 @@ export default {
     },
     submit() {
       this.v$.$touch();
+
       if (!this.v$.$invalid) {
         const body = {
           name: this.name,
@@ -550,7 +571,7 @@ export default {
             this.$toast.add({
               severity: "success",
               summary: "Success",
-              detail: "Product created",
+              detail: i18n.global.t("Product created"),
               life: 3000,
             });
             Inertia.visit(route("products"));
@@ -564,10 +585,18 @@ export default {
             });
           });
       } else {
+        let message = "";
+
+        if (typeof this.v$.$errors[0].$message === "object") {
+          message = `${i18n.global.t(this.capitalize(this.v$.$errors[0].$property))}: ${this.v$.$errors[0].$message[0]}`;
+        } else {
+          message = `${i18n.global.t(this.capitalize(this.v$.$errors[0].$property))}: ${this.v$.$errors[0].$message}`;
+        }
+
         this.$toast.add({
           severity: "error",
-          summary: "Missing fields",
-          detail: `${this.capitalize(this.v$.$errors[0].$property)}: ${this.v$.$errors[0].$message}`,
+          summary: i18n.global.t("Missing fields"),
+          detail: message,
           life: 3000,
         });
       }

@@ -35,5 +35,12 @@
     "Option Values": "Option Values",
     "Add another option": "Add another option",
     "Product Organization": "Product Organization",
-    "Add Images to Variant": "Add Images to Variant"
+    "Add Images to Variant": "Add Images to Variant",
+    "Product created": "Product created",
+    "Missing fields": "Missing fields",
+    "validations": {
+        "required": "This field is required",
+        "minLength": "This field must have at least {min} characters",
+        "minValue": "This field must have a value greater than or equal to {min}"
+    }
 }
