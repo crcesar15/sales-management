@@ -44,8 +44,8 @@ class ProductsController extends Controller
      */
     public function edit(Product $product)
     {
-        // Include the product category
-        $product->load(['media']);
+        // Include the product variants with media
+        $product->load(['variants', 'categories', 'brand', 'measureUnit']);
 
         // List of Categories
         $categories = Category::all();

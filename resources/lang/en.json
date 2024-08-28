@@ -1,6 +1,7 @@
 {
     "Products": "Products",
     "Add Product": "Add Product",
+    "Edit Product": "Edit Product",
     "All": "All",
     "Active": "Active",
     "Inactive": "Inactive",
@@ -38,6 +39,7 @@
     "Add Images to Variant": "Add Images to Variant",
     "Product created": "Product created",
     "Missing fields": "Missing fields",
+    "No products registered yet": "No products registered yet",
     "validations": {
         "required": "This field is required",
         "minLength": "This field must have at least {min} characters",

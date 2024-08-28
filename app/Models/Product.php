@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -20,9 +21,25 @@ class Product extends Model
         'status',
     ];
 
-    public function media()
+    protected $appends = [
+        'media',
+    ];
+
+    public function getMediaAttribute()
     {
-        return $this->morphMany(Media::class, 'model');
+        // Get images from variants
+        $variants = $this->variants->load('media');
+
+        if ($variants->count() === 1) {
+            return $variants->first()->media;
+        } else {
+            $media = collect();
+            foreach ($variants as $variant) {
+                $media = $media->merge($variant->media);
+            }
+
+            return $media;
+        }
     }
 
     public function categories()

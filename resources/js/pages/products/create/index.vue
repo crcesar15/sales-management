@@ -31,6 +31,7 @@
               <InputText
                 id="name"
                 v-model="name"
+                autocomplete="off"
                 :class="{'p-invalid': v$.name.$invalid && v$.name.$dirty}"
                 @blur="v$.name.$touch"
               />
@@ -95,6 +96,7 @@
                 <InputText
                   id="profit"
                   v-model="identifier"
+                  autocomplete="off"
                   :class="{'p-invalid': v$.identifier.$invalid && v$.identifier.$dirty}"
                   @blur="v$.identifier.$touch"
                 />
@@ -202,6 +204,7 @@
                   <div class="flex flex-column">
                     <InputText
                       v-model="slotProps.data.identifier"
+                      autocomplete="off"
                       :class="{'p-invalid': v$.variants.$each.$response.$errors[slotProps.index].identifier.length > 0}"
                       @blur="v$.variants.$each.$response.$errors[slotProps.index].identifier.$touch"
                     />

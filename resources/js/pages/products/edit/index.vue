@@ -1,153 +1,457 @@
 <template>
-  <AppLayout class="md:col-10 md:col-offset-1 col-12">
-    <Card>
-      <template #header>
-        <div class="grid">
-          <div class="col-12 flex justify-content-end pt-5 pr-5">
-            <PButton
-              type="button"
-              label="Discard"
-              icon="fas fa-close"
-              outlined
-              severity="primary"
-              @click="discardChanges"
-            />
-            <PButton
-              class="ml-2"
-              type="button"
-              label="Save"
-              icon="fas fa-save"
-              severity="primary"
-              @click="updateProduct"
-            />
-          </div>
-        </div>
-      </template>
-      <template #content>
-        <TabView>
-          <TabPanel header="General Info">
+  <div>
+    <Toast />
+    <div class="flex justify-content-between">
+      <div class="flex ">
+        <PButton
+          icon="fa fa-arrow-left"
+          text
+          severity="secondary"
+          @click="$inertia.visit(route('products'))"
+        />
+        <h4 class="ml-2">
+          {{ $t('Edit Product') }}
+        </h4>
+      </div>
+      <div class="flex flex-column">
+        <PButton
+          icon="fa fa-save"
+          :label="$t('Save')"
+          style="text-transform: uppercase"
+          @click="submit()"
+        />
+      </div>
+    </div>
+    <div class="grid">
+      <div class="md:col-8 col-12">
+        <Card class="mb-4">
+          <template #content>
+            <div class="flex flex-column gap-2 mb-3">
+              <label for="name">{{ $t('Name') }}</label>
+              <InputText
+                id="name"
+                v-model="name"
+                :class="{'p-invalid': v$.name.$invalid && v$.name.$dirty}"
+                @blur="v$.name.$touch"
+              />
+              <small
+                v-if="v$.name.$invalid && v$.name.$dirty"
+                class="p-error"
+              >
+                {{ v$.name.$errors[0].$message }}
+              </small>
+            </div>
+            <div class="flex flex-column gap-2 mb-3">
+              <label for="description">{{ $t('Description') }}</label>
+              <Textarea
+                id="description"
+                v-model="description"
+              />
+            </div>
+          </template>
+        </Card>
+        <Card class="mb-4">
+          <template #title>
+            {{ $t('Images') }}
+          </template>
+          <template #content>
+            <div class="flex flex-column">
+              <MediaManager
+                :files="files"
+                @upload-file="uploadFile"
+                @remove-file="removeFile"
+              />
+            </div>
+          </template>
+        </Card>
+        <Card
+          v-show="hasVariants === false"
+          class="mb-4"
+        >
+          <template #title>
+            {{ $t('Details') }}
+          </template>
+          <template #content>
             <div class="grid">
-              <div class="col-12 md:col-6 flex flex-column gap-2">
-                <label for="identifier">Identifier</label>
-                <InputText
-                  id="identifier"
-                  v-model="identifier"
-                />
-              </div>
-              <div class="col-12 md:col-6 flex flex-column gap-2">
-                <label for="name">Name</label>
-                <InputText
-                  id="name"
-                  v-model="name"
-                />
-              </div>
-              <div class="col-12 flex flex-column gap-2">
-                <label for="description">Description</label>
-                <Textarea
-                  id="description"
-                  v-model="description"
-                />
-              </div>
-              <div class="col-12 md:col-6 flex flex-column gap-2">
-                <label for="price">Price (Bs.)</label>
+              <div class="flex flex-column lg:col-6 md:col-6 col-12 gap-2 mb-3">
+                <label for="price">{{ $t('Price') }}</label>
                 <InputNumber
                   id="price"
                   v-model="price"
-                  :min-fraction-digits="2"
-                  :max-fraction-digits="2"
+                  mode="currency"
+                  currency="BOB"
+                  :class="{'p-invalid': v$.price.$invalid && v$.price.$dirty}"
+                  @blur="v$.price.$touch"
                 />
+                <small
+                  v-if="v$.price.$invalid && v$.price.$dirty"
+                  class="p-error"
+                >
+                  {{ v$.price.$errors[0].$message }}
+                </small>
               </div>
-              <div class="col-12 md:col-6 flex flex-column gap-2">
-                <label for="stock">Stock</label>
-                <InputNumber
-                  id="stock"
-                  v-model="stock"
+              <div class="flex flex-column lg:col-6 md:col-6 col-12 gap-2 mb-3">
+                <label for="profit">{{ $t('Bar Code or Identifier') }}</label>
+                <InputText
+                  id="profit"
+                  v-model="identifier"
+                  :class="{'p-invalid': v$.identifier.$invalid && v$.identifier.$dirty}"
+                  @blur="v$.identifier.$touch"
                 />
+                <small
+                  v-if="v$.identifier.$invalid && v$.identifier.$dirty"
+                  class="p-error"
+                >
+                  {{ v$.identifier.$errors[0].$message }}
+                </small>
               </div>
-              <div class="col-12 md:col-6 flex flex-column gap-2">
-                <label for="brand">Brand</label>
-                <Dropdown
-                  id="brand"
-                  v-model="brand"
-                  filter
-                  :options="brands"
-                  option-label="name"
-                  option-value="id"
-                />
+            </div>
+          </template>
+        </Card>
+        <Card class="mb-4">
+          <template #title>
+            <div class="flex justify-content-between flex-wrap">
+              <div>
+                {{ $t('Options') }}
               </div>
-              <div class="col-12 md:col-6 flex flex-column gap-2">
-                <label for="category">Category</label>
-                <Dropdown
-                  id="category"
-                  v-model="category"
-                  filter
-                  :options="categories"
-                  option-label="name"
-                  option-value="id"
-                />
-              </div>
-              <div class="col-12 md:col-6 flex flex-column gap-2">
-                <label for="measure_unit">Measure Unit</label>
-                <Dropdown
-                  id="measure_unit"
-                  v-model="measureUnit"
-                  :options="measureUnits"
-                  option-label="name"
-                  option-value="id"
-                />
-              </div>
-              <div class="col-12 md:col-6 flex flex-column gap-2">
-                <label for="status">Status</label>
-                <Dropdown
-                  id="status"
-                  v-model="status"
-                  :options="statusOptions"
-                  option-label="label"
-                  option-value="value"
+              <div class="flex align-items-center">
+                <label
+                  for="hasVariants"
+                  class="mr-3"
+                  style="font-weight: lighter; font-size: 14px;"
+                >
+                  {{ $t('This product has variants?') }}
+                </label>
+                <InputSwitch
+                  v-model="hasVariants"
+                  @change="price = null; identifier = null;"
                 />
               </div>
             </div>
-          </TabPanel>
-          <TabPanel header="Media">
-            <FilesManager
-              :files="media"
-              @upload-file="uploadFile"
-              @delete-file="deleteFile"
+          </template>
+          <template #content>
+            <OptionsEditor
+              v-show="hasVariants"
+              v-model="options"
+              @option-deleted="removeItemVariantByOption"
             />
-          </TabPanel>
-        </TabView>
-      </template>
-    </Card>
-  </AppLayout>
+          </template>
+        </Card>
+        <Card
+          v-show="options.length > 0 && hasVariants === true"
+          class="mb-4"
+        >
+          <template #title>
+            <div class="flex justify-content-between flex-wrap">
+              <div>
+                {{ $t('Variants') }}
+              </div>
+              <div>
+                <PButton
+                  :label="$t('Add Variant')"
+                  class="mr-2"
+                  @click="addVariant()"
+                />
+                <PButton
+                  outlined
+                  :label="$t('Generate Variants')"
+                  @click="generateVariants()"
+                />
+              </div>
+            </div>
+          </template>
+          <template #content>
+            <DataTable
+              v-show="variants.length > 0"
+              :value="variants"
+            >
+              <Column
+                field="media"
+                :header="$t('Images')"
+              >
+                <template #body="slotProps">
+                  <div
+                    class="cursor-pointer"
+                    @click="addImagesToVariant(slotProps.index, slotProps.data.media)"
+                  >
+                    <img
+                      v-if="slotProps.data.media.length > 0"
+                      :src="slotProps.data.media[0].url"
+                      alt="product"
+                      class="border-round border-1 h-5rem w-5rem"
+                    >
+                    <div
+                      v-else
+                      class="border-dashed h-5rem w-5rem flex justify-content-center align-items-center"
+                    >
+                      <i class="fa fa-file-circle-plus" />
+                    </div>
+                  </div>
+                </template>
+              </Column>
+              <Column
+                style="font-weight: 500;"
+                field="name"
+                :header="$t('Variant')"
+              />
+              <Column
+                field="identifier"
+                :header="$t('Bar Code or Identifier')"
+              >
+                <template #body="slotProps">
+                  <div class="flex flex-column">
+                    <InputText
+                      v-model="slotProps.data.identifier"
+                      :class="{'p-invalid': v$.variants.$each.$response.$errors[slotProps.index].identifier.length > 0}"
+                      @blur="v$.variants.$each.$response.$errors[slotProps.index].identifier.$touch"
+                    />
+                    <small
+                      v-if="v$.variants.$each.$response.$errors[slotProps.index].identifier.length > 0"
+                      class="p-error"
+                    >
+                      {{ v$.variants.$each.$response.$errors[slotProps.index].identifier[0].$message }}
+                    </small>
+                  </div>
+                </template>
+              </Column>
+              <Column
+                field="price"
+                :header="$t('Price')"
+              >
+                <template #body="slotProps">
+                  <div class="flex flex-column">
+                    <InputNumber
+                      v-model="slotProps.data.price"
+                      mode="currency"
+                      currency="BOB"
+                      :class="{'p-invalid': v$.variants.$each.$response.$errors[slotProps.index].price.length > 0}"
+                      @blur="v$.variants.$each.$response.$errors[slotProps.index].price.$touch"
+                    />
+                    <small
+                      v-if="v$.variants.$each.$response.$errors[slotProps.index].price.length > 0"
+                      class="p-error"
+                    >
+                      {{ v$.variants.$each.$response.$errors[slotProps.index].price[0].$message }}
+                    </small>
+                  </div>
+                </template>
+              </Column>
+              <Column
+                field="actions"
+                :header="$t('Actions')"
+              >
+                <template #body="slotProps">
+                  <PButton
+                    icon="fa fa-trash"
+                    severity="primary"
+                    outlined
+                    @click="removeVariant(slotProps.data.hash)"
+                  />
+                </template>
+              </Column>
+            </DataTable>
+          </template>
+        </Card>
+      </div>
+      <div class="md:col-4 col-12">
+        <Card class="mb-4">
+          <template #content>
+            <div class="flex flex-column gap-2 mb-3">
+              <label for="status">{{ $t('Status') }}</label>
+              <Dropdown
+                v-model="status"
+                :options="[
+                  { name: $t('Active'), value: 'active' },
+                  { name: $t('Inactive'), value: 'inactive' },
+                  { name: $t('Archived'), value: 'archived' }
+                ]"
+                option-label="name"
+                option-value="value"
+              />
+            </div>
+          </template>
+        </Card>
+        <Card class="mb-4">
+          <template #title>
+            {{ $t('Product Organization') }}
+          </template>
+          <template #content>
+            <div class="flex flex-column gap-2 mb-3">
+              <label for="category">{{ $t('Category') }}</label>
+              <MultiSelect
+                id="category"
+                v-model="category"
+                display="chip"
+                filter
+                :options="categories"
+                option-label="name"
+                option-value="id"
+                :class="{'p-invalid': v$.category.$invalid && v$.category.$dirty}"
+                @blur="v$.category.$touch"
+              />
+              <small
+                v-if="v$.category.$invalid && v$.category.$dirty"
+                class="p-error"
+              >
+                {{ v$.category.$errors[0].$message }}
+              </small>
+            </div>
+            <div class="flex flex-column gap-2 mb-3">
+              <label for="brand">{{ $t('Brand') }}</label>
+              <Dropdown
+                id="brand"
+                v-model="brand"
+                filter
+                :options="brands"
+                option-label="name"
+                option-value="id"
+                :class="{'p-invalid': v$.brand.$invalid && v$.brand.$dirty}"
+                @blur="v$.brand.$touch"
+              />
+              <small
+                v-if="v$.brand.$invalid && v$.brand.$dirty"
+                class="p-error"
+              >
+                {{ v$.brand.$errors[0].$message }}
+              </small>
+            </div>
+            <div class="flex flex-column gap-2 mb-3">
+              <label for="measure_unit">{{ $t('Measure Unit') }}</label>
+              <Dropdown
+                id="measure_unit"
+                v-model="measureUnit"
+                :options="measureUnits"
+                option-label="name"
+                option-value="id"
+              />
+            </div>
+          </template>
+        </Card>
+      </div>
+      <Dialog
+        v-model:visible="showVariantEditor"
+        modal
+        :header="$t('Add Variant')"
+      >
+        <div
+          v-for="(option, index) in options"
+          :key="index"
+          class="flex flex-column gap-2 mb-3"
+        >
+          <label>{{ option.name }}</label>
+          <Dropdown
+            v-model="selectedOptions[index]"
+            :options="option.values"
+            class="w-full md:w-14rem"
+          />
+        </div>
+        <template #footer>
+          <PButton
+            :label="$t('Cancel')"
+            outlined
+            severity="primary"
+            @click="toggleVariantEditor"
+          />
+          <PButton
+            :label="$t('Save')"
+            severity="primary"
+            @click="saveVariant"
+          />
+        </template>
+      </Dialog>
+      <Dialog
+        v-model:visible="showVariantImages"
+        modal
+        :header="$t('Add Images to Variant')"
+        :style="{ width: '50vw' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+      >
+        <div class="grid">
+          <div
+            v-for="file in files"
+            :key="file.id"
+            class="col-3"
+          >
+            <div class="flex flex-column gap-2">
+              <img
+                :src="file.url"
+                alt="product"
+                style="border: solid 1px var(--surface-400)"
+                class="border-round"
+              >
+              <div
+                class="flex justify-content-center"
+              >
+                <Checkbox
+                  v-model="selectedVariantImages"
+                  :value="file.id"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <template #footer>
+          <PButton
+            :label="$t('Cancel')"
+            outlined
+            severity="primary"
+            @click="toggleVariantImages"
+          />
+          <PButton
+            :label="$t('Save')"
+            severity="primary"
+            @click="saveSelectedVariantImages"
+          />
+        </template>
+      </Dialog>
+    </div>
+  </div>
 </template>
 
 <script>
 import Card from "primevue/card";
-import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
-import InputNumber from "primevue/inputnumber";
 import PButton from "primevue/button";
-import TabView from "primevue/tabview";
-import TabPanel from "primevue/tabpanel";
-import Dropdown from "primevue/dropdown";
+import InputText from "primevue/inputtext";
 import { Inertia } from "@inertiajs/inertia";
-import axios from "axios";
-import FilesManager from "./FilesManager.vue";
-import AppLayout from "../../layouts/admin.vue";
+import Textarea from "primevue/textarea";
+import Dropdown from "primevue/dropdown";
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
+import MultiSelect from "primevue/multiselect";
+import Toast from "primevue/toast";
+import InputNumber from "primevue/inputnumber";
+import InputSwitch from "primevue/inputswitch";
+import Checkbox from "primevue/checkbox";
+import Dialog from "primevue/dialog";
+import { useVuelidate } from "@vuelidate/core";
+import {
+  helpers, required, minLength, minValue, requiredIf,
+  createI18nMessage,
+} from "@vuelidate/validators";
+import AppLayout from "../../../layouts/admin.vue";
+import MediaManager from "../../../UI/MediaManager.vue";
+import OptionsEditor from "../../../UI/OptionsEditor.vue";
+import i18n from "../../../app";
 
 export default {
   components: {
-    InputText,
-    Textarea,
-    InputNumber,
     PButton,
-    TabView,
-    TabPanel,
-    FilesManager,
-    AppLayout,
     Card,
+    InputText,
+    InputNumber,
+    Textarea,
     Dropdown,
+    MediaManager,
+    MultiSelect,
+    Toast,
+    OptionsEditor,
+    DataTable,
+    Column,
+    InputSwitch,
+    Dialog,
+    Checkbox,
   },
+  layout: AppLayout,
   props: {
     product: {
       type: Object,
@@ -166,129 +470,420 @@ export default {
       default: () => [],
     },
   },
+  setup() {
+    return {
+      v$: useVuelidate(),
+    };
+  },
   data() {
     return {
-      identifier: "",
       name: "",
       description: "",
       price: 0,
-      stock: 0,
-      brand: "",
-      category: "",
-      measure_unit: "",
-      media: [],
+      identifier: "",
       status: "active",
-      statusOptions: [
-        { label: "ACTIVE", value: "active" },
-        { label: "INACTIVE", value: "inactive" },
-        { label: "ARCHIVED", value: "archived" },
-      ],
+      brand: "",
+      measureUnit: "",
+      files: [],
+      category: [],
+      options: [],
+      variants: [],
+      hasVariants: false,
+      showVariantImages: false,
+      selectedVariantImages: [],
+      selectedVariantId: null,
+      showVariantEditor: false,
+      selectedOptions: [],
+    };
+  },
+  validations() {
+    const { t } = i18n.global;
+
+    const withI18nMessage = createI18nMessage({
+      t,
+      messagesPath: "validations",
+    });
+
+    return {
+      name: {
+        required: withI18nMessage(required),
+        minLength: withI18nMessage(minLength(10)),
+      },
+      category: { required: withI18nMessage(required) },
+      brand: { required: withI18nMessage(required) },
+      price: {
+        required: withI18nMessage(requiredIf(() => !this.hasVariants)),
+        minValue: withI18nMessage(minValue(0.5)),
+      },
+      identifier: {
+        minLength: withI18nMessage(minLength(5)),
+      },
+      variants: {
+        required: withI18nMessage(requiredIf(() => this.hasVariants)),
+        $each: helpers.forEach({
+          identifier: {
+            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+            minLength: withI18nMessage(minLength(5), { messagePath: () => ("validations.minLength") }),
+          },
+          price: {
+            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+            minValue: withI18nMessage(minValue(0.5), { messagePath: () => ("validations.minValue") }),
+          },
+        }),
+      },
     };
   },
   mounted() {
     const { product } = this;
 
-    this.identifier = product.identifier;
     this.name = product.name;
     this.description = product.description;
-    this.price = product.price;
     this.stock = product.stock;
     this.brand = product.brand_id;
-    this.category = product.category_id;
+    this.category = product.categories.map((category) => category.id);
     this.measureUnit = product.measure_unit_id;
-    this.media = product.media;
+    this.files = product.media;
     this.status = product.status;
+    this.hasVariants = product.variants.length > 1;
+
+    if (this.hasVariants) {
+      this.options = product.options ? JSON.parse(product.options) : [];
+      this.price = null;
+      this.identifier = null;
+    } else {
+      this.options = [];
+      this.identifier = product.variants[0].identifier;
+      this.price = product.variants[0].price;
+    }
+    this.variants = product.variants.map((variant) => ({
+      hash: variant.hash,
+      name: variant.name,
+      identifier: variant.identifier,
+      price: variant.price,
+      media: variant.media,
+    }));
   },
   methods: {
-    discardChanges() {
-      this.$inertia.visit(route("products"));
+    validateRow(rowIndex) {
+      this.$v.variants[rowIndex].$touch();
     },
-    updateProduct() {
-      const data = {
-        identifier: this.identifier,
-        name: this.name,
-        description: this.description,
-        price: this.price,
-        stock: this.stock,
-        brand_id: this.brand,
-        category_id: this.category,
-        measure_unit_id: this.measureUnit,
-        status: this.status,
-      };
+    submit() {
+      this.v$.$touch();
 
-      axios
-        .put(route("api.products.update", { id: this.product.id }), data)
-        .then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: "Success",
-            detail: "Product updated",
-            life: 3000,
+      if (!this.v$.$invalid) {
+        const body = {
+          name: this.name,
+          description: this.description,
+          status: this.status,
+          brand_id: this.brand,
+          measure_unit_id: this.measureUnit,
+          categories: this.category,
+          options: this.options,
+        };
+
+        if (this.hasVariants) {
+          body.variants = this.variants.map((variant) => ({
+            name: variant.name,
+            identifier: variant.identifier,
+            price: variant.price,
+            status: this.status,
+            media: variant.media,
+          }));
+        } else {
+          body.variants = [{
+            name: this.name,
+            identifier: this.identifier,
+            price: this.price,
+            status: this.status,
+            media: this.files,
+          }];
+        }
+
+        axios
+          .post("products", body)
+          .then(() => {
+            this.$toast.add({
+              severity: "success",
+              summary: "Success",
+              detail: i18n.global.t("Product created"),
+              life: 3000,
+            });
+            Inertia.visit(route("products"));
+          })
+          .catch((error) => {
+            this.$toast.add({
+              severity: "error",
+              summary: "Error",
+              detail: error,
+              life: 3000,
+            });
           });
-          setTimeout(() => {
-            this.$inertia.visit(route("products"));
-          }, 3000);
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: "Error",
-            detail: error.response.data.message,
-            life: 3000,
-          });
+      } else {
+        let message = "";
+
+        if (typeof this.v$.$errors[0].$message === "object") {
+          message = `${i18n.global.t(this.capitalize(this.v$.$errors[0].$property))}: ${this.v$.$errors[0].$message[0]}`;
+        } else {
+          message = `${i18n.global.t(this.capitalize(this.v$.$errors[0].$property))}: ${this.v$.$errors[0].$message}`;
+        }
+
+        this.$toast.add({
+          severity: "error",
+          summary: i18n.global.t("Missing fields"),
+          detail: message,
+          life: 3000,
         });
+      }
+    },
+    removeVariant(hash) {
+      this.variants = this.variants.filter((variant) => variant.hash !== hash);
+    },
+    updateOptions(options) {
+      this.options = options;
     },
     uploadFile(formData) {
       axios
-        .post(`products/${this.productId}/media`, formData, {
+        .post("products/media", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         })
-        .then(() => {
+        .then((response) => {
           this.$toast.add({
             severity: "success",
             summary: "Success",
             detail: "File uploaded",
             life: 3000,
           });
-          this.getProduct();
+          this.files.push(
+            {
+              id: response.data.data.id,
+              url: response.data.data.url,
+            },
+          );
         })
         .catch((error) => {
           this.$toast.add({
             severity: "error",
             summary: "Error",
-            detail: error.response.data.message,
+            detail: error,
             life: 3000,
           });
         });
     },
-    deleteFile(fileId) {
-      // Delete file from API
-      axios.delete(`/products/${this.productId}/media/${fileId}`)
+    removeFile(id) {
+      axios
+        .delete(route("api.products.media.destroy-draft", id))
         .then(() => {
           this.$toast.add({
             severity: "success",
             summary: "Success",
-            detail: "File deleted",
+            detail: "File removed",
             life: 3000,
           });
-          this.getProduct();
+          this.files = this.files.filter((f) => f.id !== id);
         })
-        .catch(() => {
+        .catch((error) => {
           this.$toast.add({
             severity: "error",
             summary: "Error",
-            detail: "Failed to delete file",
+            detail: error,
             life: 3000,
           });
         });
     },
+    generateVariants(allowedOptions = false) {
+      const formattedOptions = [];
+      // merge all the option values
+      const options = this.options.filter((option) => option.saved === true);
+
+      if (options.length === 0) {
+        this.variants = [];
+      }
+
+      const values = this.options.map((option) => option.values);
+
+      if (options.length === 1) {
+        values[0].forEach((value) => {
+          formattedOptions.push({ name: `${value}`, options: [value] });
+        });
+      } else if (options.length === 2) {
+        values[0].forEach((value) => {
+          values[1].forEach((v) => {
+            formattedOptions.push({ name: `${value} / ${v}`, options: [value, v] });
+          });
+        });
+      } else if (options.length === 3) {
+        values[0].forEach((value) => {
+          values[1].forEach((v) => {
+            values[2].forEach((val) => {
+              formattedOptions.push({ name: `${value} / ${v} / ${val}`, options: [value, v, val] });
+            });
+          });
+        });
+      }
+
+      const variants = [];
+
+      formattedOptions.forEach((variant) => {
+        let formattedVariant;
+        // hash the variant name, get all only the letters and numbers then sort them
+        if (allowedOptions === false) {
+          const hash = variant.name
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .toLowerCase()
+            .split("")
+            .sort()
+            .join("");
+
+          formattedVariant = {
+            hash,
+            name: variant.name,
+            options: variant.options,
+            price: 0,
+            identifier: null,
+            media: [],
+          };
+
+          variants.push(formattedVariant);
+        } else {
+          allowedOptions.forEach((option) => {
+            if (variant.options.includes(option)) {
+              const hash = variant.name
+                .replace(/[^a-zA-Z0-9]/g, "")
+                .toLowerCase()
+                .split("")
+                .sort()
+                .join("");
+
+              formattedVariant = {
+                hash,
+                name: variant.name,
+                options: variant.options,
+                price: 0,
+                identifier: null,
+                media: [],
+              };
+              variants.push(formattedVariant);
+            }
+          });
+        }
+      });
+
+      this.variants = variants;
+    },
+    removeItemVariantByOption(option) {
+      let allowedOptions = [];
+
+      this.variants.forEach((variant) => {
+        option.values.forEach((value) => {
+          // remove value from the variant options
+          const index = variant.options.indexOf(value);
+
+          if (index > -1) {
+            variant.options.splice(index, 1);
+            // merge the allowed options
+            allowedOptions = allowedOptions.concat(variant.options);
+          }
+        });
+      });
+
+      // remove duplicates
+      allowedOptions = [...new Set(allowedOptions)];
+
+      this.$nextTick(() => {
+        this.generateVariants(allowedOptions);
+      });
+    },
+    addImagesToVariant(index, media) {
+      this.selectedVariantImages = media.map((file) => file.id);
+      this.selectedVariantId = index;
+      this.toggleVariantImages();
+    },
+    toggleVariantImages() {
+      this.showVariantImages = !this.showVariantImages;
+    },
+    saveSelectedVariantImages() {
+      const variant = this.variants[this.selectedVariantId];
+      const media = this.selectedVariantImages.map((id) => this.files.find((file) => file.id === id));
+
+      variant.media = media;
+      this.variants[this.selectedVariantId] = variant;
+      this.selectedVariantId = null;
+      this.selectedVariantImages = [];
+      this.toggleVariantImages();
+    },
+    toggleVariantEditor() {
+      this.showVariantEditor = !this.showVariantEditor;
+    },
+    addVariant() {
+      this.toggleVariantEditor();
+      this.selectedOptions = [];
+    },
+    saveVariant() {
+      switch (this.selectedOptions.length) {
+        case 1:
+          this.variants.push({
+            hash: this.selectedOptions[0]
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase()
+              .split("")
+              .sort()
+              .join(""),
+            name: this.selectedOptions[0],
+            options: [this.selectedOptions[0]],
+            price: 0,
+            identifier: null,
+            media: [],
+          });
+          break;
+        case 2:
+          this.variants.push({
+            hash: this.selectedOptions.join(" / ")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase()
+              .split("")
+              .sort()
+              .join(""),
+            name: this.selectedOptions.join(" / "),
+            options: this.selectedOptions,
+            price: 0,
+            identifier: null,
+            media: [],
+          });
+          break;
+        case 3:
+          this.variants.push({
+            hash: this.selectedOptions.join(" / ")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase()
+              .split("")
+              .sort()
+              .join(""),
+            name: this.selectedOptions.join(" / "),
+            options: this.selectedOptions,
+            price: 0,
+            identifier: null,
+            media: [],
+          });
+          break;
+        default:
+          break;
+      }
+
+      this.selectedOptions = [];
+      this.toggleVariantEditor();
+    },
+    capitalize(words) {
+      // separate words by capitalized letter
+      let formatted = words.replace(/([A-Z])/g, " $1")
+        // capitalize the first letter
+        .replace(/^./, (str) => str.toUpperCase());
+      // capitalize the first letter of each word
+      formatted = formatted.replace(/\b\w/g, (l) => l.toUpperCase());
+
+      return formatted;
+    },
   },
 };
 </script>
-<style>
-.p-card-body {
-  padding-top: 0px !important;
-}
-</style>

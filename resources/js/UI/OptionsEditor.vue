@@ -97,14 +97,14 @@ export default {
 
   },
   props: {
-    value: {
+    modelValue: {
       type: Array,
-      default: () => [],
+      required: true,
     },
   },
   data() {
     return {
-      options: [],
+      options: this.modelValue,
     };
   },
   computed: {
@@ -118,15 +118,18 @@ export default {
     },
   },
   watch: {
+    modelValue: {
+      handler(value) {
+        this.options = value;
+      },
+      deep: true,
+    },
     options: {
       handler(value) {
         this.$emit("update:modelValue", value);
       },
       deep: true,
     },
-  },
-  mounted() {
-    this.options = this.value;
   },
   methods: {
     addOption() {
@@ -137,7 +140,7 @@ export default {
       });
     },
     saveOption(index) {
-      const originalOptions = this.value;
+      const originalOptions = this.modelValue;
       originalOptions[index] = this.options[index];
       this.options[index].saved = true;
     },

@@ -35,7 +35,7 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            No products found.
+            {{ $t('No products registered yet') }}
           </template>
           <template #header>
             <div class="grid">
@@ -384,7 +384,7 @@ export default {
         &status=${this.status}
       `;
 
-      url += "&includes=media,brand,categories,measureUnit";
+      url += "&includes=brand,categories,measureUnit";
 
       if (this.pagination.sortOrder === -1) {
         url += "&order_direction=desc";
