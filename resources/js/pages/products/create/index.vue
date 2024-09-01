@@ -548,6 +548,7 @@ export default {
           measure_unit_id: this.measureUnit,
           categories: this.category,
           options: this.options,
+          media: this.files,
         };
 
         if (this.hasVariants) {
@@ -564,7 +565,7 @@ export default {
             identifier: this.identifier,
             price: this.price,
             status: this.status,
-            media: this.files,
+            media: this.files.map((file) => ({ id: file.id })),
           }];
         }
 

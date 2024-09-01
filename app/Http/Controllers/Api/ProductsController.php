@@ -30,11 +30,11 @@ class ProductsController extends Controller
             $query->where('status', $status);
         }
 
-        $includes = $request->input('includes', '');
+        // $includes = $request->input('includes', '');
 
-        if (!empty($includes)) {
-            $query->with(explode(',', $includes));
-        }
+        // if (!empty($includes)) {
+        //     $query->with(explode(',', $includes));
+        // }
 
         $order_by = $request->has('order_by')
             ? $order_by = $request->get('order_by')
@@ -84,6 +84,15 @@ class ProductsController extends Controller
             'status' => $request->input('status'),
         ]);
 
+        // Associate media
+        if ($request->has('media') && count($request->input('media')) > 0) {
+            foreach ($request->input('media') as $media) {
+                Media::find($media['id'])->update([
+                    'model_id' => $product->id,
+                ]);
+            }
+        }
+
         // save categories
         $categories = $request->input('categories', []);
 
@@ -96,22 +105,16 @@ class ProductsController extends Controller
 
         if (count($variants) > 0) {
             foreach ($variants as $variant) {
-                $storedVariant = $product->variants()->create([
+                $item = [
                     'identifier' => $variant['identifier'],
                     'name' => $variant['name'],
                     'price' => $variant['price'],
                     'stock' => $variant['stock'] ?? 0,
                     'status' => $variant['status'],
-                ]);
+                    'media' => json_encode($variant['media'] ?? []),
+                ];
 
-                // associate media
-                if (isset($variant['media']) && count($variant['media']) > 0) {
-                    foreach ($variant['media'] as $media) {
-                        Media::find($media['id'])->update([
-                            'model_id' => $storedVariant->id,
-                        ]);
-                    }
-                }
+                $product->variants()->create($item);
             }
         }
 
