@@ -94,6 +94,7 @@ class DatabaseSeeder extends Seeder
             ])->each(function ($product) use ($category) {
                 ProductVariant::factory(rand(1, 3))->create([
                     'product_id' => $product->id,
+                    'media' => json_encode([]),
                 ]);
                 // Add category to product
                 $product->categories()->attach($category->id);

@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('name', 150);
             $table->decimal('price', 10, 2);
             $table->integer('stock');
+            $table->json('media');
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->timestamps();
         });
