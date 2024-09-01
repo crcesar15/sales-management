@@ -18,8 +18,6 @@ class Products extends ResourceCollection
     {
         return [
             'data' => $this->collection->map(function ($product) {
-                $productMedia = [];
-
                 $formattedProduct = [
                     'id' => $product->id,
                     'categories' => $product->categories,
@@ -30,34 +28,10 @@ class Products extends ResourceCollection
                     'status' => $product->status,
                     'price' => $product->variants->min('price'),
                     'stock' => $product->variants->sum('stock'),
+                    'media' => $product->media ?? [],
                     'description' => $product->description,
+                    'variants' => $product->variants,
                 ];
-
-                $variants = $product->variants->map(function ($variant) {
-                    $formattedVariant = [
-                        'id' => $variant->id,
-                        'identifier' => $variant->identifier,
-                        'name' => $variant->name,
-                        'description' => $variant->description,
-                        'price' => $variant->price,
-                        'stock' => $variant->stock,
-                        'status' => $variant->status,
-                        'media' => $variant->media,
-                    ];
-
-                    if (!$variant->media) {
-                        $formattedVariant['media'] = [];
-                    }
-
-                    return $formattedVariant;
-                });
-
-                $productMedia = $variants->map(function ($variant) {
-                    return $variant['media'];
-                })->flatten();
-
-                $formattedProduct['media'] = $productMedia;
-                $formattedProduct['variants'] = $variants;
 
                 return $formattedProduct;
             }),

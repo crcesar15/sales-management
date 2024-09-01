@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Media;
 use App\Models\Product;
-use App\Models\ProductVariant;
 
 class ProductsMediaController extends Controller
 {
@@ -30,7 +29,7 @@ class ProductsMediaController extends Controller
         $media = Media::find($media_id);
 
         if ($media) {
-            if ($media->model_id === 0 && $media->model_type === ProductVariant::class) {
+            if ($media->model_id === 0 && $media->model_type === Product::class) {
                 $media->delete();
 
                 return response()->json(['message' => 'Media deleted'], 200);
@@ -48,7 +47,7 @@ class ProductsMediaController extends Controller
             $path = $file->store('products', 'public');
             $media = Media::create([
                 'model_id' => 0,
-                'model_type' => ProductVariant::class,
+                'model_type' => Product::class,
                 'filename' => explode('/', $path)[1],
             ]);
 

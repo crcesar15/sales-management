@@ -384,7 +384,7 @@ export default {
         &status=${this.status}
       `;
 
-      url += "&includes=brand,categories,measureUnit";
+      url += "&includes=media,brand,categories,measureUnit";
 
       if (this.pagination.sortOrder === -1) {
         url += "&order_direction=desc";
