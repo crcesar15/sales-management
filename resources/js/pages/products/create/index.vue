@@ -557,7 +557,7 @@ export default {
             identifier: variant.identifier,
             price: variant.price,
             status: this.status,
-            media: variant.media,
+            media: variant.media.map((file) => ({ id: file.id })),
           }));
         } else {
           body.variants = [{

@@ -17,6 +17,7 @@ class ProductVariant extends Model
         'price',
         'stock',
         'status',
+        'media',
     ];
 
     // protected $appends = [
