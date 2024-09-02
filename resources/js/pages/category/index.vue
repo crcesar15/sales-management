@@ -1,100 +1,119 @@
 <template>
-  <AppLayout>
+  <div>
+    <div class="flex">
+      <div class="col-2">
+        <h2 class="text-2xl font-bold">
+          {{ $t("Categories") }}
+        </h2>
+      </div>
+      <div class="col-10 flex align-items-center justify-content-end">
+        <p-button
+          :label="$t('Add Category')"
+          class="ml-2"
+          @click="addCategory"
+        />
+      </div>
+    </div>
     <ConfirmDialog />
     <Toast />
-    <h1>Categories</h1>
-    <DataTable
-      :value="categories"
-      lazy
-      :total-records="pagination.total"
-      :rows="pagination.rows"
-      :first="pagination.first"
-      :loading="loading"
-      paginator
-      sort-field="name"
-      :sort-order="1"
-      @page="onPage($event)"
-      @sort="onSort($event)"
-    >
-      <template #header>
-        <div class="grid">
-          <div class="col-12 md:col-10">
-            <input-text
-              v-model="pagination.filter"
-              type="text"
-              placeholder="Search"
-              class="w-full"
-            />
-          </div>
-          <div class="col-12 md:col-2">
-            <p-button
-              label="Category"
-              icon="fa fa-plus"
-              class="w-full"
-              @click="addCategory"
-            />
-          </div>
-        </div>
+    <Card>
+      <template #content>
+        <DataTable
+          :value="categories"
+          lazy
+          :total-records="pagination.total"
+          :rows="pagination.rows"
+          :first="pagination.first"
+          :loading="loading"
+          paginator
+          sort-field="name"
+          :sort-order="1"
+          @page="onPage($event)"
+          @sort="onSort($event)"
+        >
+          <template #header>
+            <div class="grid">
+              <div
+                class="
+                  flex
+                  col-12
+                  md:justify-content-end
+                  justify-content-center
+                "
+              >
+                <IconField icon-position="left">
+                  <InputIcon class="fa fa-search" />
+                  <InputText
+                    v-model="pagination.filter"
+                    :placeholder="$t('Search')"
+                  />
+                </IconField>
+              </div>
+            </div>
+          </template>
+          <Column
+            field="name"
+            header="Name"
+            sortable
+          />
+          <Column
+            field="created_at"
+            header="Created At"
+            sortable
+          />
+          <Column
+            field="updated_at"
+            header="Updated At"
+            sortable
+          />
+          <Column
+            field="actions"
+            header="Actions"
+          >
+            <template #body="row">
+              <div class="flex justify-center">
+                <p-button
+                  icon="fa fa-edit"
+                  text
+                  size="sm"
+                  @click="editCategory(row.data)"
+                />
+                <p-button
+                  icon="fa fa-trash"
+                  text
+                  size="sm"
+                  @click="deleteCategory(row.data.id)"
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
       </template>
-      <Column
-        field="name"
-        header="Name"
-        sortable
-      />
-      <Column
-        field="created_at"
-        header="Created At"
-        sortable
-      />
-      <Column
-        field="updated_at"
-        header="Updated At"
-        sortable
-      />
-      <Column
-        field="actions"
-        header="Actions"
-      >
-        <template #body="row">
-          <div class="flex justify-center">
-            <p-button
-              icon="fa fa-edit"
-              text
-              size="sm"
-              @click="editCategory(row.data)"
-            />
-            <p-button
-              icon="fa fa-trash"
-              text
-              size="sm"
-              @click="deleteCategory(row.data.id)"
-            />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
+    </Card>
     <CategoryEditor
       :category="selectedCategory"
       :show-dialog="editorToggle"
       @clearSelection="selectedCategory = {}; editorToggle = false;"
       @submitted="saveCategory"
     />
-  </AppLayout>
+  </div>
 </template>
 
 <script>
 import DataTable from "primevue/datatable";
+import Card from "primevue/card";
 import Column from "primevue/column";
 import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
+import IconField from "primevue/iconfield";
+import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
 import AppLayout from "../../layouts/admin.vue";
 import CategoryEditor from "./CategoryEditor.vue";
 
 export default {
   components: {
-    AppLayout,
     DataTable,
     Column,
     PButton,
@@ -102,7 +121,11 @@ export default {
     InputText,
     Toast,
     ConfirmDialog,
+    Card,
+    IconField,
+    InputIcon,
   },
+  layout: AppLayout,
   data() {
     return {
       categories: [],
