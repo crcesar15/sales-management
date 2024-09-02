@@ -652,6 +652,9 @@ export default {
             life: 3000,
           });
           this.files = this.files.filter((f) => f.id !== id);
+          this.variants.forEach((variant, index) => {
+            this.variants[index].media = variant.media.filter((media) => media.id !== id);
+          });
         })
         .catch((error) => {
           this.$toast.add({

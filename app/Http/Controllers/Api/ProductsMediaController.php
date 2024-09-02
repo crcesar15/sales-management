@@ -10,11 +10,10 @@ class ProductsMediaController extends Controller
 {
     public function destroy($id, $media_id)
     {
-        $product = Product::find($id);
         $media = Media::find($media_id);
 
-        if ($product && $media) {
-            if ($product->id === $media->model_id && $media->model_type === Product::class) {
+        if ($media) {
+            if ($media->model_id === $id && $media->model_type === Product::class) {
                 $media->delete();
 
                 return response()->json(['message' => 'Media deleted'], 200);
@@ -24,16 +23,14 @@ class ProductsMediaController extends Controller
         return response()->json(['message' => 'Media not found'], 404);
     }
 
-    public function destroyDraft($media_id)
+    public function destroyDraft($id)
     {
-        $media = Media::find($media_id);
+        $media = Media::find($id);
 
         if ($media) {
-            if ($media->model_id === 0 && $media->model_type === Product::class) {
-                $media->delete();
+            $media->delete();
 
-                return response()->json(['message' => 'Media deleted'], 200);
-            }
+            return response()->json(['message' => 'Media deleted'], 200);
         }
 
         return response()->json(['message' => 'Media not found'], 404);

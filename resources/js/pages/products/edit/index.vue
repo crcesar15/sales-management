@@ -556,6 +556,7 @@ export default {
       this.price = product.variants[0].price;
     }
     this.variants = product.variants.map((variant) => ({
+      id: variant.id,
       hash: variant.hash,
       name: variant.name,
       identifier: variant.identifier,
@@ -579,33 +580,36 @@ export default {
           measure_unit_id: this.measureUnit,
           categories: this.category,
           options: this.options,
+          media: this.files,
         };
 
         if (this.hasVariants) {
           body.variants = this.variants.map((variant) => ({
+            id: variant.id ?? null,
             name: variant.name,
             identifier: variant.identifier,
             price: variant.price,
             status: this.status,
-            media: variant.media,
+            media: variant.media.map((file) => ({ id: file.id })),
           }));
         } else {
           body.variants = [{
+            id: this.variants[0].id ?? null,
             name: this.name,
             identifier: this.identifier,
             price: this.price,
             status: this.status,
-            media: this.files,
+            media: this.files.map((file) => ({ id: file.id })),
           }];
         }
 
         axios
-          .post("products", body)
+          .put(`products/${this.product.id}`, body)
           .then(() => {
             this.$toast.add({
               severity: "success",
               summary: "Success",
-              detail: i18n.global.t("Product created"),
+              detail: i18n.global.t("Product updated"),
               life: 3000,
             });
             Inertia.visit(route("products"));
@@ -682,6 +686,9 @@ export default {
             life: 3000,
           });
           this.files = this.files.filter((f) => f.id !== id);
+          this.variants.forEach((variant, index) => {
+            this.variants[index].media = variant.media.filter((media) => media.id !== id);
+          });
         })
         .catch((error) => {
           this.$toast.add({

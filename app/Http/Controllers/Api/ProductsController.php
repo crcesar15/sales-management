@@ -126,7 +126,50 @@ class ProductsController extends Controller
     {
         $product = Product::find($id);
         if ($product) {
-            $product->update($request->all());
+            $product->update([
+                'brand_id' => $request->input('brand_id'),
+                'measure_unit_id' => $request->input('measure_unit_id'),
+                'name' => $request->input('name'),
+                'description' => $request->input('description'),
+                'options' => json_encode($request->input('options')),
+                'status' => $request->input('status'),
+            ]);
+
+            // Associate media
+            if ($request->has('media') && count($request->input('media')) > 0) {
+                foreach ($request->input('media') as $media) {
+                    Media::find($media['id'])->update([
+                        'model_id' => $product->id,
+                    ]);
+                }
+            }
+
+            // update categories
+            $categories = $request->input('categories', []);
+
+            $product->categories()->sync($categories);
+
+            // update variants
+            $variants = $request->input('variants', []);
+
+            if (count($variants) > 0) {
+                foreach ($variants as $variant) {
+                    $item = [
+                        'identifier' => $variant['identifier'],
+                        'name' => $variant['name'],
+                        'price' => $variant['price'],
+                        'stock' => $variant['stock'] ?? 0,
+                        'status' => $variant['status'],
+                        'media' => json_encode($variant['media'] ?? []),
+                    ];
+
+                    if (isset($variant['id']) && $variant['id'] !== null) {
+                        $product->variants()->find($variant['id'])->update($item);
+                    } else {
+                        $product->variants()->create($item);
+                    }
+                }
+            }
 
             return response()->json(['data' => $product], 200);
         } else {
