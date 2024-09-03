@@ -608,7 +608,7 @@ export default {
           .then(() => {
             this.$toast.add({
               severity: "success",
-              summary: "Success",
+              summary: i18n.global.t("Success"),
               detail: i18n.global.t("Product updated"),
               life: 3000,
             });
@@ -617,7 +617,7 @@ export default {
           .catch((error) => {
             this.$toast.add({
               severity: "error",
-              summary: "Error",
+              summary: i18n.global.t("Error"),
               detail: error,
               life: 3000,
             });
@@ -655,8 +655,8 @@ export default {
         .then((response) => {
           this.$toast.add({
             severity: "success",
-            summary: "Success",
-            detail: "File uploaded",
+            summary: i18n.global.t("Success"),
+            detail: i18n.global.t("File uploaded"),
             life: 3000,
           });
           this.files.push(
@@ -669,7 +669,7 @@ export default {
         .catch((error) => {
           this.$toast.add({
             severity: "error",
-            summary: "Error",
+            summary: i18n.global.t("Error"),
             detail: error,
             life: 3000,
           });
@@ -681,8 +681,8 @@ export default {
         .then(() => {
           this.$toast.add({
             severity: "success",
-            summary: "Success",
-            detail: "File removed",
+            summary: i18n.global.t("Success"),
+            detail: i18n.global.t("File removed"),
             life: 3000,
           });
           this.files = this.files.filter((f) => f.id !== id);
@@ -693,7 +693,7 @@ export default {
         .catch((error) => {
           this.$toast.add({
             severity: "error",
-            summary: "Error",
+            summary: i18n.global.t("Error"),
             detail: error,
             life: 3000,
           });
