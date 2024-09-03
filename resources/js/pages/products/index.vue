@@ -435,8 +435,8 @@ export default {
         .then(() => {
           this.$toast.add({
             severity: "success",
-            summary: "Success",
-            detail: "Product updated successfully",
+            summary: i18n.global.t("Success"),
+            detail: i18n.global.t("Product updated successfully"),
             life: 3000,
           });
           this.fetchProducts();
@@ -444,7 +444,7 @@ export default {
         .catch((error) => {
           this.$toast.add({
             severity: "error",
-            summary: "Error",
+            summary: i18n.global.t("Error"),
             detail: error.response.data.message,
             life: 3000,
           });
@@ -452,41 +452,32 @@ export default {
     },
     deleteProduct(id) {
       this.$confirm.require({
-        message: "Are you sure you want to delete this product?",
-        header: "Delete Confirmation",
+        message: i18n.global.t("Are you sure you want to delete this product?"),
+        header: i18n.global.t("Confirm"),
         icon: "fas fa-exclamation-triangle",
+        rejectLabel: i18n.global.t("Cancel"),
+        acceptLabel: i18n.global.t("Delete"),
         accept: () => {
           axios.delete(route("api.products.destroy", { id }))
             .then(() => {
               this.fetchProducts();
               this.$toast.add({
                 severity: "success",
-                summary: "Success",
-                detail: "Product deleted successfully",
+                summary: i18n.global.t("Success"),
+                detail: i18n.global.t("Product deleted successfully"),
                 life: 3000,
               });
             })
             .catch((error) => {
               this.$toast.add({
                 severity: "error",
-                summary: "Error",
+                summary: i18n.global.t("Error"),
                 detail: error.response.data.message,
                 life: 3000,
               });
             });
         },
-        reject: () => {
-          this.$toast.add({
-            severity: "info",
-            summary: "Info",
-            detail: "Product deletion canceled",
-            life: 3000,
-          });
-        },
       });
-    },
-    switchLanguage() {
-      i18n.global.locale = "es";
     },
   },
 };
