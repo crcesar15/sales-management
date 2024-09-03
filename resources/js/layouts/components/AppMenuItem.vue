@@ -30,20 +30,16 @@ export default {
       itemKey: null,
     };
   },
-  onBeforeMount() {
-    this.itemKey.value = this.parentItemKey ? `${this.parentItemKey}-${this.index}` : String(this.index);
-
-    const activeItem = this.layoutState.activeMenuItem;
-
-    this.isActiveMenu.value = activeItem === this.itemKey.value || activeItem ? activeItem.startsWith(`${this.itemKey.value}-`) : false;
-  },
   watch: {
     "layoutConfig.activeMenuItem": {
       handler(newVal) {
-        this.isActiveMenu = newVal === this.itemKey || newVal.startsWith(`${this.itemKey}-`);
+        this.isActiveMenu = newVal === this.item.to;
       },
       immediate: true,
     },
+  },
+  mounted() {
+    this.isActiveMenu = this.item.route === window.location.href;
   },
   methods: {
     itemClick(event, item) {
@@ -71,16 +67,9 @@ export default {
           foundItemKey = this.itemKey;
         }
       } else {
-        foundItemKey = this.itemKey;
+        foundItemKey = item.to;
       }
-
       this.setActiveMenuItem(foundItemKey);
-    },
-    checkActiveRoute(item) {
-      // domain
-      const domain = window.location.origin;
-      // remove domain from route;
-      return route(item.to).replace(domain, "") === this.$inertia.page.url;
     },
   },
 };
@@ -116,7 +105,7 @@ export default {
     <Link
       v-if="item.to && !item.items && item.visible !== false"
       :key="item.label"
-      :class="[item.class, { 'active-route': checkActiveRoute(item) }]"
+      :class="[item.class, { 'active-route': isActiveMenu }]"
       :href="route(item.to)"
       @click="itemClick($event, item, index)"
     >

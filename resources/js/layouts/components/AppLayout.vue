@@ -71,7 +71,7 @@ export default {
       this.layoutConfig.scale = scale;
     },
     setActiveMenuItems(item) {
-      this.layoutConfig.activeMenuItem = item || item;
+      this.layoutConfig.activeMenuItem = item;
     },
     onMenuToggle() {
       if (this.layoutConfig.menuMode === "overlay") {

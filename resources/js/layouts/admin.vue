@@ -47,11 +47,13 @@ export default {
               label: "Products",
               icon: "fa fa-list",
               to: "products",
+              route: route("products"),
             },
             {
               label: "Categories",
               icon: "fa fa-layer-group",
               to: "categories",
+              route: route("categories"),
             },
             {
               label: "Brands",
