@@ -75,11 +75,16 @@ class CategoriesController extends Controller
     //Delete a category
     public function destroy($id)
     {
-        $product = Category::find($id);
-        if ($product) {
-            $product->delete();
+        $category = Category::find($id);
+        if ($category) {
+            //remove the category from all products
+            $category->products()->update(['category_id' => null]);
 
-            return response()->json(['data' => $product], 200);
+            return 0;
+
+            $category->delete();
+
+            return response()->json(['data' => $category], 200);
         } else {
             return response()->json(['message' => 'Product not found'], 404);
         }
