@@ -40,6 +40,10 @@
     "Product created": "Product created",
     "Missing fields": "Missing fields",
     "No products registered yet": "No products registered yet",
+    "Categories": "Categories",
+    "Add Category": "Add Category",
+    "Created At": "Created At",
+    "Updated At": "Updated At",
     "validations": {
         "required": "This field is required",
         "minLength": "This field must have at least {min} characters",

@@ -1,12 +1,12 @@
 <template>
   <div>
     <div class="flex">
-      <div class="col-2">
-        <h2 class="text-2xl font-bold">
+      <div class="col-2 flex align-items-center">
+        <h2 class="text-2xl font-bold m-0">
           {{ $t("Categories") }}
         </h2>
       </div>
-      <div class="col-10 flex align-items-center justify-content-end">
+      <div class="col-10 flex justify-content-end">
         <p-button
           :label="$t('Add Category')"
           class="ml-2"
@@ -28,9 +28,13 @@
           paginator
           sort-field="name"
           :sort-order="1"
+          :row-class="rowClass"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
+          <template #empty>
+            {{ $t('No categories registered yet') }}
+          </template>
           <template #header>
             <div class="grid">
               <div
@@ -53,22 +57,26 @@
           </template>
           <Column
             field="name"
-            header="Name"
+            :header="$t('Name')"
+            header-class="surface-100"
             sortable
           />
           <Column
             field="created_at"
-            header="Created At"
+            :header="$t('Created At')"
+            header-class="surface-100"
             sortable
           />
           <Column
             field="updated_at"
-            header="Updated At"
+            :header="$t('Updated At')"
+            header-class="surface-100"
             sortable
           />
           <Column
             field="actions"
-            header="Actions"
+            :header="$t('Actions')"
+            header-class="surface-100"
           >
             <template #body="row">
               <div class="flex justify-center">
@@ -281,3 +289,21 @@ export default {
   },
 };
 </script>
+
+<style>
+.sortable-column [data-pc-section="sort"] {
+  padding-left: 0.2rem;
+}
+
+.sortable-column [data-pc-section="headercontent"] {
+  display: flex;
+  align-items: center;
+}
+.sortable-column th:hover {
+  cursor: pointer;
+  background-color: #ccc;
+}
+.p-datatable .p-datatable-tbody>tr.no-expander>td .p-row-toggler {
+  display: none;
+}
+</style>

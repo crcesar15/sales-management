@@ -40,6 +40,10 @@
     "Product created": "Producto creado",
     "Missing fields": "Campos faltantes",
     "No products registered yet": "No hay productos registrados aún",
+    "Categories": "Categorías",
+    "Add Category": "Agregar Categoría",
+    "Created At": "Fecha de Creación",
+    "Updated At": "Fecha de Actualización",
     "validations": {
         "required": "Este campo es requerido",
         "minLength": "Este campo debe tener al menos {min} caracteres",

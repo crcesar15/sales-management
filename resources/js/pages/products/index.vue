@@ -1,12 +1,12 @@
 <template>
   <div>
     <div class="flex">
-      <div class="col-2">
-        <h2 class="text-2xl font-bold">
+      <div class="col-2 flex align-items-center">
+        <h2 class="text-2xl font-bold m-0">
           {{ $t("Products") }}
         </h2>
       </div>
-      <div class="col-10 flex align-items-center justify-content-end">
+      <div class="col-10 flex justify-content-end">
         <p-button
           :label="$t('Add Product')"
           class="ml-2"
@@ -30,7 +30,6 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          :row-class="rowClass"
           @page="onPage($event)"
           @sort="onSort($event)"
         >

@@ -2,16 +2,17 @@
   <div>
     <Dialog
       v-model:visible="visible"
-      header="Category Editor"
+      :header="$t('Category')"
       modal
       @hide="clearSelection"
     >
       <div class="p-fluid">
         <div class="p-field">
-          <label for="name">Name</label>
+          <label for="name">{{ $t('Name') }}</label>
           <InputText
             id="name"
             v-model="name"
+            class="mt-2"
           />
           <small
             id="text-error"
@@ -25,12 +26,12 @@
       >
         <PButton
           severity="secondary"
-          label="Close"
+          :label="$t('Cancel')"
           @click="closeModal"
         />
         <PButton
           severity="primary"
-          label="Save"
+          :label="$t('Save')"
           @click="submit"
         />
       </template>
