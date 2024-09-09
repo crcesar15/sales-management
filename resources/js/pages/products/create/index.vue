@@ -570,7 +570,7 @@ export default {
         }
 
         axios
-          .post("products", body)
+          .post(route("api.products.store"), body)
           .then(() => {
             this.$toast.add({
               severity: "success",
@@ -613,7 +613,7 @@ export default {
     },
     uploadFile(formData) {
       axios
-        .post("products/media", formData, {
+        .post(route("api.products.media.store"), formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },

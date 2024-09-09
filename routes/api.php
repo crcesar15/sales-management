@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\ProductsController;
+use App\Http\Controllers\Api\ProductsMediaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,8 +27,11 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::delete('/categories/{id}', [CategoriesController::class, 'destroy'])->name('categories.destroy');
 
     //Products Media
-    Route::post('/products/media', 'App\Http\Controllers\Api\ProductsMediaController@draft');
-    Route::post('/products/{id}/media', 'App\Http\Controllers\Api\ProductsMediaController@store');
-    Route::delete('/products/{id}/media/{media_id}', 'App\Http\Controllers\Api\ProductsMediaController@destroy');
-    Route::delete('products/media/{media_id}', 'App\Http\Controllers\Api\ProductsMediaController@destroyDraft')->name('products.media.destroy-draft');
+    Route::post('/products/media', [ProductsMediaController::class, 'draft'])
+        ->name('products.media.draft');
+    Route::post('/products/{id}/media', [ProductsMediaController::class, 'store'])->name('products.media.store');
+    Route::delete('/products/{id}/media/{media_id}', [ProductsMediaController::class, 'destroy'])
+        ->name('products.media.destroy');
+    Route::delete('products/media/{media_id}', [ProductsMediaController::class, 'destroyDraft'])
+        ->name('products.media.destroy-draft');
 });

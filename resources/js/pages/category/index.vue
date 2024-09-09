@@ -166,7 +166,10 @@ export default {
     fetchCategories() {
       this.loading = true;
 
-      let url = `/categories?&per_page=${this.pagination.rows}&page=${this.pagination.page}&order_by=${this.pagination.sortField}`;
+      let url = `${route("api.categories")}?
+        &per_page=${this.pagination.rows}
+        &page=${this.pagination.page}
+        &order_by=${this.pagination.sortField}`;
 
       if (this.pagination.sortOrder === -1) {
         url += "&order_direction=desc";
@@ -218,7 +221,7 @@ export default {
         header: "Delete Confirmation",
         icon: "fas fa-exclamation-triangle",
         accept: () => {
-          axios.delete(`/categories/${category}`)
+          axios.delete(`${route("api.categories.destroy")}/${category}`)
             .then(() => {
               this.$toast.add({
                 severity: "success",
@@ -247,7 +250,7 @@ export default {
       }
     },
     createCategory(category) {
-      axios.post("/categories", category)
+      axios.post(route("api.categories.store"), category)
         .then(() => {
           this.$toast.add({
             severity: "success",
@@ -267,7 +270,7 @@ export default {
         });
     },
     updateCategory(id, category) {
-      axios.put(`/categories/${id}`, category)
+      axios.put(`${route("api.categories.update")}/${id}`, category)
         .then(() => {
           this.$toast.add({
             severity: "success",

@@ -377,7 +377,7 @@ export default {
     },
     fetchProducts() {
       this.loading = true;
-      let url = `/products?per_page=${this.pagination.rows}
+      let url = `${route("api.products")}?per_page=${this.pagination.rows}
         &page=${this.pagination.page}
         &order_by=${this.pagination.sortField}
         &status=${this.status}
@@ -431,7 +431,7 @@ export default {
       this.$inertia.visit(route("products.edit", { id: productId }));
     },
     updateProduct(id, product) {
-      axios.put(`/products/${id}`, product)
+      axios.put(`${route("api.products.store")}/${id}`, product)
         .then(() => {
           this.$toast.add({
             severity: "success",

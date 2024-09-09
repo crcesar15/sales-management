@@ -12,6 +12,7 @@
           <InputText
             id="name"
             v-model="name"
+            autocomplete="off"
             class="mt-2"
           />
           <small
