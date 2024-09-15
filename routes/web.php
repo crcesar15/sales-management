@@ -46,4 +46,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/categories', function () {
         return Inertia::render('category/index');
     })->name('categories');
+
+    Route::get('/brands', function () {
+        return Inertia::render('brands/index');
+    })->name('brands');
 });

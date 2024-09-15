@@ -58,7 +58,8 @@ export default {
             {
               label: "Brands",
               icon: "fa fa-copyright",
-              to: "home",
+              to: "brands",
+              route: route("brands"),
             },
             {
               label: "Units",
