@@ -80,8 +80,6 @@ class CategoriesController extends Controller
             //remove the category from all products
             $category->products()->update(['category_id' => null]);
 
-            return 0;
-
             $category->delete();
 
             return response()->json(['data' => $category], 200);

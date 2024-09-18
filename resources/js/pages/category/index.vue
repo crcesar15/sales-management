@@ -221,7 +221,7 @@ export default {
         header: "Delete Confirmation",
         icon: "fas fa-exclamation-triangle",
         accept: () => {
-          axios.delete(`${route("api.categories.destroy")}/${category}`)
+          axios.delete(`${route("api.categories.destroy", category)}`)
             .then(() => {
               this.$toast.add({
                 severity: "success",
