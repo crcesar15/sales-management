@@ -77,9 +77,8 @@ class CategoriesController extends Controller
     {
         $category = Category::find($id);
         if ($category) {
-            //remove the category from all products
-            $category->products()->update(['category_id' => null]);
-
+            // remove the category from the intermediate table
+            $category->products()->detach();
             $category->delete();
 
             return response()->json(['data' => $category], 200);
