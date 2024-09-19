@@ -96,7 +96,7 @@ export default {
         :class="item.icon"
         class="layout-menuitem-icon"
       />
-      <span class="layout-menuitem-text">{{ item.label }}</span>
+      <span class="layout-menuitem-text">{{ $t(item.label) }}</span>
       <i
         v-if="item.items"
         class="pi pi-fw pi-angle-down layout-submenu-toggler"
@@ -113,7 +113,7 @@ export default {
         :class="item.icon"
         class="layout-menuitem-icon"
       />
-      <span class="layout-menuitem-text">{{ item.label }}</span>
+      <span class="layout-menuitem-text">{{ $t(item.label) }}</span>
       <i
         v-if="item.items"
         class="pi pi-fw pi-angle-down layout-submenu-toggler"
