@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BrandsController;
 use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
@@ -25,6 +26,13 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::post('/categories', [CategoriesController::class, 'store'])->name('categories.store');
     Route::put('/categories/{id}', [CategoriesController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{id}', [CategoriesController::class, 'destroy'])->name('categories.destroy');
+
+    //Routes for Brands
+    Route::get('/brands', [BrandsController::class, 'index'])->name('brands');
+    Route::get('/brands/{id}', [BrandsController::class, 'show'])->name('brands.show');
+    Route::post('/brands', [BrandsController::class, 'store'])->name('brands.store');
+    Route::put('/brands/{id}', [BrandsController::class, 'update'])->name('brands.update');
+    Route::delete('/brands/{id}', [BrandsController::class, 'destroy'])->name('brands.destroy');
 
     //Products Media
     Route::post('/products/media', [ProductsMediaController::class, 'draft'])
