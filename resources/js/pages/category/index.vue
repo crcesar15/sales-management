@@ -220,6 +220,8 @@ export default {
         message: this.$t("Are you sure you want to delete this category?"),
         header: this.$t("Confirm"),
         icon: "fas fa-exclamation-triangle",
+        rejectLabel: this.$t("Cancel"),
+        acceptLabel: this.$t("Delete"),
         accept: () => {
           axios.delete(`${route("api.categories.destroy", category)}`)
             .then(() => {
