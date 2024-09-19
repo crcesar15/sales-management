@@ -509,8 +509,10 @@ export default {
         required: withI18nMessage(required),
         minLength: withI18nMessage(minLength(10)),
       },
-      category: { required: withI18nMessage(required) },
-      brand: { required: withI18nMessage(required) },
+      // category: { required: withI18nMessage(required) },
+      // brand: { required: withI18nMessage(required) },
+      category: {},
+      brand: {},
       price: {
         required: withI18nMessage(requiredIf(() => !this.hasVariants)),
         minValue: withI18nMessage(minValue(0.5)),
@@ -550,19 +552,20 @@ export default {
       this.options = product.options ? JSON.parse(product.options) : [];
       this.price = null;
       this.identifier = null;
+
+      this.variants = product.variants.map((variant) => ({
+        id: variant.id,
+        hash: variant.hash,
+        name: variant.name,
+        identifier: variant.identifier,
+        price: variant.price,
+        media: variant.media,
+      }));
     } else {
       this.options = [];
       this.identifier = product.variants[0].identifier;
       this.price = product.variants[0].price;
     }
-    this.variants = product.variants.map((variant) => ({
-      id: variant.id,
-      hash: variant.hash,
-      name: variant.name,
-      identifier: variant.identifier,
-      price: variant.price,
-      media: variant.media,
-    }));
   },
   methods: {
     validateRow(rowIndex) {
@@ -594,7 +597,7 @@ export default {
           }));
         } else {
           body.variants = [{
-            id: this.variants[0].id ?? null,
+            id: this.product.variants[0].id ?? null,
             name: this.name,
             identifier: this.identifier,
             price: this.price,
@@ -609,7 +612,7 @@ export default {
             this.$toast.add({
               severity: "success",
               summary: i18n.global.t("Success"),
-              detail: i18n.global.t("Product updated"),
+              detail: i18n.global.t("Product updated successfully"),
               life: 3000,
             });
             Inertia.visit(route("products"));

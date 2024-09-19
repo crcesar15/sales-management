@@ -508,8 +508,10 @@ export default {
         required: withI18nMessage(required),
         minLength: withI18nMessage(minLength(10)),
       },
-      category: { required: withI18nMessage(required) },
-      brand: { required: withI18nMessage(required) },
+      // category: { required: withI18nMessage(required) },
+      // brand: { required: withI18nMessage(required) },
+      category: { },
+      brand: { },
       price: {
         required: withI18nMessage(requiredIf(() => !this.hasVariants)),
         minValue: withI18nMessage(minValue(0.5)),
@@ -575,7 +577,7 @@ export default {
             this.$toast.add({
               severity: "success",
               summary: i18n.global.t("Success"),
-              detail: i18n.global.t("Product created"),
+              detail: i18n.global.t("Product created successfully"),
               life: 3000,
             });
             Inertia.visit(route("products"));
