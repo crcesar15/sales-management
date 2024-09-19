@@ -217,16 +217,16 @@ export default {
     },
     deleteCategory(category) {
       this.$confirm.require({
-        message: "Are you sure you want to delete this category?",
-        header: "Delete Confirmation",
+        message: this.$t("Are you sure you want to delete this category?"),
+        header: this.$t("Confirm"),
         icon: "fas fa-exclamation-triangle",
         accept: () => {
           axios.delete(`${route("api.categories.destroy", category)}`)
             .then(() => {
               this.$toast.add({
                 severity: "success",
-                summary: "Success",
-                detail: "Category deleted successfully",
+                summary: this.$t("Success"),
+                detail: this.$t("Category deleted successfully"),
                 life: 3000,
               });
               this.fetchCategories();
@@ -254,8 +254,8 @@ export default {
         .then(() => {
           this.$toast.add({
             severity: "success",
-            summary: "Success",
-            detail: "Category created successfully",
+            summary: this.$t("Success"),
+            detail: this.$t("Category created successfully"),
             life: 3000,
           });
           this.fetchCategories();
@@ -270,12 +270,12 @@ export default {
         });
     },
     updateCategory(id, category) {
-      axios.put(`${route("api.categories.update")}/${id}`, category)
+      axios.put(`${route("api.categories.update", id)}`, category)
         .then(() => {
           this.$toast.add({
             severity: "success",
-            summary: "Success",
-            detail: "Category updated successfully",
+            summary: this.$t("Success"),
+            detail: this.$t("Category updated successfully"),
             life: 3000,
           });
           this.fetchCategories();

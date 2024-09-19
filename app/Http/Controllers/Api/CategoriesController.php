@@ -79,6 +79,7 @@ class CategoriesController extends Controller
         if ($category) {
             // remove the category from the intermediate table
             $category->products()->detach();
+
             $category->delete();
 
             return response()->json(['data' => $category], 200);
