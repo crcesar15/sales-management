@@ -1,8 +1,8 @@
 <template>
   <div>
     <Toast />
-    <div class="flex justify-content-between">
-      <div class="flex ">
+    <div class="flex mb-2 justify-content-between mb-2">
+      <div class="flex">
         <PButton
           icon="fa fa-arrow-left"
           text
@@ -13,7 +13,7 @@
           {{ $t('Add Product') }}
         </h4>
       </div>
-      <div class="flex flex-column">
+      <div class="flex flex-column justify-content-center">
         <PButton
           icon="fa fa-save"
           :label="$t('Save')"

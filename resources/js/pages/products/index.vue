@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="flex">
+    <div class="flex mb-2">
       <div class="col-2 flex align-items-center">
         <h2 class="text-2xl font-bold m-0">
           {{ $t("Products") }}

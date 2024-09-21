@@ -1,7 +1,7 @@
 <template>
   <div>
     <Toast />
-    <div class="flex justify-content-between">
+    <div class="flex justify-content-between mb-2">
       <div class="flex ">
         <PButton
           icon="fa fa-arrow-left"

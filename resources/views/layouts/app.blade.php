@@ -21,7 +21,7 @@
     @inertiaHead
 </head>
 
-<body class="surface-ground">
+<body class="surface-100">
     @inertia
 </body>
 
