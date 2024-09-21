@@ -202,10 +202,22 @@
             </template>
           </Column>
           <Column
-            expander
             style="width: 5rem"
             header-class="surface-100"
-          />
+          >
+            <template #body="slotProps">
+              <i
+                v-if="slotProps.data.variants.length > 1"
+                class="fa fa-fw fa-chevron-circle-down"
+                :class="{
+                  'fa-chevron-down': !expandedRows.includes(slotProps.data),
+                  'fa-chevron-up': expandedRows.includes(slotProps.data),
+                }"
+                style="cursor: pointer;"
+                @click="onExpandRow(slotProps.data.id)"
+              />
+            </template>
+          </Column>
           <template #expansion="product">
             <div>
               <DataTable
@@ -372,8 +384,18 @@ export default {
     this.fetchProducts();
   },
   methods: {
-    rowClass(rowData) {
-      return rowData.variants.length > 1 ? "" : "no-expander";
+    onExpandRow(id) {
+      // get product by id
+      const product = this.products.find((item) => item.id === id);
+
+      // check if the product is already expanded
+      if (this.expandedRows.includes(product)) {
+        // remove the product from the expanded rows
+        this.expandedRows = this.expandedRows.filter((row) => row !== product);
+      } else {
+        // add the product to the expanded rows
+        this.expandedRows.push(product);
+      }
     },
     fetchProducts() {
       this.loading = true;
