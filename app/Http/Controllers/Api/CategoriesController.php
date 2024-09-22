@@ -49,7 +49,7 @@ class CategoriesController extends Controller
         if ($category) {
             return response()->json(['data' => $category], 200);
         } else {
-            return response()->json(['message' => 'Product not found'], 404);
+            return response()->json(['message' => 'Category not found'], 404);
         }
     }
 
@@ -70,7 +70,7 @@ class CategoriesController extends Controller
 
             return response()->json(['data' => $category], 200);
         } else {
-            return response()->json(['message' => 'Product not found'], 404);
+            return response()->json(['message' => 'Category not found'], 404);
         }
     }
 
@@ -86,7 +86,7 @@ class CategoriesController extends Controller
 
             return response()->json(['data' => $category], 200);
         } else {
-            return response()->json(['message' => 'Product not found'], 404);
+            return response()->json(['message' => 'Category not found'], 404);
         }
     }
 }
