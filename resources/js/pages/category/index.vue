@@ -65,14 +65,12 @@
             field="products_count"
             :header="$t('Products')"
             header-class="surface-100"
-            style="text-align: center;"
           >
             <template
               #body="row"
             >
               <Badge
                 :value="row.data.products_count"
-                size="large"
               />
             </template>
           </Column>

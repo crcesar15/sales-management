@@ -25,6 +25,8 @@ class BrandsController extends Controller
             );
         }
 
+        $query->withCount('products');
+
         $order_by = $request->has('order_by')
             ? $order_by = $request->get('order_by')
             : 'name';
@@ -43,9 +45,9 @@ class BrandsController extends Controller
     //Get a brand by id
     public function show($id)
     {
-        $product = Brand::find($id);
-        if ($product) {
-            return response()->json(['data' => $product], 200);
+        $brand = Brand::find($id);
+        if ($brand) {
+            return response()->json(['data' => $brand], 200);
         } else {
             return response()->json(['message' => 'Product not found'], 404);
         }
@@ -54,19 +56,19 @@ class BrandsController extends Controller
     //Create a new brand
     public function store(Request $request)
     {
-        $product = Brand::create($request->all());
+        $brand = Brand::create($request->all());
 
-        return response()->json(['data' => $product], 201);
+        return response()->json(['data' => $brand], 201);
     }
 
     //Update a brand
     public function update(Request $request, $id)
     {
-        $product = Brand::find($id);
-        if ($product) {
-            $product->update($request->all());
+        $brand = Brand::find($id);
+        if ($brand) {
+            $brand->update($request->all());
 
-            return response()->json(['data' => $product], 200);
+            return response()->json(['data' => $brand], 200);
         } else {
             return response()->json(['message' => 'Product not found'], 404);
         }
