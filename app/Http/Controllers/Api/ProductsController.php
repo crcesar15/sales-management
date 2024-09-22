@@ -30,11 +30,11 @@ class ProductsController extends Controller
             $query->where('status', $status);
         }
 
-        // $includes = $request->input('includes', '');
+        $includes = $request->input('includes', '');
 
-        // if (!empty($includes)) {
-        //     $query->with(explode(',', $includes));
-        // }
+        if (!empty($includes)) {
+            $query->with(explode(',', $includes));
+        }
 
         $order_by = $request->has('order_by')
             ? $order_by = $request->get('order_by')

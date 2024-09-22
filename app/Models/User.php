@@ -39,6 +39,14 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    // additional properties
+    protected $appends = ['full_name'];
+
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
     /**
      * The attributes that should be cast.
      *
@@ -47,6 +55,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'created_at' => 'datetime:Y-m-d H:i',
+        'updated_at' => 'datetime:Y-m-d H:i',
     ];
 
     public function role()
