@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -58,4 +59,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/roles', function () {
         return Inertia::render('roles/index');
     })->name('roles');
+
+    // User Routes
+    Route::get('/users', [UsersController::class, 'index'])->name('users');
+    Route::get('/users/{user}/edit', [UsersController::class, 'edit'])->name('users.edit');
+    Route::get('/users/create', [UsersController::class, 'create'])->name('users.create');
 });

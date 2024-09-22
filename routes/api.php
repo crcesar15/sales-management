@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\MeasureUnitsController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
 use App\Http\Controllers\Api\RolesController;
+use App\Http\Controllers\Api\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -58,4 +59,11 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::post('/roles', [RolesController::class, 'store'])->name('roles.store');
     Route::put('/roles/{id}', [RolesController::class, 'update'])->name('roles.update');
     Route::delete('/roles/{id}', [RolesController::class, 'destroy'])->name('roles.destroy');
+
+    // Routes for Users
+    Route::get('/users', [UsersController::class, 'index'])->name('users');
+    Route::get('/users/{id}', [UsersController::class, 'show'])->name('users.show');
+    Route::post('/users', [UsersController::class, 'store'])->name('users.store');
+    Route::put('/users/{id}', [UsersController::class, 'update'])->name('users.update');
+    Route::delete('/users/{id}', [UsersController::class, 'destroy'])->name('users.destroy');
 });
