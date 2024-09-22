@@ -69,6 +69,13 @@
     "Measure Unit deleted successfully": "Unidad de Medida eliminada exitosamente",
     "Measure Unit created successfully": "Unidad de Medida creada exitosamente",
     "Measure Unit updated successfully": "Unidad de Medida actualizada exitosamente",
+    "Roles": "Roles",
+    "Add Role": "Agregar Rol",
+    "Are you sure you want to delete this role?": "¿Estás seguro de que deseas eliminar este rol?",
+    "Role deleted successfully": "Rol eliminado exitosamente",
+    "Role created successfully": "Rol creado exitosamente",
+    "Role updated successfully": "Rol actualizado exitosamente",
+    "Users": "Usuarios",
     "validations": {
         "required": "Este campo es requerido",
         "minLength": "Este campo debe tener al menos {min} caracteres",

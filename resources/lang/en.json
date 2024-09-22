@@ -69,6 +69,13 @@
     "Measure Unit deleted successfully": "Measure Unit deleted successfully",
     "Measure Unit created successfully": "Measure Unit created successfully",
     "Measure Unit updated successfully": "Measure Unit updated successfully",
+    "Roles": "Roles",
+    "Add Role": "Add Role",
+    "Are you sure you want to delete this role?": "Are you sure you want to delete this role?",
+    "Role deleted successfully": "Role deleted successfully",
+    "Role created successfully": "Role created successfully",
+    "Role updated successfully": "Role updated successfully",
+    "Users": "Users",
     "validations": {
         "required": "This field is required",
         "minLength": "This field must have at least {min} characters",

@@ -155,7 +155,8 @@ export default {
             {
               label: "Roles",
               icon: "fa fa-user-tag",
-              to: "home",
+              to: "roles",
+              route: route("roles"),
             },
             {
               label: "Permissions",
