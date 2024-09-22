@@ -63,6 +63,12 @@
     "Brand deleted successfully": "Marca eliminada exitosamente",
     "Brand created successfully": "Marca creada exitosamente",
     "Brand updated successfully": "Marca actualizada exitosamente",
+    "Measure Units": "Unidades de Medida",
+    "Add Measure Unit": "Agregar Unidad de Medida",
+    "Are you sure you want to delete this measure unit?": "¿Estás seguro de que deseas eliminar esta unidad de medida?",
+    "Measure Unit deleted successfully": "Unidad de Medida eliminada exitosamente",
+    "Measure Unit created successfully": "Unidad de Medida creada exitosamente",
+    "Measure Unit updated successfully": "Unidad de Medida actualizada exitosamente",
     "validations": {
         "required": "Este campo es requerido",
         "minLength": "Este campo debe tener al menos {min} caracteres",
