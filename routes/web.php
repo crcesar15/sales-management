@@ -50,4 +50,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/brands', function () {
         return Inertia::render('brands/index');
     })->name('brands');
+
+    Route::get('/measure-units', function () {
+        return Inertia::render('measure-units/index');
+    })->name('measure-units');
 });

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\BrandsController;
 use App\Http\Controllers\Api\CategoriesController;
+use App\Http\Controllers\Api\MeasureUnitsController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
 use Illuminate\Http\Request;
@@ -33,6 +34,13 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::post('/brands', [BrandsController::class, 'store'])->name('brands.store');
     Route::put('/brands/{id}', [BrandsController::class, 'update'])->name('brands.update');
     Route::delete('/brands/{id}', [BrandsController::class, 'destroy'])->name('brands.destroy');
+
+    //Routes for Measure Units
+    Route::get('/measure-units', [MeasureUnitsController::class, 'index'])->name('measure-units');
+    Route::get('/measure-units/{id}', [MeasureUnitsController::class, 'show'])->name('measure-units.show');
+    Route::post('/measure-units', [MeasureUnitsController::class, 'store'])->name('measure-units.store');
+    Route::put('/measure-units/{id}', [MeasureUnitsController::class, 'update'])->name('measure-units.update');
+    Route::delete('/measure-units/{id}', [MeasureUnitsController::class, 'destroy'])->name('measure-units.destroy');
 
     //Products Media
     Route::post('/products/media', [ProductsMediaController::class, 'draft'])
