@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\MeasureUnitsController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
+use App\Http\Controllers\Api\RolesController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -50,4 +51,11 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
         ->name('products.media.destroy');
     Route::delete('products/media/{media_id}', [ProductsMediaController::class, 'destroyDraft'])
         ->name('products.media.destroy-draft');
+
+    // Routes for Roles
+    Route::get('/roles', [RolesController::class, 'index'])->name('roles');
+    Route::get('/roles/{id}', [RolesController::class, 'show'])->name('roles.show');
+    Route::post('/roles', [RolesController::class, 'store'])->name('roles.store');
+    Route::put('/roles/{id}', [RolesController::class, 'update'])->name('roles.update');
+    Route::delete('/roles/{id}', [RolesController::class, 'destroy'])->name('roles.destroy');
 });

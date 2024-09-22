@@ -54,4 +54,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/measure-units', function () {
         return Inertia::render('measure-units/index');
     })->name('measure-units');
+
+    Route::get('/roles', function () {
+        return Inertia::render('roles/index');
+    })->name('roles');
 });
