@@ -11,6 +11,16 @@ class Role extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->hasMany(User::class);
     }
+
+    protected $fillable = [
+        'name',
+        'description',
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d H:i',
+        'updated_at' => 'datetime:Y-m-d H:i',
+    ];
 }
