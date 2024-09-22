@@ -62,6 +62,21 @@
             sortable
           />
           <Column
+            field="products_count"
+            :header="$t('Products')"
+            header-class="surface-100"
+            style="text-align: center;"
+          >
+            <template
+              #body="row"
+            >
+              <Badge
+                :value="row.data.products_count"
+                size="large"
+              />
+            </template>
+          </Column>
+          <Column
             field="created_at"
             :header="$t('Created At')"
             header-class="surface-100"
@@ -117,6 +132,7 @@ import InputText from "primevue/inputtext";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
+import Badge from "primevue/badge";
 import AppLayout from "../../layouts/admin.vue";
 import CategoryEditor from "./CategoryEditor.vue";
 
@@ -132,6 +148,7 @@ export default {
     Card,
     IconField,
     InputIcon,
+    Badge,
   },
   layout: AppLayout,
   data() {

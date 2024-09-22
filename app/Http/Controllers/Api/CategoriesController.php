@@ -25,6 +25,8 @@ class CategoriesController extends Controller
             );
         }
 
+        $query->withCount('products');
+
         $order_by = $request->has('order_by')
             ? $order_by = $request->get('order_by')
             : 'name';
@@ -43,9 +45,9 @@ class CategoriesController extends Controller
     //Get a category by id
     public function show($id)
     {
-        $product = Category::find($id);
-        if ($product) {
-            return response()->json(['data' => $product], 200);
+        $category = Category::find($id);
+        if ($category) {
+            return response()->json(['data' => $category], 200);
         } else {
             return response()->json(['message' => 'Product not found'], 404);
         }
@@ -54,19 +56,19 @@ class CategoriesController extends Controller
     //Create a new category
     public function store(Request $request)
     {
-        $product = Category::create($request->all());
+        $category = Category::create($request->all());
 
-        return response()->json(['data' => $product], 201);
+        return response()->json(['data' => $category], 201);
     }
 
     //Update a category
     public function update(Request $request, $id)
     {
-        $product = Category::find($id);
-        if ($product) {
-            $product->update($request->all());
+        $category = Category::find($id);
+        if ($category) {
+            $category->update($request->all());
 
-            return response()->json(['data' => $product], 200);
+            return response()->json(['data' => $category], 200);
         } else {
             return response()->json(['message' => 'Product not found'], 404);
         }
