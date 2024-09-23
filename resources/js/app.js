@@ -12,6 +12,7 @@ import { createInertiaApp, Link } from "@inertiajs/inertia-vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 
 import Ripple from "primevue/ripple";
+import Tooltip from "primevue/tooltip";
 import StyleClass from "primevue/styleclass";
 import PrimeVue from "primevue/config";
 import ToastService from "primevue/toastservice";
@@ -52,6 +53,7 @@ createInertiaApp({
       .use(ConfirmationService)
       .directive("ripple", Ripple)
       .directive("styleclass", StyleClass)
+      .directive("tooltip", Tooltip)
       .mount(el);
   },
 });
