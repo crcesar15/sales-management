@@ -33,7 +33,7 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ $t('No brands registered yet') }}
+            {{ $t('No brands found') }}
           </template>
           <template #header>
             <div class="grid">
@@ -94,12 +94,14 @@
             <template #body="row">
               <div class="flex justify-center">
                 <p-button
+                  v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
                   size="sm"
                   @click="editBrand(row.data)"
                 />
                 <p-button
+                  v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text
                   size="sm"
@@ -205,7 +207,7 @@ export default {
         .catch((error) => {
           this.$toast.add({
             severity: "error",
-            summary: "Error",
+            summary: this.$t("Error"),
             detail: error.response.data.message,
             life: 3000,
           });
@@ -251,7 +253,7 @@ export default {
             .catch((error) => {
               this.$toast.add({
                 severity: "error",
-                summary: "Error",
+                summary: this.$t("Error"),
                 detail: error.response.data.message,
                 life: 3000,
               });
@@ -280,7 +282,7 @@ export default {
         .catch((error) => {
           this.$toast.add({
             severity: "error",
-            summary: "Error",
+            summary: this.$t("Error"),
             detail: error.response.data.message,
             life: 3000,
           });
@@ -300,7 +302,7 @@ export default {
         .catch((error) => {
           this.$toast.add({
             severity: "error",
-            summary: "Error",
+            summary: this.$t("Error"),
             detail: error.response.data.message,
             life: 3000,
           });

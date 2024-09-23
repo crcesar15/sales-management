@@ -10,7 +10,7 @@
         <p-button
           :label="$t('Add Role')"
           class="ml-2"
-          @click="addMeasureUnit"
+          @click="addRole"
         />
       </div>
     </div>
@@ -33,7 +33,7 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ $t('No measure units registered yet') }}
+            {{ $t('No roles found') }}
           </template>
           <template #header>
             <div class="grid">
@@ -98,16 +98,18 @@
             <template #body="row">
               <div class="flex justify-center">
                 <p-button
+                  v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
                   size="sm"
-                  @click="editMeasureUnit(row.data)"
+                  @click="editRole(row.data)"
                 />
                 <p-button
+                  v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text
                   size="sm"
-                  @click="deleteMeasureUnit(row.data.id)"
+                  @click="deleteRole(row.data.id)"
                 />
               </div>
             </template>
@@ -116,10 +118,10 @@
       </template>
     </Card>
     <ItemEditor
-      :role="selectedMeasureUnit"
+      :role="selectedRole"
       :show-dialog="editorToggle"
-      @clearSelection="selectedMeasureUnit = {}; editorToggle = false;"
-      @submitted="saveMeasureUnit"
+      @clearSelection="selectedRole = {}; editorToggle = false;"
+      @submitted="saveRole"
     />
   </div>
 </template>
@@ -166,7 +168,7 @@ export default {
         filter: "",
       },
       loading: false,
-      selectedMeasureUnit: {},
+      selectedRole: {},
       editorToggle: false,
     };
   },
@@ -209,7 +211,7 @@ export default {
         .catch((error) => {
           this.$toast.add({
             severity: "error",
-            summary: "Error",
+            summary: this.$t("Error"),
             detail: error.response.data.message,
             life: 3000,
           });
@@ -226,17 +228,17 @@ export default {
       this.pagination.sortOrder = event.sortOrder;
       this.fetchRoles();
     },
-    addMeasureUnit() {
+    addRole() {
       this.editorToggle = true;
-      this.selectedMeasureUnit = {};
+      this.selectedRole = {};
     },
-    editMeasureUnit(role) {
+    editRole(role) {
       this.editorToggle = true;
-      this.selectedMeasureUnit = role;
+      this.selectedRole = role;
     },
-    deleteMeasureUnit(id) {
+    deleteRole(id) {
       this.$confirm.require({
-        message: this.$t("Are you sure you want to delete this measure unit?"),
+        message: this.$t("Are you sure you want to delete this role unit?"),
         header: this.$t("Confirm"),
         icon: "fas fa-exclamation-triangle",
         rejectLabel: this.$t("Cancel"),
@@ -255,7 +257,7 @@ export default {
             .catch((error) => {
               this.$toast.add({
                 severity: "error",
-                summary: "Error",
+                summary: this.$t("Error"),
                 detail: error.response.data.message,
                 life: 3000,
               });
@@ -263,14 +265,14 @@ export default {
         },
       });
     },
-    saveMeasureUnit(id, role) {
+    saveRole(id, role) {
       if (id) {
-        this.updateMeasureUnit(id, role);
+        this.updateRole(id, role);
       } else {
-        this.createMeasureUnit(role);
+        this.createRole(role);
       }
     },
-    createMeasureUnit(role) {
+    createRole(role) {
       axios.post(route("api.roles.store"), role)
         .then(() => {
           this.$toast.add({
@@ -284,13 +286,13 @@ export default {
         .catch((error) => {
           this.$toast.add({
             severity: "error",
-            summary: "Error",
+            summary: this.$t("Error"),
             detail: error.response.data.message,
             life: 3000,
           });
         });
     },
-    updateMeasureUnit(id, role) {
+    updateRole(id, role) {
       axios.put(`${route("api.roles.update", id)}`, role)
         .then(() => {
           this.$toast.add({
@@ -304,7 +306,7 @@ export default {
         .catch((error) => {
           this.$toast.add({
             severity: "error",
-            summary: "Error",
+            summary: this.$t("Error"),
             detail: error.response.data.message,
             life: 3000,
           });

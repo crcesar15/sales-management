@@ -186,12 +186,14 @@
             <template #body="{ data }">
               <span class="p-buttonset flex justify-content-center">
                 <p-button
+                  v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
                   size="sm"
                   @click="editProduct(data.id)"
                 />
                 <p-button
+                  v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text
                   size="sm"
@@ -208,6 +210,7 @@
             <template #body="slotProps">
               <i
                 v-if="slotProps.data.variants.length > 1"
+                v-tooltip.top="!expandedRows.includes(slotProps.data) ? $t('Show variants') : $t('Hide variants')"
                 class="fa fa-fw fa-chevron-circle-down"
                 :class="{
                   'fa-chevron-down': !expandedRows.includes(slotProps.data),
