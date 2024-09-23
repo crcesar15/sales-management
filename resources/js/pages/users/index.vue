@@ -165,6 +165,7 @@
                 <p-button
                   v-show="row.data.status !== 'archived'"
                   v-tooltip.top="$t('Delete')"
+                  :disabled="isCurrentUser(row.data.id)"
                   icon="fa fa-trash"
                   text
                   size="sm"
@@ -240,6 +241,9 @@ export default {
     this.fetchUsers();
   },
   methods: {
+    isCurrentUser(id) {
+      return user.id === id;
+    },
     fetchUsers() {
       this.loading = true;
 

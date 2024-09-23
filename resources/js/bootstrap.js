@@ -18,6 +18,14 @@ if (token) {
   console.error("CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token");
 }
 
+const user = document.head.querySelector("meta[name=\"user\"]");
+
+if (user) {
+  window.user = JSON.parse(user.content);
+} else {
+  window.user = null;
+}
+
 window.axios.defaults.baseURL = `${window.location.protocol}//${window.location.hostname}/api/`;
 window.axios.defaults.withCredentials = true;
 window.axios.defaults.withXSRFToken = true;
