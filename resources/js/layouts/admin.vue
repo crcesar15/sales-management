@@ -150,7 +150,8 @@ export default {
             {
               label: "Users",
               icon: "fa fa-user",
-              to: "home",
+              to: "users",
+              route: route("users"),
             },
             {
               label: "Roles",
