@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class UsersController extends Controller
 {
-    //Get all roles
+    //Get all users
     public function index(Request $request)
     {
         $query = User::query();
@@ -23,6 +23,16 @@ class UsersController extends Controller
                     $query->where('first_name', 'like', $filter);
                 }
             );
+        }
+
+        $status = $request->input('status', 'all');
+
+        if ($status === 'archived') {
+            $query->onlyTrashed();
+        } else {
+            if ($status !== 'all') {
+                $query->where('status', $status);
+            }
         }
 
         $includes = $request->input('includes', '');
@@ -46,7 +56,7 @@ class UsersController extends Controller
         return new ApiCollection($response);
     }
 
-    //Get a role by id
+    //Get a user by id
     public function show($id)
     {
         $user = User::find($id);
@@ -57,7 +67,7 @@ class UsersController extends Controller
         }
     }
 
-    //Create a new role
+    //Create a new user
     public function store(Request $request)
     {
         $user = User::create($request->all());
@@ -65,7 +75,7 @@ class UsersController extends Controller
         return response()->json(['data' => $user], 201);
     }
 
-    //Update a role
+    //Update a user
     public function update(Request $request, $id)
     {
         $user = User::find($id);
@@ -78,17 +88,29 @@ class UsersController extends Controller
         }
     }
 
-    //Delete a role
+    //Delete a user
     public function destroy($id)
     {
         $user = User::find($id);
         if ($user) {
-            //remove the role from the users
-            $user->users()->update(['role_id' => null]);
+            // Inactive user
+            $user->update(['status' => 'archived']);
 
+            // soft delete
             $user->delete();
+        } else {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+    }
 
-            return response()->json(['data' => $user], 200);
+    //Restore a user
+    public function restore($id)
+    {
+        $user = User::withTrashed()->find($id);
+        if ($user) {
+            $user->restore();
+
+            $user->update(['status' => 'active']);
         } else {
             return response()->json(['message' => 'User not found'], 404);
         }
