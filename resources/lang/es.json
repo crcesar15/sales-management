@@ -107,10 +107,14 @@
     "Weak": "Débil",
     "Medium": "Medio",
     "Strong": "Fuerte",
+    "Please review the errors in the form": "Por favor revisa los errores en el formulario",
     "validations": {
         "required": "Este campo es requerido",
         "minLength": "Este campo debe tener al menos {min} caracteres",
         "minValue": "Este campo debe tener un valor mayor o igual a {min}",
-        "email": "Este campo debe ser un correo electrónico válido"
+        "email": "Este campo debe ser un correo electrónico válido",
+        "sameAsPassword": "La confirmación de la contraseña no coincide",
+        "alphaNum": "Este campo no debe contener caracteres especiales",
+        "username": "Este campo debe contener solo letras, números, guiones y guiones bajos"
     }
 }

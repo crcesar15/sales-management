@@ -601,7 +601,7 @@ export default {
 
         this.$toast.add({
           severity: "error",
-          summary: i18n.global.t("Missing fields"),
+          summary: i18n.global.t("Please review the errors in the form"),
           detail: message,
           life: 3000,
         });

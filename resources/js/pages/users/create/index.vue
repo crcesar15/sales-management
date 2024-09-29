@@ -133,7 +133,15 @@
                 :options="roles"
                 option-label="name"
                 option-value="id"
+                :class="{'p-invalid': v$.role.$invalid && v$.role.$dirty}"
+                @blur="v$.role.$touch"
               />
+              <small
+                v-if="v$.role.$invalid && v$.role.$dirty"
+                class="p-error"
+              >
+                {{ v$.role.$errors[0].$message }}
+              </small>
             </div>
           </template>
         </Card>
@@ -220,9 +228,19 @@ import {
   required,
   email,
   createI18nMessage,
+  sameAs,
+  minLength,
+  alphaNum,
 } from "@vuelidate/validators";
 import AppLayout from "../../../layouts/admin.vue";
 import i18n from "../../../app";
+
+const username = (value) => {
+  if (!value) return true;
+
+  // must allow only letters, numbers, dashes, underscores and dots
+  return /^[a-zA-Z0-9_.-]*$/.test(value);
+};
 
 export default {
   components: {
@@ -281,14 +299,59 @@ export default {
       },
       username: {
         required: withI18nMessage(required),
+        username: withI18nMessage(username),
+      },
+      role: {
+        required: withI18nMessage(required),
       },
       password: {
         required: withI18nMessage(required),
+        minLength: withI18nMessage(minLength(6)),
       },
       password_confirmation: {
         required: withI18nMessage(required),
+        minLength: withI18nMessage(minLength(6)),
+        sameAsPassword: withI18nMessage(sameAs(this.password)),
       },
     };
+  },
+  methods: {
+    submit() {
+      this.v$.$touch();
+
+      if (!this.v$.$invalid) {
+        const user = {
+          first_name: this.first_name,
+          last_name: this.last_name,
+          email: this.email,
+          status: this.status,
+          role: this.role,
+          phone_number: this.phone_number,
+          date_of_birth: this.date_of_birth,
+          username: this.username,
+          password: this.password,
+          password_confirmation: this.password_confirmation,
+        };
+
+        axios.post(route("users.store"), user).then(() => {
+          this.$toast.add({
+            severity: "success",
+            summary: this.$t("Success"),
+            detail: this.$t("User has been created successfully"),
+            life: 3000,
+          });
+
+          this.$inertia.visit(route("users"));
+        });
+      } else {
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("Error"),
+          detail: this.$t("Please review the errors in the form"),
+          life: 3000,
+        });
+      }
+    },
   },
 };
 </script>

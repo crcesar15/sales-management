@@ -620,7 +620,7 @@ export default {
           .catch((error) => {
             this.$toast.add({
               severity: "error",
-              summary: i18n.global.t("Error"),
+              summary: i18n.global.t("Please review the errors in the form"),
               detail: error,
               life: 3000,
             });

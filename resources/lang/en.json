@@ -107,10 +107,14 @@
     "Weak": "Weak",
     "Medium": "Medium",
     "Strong": "Strong",
+    "Please review the errors in the form": "Please review the errors in the form",
     "validations": {
         "required": "This field is required",
         "minLength": "This field must have at least {min} characters",
         "minValue": "This field must have a value greater than or equal to {min}",
-        "email": "This field must be a valid email"
+        "email": "This field must be a valid email",
+        "sameAsPassword": "The password confirmation does not match",
+        "alphaNum": "This field must not contain special characters",
+        "username": "This field must only contain letters, numbers, dashes and underscores"
     }
 }
