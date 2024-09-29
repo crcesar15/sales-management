@@ -20,6 +20,7 @@ import ConfirmationService from "primevue/confirmationservice";
 import PButton from "primevue/button";
 import { InertiaProgress } from "@inertiajs/progress";
 import { ZiggyVue } from "ziggy-js";
+import Aura from "@primevue/themes/aura";
 
 import en from "../lang/en.json";
 import es from "../lang/es.json";
@@ -48,7 +49,15 @@ createInertiaApp({
       .component("PButton", PButton)
       .component("Link", Link)
       .use(ZiggyVue)
-      .use(PrimeVue, { ripple: true })
+      .use(PrimeVue, {
+        ripple: true,
+        theme: {
+          preset: Aura,
+          options: {
+            darkModeSelector: ".app-dark",
+          },
+        },
+      })
       .use(ToastService)
       .use(ConfirmationService)
       .directive("ripple", Ripple)
