@@ -1,18 +1,18 @@
 .layout-sidebar {
     position: fixed;
-    width: 300px;
-    height: calc(100vh - 9rem);
+    width: 20rem;
+    height: calc(100vh - 8rem);
     z-index: 999;
     overflow-y: auto;
     user-select: none;
     top: 6rem;
     left: 2rem;
-    transition: transform $transitionDuration, left $transitionDuration;
+    transition:
+        transform var(--layout-section-transition-duration),
+        left var(--layout-section-transition-duration);
     background-color: var(--surface-overlay);
-    border-radius: $borderRadius;
+    border-radius: var(--content-border-radius);
     padding: 0.5rem 1.5rem;
-    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.02), 0px 0px 2px rgba(0, 0, 0, 0.05),
-        0px 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .layout-menu {
@@ -25,7 +25,7 @@
             font-size: 0.857rem;
             text-transform: uppercase;
             font-weight: 700;
-            color: var(--surface-900);
+            color: var(--text-color);
             margin: 0.75rem 0;
         }
 
@@ -65,9 +65,10 @@
             color: var(--text-color);
             cursor: pointer;
             padding: 0.75rem 1rem;
-            border-radius: $borderRadius;
-            transition: background-color $transitionDuration,
-                box-shadow $transitionDuration;
+            border-radius: var(--content-border-radius);
+            transition:
+                background-color var(--element-transition-duration),
+                box-shadow var(--element-transition-duration);
 
             .layout-menuitem-icon {
                 margin-right: 0.5rem;
@@ -76,7 +77,7 @@
             .layout-submenu-toggler {
                 font-size: 75%;
                 margin-left: auto;
-                transition: transform $transitionDuration;
+                transition: transform var(--element-transition-duration);
             }
 
             &.active-route {
@@ -95,7 +96,7 @@
 
         ul {
             overflow: hidden;
-            border-radius: $borderRadius;
+            border-radius: var(--content-border-radius);
 
             li {
                 a {
