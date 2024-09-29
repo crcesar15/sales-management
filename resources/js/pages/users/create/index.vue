@@ -164,6 +164,11 @@
                 id="password"
                 v-model="password"
                 :class="{'p-invalid': v$.password.$invalid && v$.password.$dirty}"
+                :prompt-label="$t('Choose a password')"
+                :weak-label="$t('Weak')"
+                :medium-label="$t('Medium')"
+                :strong-label="$t('Strong')"
+                toggle-mask
                 @blur="v$.password.$touch"
               />
               <small
@@ -174,12 +179,17 @@
               </small>
             </div>
             <div class="flex flex-column gap-2 mb-3">
-              <label for="password_confirmation">{{ $t('Password Confirmation') }}</label>
+              <label for="password_confirmation">{{ $t('Confirm Password') }}</label>
               <Password
                 id="password_confirmation"
                 v-model="password_confirmation"
                 autocomplete="off"
                 :class="{'p-invalid': v$.password_confirmation.$invalid && v$.password_confirmation.$dirty}"
+                :prompt-label="$t('Re-enter password')"
+                :weak-label="$t('Weak')"
+                :medium-label="$t('Medium')"
+                :strong-label="$t('Strong')"
+                toggle-mask
                 @blur="v$.password_confirmation.$touch"
               />
               <small
