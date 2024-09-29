@@ -70,6 +70,21 @@ class UsersController extends Controller
     //Create a new user
     public function store(Request $request)
     {
+        // check if the username already exists
+        $user = User::where('username', $request->input('username'))->first();
+
+        if ($user) {
+            return response()->json(['message' => 'Username is not available'], 400);
+        }
+
+        // check if the email already exists
+        $user = User::where('email', $request->input('email'))->first();
+
+        if ($user) {
+            return response()->json(['message' => 'Email already exists'], 400);
+        }
+
+        // create a new user
         $user = User::create($request->all());
 
         return response()->json(['data' => $user], 201);

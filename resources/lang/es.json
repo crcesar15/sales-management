@@ -108,6 +108,8 @@
     "Medium": "Medio",
     "Strong": "Fuerte",
     "Please review the errors in the form": "Por favor revisa los errores en el formulario",
+    "Username is not available": "El nombre de usuario no está disponible",
+    "Email is not available": "El correo electrónico no está disponible",
     "validations": {
         "required": "Este campo es requerido",
         "minLength": "Este campo debe tener al menos {min} caracteres",

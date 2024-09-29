@@ -108,6 +108,8 @@
     "Medium": "Medium",
     "Strong": "Strong",
     "Please review the errors in the form": "Please review the errors in the form",
+    "Username is not available": "Username is not available",
+    "Email is not available": "Email is not available",
     "validations": {
         "required": "This field is required",
         "minLength": "This field must have at least {min} characters",

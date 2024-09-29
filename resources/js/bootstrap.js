@@ -5,6 +5,7 @@
  */
 
 import axios from "axios";
+import moment from "moment";
 
 window.axios = axios;
 
@@ -25,6 +26,8 @@ if (user) {
 } else {
   window.user = null;
 }
+
+window.moment = moment;
 
 window.axios.defaults.baseURL = `${window.location.protocol}//${window.location.hostname}/api/`;
 window.axios.defaults.withCredentials = true;

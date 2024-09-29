@@ -299,6 +299,7 @@ export default {
       },
       username: {
         required: withI18nMessage(required),
+        minLength: withI18nMessage(minLength(6)),
         username: withI18nMessage(username),
       },
       role: {
@@ -325,15 +326,15 @@ export default {
           last_name: this.last_name,
           email: this.email,
           status: this.status,
-          role: this.role,
+          role_id: this.role,
           phone_number: this.phone_number,
-          date_of_birth: this.date_of_birth,
+          date_of_birth: moment(this.date_of_birth).format("YYYY-MM-DD"),
           username: this.username,
           password: this.password,
           password_confirmation: this.password_confirmation,
         };
 
-        axios.post(route("users.store"), user).then(() => {
+        axios.post(route("api.users.store"), user).then(() => {
           this.$toast.add({
             severity: "success",
             summary: this.$t("Success"),
@@ -342,6 +343,13 @@ export default {
           });
 
           this.$inertia.visit(route("users"));
+        }).catch((error) => {
+          this.$toast.add({
+            severity: "error",
+            summary: this.$t("Error"),
+            detail: this.$t(error.response.data.message),
+            life: 3000,
+          });
         });
       } else {
         this.$toast.add({
