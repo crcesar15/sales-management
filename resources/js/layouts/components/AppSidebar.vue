@@ -1,16 +1,11 @@
-<script>
+<script setup>
 import AppMenu from "./AppMenu.vue";
-
-export default {
-  components: {
-    AppMenu,
-  },
-};
-
 </script>
 
 <template>
-  <app-menu />
+  <div class="layout-sidebar">
+    <app-menu />
+  </div>
 </template>
 
 <style lang="scss" scoped></style>

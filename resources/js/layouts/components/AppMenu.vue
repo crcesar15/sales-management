@@ -1,19 +1,15 @@
-<script>
+<script setup>
+import { inject } from "vue";
 
 import AppMenuItem from "./AppMenuItem.vue";
 
-export default {
-  components: {
-    AppMenuItem,
-  },
-  inject: ["menuitems"],
-};
+const model = inject("menuitems");
 </script>
 
 <template>
   <ul class="layout-menu">
     <template
-      v-for="(item, i) in menuitems"
+      v-for="(item, i) in model"
       :key="item"
     >
       <app-menu-item
@@ -26,18 +22,6 @@ export default {
         class="menu-separator"
       />
     </template>
-    <li>
-      <a
-        href="https://www.primefaces.org/primeblocks-vue/#/"
-        target="_blank"
-      >
-        <img
-          src=""
-          alt="Prime Blocks"
-          class="w-full mt-3"
-        >
-      </a>
-    </li>
   </ul>
 </template>
 

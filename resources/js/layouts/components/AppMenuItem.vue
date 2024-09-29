@@ -1,79 +1,69 @@
-<script>
+<script setup>
+import { onBeforeMount, ref, watch } from "vue";
 import { Link } from "@inertiajs/inertia-vue3";
+import { useLayout } from "./composables/layout";
 
-export default {
-  components: {
-    Link,
+const { layoutState, setActiveMenuItem, onMenuToggle } = useLayout();
+
+const props = defineProps({
+  item: {
+    type: Object,
+    default: () => ({}),
   },
-  inject: ["layoutConfig", "layoutState", "setActiveMenuItem", "onMenuToggle"],
-  props: {
-    item: {
-      type: Object,
-      default: () => ({}),
-    },
-    index: {
-      type: Number,
-      default: 0,
-    },
-    root: {
-      type: Boolean,
-      default: true,
-    },
-    parentItemKey: {
-      type: String,
-      default: null,
-    },
+  index: {
+    type: Number,
+    default: 0,
   },
-  data() {
-    return {
-      isActiveMenu: false,
-      itemKey: null,
-    };
+  root: {
+    type: Boolean,
+    default: true,
   },
-  watch: {
-    "layoutConfig.activeMenuItem": {
-      handler(newVal) {
-        this.isActiveMenu = newVal === this.item.to;
-      },
-      immediate: true,
-    },
+  parentItemKey: {
+    type: String,
+    default: null,
   },
-  mounted() {
-    this.isActiveMenu = this.item.route === window.location.href;
+});
+
+const isActiveMenu = ref(false);
+const itemKey = ref(null);
+
+onBeforeMount(() => {
+  itemKey.value = props.parentItemKey ? `${props.parentItemKey}-${props.index}` : String(props.index);
+
+  const activeItem = layoutState.activeMenuItem;
+
+  isActiveMenu.value = activeItem === itemKey.value || activeItem ? activeItem.startsWith(`${itemKey.value}-`) : false;
+});
+
+watch(
+  () => layoutState.activeMenuItem,
+  (newVal) => {
+    isActiveMenu.value = newVal === itemKey.value || newVal.startsWith(`${itemKey.value}-`);
   },
-  methods: {
-    itemClick(event, item) {
-      if (item.disabled) {
-        event.preventDefault();
-        return;
-      }
+);
 
-      const { overlayMenuActive, staticMenuMobileActive } = this.layoutState;
+function itemClick(event, item) {
+  if (item.disabled) {
+    event.preventDefault();
+    return;
+  }
 
-      if ((item.to || item.url) && (staticMenuMobileActive || overlayMenuActive)) {
-        this.onMenuToggle();
-      }
+  if ((item.to || item.url) && (layoutState.staticMenuMobileActive || layoutState.overlayMenuActive)) {
+    onMenuToggle();
+  }
 
-      if (item.command) {
-        item.command({ originalEvent: event, item });
-      }
+  if (item.command) {
+    item.command({ originalEvent: event, item });
+  }
 
-      let foundItemKey;
+  const foundItemKey = item.items ? (isActiveMenu.value ? props.parentItemKey : itemKey) : itemKey.value;
 
-      if (item.items) {
-        if (this.isActiveMenu) {
-          foundItemKey = this.parentItemKey;
-        } else {
-          foundItemKey = this.itemKey;
-        }
-      } else {
-        foundItemKey = item.to;
-      }
-      this.setActiveMenuItem(foundItemKey);
-    },
-  },
-};
+  setActiveMenuItem(foundItemKey);
+}
 
+function checkActiveRoute(item) {
+  return route.path === item.to;
+}
 </script>
 
 <template>
@@ -99,13 +89,13 @@ export default {
       <span class="layout-menuitem-text">{{ $t(item.label) }}</span>
       <i
         v-if="item.items"
-        class="pi pi-fw pi-angle-down layout-submenu-toggler"
+        class="fa fa-fw fa-angle-down layout-submenu-toggler"
       />
     </a>
     <Link
       v-if="item.to && !item.items && item.visible !== false"
-      :key="item.label"
-      :class="[item.class, { 'active-route': isActiveMenu }]"
+      :class="[item.class, { 'active-route': checkActiveRoute(item) }]"
+      tabindex="0"
       :href="route(item.to)"
       @click="itemClick($event, item, index)"
     >
@@ -116,7 +106,7 @@ export default {
       <span class="layout-menuitem-text">{{ $t(item.label) }}</span>
       <i
         v-if="item.items"
-        class="pi pi-fw pi-angle-down layout-submenu-toggler"
+        class="fa fa-fw fa-angle-down layout-submenu-toggler"
       />
     </Link>
     <Transition
