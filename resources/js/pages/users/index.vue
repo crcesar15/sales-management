@@ -10,7 +10,7 @@
         <p-button
           :label="$t('Add User')"
           class="ml-2"
-          @click="addUser"
+          @click="$inertia.visit(route('users.create'))"
         />
       </div>
     </div>
@@ -243,6 +243,10 @@ export default {
   methods: {
     isCurrentUser(id) {
       return user.id === id;
+    },
+    editUser(id) {
+      console.log(id);
+      this.$inertia.visit(route("users.edit", id));
     },
     fetchUsers() {
       this.loading = true;

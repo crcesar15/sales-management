@@ -38,7 +38,7 @@ class UsersController extends Controller
         $user->load(['role']);
 
         // List of Roles
-        $roles = Brand::all();
+        $roles = Role::all();
 
         return Inertia::render('users/edit/index', [
             'user' => $user,

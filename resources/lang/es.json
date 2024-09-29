@@ -97,6 +97,7 @@
     "validations": {
         "required": "Este campo es requerido",
         "minLength": "Este campo debe tener al menos {min} caracteres",
-        "minValue": "Este campo debe tener un valor mayor o igual a {min}"
+        "minValue": "Este campo debe tener un valor mayor o igual a {min}",
+        "email": "Este campo debe ser un correo electrónico válido"
     }
 }
