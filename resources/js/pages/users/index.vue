@@ -92,6 +92,12 @@
             sortable
           />
           <Column
+            field="username"
+            :header="$t('Username')"
+            header-class="surface-100"
+            sortable
+          />
+          <Column
             field="role.name"
             :header="$t('Role')"
             header-class="surface-100"
@@ -245,7 +251,6 @@ export default {
       return user.id === id;
     },
     editUser(id) {
-      console.log(id);
       this.$inertia.visit(route("users.edit", id));
     },
     fetchUsers() {

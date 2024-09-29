@@ -81,7 +81,7 @@ class UsersController extends Controller
         $user = User::where('email', $request->input('email'))->first();
 
         if ($user) {
-            return response()->json(['message' => 'Email already exists'], 400);
+            return response()->json(['message' => 'Email is not available'], 400);
         }
 
         // create a new user
@@ -93,7 +93,33 @@ class UsersController extends Controller
     //Update a user
     public function update(Request $request, $id)
     {
+        // check if the username already exists
+        $user = User::where(
+            [
+                ['username', '=', $request->input('username')],
+                ['id', '!=', $id],
+            ]
+        )->first();
+
+        if ($user) {
+            return response()->json(['message' => 'Username is not available'], 400);
+        }
+
+        // check if the email already exists
+        $user = User::where(
+            [
+                ['email', '=', $request->input('email')],
+                ['id', '!=', $id],
+            ]
+        )->first();
+
+        if ($user) {
+            return response()->json(['message' => 'Email is not available'], 400);
+        }
+
+        // update user
         $user = User::find($id);
+
         if ($user) {
             $user->update($request->all());
 

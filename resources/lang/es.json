@@ -110,8 +110,13 @@
     "Please review the errors in the form": "Por favor revisa los errores en el formulario",
     "Username is not available": "El nombre de usuario no está disponible",
     "Email is not available": "El correo electrónico no está disponible",
+    "Edit User": "Editar Usuario",
+    "New Password": "Nueva Contraseña",
+    "User has been created successfully": "El usuario ha sido creado exitosamente",
+    "User has been update successfully": "El usuario ha sido actualizado exitosamente",
     "validations": {
         "required": "Este campo es requerido",
+        "requiredIf": "Este campo es requerido",
         "minLength": "Este campo debe tener al menos {min} caracteres",
         "minValue": "Este campo debe tener un valor mayor o igual a {min}",
         "email": "Este campo debe ser un correo electrónico válido",

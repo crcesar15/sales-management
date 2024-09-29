@@ -10,7 +10,7 @@
           @click="$inertia.visit(route('users'))"
         />
         <h4 class="ml-2">
-          {{ $t('Add User') }}
+          {{ $t('Edit User') }}
         </h4>
       </div>
       <div class="flex flex-column justify-content-center">
@@ -167,7 +167,7 @@
               </small>
             </div>
             <div class="flex flex-column gap-2 mb-3">
-              <label for="username">{{ $t('Password') }}</label>
+              <label for="username">{{ $t('New Password') }}</label>
               <Password
                 id="password"
                 v-model="password"
@@ -230,7 +230,7 @@ import {
   createI18nMessage,
   sameAs,
   minLength,
-  alphaNum,
+  requiredIf,
 } from "@vuelidate/validators";
 import AppLayout from "../../../layouts/admin.vue";
 import i18n from "../../../app";
@@ -254,6 +254,10 @@ export default {
   },
   layout: AppLayout,
   props: {
+    user: {
+      type: Object,
+      default: () => ({}),
+    },
     roles: {
       type: Array,
       default: () => [],
@@ -277,6 +281,21 @@ export default {
       password: "",
       password_confirmation: "",
     };
+  },
+  watch: {
+    user: {
+      handler(user) {
+        this.first_name = user.first_name;
+        this.last_name = user.last_name;
+        this.email = user.email;
+        this.status = user.status;
+        this.role = user.role_id;
+        this.phone = user.phone;
+        this.date_of_birth = user.date_of_birth;
+        this.username = user.username;
+      },
+      immediate: true,
+    },
   },
   validations() {
     const { t } = i18n.global;
@@ -306,11 +325,10 @@ export default {
         required: withI18nMessage(required),
       },
       password: {
-        required: withI18nMessage(required),
         minLength: withI18nMessage(minLength(6)),
       },
       password_confirmation: {
-        required: withI18nMessage(required),
+        requiredIf: withI18nMessage(requiredIf(this.password.length >= 6)),
         minLength: withI18nMessage(minLength(6)),
         sameAsPassword: withI18nMessage(sameAs(this.password)),
       },
@@ -330,11 +348,14 @@ export default {
           phone: this.phone,
           date_of_birth: moment(this.date_of_birth).format("YYYY-MM-DD"),
           username: this.username,
-          password: this.password,
-          password_confirmation: this.password_confirmation,
         };
 
-        axios.post(route("api.users.store"), user).then(() => {
+        if (this.password) {
+          user.password = this.password;
+          user.password_confirmation = this.password_confirmation;
+        }
+
+        axios.put(route("api.users.update", this.user.id), user).then(() => {
           this.$toast.add({
             severity: "success",
             summary: this.$t("Success"),
