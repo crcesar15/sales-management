@@ -13,6 +13,7 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
+    <link href="https://fonts.cdnfonts.com/css/lato" rel="stylesheet">
 
     <!-- CSS yield -->
     @yield('css')
@@ -24,7 +25,7 @@
     @inertiaHead
 </head>
 
-<body class="surface-100">
+<body>
     @inertia
 </body>
 

@@ -1,10 +1,6 @@
 <template>
   <app-layout>
-    <main
-      class="m-0 layout-wrapper layout-news-active p-ripple-disabled layout-light"
-    >
-      <slot />
-    </main>
+    <slot />
     <Toast />
   </app-layout>
 </template>
