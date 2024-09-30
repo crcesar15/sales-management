@@ -34,6 +34,7 @@ const i18n = createI18n({
   locale: "en", // default locale
   fallbackLocale: "en",
   messages,
+  legacy: false,
 });
 
 InertiaProgress.init();

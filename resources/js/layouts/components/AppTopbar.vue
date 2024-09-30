@@ -1,9 +1,24 @@
 <script setup>
 import { Link } from "@inertiajs/inertia-vue3";
+import { ref, watch } from "vue";
+import Dropdown from "primevue/dropdown";
+import { useI18n } from "vue-i18n";
 import { useLayout } from "./composables/layout";
 import AppConfigurator from "./AppConfigurator.vue";
 
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
+const selectedLanguage = ref("en");
+const languages = ref([
+  { name: "EN", code: "en" },
+  { name: "ES", code: "es" },
+]);
+
+const t = useI18n();
+
+watch(selectedLanguage, (newVal) => {
+  t.locale.value = newVal;
+});
+
 </script>
 
 <template>
@@ -47,6 +62,18 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
           <AppConfigurator />
         </div>
       </div>
+      <button
+        v-styleclass="{
+          selector: '@next',
+          toggleClass: 'hidden',
+          enterActiveClass: 'animate-scalein',
+          leaveActiveClass: 'animate-fadeout',
+          hideOnOutsideClick: true
+        }"
+        class="layout-topbar-menu-button layout-topbar-action"
+      >
+        <i class="fa fa-ellipsis-v" />
+      </button>
       <div class="layout-topbar-menu hidden lg:block">
         <div class="layout-topbar-menu-content">
           <button
@@ -70,6 +97,15 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
             <i class="fa fa-user" />
             <span>Profile</span>
           </button>
+          <Dropdown
+            id="topbarLanguage"
+            v-model="selectedLanguage"
+            :options="languages"
+            option-label="name"
+            option-value="code"
+            placeholder="Language"
+            class="w-full md:w-auto"
+          />
         </div>
       </div>
     </div>
