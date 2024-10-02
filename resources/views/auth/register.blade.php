@@ -20,8 +20,8 @@
 @endsection
 
 @section('content')
-    <div class="grid">
-        <div class="md:col-8 md:col-offset-2">
+    <div class="grid" style="height: calc(100vh - 40px)">
+        <div class="col-12 md:col-4 md:col-offset-4 flex flex-column justify-content-center">
             <div class="surface-card p-4 shadow-2 border-round w-full">
                 <div class="logo-container">
                     <img src="{{ asset('images/logo.png') }}">

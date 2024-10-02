@@ -10,6 +10,8 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
+    <link href="https://fonts.cdnfonts.com/css/lato" rel="stylesheet">
+
     @yield('css')
 
     <!-- Scripts -->
@@ -18,7 +20,7 @@
 
 <body>
     <div id="app">
-        <main class="py-4 md:mx-4 lg:mx-4 mx-0" style="height: 100vh">
+        <main class="py-4 md:mx-4 lg:mx-4 mx-0">
             @yield('content')
         </main>
     </div>
