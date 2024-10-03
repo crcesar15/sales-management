@@ -1,7 +1,7 @@
 // Bootstrap
-@import "primeflex/primeflex.scss";
 @import "@fortawesome/fontawesome-free/css/all.min.css";
 @import "./layout/layout.scss";
+@import "../css/app.css";
 
 /* adjust the font size for mobile */
 @media (max-width: 768px) {
@@ -11,7 +11,7 @@
 }
 
 html {
-    font-size: 14px;
+    font-size: 1rem;
 }
 
 .p-badge {
