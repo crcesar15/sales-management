@@ -21,12 +21,14 @@
     @routes
 
     <!-- Scripts -->
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    @vite(['resources/sass/app.scss'])
     @inertiaHead
 </head>
 
 <body>
     @inertia
 </body>
+
+@vite(['resources/js/app.js'])
 
 </html>

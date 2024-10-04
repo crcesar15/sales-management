@@ -294,31 +294,34 @@ function onMenuModeChange() {
   setMenuMode(menuMode.value);
 }
 </script>
-
 <template>
   <div
     class="
-      hidden
-      absolute
-      configurator-container
-      right-0
-      w-16rem
-      p-3
-      border-1
-      origin-top
-    "
+    config-panel
+    hidden
+    absolute
+    top-[3.25rem]
+    right-0
+    w-64
+    p-4
+    border
+    border-surface
+    rounded-border
+    origin-top
+    shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]"
+    style="background-color: var(--p-card-background);"
   >
-    <div class="flex flex-column gap-3">
+    <div class="flex flex-col gap-4">
       <div>
         <span class="text-sm text-muted-color font-semibold">Primary</span>
-        <div class="pt-2 flex gap-2 flex-wrap justify-content-between">
+        <div class="pt-2 flex gap-2 flex-wrap justify-between">
           <button
             v-for="primaryColor of primaryColors"
             :key="primaryColor.name"
             type="button"
             :title="primaryColor.name"
             :class="[
-              'border-none w-1.25 h-1.25 border-circle p-0 cursor-pointer outline-none-2',
+              'border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1',
               { 'outline-primary': layoutConfig.primary === primaryColor.name }
             ]"
             :style="{ backgroundColor: `${primaryColor.name === 'noir' ? 'var(--text-color)' : primaryColor.palette['500']}` }"
@@ -328,14 +331,14 @@ function onMenuModeChange() {
       </div>
       <div>
         <span class="text-sm text-muted-color font-semibold">Surface</span>
-        <div class="pt-2 flex gap-2 flex-wrap justify-content-between">
+        <div class="pt-2 flex gap-2 flex-wrap justify-between">
           <button
             v-for="surface of surfaces"
             :key="surface.name"
             type="button"
             :title="surface.name"
             :class="[
-              'border-none w-1.25 h-1.25 border-circle p-0 cursor-pointer outline-none-2',
+              'border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1',
               { 'outline-primary': layoutConfig.surface ? layoutConfig.surface === surface.name : isDarkTheme ? surface.name === 'zinc' : surface.name === 'slate' }
             ]"
             :style="{ backgroundColor: `${surface.palette['500']}` }"
@@ -343,7 +346,7 @@ function onMenuModeChange() {
           />
         </div>
       </div>
-      <div class="flex flex-column gap-2">
+      <div class="flex flex-col gap-2">
         <span class="text-sm text-muted-color font-semibold">Presets</span>
         <SelectButton
           v-model="preset"
@@ -352,7 +355,7 @@ function onMenuModeChange() {
           @change="onPresetChange"
         />
       </div>
-      <div class="flex flex-column gap-2">
+      <div class="flex flex-col gap-2">
         <span class="text-sm text-muted-color font-semibold">Menu Mode</span>
         <SelectButton
           v-model="menuMode"
@@ -366,37 +369,3 @@ function onMenuModeChange() {
     </div>
   </div>
 </template>
-
-<style scoped>
-.configurator-container {
-  top: 3.5rem;
-  background-color: color-mix(in srgb, var(--p-surface-0) calc(100% * 1), transparent);
-  border-color: var(--p-content-border-color);
-  border-radius: var(--p-content-border-radius);
-  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.02), 0px 0px 2px rgba(0, 0, 0, 0.05), 0px 1px 4px rgba(0, 0, 0, 0.08);
-}
-.app-dark .configurator-container {
-  background-color: color-mix(in srgb, var(--p-surface-900) calc(100% * 1), transparent) !important;
-}
-
-.w-1\.25 {
-  width: 1.25rem;
-}
-
-.h-1\.25 {
-  height: 1.25rem;
-}
-
-.text-muted-color {
-  color: var(--p-text-muted-color);
-}
-
-.outline-none-2 {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-}
-
-.outline-primary {
-  outline-color: color-mix(in srgb,var(--p-primary-color) 100%,transparent);
-}
-</style>

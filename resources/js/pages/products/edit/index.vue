@@ -650,7 +650,7 @@ export default {
     },
     uploadFile(formData) {
       axios
-        .post(route("api.products.media.store"), formData, {
+        .post(route("api.products.media.draft"), formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },

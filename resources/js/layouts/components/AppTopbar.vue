@@ -30,12 +30,12 @@ watch(selectedLanguage, (newVal) => {
       >
         <i class="fa fa-bars" />
       </button>
-      <Link
+      <router-link
         to="/"
         class="layout-topbar-logo"
       >
         <span>SAKAI</span>
-      </Link>
+      </router-link>
     </div>
 
     <div class="layout-topbar-actions">
@@ -45,31 +45,22 @@ watch(selectedLanguage, (newVal) => {
           class="layout-topbar-action"
           @click="toggleDarkMode"
         >
-          <i :class="['fa-regular', { 'fa-moon': isDarkTheme, 'fa-sun': !isDarkTheme }]" />
+          <i :class="['fa', { 'fa-moon': isDarkTheme, 'fa-sun': !isDarkTheme }]" />
         </button>
         <div class="relative">
           <button
-            v-styleclass="{
-              selector: '@next',
-              toggleClass: 'hidden',
-              hideOnOutsideClick: 'true',
-            }"
+            v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }"
             type="button"
-            class="layout-topbar-action layout-topbar-action-highlight palette-button"
+            class="layout-topbar-action layout-topbar-action-highlight"
           >
             <i class="fa fa-palette" />
           </button>
           <AppConfigurator />
         </div>
       </div>
+
       <button
-        v-styleclass="{
-          selector: '@next',
-          toggleClass: 'hidden',
-          enterActiveClass: 'animate-scalein',
-          leaveActiveClass: 'animate-fadeout',
-          hideOnOutsideClick: true
-        }"
+        v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }"
         class="layout-topbar-menu-button layout-topbar-action"
       >
         <i class="fa fa-ellipsis-v" />
@@ -97,33 +88,8 @@ watch(selectedLanguage, (newVal) => {
             <i class="fa fa-user" />
             <span>Profile</span>
           </button>
-          <Dropdown
-            id="topbarLanguage"
-            v-model="selectedLanguage"
-            :options="languages"
-            option-label="name"
-            option-value="code"
-            placeholder="Language"
-            class="w-full md:w-auto"
-          />
         </div>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.layout-topbar button {
-  border: 0px;
-  background-color: transparent;
-}
-
-.layout-topbar button:hover {
-  background-color: var(--surface-hover);
-}
-
-.palette-button:hover {
-  background-color: var(--primary-color) !important;
-  color: var(--primary-contrast-color) !important;
-}
-</style>

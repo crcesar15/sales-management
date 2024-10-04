@@ -9,44 +9,49 @@
       @hide="clearSelection"
     >
       <div
-        class="grid flex-column"
+        class="flex flex-col"
       >
         <div
           class="
-            flex flex-wrap justify-content-center align-content-center
-            col
-            "
+            flex
+            flex-wrap
+            justify-center
+            content-center
+            w-full
+            mb-4
+          "
         >
           <div
             v-if="product.media.length > 1"
-            class="flex flex-wrap justify-content-center align-content-center"
+            class="flex flex-wrap justify-center content-center"
           >
             <Carousel
               :value="product.media"
               :num-visible="1"
               :num-scroll="1"
-              class="lg:w-8 md:w-10 w-12"
+              class="lg:w-4/6 md:w-5/6 w-full"
             >
               <template #item="image">
                 <Image
                   :src="image.data.url"
-                  class="border-round"
-                  image-class="w-full"
+                  image-class="w-full rounded-border shadow-lg border border-surface"
                 />
               </template>
             </Carousel>
           </div>
-          <div v-else-if="product.media.length === 1">
+          <div
+            v-else-if="product.media.length === 1"
+            style="width: 250px;"
+          >
             <Image
               :src="product.media[0].url"
-              class="border-round"
-              image-class="col"
+              image-class="w-full rounded-border shadow-lg border border-surface"
             />
           </div>
           <div v-else>
             <!-- not found div -->
             <div
-              class="flex flex-wrap justify-content-center align-content-center text-primary shadow-2 border-round mb-4"
+              class="flex flex-wrap justify-center content-center text-primary shadow-lg rounded-border"
               style="height: 250px; width: 250px;"
             >
               <p>
@@ -55,8 +60,8 @@
             </div>
           </div>
         </div>
-        <div class="surface-100 border-round grid p-2 col">
-          <div class="md:col-6 col-12 pt-0 pb-0">
+        <div class="bg-surface-100 rounded-border grid grid-cols-12 p-8 w-full">
+          <div class="md:col-span-6 col-span-12 pt-0 pb-0">
             <p>
               <strong>
                 {{ $t('Name') }}:
@@ -76,7 +81,7 @@
               {{ product?.brand?.name }}
             </p>
           </div>
-          <div class="md:col-6 col-12 pt-0 pb-0">
+          <div class="md:col-span-6 col-span-12 pt-0 pb-0">
             <p>
               <strong>
                 {{ $t('Measure Unit') }}:
@@ -96,7 +101,7 @@
               {{ product?.category?.name }}
             </p>
           </div>
-          <div class="col-12 pt-0">
+          <div class="col-span-12 pt-4">
             <p>
               <strong>
                 {{ $t('Description') }}:

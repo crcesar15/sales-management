@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div class="flex mb-2">
-      <div class="col-2 flex align-items-center">
+    <div class="grid grid-cols-12 mb-4">
+      <div class="col-span-2 flex items-center">
         <h2 class="text-2xl font-bold m-0">
           {{ $t("Products") }}
         </h2>
       </div>
-      <div class="col-10 flex justify-content-end">
+      <div class="col-span-10 flex flex-wrap justify-end">
         <p-button
           :label="$t('Add Product')"
           class="ml-2"
@@ -15,7 +15,6 @@
       </div>
     </div>
     <ConfirmDialog />
-    <Toast />
     <Card>
       <template #content>
         <DataTable
@@ -30,6 +29,7 @@
           paginator
           sort-field="name"
           :sort-order="1"
+          table-class="border-surface border"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -37,8 +37,8 @@
             {{ $t('No products registered yet') }}
           </template>
           <template #header>
-            <div class="grid">
-              <div class="xl:col-6 lg:col-6 md:col-6 col-12 flex md:justify-content-start justify-content-center">
+            <div class="grid grid-cols-12">
+              <div class="xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12 flex md:justify-start justify-center">
                 <SelectButton
                   v-model="status"
                   :options="[{
@@ -62,19 +62,26 @@
               <div
                 class="
                   flex
-                  xl:col-6
-                  lg:col-6
-                  md:col-6
-                  col-12
-                  md:justify-content-end
-                  justify-content-center
+                  xl:col-span-3
+                  xl:col-start-10
+                  lg:col-span-4
+                  lg:col-start-9
+                  md:col-span-6
+                  md:col-start-7
+                  col-span-12
+                  md:justify-end
+                  justify-center
                 "
               >
-                <IconField icon-position="left">
+                <IconField
+                  icon-position="left"
+                  class="w-full"
+                >
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
                     :placeholder="$t('Search')"
+                    class="w-full"
                   />
                 </IconField>
               </div>
@@ -84,7 +91,6 @@
             field="name"
             :header="$t('Product')"
             sortable
-            header-class="surface-100"
           >
             <template #body="{ data }">
               <span
@@ -100,7 +106,6 @@
             field="media"
             :header="$t('Image')"
             style="padding: 4px 12px; margin: 0px;"
-            header-class="surface-100"
           >
             <template #body="{ data }">
               <img
@@ -112,7 +117,7 @@
               >
               <div
                 v-else
-                class="bg-gray-200 border-round justify-content-center align-items-center flex"
+                class="bg-gray-200 rounded-border justify-center items-center flex"
                 style="height: 55px; width: 55px;"
               >
                 <p style="font-size: 18px; font-weight: bold;">
@@ -124,39 +129,35 @@
           <Column
             field="status"
             :header="$t('Status')"
-            header-class="flex justify-content-center surface-100"
-            class="flex justify-content-center"
+            header-class="flex justify-center"
+            class="flex justify-center"
           >
             <template #body="{ data }">
               <div
                 style="height: 55px;"
-                class="flex align-items-center"
+                class="flex items-center"
               >
-                <span
+                <Tag
                   v-if="data.status === 'active'"
-                  class="p-tag p-tag-success"
-                >
-                  {{ $t('Active') }}
-                </span>
-                <span
+                  severity="success"
+                  :value="$t('Active')"
+                />
+                <Tag
                   v-else-if="data.status === 'inactive'"
-                  class="p-tag p-tag-warning"
-                >
-                  {{ $t('Inactive') }}
-                </span>
-                <span
+                  severity="warn"
+                  :value="$t('Inactive')"
+                />
+                <Tag
                   v-else
-                  class="p-tag p-tag-danger"
-                >
-                  {{ $t('Archived') }}
-                </span>
+                  severity="danger"
+                  :value="$t('Archived')"
+                />
               </div>
             </template>
           </Column>
           <Column
             field="price"
             :header="$t('Price')"
-            header-class="surface-100"
           >
             <template #body="{ data }">
               <span>
@@ -167,24 +168,21 @@
           <Column
             field="stock"
             :header="$t('Stock')"
-            header-class="surface-100"
           />
           <Column
             field="brand.name"
             :header="$t('Brand')"
-            header-class="surface-100"
           />
           <Column
             field="category"
             :header="$t('Category')"
-            header-class="surface-100"
           />
           <Column
             :header="$t('Actions')"
-            header-class="flex justify-content-center surface-100"
+            header-class="flex justify-center"
           >
             <template #body="{ data }">
-              <span class="p-buttonset flex justify-content-center">
+              <span class="p-buttonset flex justify-center">
                 <p-button
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
@@ -205,7 +203,6 @@
           </Column>
           <Column
             style="width: 5rem"
-            header-class="surface-100"
           >
             <template #body="slotProps">
               <i
@@ -230,25 +227,23 @@
                 <Column
                   field="name"
                   :header="$t('Variant')"
-                  header-class="surface-100"
                 />
                 <Column
                   field="media"
                   :header="$t('Image')"
                   style="padding: 4px 12px; margin: 0px;"
-                  header-class="surface-100"
                 >
                   <template #body="{ data }">
                     <img
                       v-if="data.media.length"
                       :src="data.media[0].url"
                       alt="Product Image"
-                      class="border-round"
+                      class="rounded-border"
                       style="height: 55px; width: 55px;"
                     >
                     <div
                       v-else
-                      class="bg-gray-200 border-round flex justify-content-center align-items-center"
+                      class="bg-gray-200 rounded-border flex justify-center items-center"
                       style="height: 55px; width: 55px;"
                     >
                       <p style="font-size:18px; font-weight: bold">
@@ -260,39 +255,35 @@
                 <Column
                   field="status"
                   :header="$t('Status')"
-                  header-class="flex justify-content-center surface-100"
-                  class="flex justify-content-center"
+                  header-class="flex justify-center"
+                  class="flex justify-center"
                 >
                   <template #body="{ data }">
                     <div
                       style="height: 55px;"
-                      class="flex align-items-center"
+                      class="flex items-center"
                     >
-                      <span
+                      <Tag
                         v-if="data.status === 'active'"
-                        class="p-tag p-tag-success"
-                      >
-                        {{ $t('Active') }}
-                      </span>
-                      <span
+                        severity="success"
+                        :value="$t('Active')"
+                      />
+                      <Tag
                         v-else-if="data.status === 'inactive'"
-                        class="p-tag p-tag-warning"
-                      >
-                        {{ $t('Inactive') }}
-                      </span>
-                      <span
+                        severity="warn"
+                        :value="$t('Inactive')"
+                      />
+                      <Tag
                         v-else
-                        class="p-tag p-tag-danger"
-                      >
-                        {{ $t('Archived') }}
-                      </span>
+                        severity="danger"
+                        :value="$t('Archived')"
+                      />
                     </div>
                   </template>
                 </Column>
                 <Column
                   field="price"
                   :header="$t('Price')"
-                  header-class="surface-100"
                 >
                   <template #body="{ data }">
                     <span>
@@ -303,7 +294,6 @@
                 <Column
                   field="stock"
                   :header="$t('Stock')"
-                  header-class="surface-100"
                 />
               </DataTable>
             </div>
@@ -324,13 +314,13 @@
 import DataTable from "primevue/datatable";
 import Card from "primevue/card";
 import Column from "primevue/column";
-import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import ConfirmDialog from "primevue/confirmdialog";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import SelectButton from "primevue/selectbutton";
+import Tag from "primevue/tag";
 import i18n from "../../app";
 import AppLayout from "../../layouts/admin.vue";
 import ItemViewer from "./ItemViewer.vue";
@@ -343,11 +333,11 @@ export default {
     InputText,
     IconField,
     InputIcon,
-    Toast,
     ConfirmDialog,
     ItemViewer,
     Card,
     SelectButton,
+    Tag,
   },
   layout: AppLayout,
   data() {
