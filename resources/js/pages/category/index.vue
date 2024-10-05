@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div class="flex mb-2">
-      <div class="col-2 flex align-items-center">
+    <div class="grid grid-cols-12 mb-4">
+      <div class="col-span-2 flex items-center">
         <h2 class="text-2xl font-bold m-0">
           {{ $t("Categories") }}
         </h2>
       </div>
-      <div class="col-10 flex justify-content-end">
+      <div class="col-span-10 flex flex-wrap justify-end">
         <p-button
           :label="$t('Add Category')"
           class="ml-2"
@@ -28,7 +28,7 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          :row-class="rowClass"
+          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -36,20 +36,28 @@
             {{ $t('No categories found') }}
           </template>
           <template #header>
-            <div class="grid">
+            <div class="grid grid-cols-12">
               <div
                 class="
                   flex
-                  col-12
+                  lg:col-span-3
+                  lg:col-start-10
+                  md:col-span-4
+                  md:col-start-9
                   md:justify-content-end
+                  col-span-12
                   justify-content-center
                 "
               >
-                <IconField icon-position="left">
+                <IconField
+                  icon-position="left"
+                  class="w-full"
+                >
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
                     :placeholder="$t('Search')"
+                    fluid
                   />
                 </IconField>
               </div>
@@ -58,18 +66,17 @@
           <Column
             field="name"
             :header="$t('Name')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="products_count"
             :header="$t('Products')"
-            header-class="surface-100"
           >
             <template
               #body="row"
             >
-              <Badge
+              <Tag
+                rounded
                 :value="row.data.products_count"
               />
             </template>
@@ -77,19 +84,16 @@
           <Column
             field="created_at"
             :header="$t('Created At')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="updated_at"
             :header="$t('Updated At')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="actions"
             :header="$t('Actions')"
-            header-class="surface-100"
           >
             <template #body="row">
               <div class="flex justify-center">
@@ -132,7 +136,7 @@ import InputText from "primevue/inputtext";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
-import Badge from "primevue/badge";
+import Tag from "primevue/tag";
 import AppLayout from "../../layouts/admin.vue";
 import CategoryEditor from "./CategoryEditor.vue";
 
@@ -148,7 +152,7 @@ export default {
     Card,
     IconField,
     InputIcon,
-    Badge,
+    Tag,
   },
   layout: AppLayout,
   data() {
