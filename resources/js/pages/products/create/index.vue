@@ -260,7 +260,7 @@
           <template #content>
             <div class="flex flex-col gap-2 mb-3">
               <label for="status">{{ $t('Status') }}</label>
-              <Dropdown
+              <Select
                 v-model="status"
                 :options="[
                   { name: $t('Active'), value: 'active' },
@@ -300,7 +300,7 @@
             </div>
             <div class="flex flex-col gap-2 mb-3">
               <label for="brand">{{ $t('Brand') }}</label>
-              <Dropdown
+              <Select
                 id="brand"
                 v-model="brand"
                 filter
@@ -319,7 +319,7 @@
             </div>
             <div class="flex flex-col gap-2 mb-3">
               <label for="measure_unit">{{ $t('Measure Unit') }}</label>
-              <Dropdown
+              <Select
                 id="measure_unit"
                 v-model="measureUnit"
                 :options="measureUnits"
@@ -341,7 +341,7 @@
           class="flex flex-col gap-2 mb-3"
         >
           <label>{{ option.name }}</label>
-          <Dropdown
+          <Select
             v-model="selectedOptions[index]"
             :options="option.values"
             class="w-full md:w-[20rem]"
@@ -415,11 +415,10 @@ import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import { Inertia } from "@inertiajs/inertia";
 import Textarea from "primevue/textarea";
-import Dropdown from "primevue/dropdown";
+import Select from "primevue/select";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import MultiSelect from "primevue/multiselect";
-import Toast from "primevue/toast";
 import InputNumber from "primevue/inputnumber";
 import InputSwitch from "primevue/inputswitch";
 import Checkbox from "primevue/checkbox";
@@ -441,10 +440,9 @@ export default {
     InputText,
     InputNumber,
     Textarea,
-    Dropdown,
+    Select,
     MediaManager,
     MultiSelect,
-    Toast,
     OptionsEditor,
     DataTable,
     Column,

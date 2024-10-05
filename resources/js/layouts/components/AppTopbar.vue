@@ -30,12 +30,12 @@ watch(selectedLanguage, (newVal) => {
       >
         <i class="fa fa-bars" />
       </button>
-      <router-link
+      <a
         to="/"
         class="layout-topbar-logo"
       >
         <span>SAKAI</span>
-      </router-link>
+      </a>
     </div>
 
     <div class="layout-topbar-actions">

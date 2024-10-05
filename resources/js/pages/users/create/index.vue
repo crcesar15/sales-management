@@ -1,7 +1,6 @@
 <template>
   <div>
-    <Toast />
-    <div class="flex mb-2 justify-content-between mb-2">
+    <div class="flex justify-between mb-2">
       <div class="flex">
         <PButton
           icon="fa fa-arrow-left"
@@ -13,7 +12,7 @@
           {{ $t('Add User') }}
         </h4>
       </div>
-      <div class="flex flex-column justify-content-center">
+      <div class="flex flex-col justify-center">
         <PButton
           icon="fa fa-save"
           :label="$t('Save')"
@@ -22,13 +21,13 @@
         />
       </div>
     </div>
-    <div class="grid">
-      <div class="md:col-8 col-12">
+    <div class="grid grid-cols-12 gap-4">
+      <div class="md:col-span-8 col-span-12">
         <Card class="mb-4">
           <template #content>
-            <div class="grid">
-              <div class="md:col-6 col-12">
-                <div class="flex flex-column gap-2 mb-3">
+            <div class="grid grid-cols-12 gap-4">
+              <div class="md:col-span-6 col-span-12">
+                <div class="flex flex-col gap-2 mb-3">
                   <label for="first_name">{{ $t('First Name') }}</label>
                   <InputText
                     id="first_name"
@@ -39,14 +38,14 @@
                   />
                   <small
                     v-if="v$.first_name.$invalid && v$.first_name.$dirty"
-                    class="p-error"
+                    class="text-red-400 dark:text-red-300"
                   >
                     {{ v$.first_name.$errors[0].$message }}
                   </small>
                 </div>
               </div>
-              <div class="md:col-6 col-12">
-                <div class="flex flex-column gap-2 mb-3">
+              <div class="md:col-span-6 col-span-12">
+                <div class="flex flex-col gap-2 mb-3">
                   <label for="last_name">{{ $t('Last Name') }}</label>
                   <InputText
                     id="last_name"
@@ -57,14 +56,14 @@
                   />
                   <small
                     v-if="v$.last_name.$invalid && v$.last_name.$dirty"
-                    class="p-error"
+                    class="text-red-400 dark:text-red-300"
                   >
                     {{ v$.last_name.$errors[0].$message }}
                   </small>
                 </div>
               </div>
             </div>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="first_name">{{ $t('Email') }}</label>
               <InputText
                 id="email"
@@ -75,7 +74,7 @@
               />
               <small
                 v-if="v$.email.$invalid && v$.email.$dirty"
-                class="p-error"
+                class="text-red-400 dark:text-red-300"
               >
                 {{ v$.email.$errors[0].$message }}
               </small>
@@ -87,9 +86,9 @@
             {{ $t('Additional Information') }}
           </template>
           <template #content>
-            <div class="grid">
-              <div class="md:col-6 col-12">
-                <div class="flex flex-column gap-2 mb-3">
+            <div class="grid grid-cols-12 gap-4">
+              <div class="md:col-span-6 col-span-12">
+                <div class="flex flex-col gap-2 mb-3">
                   <label for="phone">{{ $t('Phone Number') }}</label>
                   <InputText
                     id="phone"
@@ -98,10 +97,10 @@
                   />
                 </div>
               </div>
-              <div class="md:col-6 col-12">
-                <div class="flex flex-column gap-2 mb-3">
+              <div class="md:col-span-6 col-span-12">
+                <div class="flex flex-col gap-2 mb-3">
                   <label for="date_of_birth">{{ $t('Date of Birth') }}</label>
-                  <Calendar
+                  <DatePicker
                     id="date_of_birth"
                     v-model="date_of_birth"
                   />
@@ -111,12 +110,12 @@
           </template>
         </Card>
       </div>
-      <div class="md:col-4 col-12">
+      <div class="md:col-span-4 col-span-12">
         <Card class="mb-4">
           <template #content>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="status">{{ $t('Status') }}</label>
-              <Dropdown
+              <Select
                 v-model="status"
                 :options="[
                   { name: $t('Active'), value: 'active' },
@@ -126,9 +125,9 @@
                 option-value="value"
               />
             </div>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="status">{{ $t('Role') }}</label>
-              <Dropdown
+              <Select
                 v-model="role"
                 :options="roles"
                 option-label="name"
@@ -138,7 +137,7 @@
               />
               <small
                 v-if="v$.role.$invalid && v$.role.$dirty"
-                class="p-error"
+                class="text-red-400 dark:text-red-300"
               >
                 {{ v$.role.$errors[0].$message }}
               </small>
@@ -150,7 +149,7 @@
             {{ $t('Credentials') }}
           </template>
           <template #content>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="username">{{ $t('Username') }}</label>
               <InputText
                 id="username"
@@ -161,12 +160,12 @@
               />
               <small
                 v-if="v$.username.$invalid && v$.username.$dirty"
-                class="p-error"
+                class="text-red-400 dark:text-red-300"
               >
                 {{ v$.username.$errors[0].$message }}
               </small>
             </div>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="username">{{ $t('Password') }}</label>
               <Password
                 id="password"
@@ -181,12 +180,12 @@
               />
               <small
                 v-if="v$.password.$invalid && v$.password.$dirty"
-                class="p-error"
+                class="text-red-400 dark:text-red-300"
               >
                 {{ v$.password.$errors[0].$message }}
               </small>
             </div>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="password_confirmation">{{ $t('Confirm Password') }}</label>
               <Password
                 id="password_confirmation"
@@ -202,7 +201,7 @@
               />
               <small
                 v-if="v$.password_confirmation.$invalid && v$.password_confirmation.$dirty"
-                class="p-error"
+                class="text-red-400 dark:text-red-300"
               >
                 {{ v$.password_confirmation.$errors[0].$message }}
               </small>
@@ -217,10 +216,9 @@
 <script>
 import Card from "primevue/card";
 import InputText from "primevue/inputtext";
-import Dropdown from "primevue/dropdown";
+import Select from "primevue/select";
 import PButton from "primevue/button";
-import Calendar from "primevue/calendar";
-import Toast from "primevue/toast";
+import DatePicker from "primevue/datepicker";
 import Password from "primevue/password";
 
 import { useVuelidate } from "@vuelidate/core";
@@ -230,7 +228,6 @@ import {
   createI18nMessage,
   sameAs,
   minLength,
-  alphaNum,
 } from "@vuelidate/validators";
 import AppLayout from "../../../layouts/admin.vue";
 import i18n from "../../../app";
@@ -246,10 +243,9 @@ export default {
   components: {
     Card,
     InputText,
-    Dropdown,
+    Select,
     PButton,
-    Toast,
-    Calendar,
+    DatePicker,
     Password,
   },
   layout: AppLayout,

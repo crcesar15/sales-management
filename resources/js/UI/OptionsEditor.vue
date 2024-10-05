@@ -52,14 +52,15 @@
         <div class="md:col-span-6 col-span-12 flex flex-col gap-3">
           <label :for="`values-${index}`">{{ $t('Option Values') }}</label>
           <div class="flex flex-row">
-            <Chips
+            <AutoComplete
               v-model="option.values"
+              multiple
+              :typeahead="false"
               :input-id="`values-${index}`"
               :disabled="option.name.length === 0"
-              separator=","
               class="w-full block"
-              @add="option.saved = false"
-              @remove="option.saved = false"
+              @option-select="option.saved = false"
+              @option-unselect="option.saved = false"
             />
           </div>
         </div>
@@ -80,12 +81,12 @@
 
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
-import Chips from "primevue/chips";
+import AutoComplete from "primevue/autocomplete";
 
 export default {
   components: {
     Button,
-    Chips,
+    AutoComplete,
     InputText,
 
   },
