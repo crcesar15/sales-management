@@ -1,25 +1,21 @@
 <template>
   <div>
-    <div class="flex mb-2">
-      <div class="col-2 flex align-items-center">
-        <h2 class="text-2xl font-bold m-0">
-          {{ $t("Measure Units") }}
-        </h2>
-      </div>
-      <div class="col-10 flex justify-content-end">
-        <p-button
-          :label="$t('Add Measure Unit')"
-          class="ml-2"
-          @click="addMeasureUnit"
-        />
-      </div>
+    <div class="flex flex-row justify-between mb-3">
+      <h2 class="text-2xl font-bold flex items-end m-0">
+        {{ $t("Measure Units") }}
+      </h2>
+      <p-button
+        :label="$t('Add Measure Unit')"
+        class="ml-2"
+        @click="addMeasureUnit"
+      />
     </div>
     <ConfirmDialog />
-    <Toast />
     <Card>
       <template #content>
         <DataTable
           :value="measureUnits"
+          resizable-columns
           lazy
           :total-records="pagination.total"
           :rows="pagination.rows"
@@ -28,7 +24,7 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          :row-class="rowClass"
+          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -36,20 +32,28 @@
             {{ $t('No measure units found') }}
           </template>
           <template #header>
-            <div class="grid">
+            <div class="grid grid-cols-12">
               <div
                 class="
                   flex
-                  col-12
-                  md:justify-content-end
-                  justify-content-center
+                  lg:col-span-3
+                  lg:col-start-10
+                  md:col-span-4
+                  md:col-start-9
+                  col-span-12
+                  md:justify-end
+                  justify-center
                 "
               >
-                <IconField icon-position="left">
+                <IconField
+                  icon-position="left"
+                  class="w-full"
+                >
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
                     :placeholder="$t('Search')"
+                    class="w-full"
                   />
                 </IconField>
               </div>
@@ -119,13 +123,11 @@
 import DataTable from "primevue/datatable";
 import Card from "primevue/card";
 import Column from "primevue/column";
-import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
-import Badge from "primevue/badge";
 import AppLayout from "../../layouts/admin.vue";
 import ItemEditor from "./ItemEditor.vue";
 
@@ -136,12 +138,10 @@ export default {
     PButton,
     ItemEditor,
     InputText,
-    Toast,
     ConfirmDialog,
     Card,
     IconField,
     InputIcon,
-    Badge,
   },
   layout: AppLayout,
   data() {
@@ -232,6 +232,7 @@ export default {
         icon: "fas fa-exclamation-triangle",
         rejectLabel: this.$t("Cancel"),
         acceptLabel: this.$t("Delete"),
+        rejectClass: "p-button-secondary",
         accept: () => {
           axios.delete(`${route("api.measure-units.destroy", id)}`)
             .then(() => {

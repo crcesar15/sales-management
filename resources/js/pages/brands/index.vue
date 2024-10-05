@@ -15,6 +15,7 @@
       <template #content>
         <DataTable
           :value="brands"
+          resizable-columns
           lazy
           :total-records="pagination.total"
           :rows="pagination.rows"

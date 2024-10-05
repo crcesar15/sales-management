@@ -6,38 +6,31 @@
       modal
       @hide="clearSelection"
     >
-      <div class="p-fluid">
-        <div class="p-field">
-          <label for="name">{{ $t('Name') }}</label>
-          <InputText
-            id="name"
-            v-model="name"
-            autocomplete="off"
-            class="mt-2"
-          />
-          <small
-            id="text-error"
-            class="p-error"
-          >{{ nameErrorMessage || '&nbsp;' }}</small>
-        </div>
-        <div class="p-field">
-          <label for="description">{{ $t('Description') }}</label>
-          <Textarea
-            id="description"
-            v-model="description"
-            autocomplete="off"
-            rows="2"
-            class="mt-2"
-          />
-          <small
-            id="text-error"
-            class="p-error"
-          >{{ nameErrorMessage || '&nbsp;' }}</small>
-        </div>
+      <div class="flex flex-col w-[20rem]">
+        <label for="name">{{ $t('Name') }}</label>
+        <InputText
+          id="name"
+          v-model="name"
+          autocomplete="off"
+          class="mt-2"
+          :class="{ 'p-invalid': nameErrorMessage }"
+        />
+        <small
+          id="text-error"
+          class="text-red-400 dark:text-red-300"
+        >{{ nameErrorMessage || '&nbsp;' }}</small>
+        <label for="description">{{ $t('Description') }}</label>
+        <Textarea
+          id="description"
+          v-model="description"
+          autocomplete="off"
+          rows="2"
+          class="mt-2"
+        />
       </div>
       <template
         #footer
-        class="flex flex-wrap justify-content-end"
+        class="flex flex-wrap justify-end"
       >
         <PButton
           severity="secondary"

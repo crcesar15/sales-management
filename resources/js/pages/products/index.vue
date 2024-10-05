@@ -16,6 +16,7 @@
         <DataTable
           v-model:expandedRows="expandedRows"
           :value="products"
+          resizable-columns
           lazy
           :page-link-size="3"
           :total-records="pagination.total"
