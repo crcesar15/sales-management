@@ -9,6 +9,7 @@ export default {
   theme: {
     extend: {},
   },
+  darkMode: ["class", ".app-dark"],
   plugins: [
     require("tailwindcss-primeui"),
   ],

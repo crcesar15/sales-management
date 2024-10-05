@@ -1,7 +1,7 @@
 <template>
   <div>
     <Toast />
-    <div class="flex mb-2 justify-content-between mb-2">
+    <div class="flex mb-2 justify-between">
       <div class="flex">
         <PButton
           icon="fa fa-arrow-left"
@@ -13,7 +13,7 @@
           {{ $t('Add Product') }}
         </h4>
       </div>
-      <div class="flex flex-column justify-content-center">
+      <div class="flex flex-col justify-center">
         <PButton
           icon="fa fa-save"
           :label="$t('Save')"
@@ -22,11 +22,11 @@
         />
       </div>
     </div>
-    <div class="grid">
-      <div class="md:col-8 col-12">
+    <div class="grid grid-cols-12 gap-4">
+      <div class="md:col-span-8 col-span-12">
         <Card class="mb-4">
           <template #content>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="name">{{ $t('Name') }}</label>
               <InputText
                 id="name"
@@ -37,12 +37,12 @@
               />
               <small
                 v-if="v$.name.$invalid && v$.name.$dirty"
-                class="p-error"
+                class="text-red-400 dark:text-red-300"
               >
                 {{ v$.name.$errors[0].$message }}
               </small>
             </div>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="description">{{ $t('Description') }}</label>
               <Textarea
                 id="description"
@@ -56,7 +56,7 @@
             {{ $t('Images') }}
           </template>
           <template #content>
-            <div class="flex flex-column">
+            <div class="flex flex-col">
               <MediaManager
                 :files="files"
                 @upload-file="uploadFile"
@@ -73,8 +73,8 @@
             {{ $t('Details') }}
           </template>
           <template #content>
-            <div class="grid">
-              <div class="flex flex-column lg:col-6 md:col-6 col-12 gap-2 mb-3">
+            <div class="grid grid-cols-12 gap-4">
+              <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
                 <label for="price">{{ $t('Price') }}</label>
                 <InputNumber
                   id="price"
@@ -86,12 +86,12 @@
                 />
                 <small
                   v-if="v$.price.$invalid && v$.price.$dirty"
-                  class="p-error"
+                  class="text-red-400 dark:text-red-300"
                 >
                   {{ v$.price.$errors[0].$message }}
                 </small>
               </div>
-              <div class="flex flex-column lg:col-6 md:col-6 col-12 gap-2 mb-3">
+              <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
                 <label for="profit">{{ $t('Bar Code or Identifier') }}</label>
                 <InputText
                   id="profit"
@@ -102,7 +102,7 @@
                 />
                 <small
                   v-if="v$.identifier.$invalid && v$.identifier.$dirty"
-                  class="p-error"
+                  class="text-red-400 dark:text-red-300"
                 >
                   {{ v$.identifier.$errors[0].$message }}
                 </small>
@@ -112,15 +112,15 @@
         </Card>
         <Card class="mb-4">
           <template #title>
-            <div class="flex justify-content-between flex-wrap">
+            <div class="flex justify-between flex-wrap">
               <div>
                 {{ $t('Options') }}
               </div>
-              <div class="flex align-items-center">
+              <div class="flex items-center">
                 <label
                   for="hasVariants"
-                  class="mr-3"
-                  style="font-weight: lighter; font-size: 14px;"
+                  class="mr-3 text-primary"
+                  style="font-size: 14px;"
                 >
                   {{ $t('This product has variants?') }}
                 </label>
@@ -144,7 +144,7 @@
           class="mb-4"
         >
           <template #title>
-            <div class="flex justify-content-between flex-wrap">
+            <div class="flex justify-between flex-wrap">
               <div>
                 {{ $t('Variants') }}
               </div>
@@ -180,11 +180,11 @@
                       v-if="slotProps.data.media.length > 0"
                       :src="slotProps.data.media[0].url"
                       alt="product"
-                      class="border-round border-1 h-5rem w-5rem"
+                      class="rounded-border border h-20 w-20"
                     >
                     <div
                       v-else
-                      class="border-dashed h-5rem w-5rem flex justify-content-center align-items-center"
+                      class="border-dashed border-surface border-4 h-20 w-20 flex justify-center items-center"
                     >
                       <i class="fa fa-file-circle-plus" />
                     </div>
@@ -201,7 +201,7 @@
                 :header="$t('Bar Code or Identifier')"
               >
                 <template #body="slotProps">
-                  <div class="flex flex-column">
+                  <div class="flex flex-col">
                     <InputText
                       v-model="slotProps.data.identifier"
                       autocomplete="off"
@@ -210,7 +210,7 @@
                     />
                     <small
                       v-if="v$.variants.$each.$response.$errors[slotProps.index].identifier.length > 0"
-                      class="p-error"
+                      class="text-red-400 dark:text-red-300"
                     >
                       {{ v$.variants.$each.$response.$errors[slotProps.index].identifier[0].$message }}
                     </small>
@@ -222,7 +222,7 @@
                 :header="$t('Price')"
               >
                 <template #body="slotProps">
-                  <div class="flex flex-column">
+                  <div class="flex flex-col">
                     <InputNumber
                       v-model="slotProps.data.price"
                       mode="currency"
@@ -232,7 +232,7 @@
                     />
                     <small
                       v-if="v$.variants.$each.$response.$errors[slotProps.index].price.length > 0"
-                      class="p-error"
+                      class="text-red-400 dark:text-red-300"
                     >
                       {{ v$.variants.$each.$response.$errors[slotProps.index].price[0].$message }}
                     </small>
@@ -256,10 +256,10 @@
           </template>
         </Card>
       </div>
-      <div class="md:col-4 col-12">
+      <div class="md:col-span-4 col-span-12">
         <Card class="mb-4">
           <template #content>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="status">{{ $t('Status') }}</label>
               <Dropdown
                 v-model="status"
@@ -279,7 +279,7 @@
             {{ $t('Product Organization') }}
           </template>
           <template #content>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="category">{{ $t('Category') }}</label>
               <MultiSelect
                 id="category"
@@ -294,12 +294,12 @@
               />
               <small
                 v-if="v$.category.$invalid && v$.category.$dirty"
-                class="p-error"
+                class="text-red-400 dark:text-red-300"
               >
                 {{ v$.category.$errors[0].$message }}
               </small>
             </div>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="brand">{{ $t('Brand') }}</label>
               <Dropdown
                 id="brand"
@@ -313,12 +313,12 @@
               />
               <small
                 v-if="v$.brand.$invalid && v$.brand.$dirty"
-                class="p-error"
+                class="text-red-400 dark:text-red-300"
               >
                 {{ v$.brand.$errors[0].$message }}
               </small>
             </div>
-            <div class="flex flex-column gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="measure_unit">{{ $t('Measure Unit') }}</label>
               <Dropdown
                 id="measure_unit"
@@ -339,7 +339,7 @@
         <div
           v-for="(option, index) in options"
           :key="index"
-          class="flex flex-column gap-2 mb-3"
+          class="flex flex-col gap-2 mb-3"
         >
           <label>{{ option.name }}</label>
           <Dropdown
@@ -369,21 +369,21 @@
         :style="{ width: '50vw' }"
         :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
       >
-        <div class="grid">
+        <div class="grid grid-cols-12">
           <div
             v-for="file in files"
             :key="file.id"
-            class="col-3"
+            class="col-span-3"
           >
-            <div class="flex flex-column gap-2">
+            <div class="flex flex-col gap-2">
               <img
                 :src="file.url"
                 alt="product"
                 style="border: solid 1px var(--surface-400)"
-                class="border-round"
+                class="rounded-border"
               >
               <div
-                class="flex justify-content-center"
+                class="flex justify-center"
               >
                 <Checkbox
                   v-model="selectedVariantImages"

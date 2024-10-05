@@ -1,25 +1,23 @@
 <template>
   <div>
     <div v-show="options.length === 0">
-      <div class="grid">
-        <div class="col-12">
-          <PButton
-            icon="fa fa-plus"
-            text
-            :label="$t('Add options like size or color')"
-            @click="addOption"
-          />
-        </div>
+      <div class="flex">
+        <PButton
+          icon="fa fa-plus"
+          text
+          :label="$t('Add options like size or color')"
+          @click="addOption"
+        />
       </div>
     </div>
     <div v-show="options.length > 0">
       <div
         v-for="(option,index) in options"
         :key="index"
-        class="w-full grid flex-row mb-3"
+        class="grid grid-cols-12 mb-3 gap-3"
       >
         <div
-          class="col-12 flex flex-wrap flex-row justify-content-end"
+          class="col-span-12 flex flex-wrap flex-row justify-end"
           style="margin-bottom: -35px;"
         >
           <Button
@@ -39,45 +37,40 @@
             @click="deleteOption(index)"
           />
         </div>
-        <div class="md:col-6 col-12 flex flex-column gap-3">
+        <div class="md:col-span-6 col-span-12 flex flex-col gap-3">
           <label :for="`option-${index}`">{{ $t('Option Name') }}</label>
-          <div class="grid flex-row">
-            <div class="col">
-              <InputText
-                :id="`option-${index}`"
-                v-model="option.name"
-                class="w-full"
-                :invalid="checkAvailability"
-              />
-            </div>
+          <div class="flex flex-row">
+            <InputText
+              :id="`option-${index}`"
+              v-model="option.name"
+              class="w-full"
+              :invalid="checkAvailability"
+              autocomplete="off"
+            />
           </div>
         </div>
-        <div class="md:col-6 col-12 flex flex-column gap-3">
+        <div class="md:col-span-6 col-span-12 flex flex-col gap-3">
           <label :for="`values-${index}`">{{ $t('Option Values') }}</label>
-          <div class="grid flex-row">
-            <div class="col">
-              <Chips
-                v-model="option.values"
-                :input-id="`values-${index}`"
-                :disabled="option.name.length === 0"
-                separator=","
-                class="w-full block"
-                @add="option.saved = false"
-                @remove="option.saved = false"
-              />
-            </div>
+          <div class="flex flex-row">
+            <Chips
+              v-model="option.values"
+              :input-id="`values-${index}`"
+              :disabled="option.name.length === 0"
+              separator=","
+              class="w-full block"
+              @add="option.saved = false"
+              @remove="option.saved = false"
+            />
           </div>
         </div>
       </div>
-      <div class="grid">
-        <div class="col-12">
-          <PButton
-            icon="fa fa-plus"
-            text
-            :label="$t('Add another option')"
-            @click="addOption"
-          />
-        </div>
+      <div class="flex">
+        <PButton
+          icon="fa fa-plus"
+          text
+          :label="$t('Add another option')"
+          @click="addOption"
+        />
       </div>
     </div>
   </div>

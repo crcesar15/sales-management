@@ -2,7 +2,7 @@
   <div>
     <div
       v-if="files.length === 0"
-      class="grid justify-content-center mt-4"
+      class="flex justify-center mt-4"
     >
       <PButton
         :label="$t('Upload Image')"
@@ -14,13 +14,13 @@
       v-else
     >
       <div v-if="files.length > 0">
-        <div class="grid">
+        <div class="grid grid-cols-12">
           <div
             v-for="(file, index) of files"
             :key="file.id"
-            class="p-2 flex flex-column align-items-center xl:col-3 lg:col-4 md:col-6 col-12"
+            class="p-2 flex flex-col items-center xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12"
           >
-            <div class="flex flex-column align-items-center border-1 surface-border border-round">
+            <div class="flex flex-col items-center border surface-border rounded-border">
               <img
                 role="presentation"
                 :src="file.url"
@@ -40,7 +40,7 @@
         </div>
       </div>
     </div>
-    <div class="flex justify-content-center mt-4">
+    <div class="flex justify-center mt-4">
       <FileUpload
         v-show="files.length > 0"
         ref="fileUpload"
@@ -60,7 +60,7 @@
       :closable="false"
     >
       <template #footer>
-        <div class="flex align-items-center justify-content-center gap-2 mt-2">
+        <div class="flex items-center justify-center gap-2 mt-2">
           <PButton
             icon="fas fa-check"
             :label="$t('Save')"

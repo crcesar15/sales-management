@@ -308,8 +308,9 @@ function onMenuModeChange() {
     border-surface
     rounded-border
     origin-top
-    shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]"
-    style="background-color: var(--p-card-background);"
+    shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]
+    bg-surface-0
+    dark:bg-surface-900"
   >
     <div class="flex flex-col gap-4">
       <div>
