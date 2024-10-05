@@ -62,31 +62,27 @@
           <Column
             field="name"
             :header="$t('Name')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="description"
             :header="$t('Description')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="created_at"
             :header="$t('Created At')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="updated_at"
             :header="$t('Updated At')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="actions"
             :header="$t('Actions')"
-            header-class="surface-100"
+            :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
               <div class="flex justify-center">

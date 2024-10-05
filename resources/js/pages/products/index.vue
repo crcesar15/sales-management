@@ -176,7 +176,7 @@
           />
           <Column
             :header="$t('Actions')"
-            header-class="flex justify-center"
+            :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="{ data }">
               <span class="p-buttonset flex justify-center">

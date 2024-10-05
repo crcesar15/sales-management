@@ -90,6 +90,7 @@
           <Column
             field="actions"
             :header="$t('Actions')"
+            :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
               <div class="flex justify-center">

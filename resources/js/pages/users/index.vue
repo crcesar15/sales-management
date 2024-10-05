@@ -1,25 +1,21 @@
 <template>
   <div>
-    <div class="flex mb-2">
-      <div class="col-2 flex align-items-center">
-        <h2 class="text-2xl font-bold m-0">
-          {{ $t("Users") }}
-        </h2>
-      </div>
-      <div class="col-10 flex justify-content-end">
-        <p-button
-          :label="$t('Add User')"
-          class="ml-2"
-          @click="$inertia.visit(route('users.create'))"
-        />
-      </div>
+    <div class="flex justify-between mb-3">
+      <h2 class="text-2xl font-bold flex items-end m-0">
+        {{ $t("Users") }}
+      </h2>
+      <p-button
+        :label="$t('Add User')"
+        class="ml-2"
+        @click="$inertia.visit(route('users.create'))"
+      />
     </div>
     <ConfirmDialog />
-    <Toast />
     <Card>
       <template #content>
         <DataTable
           :value="users"
+          resizable-columns
           lazy
           :total-records="pagination.total"
           :rows="pagination.rows"
@@ -28,7 +24,7 @@
           paginator
           sort-field="first_name"
           :sort-order="1"
-          :row-class="rowClass"
+          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -36,8 +32,16 @@
             {{ $t('No users found') }}
           </template>
           <template #header>
-            <div class="grid">
-              <div class="xl:col-6 lg:col-6 md:col-6 col-12 flex md:justify-content-start justify-content-center">
+            <div class="grid grid-cols-12">
+              <div
+                class="
+                  md:col-span-6
+                  col-span-12
+                  flex
+                  md:justify-start
+                  justify-center
+                "
+              >
                 <SelectButton
                   v-model="status"
                   :options="[{
@@ -61,19 +65,26 @@
               <div
                 class="
                   flex
-                  xl:col-6
-                  lg:col-6
-                  md:col-6
+                  xl:col-span-3
+                  xl:col-start-10
+                  lg:col-span-4
+                  lg:col-start-9
+                  md:col-span-6
+                  md:col-start-7
                   col-12
                   md:justify-content-end
                   justify-content-center
                 "
               >
-                <IconField icon-position="left">
+                <IconField
+                  icon-position="left"
+                  class="w-full"
+                >
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
                     :placeholder="$t('Search')"
+                    class="w-full"
                   />
                 </IconField>
               </div>
@@ -82,36 +93,31 @@
           <Column
             field="first_name"
             :header="$t('First Name')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="last_name"
             :header="$t('Last Name')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="username"
             :header="$t('Username')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="role.name"
             :header="$t('Role')"
-            header-class="surface-100"
           />
           <Column
             field="status"
             :header="$t('Status')"
-            header-class="surface-100"
             sortable
           >
             <template #body="{ data }">
               <div
                 style="height: 55px;"
-                class="flex align-items-center"
+                class="flex items-center"
               >
                 <span
                   v-if="data.status === 'active'"
@@ -137,19 +143,17 @@
           <Column
             field="created_at"
             :header="$t('Created At')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="updated_at"
             :header="$t('Updated At')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="actions"
             :header="$t('Actions')"
-            header-class="surface-100"
+            :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
               <div class="flex justify-center">
@@ -190,7 +194,6 @@
 import DataTable from "primevue/datatable";
 import Card from "primevue/card";
 import Column from "primevue/column";
-import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import IconField from "primevue/iconfield";
@@ -205,7 +208,6 @@ export default {
     Column,
     PButton,
     InputText,
-    Toast,
     ConfirmDialog,
     Card,
     IconField,
@@ -305,6 +307,7 @@ export default {
         icon: "fas fa-exclamation-triangle",
         rejectLabel: this.$t("Cancel"),
         acceptLabel: this.$t("Restore"),
+        rejectClass: "p-button-secondary",
         accept: () => {
           axios.put(route("api.users.restore", id))
             .then(() => {
@@ -334,6 +337,7 @@ export default {
         icon: "fas fa-exclamation-triangle",
         rejectLabel: this.$t("Cancel"),
         acceptLabel: this.$t("Delete"),
+        rejectClass: "p-button-secondary",
         accept: () => {
           axios.delete(route("api.users.destroy", id))
             .then(() => {
