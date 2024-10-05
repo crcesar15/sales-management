@@ -68,14 +68,17 @@
           <Column
             field="products_count"
             :header="$t('Products')"
+            :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template
               #body="row"
             >
-              <Tag
-                rounded
-                :value="row.data.products_count"
-              />
+              <div class="flex justify-center">
+                <Tag
+                  rounded
+                  :value="row.data.products_count"
+                />
+              </div>
             </template>
           </Column>
           <Column

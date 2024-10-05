@@ -73,12 +73,19 @@
           <Column
             field="users_count"
             :header="$t('Users')"
+            :pt="{columnHeaderContent: 'justify-center'}"
           >
-            <template #body="row">
-              <Tag
-                rounded
-                :value="row.data.users_count"
-              />
+            <template
+              #body="row"
+            >
+              <div
+                class="flex justify-center"
+              >
+                <Tag
+                  rounded
+                  :value="row.data.users_count"
+                />
+              </div>
             </template>
           </Column>
           <Column

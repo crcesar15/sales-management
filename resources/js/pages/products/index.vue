@@ -103,23 +103,26 @@
             field="media"
             :header="$t('Image')"
             style="padding: 4px 12px; margin: 0px;"
+            :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="{ data }">
-              <img
-                v-if="data.media.length"
-                :src="data.media[0].url"
-                alt="Product Image"
-                class="border-round"
-                style="height: 55px; width: 55px;"
-              >
-              <div
-                v-else
-                class="bg-gray-200 rounded-border justify-center items-center flex"
-                style="height: 55px; width: 55px;"
-              >
-                <p style="font-size: 18px; font-weight: bold;">
-                  {{ data.name.substring(0, 2).toUpperCase() }}
-                </p>
+              <div class="flex justify-center">
+                <img
+                  v-if="data.media.length"
+                  :src="data.media[0].url"
+                  alt="Product Image"
+                  class="border-round"
+                  style="height: 55px; width: 55px;"
+                >
+                <div
+                  v-else
+                  class="bg-gray-200 rounded-border justify-center items-center flex"
+                  style="height: 55px; width: 55px;"
+                >
+                  <p style="font-size: 18px; font-weight: bold;">
+                    {{ data.name.substring(0, 2).toUpperCase() }}
+                  </p>
+                </div>
               </div>
             </template>
           </Column>
@@ -229,23 +232,26 @@
                   field="media"
                   :header="$t('Image')"
                   style="padding: 4px 12px; margin: 0px;"
+                  :pt="{columnHeaderContent: 'justify-center'}"
                 >
                   <template #body="{ data }">
-                    <img
-                      v-if="data.media.length"
-                      :src="data.media[0].url"
-                      alt="Product Image"
-                      class="rounded-border"
-                      style="height: 55px; width: 55px;"
-                    >
-                    <div
-                      v-else
-                      class="bg-gray-200 rounded-border flex justify-center items-center"
-                      style="height: 55px; width: 55px;"
-                    >
-                      <p style="font-size:18px; font-weight: bold">
-                        {{ data.name.substring(0, 2).toUpperCase() }}
-                      </p>
+                    <div class="flex justify-center">
+                      <img
+                        v-if="data.media.length"
+                        :src="data.media[0].url"
+                        alt="Product Image"
+                        class="rounded-border"
+                        style="height: 55px; width: 55px;"
+                      >
+                      <div
+                        v-else
+                        class="bg-gray-200 rounded-border flex justify-center items-center"
+                        style="height: 55px; width: 55px;"
+                      >
+                        <p style="font-size:18px; font-weight: bold">
+                          {{ data.name.substring(0, 2).toUpperCase() }}
+                        </p>
+                      </div>
                     </div>
                   </template>
                 </Column>
