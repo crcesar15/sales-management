@@ -1,6 +1,5 @@
 <template>
   <div>
-    <Toast />
     <div class="flex mb-2 justify-between">
       <div class="flex">
         <PButton
@@ -345,7 +344,7 @@
           <Dropdown
             v-model="selectedOptions[index]"
             :options="option.values"
-            class="w-full md:w-14rem"
+            class="w-full md:w-[20rem]"
           />
         </div>
         <template #footer>
@@ -369,7 +368,7 @@
         :style="{ width: '50vw' }"
         :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
       >
-        <div class="grid grid-cols-12">
+        <div class="grid grid-cols-12 gap-4">
           <div
             v-for="file in files"
             :key="file.id"
@@ -379,8 +378,7 @@
               <img
                 :src="file.url"
                 alt="product"
-                style="border: solid 1px var(--surface-400)"
-                class="rounded-border"
+                class="rounded-border border-surface border"
               >
               <div
                 class="flex justify-center"
