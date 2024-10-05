@@ -1,18 +1,14 @@
 <template>
   <div>
-    <div class="grid grid-cols-12 mb-4">
-      <div class="col-span-2 flex items-center">
-        <h2 class="text-2xl font-bold m-0">
-          {{ $t("Categories") }}
-        </h2>
-      </div>
-      <div class="col-span-10 flex flex-wrap justify-end">
-        <p-button
-          :label="$t('Add Category')"
-          class="ml-2"
-          @click="addCategory"
-        />
-      </div>
+    <div class="flex flex-row justify-between mb-3">
+      <h2 class="text-2xl font-bold flex items-end m-0">
+        {{ $t("Categories") }}
+      </h2>
+      <p-button
+        :label="$t('Add Category')"
+        class="ml-2"
+        @click="addCategory"
+      />
     </div>
     <ConfirmDialog />
     <Toast />
@@ -243,6 +239,7 @@ export default {
         icon: "fas fa-exclamation-triangle",
         rejectLabel: this.$t("Cancel"),
         acceptLabel: this.$t("Delete"),
+        rejectClass: "p-button-secondary",
         accept: () => {
           axios.delete(`${route("api.categories.destroy", category)}`)
             .then(() => {
