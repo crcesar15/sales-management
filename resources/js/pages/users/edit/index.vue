@@ -86,7 +86,7 @@
             {{ $t('Additional Information') }}
           </template>
           <template #content>
-            <div class="grid">
+            <div class="grid grid-cols-12 gap-4">
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
                   <label for="phone">{{ $t('Phone Number') }}</label>
@@ -100,7 +100,7 @@
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
                   <label for="date_of_birth">{{ $t('Date of Birth') }}</label>
-                  <Calendar
+                  <DatePicker
                     id="date_of_birth"
                     v-model="date_of_birth"
                   />
@@ -218,7 +218,7 @@ import Card from "primevue/card";
 import InputText from "primevue/inputtext";
 import Select from "primevue/select";
 import PButton from "primevue/button";
-import Calendar from "primevue/calendar";
+import DatePicker from "primevue/datepicker";
 import Password from "primevue/password";
 
 import { useVuelidate } from "@vuelidate/core";
@@ -246,7 +246,7 @@ export default {
     InputText,
     Select,
     PButton,
-    Calendar,
+    DatePicker,
     Password,
   },
   layout: AppLayout,

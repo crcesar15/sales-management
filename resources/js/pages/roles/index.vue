@@ -1,25 +1,22 @@
 <template>
   <div>
-    <div class="flex mb-2">
-      <div class="col-2 flex align-items-center">
-        <h2 class="text-2xl font-bold m-0">
-          {{ $t("Roles") }}
-        </h2>
-      </div>
-      <div class="col-10 flex justify-content-end">
-        <p-button
-          :label="$t('Add Role')"
-          class="ml-2"
-          @click="addRole"
-        />
-      </div>
+    <div class="flex justify-between mb-3">
+      <h2 class="text-2xl font-bold flex items-end m-0">
+        {{ $t("Roles") }}
+      </h2>
+      <p-button
+        :label="$t('Add Role')"
+        class="ml-2"
+        @click="addRole"
+      />
     </div>
     <ConfirmDialog />
-    <Toast />
     <Card>
       <template #content>
         <DataTable
           :value="roles"
+          resizable-columns
+
           lazy
           :total-records="pagination.total"
           :rows="pagination.rows"
@@ -28,7 +25,7 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          :row-class="rowClass"
+          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -36,20 +33,28 @@
             {{ $t('No roles found') }}
           </template>
           <template #header>
-            <div class="grid">
+            <div class="grid grid-cols-12">
               <div
                 class="
                   flex
+                  lg:col-span-3
+                  lg:col-start-10
+                  md:col-span-4
+                  md:col-start-9
                   col-12
                   md:justify-content-end
                   justify-content-center
                 "
               >
-                <IconField icon-position="left">
+                <IconField
+                  icon-position="left"
+                  class="w-full"
+                >
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
                     :placeholder="$t('Search')"
+                    class="w-full"
                   />
                 </IconField>
               </div>
@@ -58,22 +63,20 @@
           <Column
             field="name"
             :header="$t('Name')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="description"
             :header="$t('Description')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="users_count"
             :header="$t('Users')"
-            header-class="surface-100"
           >
             <template #body="row">
-              <Badge
+              <Tag
+                rounded
                 :value="row.data.users_count"
               />
             </template>
@@ -81,19 +84,17 @@
           <Column
             field="created_at"
             :header="$t('Created At')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="updated_at"
             :header="$t('Updated At')"
-            header-class="surface-100"
             sortable
           />
           <Column
             field="actions"
             :header="$t('Actions')"
-            header-class="surface-100"
+            :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
               <div class="flex justify-center">
@@ -130,13 +131,12 @@
 import DataTable from "primevue/datatable";
 import Card from "primevue/card";
 import Column from "primevue/column";
-import Toast from "primevue/toast";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
-import Badge from "primevue/badge";
+import Tag from "primevue/tag";
 import AppLayout from "../../layouts/admin.vue";
 import ItemEditor from "./ItemEditor.vue";
 
@@ -147,12 +147,11 @@ export default {
     PButton,
     ItemEditor,
     InputText,
-    Toast,
     ConfirmDialog,
     Card,
     IconField,
     InputIcon,
-    Badge,
+    Tag,
   },
   layout: AppLayout,
   data() {
@@ -238,11 +237,12 @@ export default {
     },
     deleteRole(id) {
       this.$confirm.require({
-        message: this.$t("Are you sure you want to delete this role unit?"),
+        message: this.$t("Are you sure you want to delete this role?"),
         header: this.$t("Confirm"),
         icon: "fas fa-exclamation-triangle",
         rejectLabel: this.$t("Cancel"),
         acceptLabel: this.$t("Delete"),
+        rejectClass: "p-button-secondary",
         accept: () => {
           axios.delete(`${route("api.roles.destroy", id)}`)
             .then(() => {
