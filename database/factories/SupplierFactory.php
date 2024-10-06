@@ -22,6 +22,7 @@ class SupplierFactory extends Factory
             'phone' => $this->faker->phoneNumber,
             'address' => $this->faker->address,
             'details' => $this->faker->sentence,
+            'status' => 'active',
         ];
     }
 }

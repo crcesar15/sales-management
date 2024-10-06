@@ -119,24 +119,24 @@
                 style="height: 55px;"
                 class="flex items-center"
               >
-                <span
+                <Tag
                   v-if="data.status === 'active'"
-                  class="p-tag p-tag-success"
+                  severity="success"
                 >
                   {{ $t('Active') }}
-                </span>
-                <span
+                </Tag>
+                <Tag
                   v-else-if="data.status === 'inactive'"
-                  class="p-tag p-tag-warning"
+                  severity="warn"
                 >
                   {{ $t('Inactive') }}
-                </span>
-                <span
+                </Tag>
+                <Tag
                   v-else
-                  class="p-tag p-tag-danger"
+                  severity="danger"
                 >
                   {{ $t('Archived') }}
-                </span>
+                </Tag>
               </div>
             </template>
           </Column>
@@ -200,6 +200,7 @@ import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
 import SelectButton from "primevue/selectbutton";
+import Tag from "primevue/tag";
 import AppLayout from "../../layouts/admin.vue";
 
 export default {
@@ -213,6 +214,7 @@ export default {
     IconField,
     InputIcon,
     SelectButton,
+    Tag,
   },
   layout: AppLayout,
   data() {

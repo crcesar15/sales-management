@@ -9,6 +9,15 @@ class Supplier extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'fullname',
+        'email',
+        'phone',
+        'address',
+        'details',
+        'status',
+    ];
+
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i',
         'updated_at' => 'datetime:Y-m-d H:i',

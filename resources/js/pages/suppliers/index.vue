@@ -7,7 +7,7 @@
       <PButton
         :label="$t('Add Supplier')"
         class="ml-2"
-        @click="() => {console.log('Add Supplier')}"
+        @click="$inertia.visit(route('suppliers.create'))"
       />
     </div>
     <ConfirmDialog />
@@ -33,6 +33,32 @@
           </template>
           <template #header>
             <div class="grid grid-cols-12">
+              <div
+                class="
+                  md:col-span-6
+                  col-span-12
+                  flex
+                  md:justify-start
+                  justify-center
+                "
+              >
+                <SelectButton
+                  v-model="status"
+                  :options="[{
+                    label: $t('All'),
+                    value: 'all',
+                  }, {
+                    label: $t('Active'),
+                    value: 'active',
+                  }, {
+                    label: $t('Inactive'),
+                    value: 'inactive',
+                  }]"
+                  option-label="label"
+                  option-value="value"
+                  aria-labelledby="basic"
+                />
+              </div>
               <div
                 class="
                   flex
@@ -66,6 +92,31 @@
             :header="$t('Full Name')"
             sortable
           />
+          <Column
+            field="status"
+            :header="$t('Status')"
+            sortable
+          >
+            <template #body="{ data }">
+              <div
+                style="height: 55px;"
+                class="flex items-center"
+              >
+                <Tag
+                  v-if="data.status === 'active'"
+                  severity="success"
+                >
+                  {{ $t('Active') }}
+                </Tag>
+                <Tag
+                  v-else-if="data.status === 'inactive'"
+                  severity="warn"
+                >
+                  {{ $t('Inactive') }}
+                </Tag>
+              </div>
+            </template>
+          </Column>
           <Column
             field="phone"
             :header="$t('Phone')"
@@ -121,6 +172,7 @@ import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
 import SelectButton from "primevue/selectbutton";
+import Tag from "primevue/tag";
 import AppLayout from "../../layouts/admin.vue";
 
 export default {
@@ -134,7 +186,7 @@ export default {
     InputIcon,
     ConfirmDialog,
     SelectButton,
-    AppLayout,
+    Tag,
   },
   layout: AppLayout,
   data() {
@@ -150,6 +202,7 @@ export default {
         filter: "",
       },
       loading: false,
+      status: "all",
     };
   },
   watch: {
@@ -158,6 +211,10 @@ export default {
         this.pagination.page = 1;
         this.fetchSuppliers();
       },
+    },
+    status() {
+      this.pagination.page = 1;
+      this.fetchSuppliers();
     },
   },
   mounted() {
@@ -179,7 +236,8 @@ export default {
 
       let url = `${route("api.suppliers")}?per_page=${this.pagination.rows}
         &page=${this.pagination.page}
-        &order_by=${this.pagination.sortField}`;
+        &order_by=${this.pagination.sortField}
+        &status=${this.status}`;
 
       if (this.pagination.sortOrder === -1) {
         url += "&order_direction=desc";
@@ -206,6 +264,36 @@ export default {
           });
           this.loading = false;
         });
+    },
+    deleteSupplier(id) {
+      this.$confirm.require({
+        message: this.$t("Are you sure you want to delete this supplier?"),
+        header: this.$t("Confirm"),
+        icon: "fas fa-exclamation-triangle",
+        rejectLabel: this.$t("Cancel"),
+        acceptLabel: this.$t("Delete"),
+        rejectClass: "p-button-secondary",
+        accept: () => {
+          axios.delete(route("api.suppliers.destroy", id))
+            .then(() => {
+              this.$toast.add({
+                severity: "success",
+                summary: "Success",
+                detail: this.$t("Supplier deleted successfully"),
+                life: 3000,
+              });
+              this.fetchSuppliers();
+            })
+            .catch((error) => {
+              this.$toast.add({
+                severity: "error",
+                summary: this.$t("Error"),
+                detail: error.response.data.message,
+                life: 3000,
+              });
+            });
+        },
+      });
     },
   },
 };
