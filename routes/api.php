@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\MeasureUnitsController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
 use App\Http\Controllers\Api\RolesController;
+use App\Http\Controllers\Api\SuppliersController;
 use App\Http\Controllers\Api\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -67,4 +68,11 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::put('/users/{id}', [UsersController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [UsersController::class, 'destroy'])->name('users.destroy');
     Route::put('/users/{id}/restore', [UsersController::class, 'restore'])->name('users.restore');
+
+    // Route for Suppliers
+    Route::get('/suppliers', [SuppliersController::class, 'index'])->name('suppliers');
+    Route::get('/suppliers/{id}', [SuppliersController::class, 'show'])->name('suppliers.show');
+    Route::post('/suppliers', [SuppliersController::class, 'store'])->name('suppliers.store');
+    Route::put('/suppliers/{id}', [SuppliersController::class, 'update'])->name('suppliers.update');
+    Route::delete('/suppliers/{id}', [SuppliersController::class, 'destroy'])->name('suppliers.destroy');
 });
