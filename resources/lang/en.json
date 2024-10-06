@@ -121,6 +121,9 @@
     "Phone": "Phone",
     "Are you sure you want to delete this supplier?": "Are you sure you want to delete this supplier?",
     "Supplier deleted successfully": "Supplier deleted successfully",
+    "Supplier has been created successfully": "Supplier has been created successfully",
+    "Configuration": "Configuration",
+    "Supplier has been updated successfully": "Supplier has been updated successfully",
     "validations": {
         "required": "This field is required",
         "requiredIf": "This field is required",

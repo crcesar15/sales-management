@@ -265,6 +265,9 @@ export default {
           this.loading = false;
         });
     },
+    editSupplier(id) {
+      this.$inertia.visit(route("suppliers.edit", id));
+    },
     deleteSupplier(id) {
       this.$confirm.require({
         message: this.$t("Are you sure you want to delete this supplier?"),

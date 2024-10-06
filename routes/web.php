@@ -69,4 +69,5 @@ Route::group(['middleware' => ['auth']], function () {
     // Suppliers Routes
     Route::get('/suppliers', [SuppliersController::class, 'index'])->name('suppliers');
     Route::get('/suppliers/create', [SuppliersController::class, 'create'])->name('suppliers.create');
+    Route::get('/suppliers/{supplier}/edit', [SuppliersController::class, 'edit'])->name('suppliers.edit');
 });
