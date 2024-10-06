@@ -1,5 +1,7 @@
 <script setup>
-import { onBeforeMount, ref, watch } from "vue";
+import {
+  onBeforeMount, ref, watch, onMounted,
+} from "vue";
 import { Link } from "@inertiajs/inertia-vue3";
 import { useLayout } from "./composables/layout";
 
@@ -35,6 +37,10 @@ onBeforeMount(() => {
   isActiveMenu.value = activeItem === itemKey.value || activeItem ? activeItem.startsWith(`${itemKey.value}-`) : false;
 });
 
+onMounted(() => {
+  isActiveMenu.value = window.location.href.includes(props.item.to);
+});
+
 watch(
   () => layoutState.activeMenuItem,
   (newVal) => {
@@ -56,13 +62,15 @@ function itemClick(event, item) {
     item.command({ originalEvent: event, item });
   }
 
-  const foundItemKey = item.items ? (isActiveMenu.value ? props.parentItemKey : itemKey) : itemKey.value;
-
-  setActiveMenuItem(foundItemKey);
-}
-
-function checkActiveRoute(item) {
-  return route.path === item.to;
+  if (item.items) {
+    if (isActiveMenu.value) {
+      setActiveMenuItem(props.parentItemKey);
+    } else {
+      setActiveMenuItem(itemKey.value);
+    }
+  } else {
+    setActiveMenuItem(itemKey.value);
+  }
 }
 </script>
 
@@ -80,7 +88,7 @@ function checkActiveRoute(item) {
       :class="item.class"
       :target="item.target"
       tabindex="0"
-      @click="itemClick($event, item, index)"
+      @click="itemClick($event, item)"
     >
       <i
         :class="item.icon"
@@ -94,10 +102,10 @@ function checkActiveRoute(item) {
     </a>
     <Link
       v-if="item.to && !item.items && item.visible !== false"
-      :class="[item.class, { 'active-route': checkActiveRoute(item) }]"
+      :class="[item.class, { 'active-route': isActiveMenu }]"
       tabindex="0"
       :href="route(item.to)"
-      @click="itemClick($event, item, index)"
+      @click="itemClick($event, item)"
     >
       <i
         :class="item.icon"
