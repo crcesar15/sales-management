@@ -25,6 +25,12 @@ class SuppliersController extends Controller
             );
         }
 
+        $status = $request->input('status', 'all');
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
         $order_by = $request->has('order_by')
             ? $order_by = $request->get('order_by')
             : 'name';

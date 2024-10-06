@@ -12,4 +12,9 @@ class SuppliersController extends Controller
     {
         return Inertia::render('suppliers/index');
     }
+
+    public function create()
+    {
+        return Inertia::render('suppliers/create/index');
+    }
 }

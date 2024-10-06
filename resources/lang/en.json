@@ -119,6 +119,8 @@
     "No suppliers found": "No suppliers found",
     "Full Name": "Full Name",
     "Phone": "Phone",
+    "Are you sure you want to delete this supplier?": "Are you sure you want to delete this supplier?",
+    "Supplier deleted successfully": "Supplier deleted successfully",
     "validations": {
         "required": "This field is required",
         "requiredIf": "This field is required",
