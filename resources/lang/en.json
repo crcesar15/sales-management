@@ -114,6 +114,11 @@
     "New Password": "New Password",
     "User has been created successfully": "User has been created successfully",
     "User has been updated successfully": "User has been updated successfully",
+    "Suppliers": "Suppliers",
+    "Add Supplier": "Add Supplier",
+    "No suppliers found": "No suppliers found",
+    "Full Name": "Full Name",
+    "Phone": "Phone",
     "validations": {
         "required": "This field is required",
         "requiredIf": "This field is required",

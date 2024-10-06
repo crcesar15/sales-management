@@ -105,7 +105,8 @@ export default {
             {
               label: "Suppliers",
               icon: "fa fa-truck-field",
-              to: "home",
+              to: "suppliers",
+              route: route("suppliers"),
             },
           ],
         },

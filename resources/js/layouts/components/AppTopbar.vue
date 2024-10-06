@@ -1,7 +1,7 @@
 <script setup>
 import { Link } from "@inertiajs/inertia-vue3";
 import { ref, watch } from "vue";
-import Dropdown from "primevue/dropdown";
+import Select from "primevue/select";
 import { useI18n } from "vue-i18n";
 import { useLayout } from "./composables/layout";
 import AppConfigurator from "./AppConfigurator.vue";
@@ -88,6 +88,15 @@ watch(selectedLanguage, (newVal) => {
             <i class="fa fa-user" />
             <span>Profile</span>
           </button>
+          <Select
+            id="topbarLanguage"
+            v-model="selectedLanguage"
+            :options="languages"
+            option-label="name"
+            option-value="code"
+            placeholder="Language"
+            class="w-full md:w-auto"
+          />
         </div>
       </div>
     </div>

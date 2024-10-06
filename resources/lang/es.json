@@ -114,6 +114,11 @@
     "New Password": "Nueva Contraseña",
     "User has been created successfully": "El usuario ha sido creado exitosamente",
     "User has been update successfully": "El usuario ha sido actualizado exitosamente",
+    "Suppliers": "Proveedores",
+    "Add Supplier": "Agregar Proveedor",
+    "No suppliers found": "No se encontraron proveedores",
+    "Full Name": "Nombre Completo",
+    "Phone": "Teléfono",
     "validations": {
         "required": "Este campo es requerido",
         "requiredIf": "Este campo es requerido",
