@@ -18,6 +18,8 @@ return new class extends Migration {
             $table->string('address')->nullable();
             $table->string('details')->nullable();
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
+            $table->json('additional_contacts')->nullable();
+            $table->json('meta')->nullable();
             $table->timestamps();
         });
     }

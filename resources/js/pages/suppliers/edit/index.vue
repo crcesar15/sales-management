@@ -9,7 +9,7 @@
           @click="$inertia.visit(route('suppliers'))"
         />
         <h4 class="ml-2">
-          {{ $t("Add Supplier") }}
+          {{ $t("Edit Supplier") }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
@@ -28,7 +28,7 @@
             <div class="grid grid-cols-12 gap-4">
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-2 mb-2">
-                  <label for="fullname">{{ $t("Fullname") }}</label>
+                  <label for="fullname">{{ $t("Full Name") }}</label>
                   <InputText
                     id="fullname"
                     v-model="fullname"
@@ -79,33 +79,137 @@
                 {{ v$.email.$errors[0].$message }}
               </small>
             </div>
+            <div class="flex flex-col gap-2 mb-2">
+              <label for="address">{{ $t("Address") }}</label>
+              <InputText
+                id="address"
+                v-model="address"
+                autocomplete="off"
+              />
+            </div>
+            <div class="flex flex-col gap-2 mb-2">
+              <label for="details">{{ $t("Details") }}</label>
+              <Textarea
+                id="details"
+                v-model="details"
+                rows="3"
+              />
+            </div>
           </template>
         </Card>
         <Card class="mb-4">
           <template #title>
-            {{ $t("Additional Information") }}
+            <div class="flex flex-row justify-between items-center">
+              <div>
+                {{ $t("Additional Contacts") }}
+              </div>
+              <div class="flex items-center">
+                <label
+                  for="hasAdditionalContacts"
+                  class="mr-3 text-primary"
+                  style="font-size: 14px;"
+                >
+                  {{ $t("This supplier has additional contacts?") }}
+                </label>
+                <ToggleSwitch
+                  v-model="hasAdditionalContacts"
+                  input-id="hasAdditionalContacts"
+                />
+              </div>
+            </div>
           </template>
           <template #content>
-            <div class="grid grid-cols-12 gap-4">
-              <div class="col-span-12">
-                <div class="flex flex-col gap-2 mb-2">
-                  <label for="address">{{ $t("Address") }}</label>
-                  <InputText
-                    id="address"
-                    v-model="address"
-                    autocomplete="off"
-                  />
+            <div
+              v-show="hasAdditionalContacts"
+              class="mt-3"
+            >
+              <div
+                v-for="(contact, index) in additionalContacts"
+                :key="index"
+                class="border-2 rounded-border border-surface p-2 mb-2"
+              >
+                <div>
+                  <div
+                    class="flex justify-end items-center"
+                    style="margin-bottom: -20px;"
+                  >
+                    <PButton
+                      v-tooltip.top="$t('Delete')"
+                      icon="fa fa-trash"
+                      size="small"
+                      text
+                      class="!p-3 !m-0 !w-[21px] !h-[21px]"
+                      @click="additionalContacts.splice(index, 1)"
+                    />
+                  </div>
+                </div>
+                <div class="grid grid-cols-12 gap-3">
+                  <div class="lg:col-span-4 md:col-span-6 col-span-12">
+                    <div class="flex flex-col gap-2 mb-2">
+                      <label for="fullname">{{ $t("Full Name") }}</label>
+                      <InputText
+                        v-model="contact.fullname"
+                        autocomplete="off"
+                        :class="{'p-invalid': v$.additionalContacts.$each.$response.$errors[index].fullname.length > 0}"
+                        @blur="v$.additionalContacts.$each.$response.$errors[index].fullname.$touch"
+                      />
+                      <small
+                        v-if="v$.additionalContacts.$each.$response.$errors[index].fullname.length > 0"
+                        class="text-red-400 dark:text-red-300"
+                      >
+                        {{ v$.additionalContacts.$each.$response.$errors[index].fullname[0].$message }}
+                      </small>
+                    </div>
+                  </div>
+                  <div class="lg:col-span-4 md:col-span-6 col-span-12">
+                    <div class="flex flex-col gap-2 mb-2">
+                      <label for="phone">{{ $t("Phone") }}</label>
+                      <InputText
+                        v-model="contact.phone"
+                        autocomplete="off"
+                        :class="{'p-invalid': v$.additionalContacts.$each.$response.$errors[index].phone.length > 0}"
+                        @blur="v$.additionalContacts.$each.$response.$errors[index].phone.$touch"
+                      />
+                      <small
+                        v-if="v$.additionalContacts.$each.$response.$errors[index].phone.length > 0"
+                        class="text-red-400 dark:text-red-300"
+                      >
+                        {{ v$.additionalContacts.$each.$response.$errors[index].phone[0].$message }}
+                      </small>
+                    </div>
+                  </div>
+                  <div class="lg:col-span-4 col-span-12">
+                    <div class="flex flex-col gap-2 mb-2">
+                      <label for="email">{{ $t("Email") }}</label>
+                      <InputText
+                        v-model="contact.email"
+                        autocomplete="off"
+                        :class="{'p-invalid': v$.additionalContacts.$each.$response.$errors[index].email.length > 0}"
+                        @blur="v$.additionalContacts.$each.$response.$errors[index].email.$touch"
+                      />
+                      <small
+                        v-if="v$.additionalContacts.$each.$response.$errors[index].email.length > 0"
+                        class="text-red-400 dark:text-red-300"
+                      >
+                        {{ v$.additionalContacts.$each.$response.$errors[index].email[0].$message }}
+                      </small>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="col-span-12">
-                <div class="flex flex-col gap-2 mb-2">
-                  <label for="details">{{ $t("Details") }}</label>
-                  <Textarea
-                    id="details"
-                    v-model="details"
-                    rows="3"
-                  />
-                </div>
+              <small
+                v-show="additionalContacts.length === 0"
+                class="text-red-400 dark:text-red-300"
+              >
+                {{ $t("You need to add at least one additional contact") }}
+              </small>
+              <div class="flex justify-end">
+                <PButton
+                  icon="fa fa-plus"
+                  text
+                  :label="$t('Add More Contacts')"
+                  @click="additionalContacts.push({ fullname: '', phone: '', email: '' })"
+                />
               </div>
             </div>
           </template>
@@ -143,12 +247,15 @@ import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 import Select from "primevue/select";
 import PButton from "primevue/button";
+import ToggleSwitch from "primevue/toggleswitch";
 
 import { useVuelidate } from "@vuelidate/core";
 import {
   required,
+  requiredIf,
   email,
   createI18nMessage,
+  helpers,
 } from "@vuelidate/validators";
 import axios from "axios";
 import AppLayout from "../../../layouts/admin.vue";
@@ -161,6 +268,7 @@ export default {
     Select,
     PButton,
     Textarea,
+    ToggleSwitch,
   },
   layout: AppLayout,
   props: {
@@ -182,6 +290,14 @@ export default {
       email: "",
       phone: "",
       status: "active",
+      hasAdditionalContacts: false,
+      additionalContacts: [
+        {
+          fullname: "",
+          phone: "",
+          email: "",
+        },
+      ],
     };
   },
   watch: {
@@ -193,6 +309,12 @@ export default {
         this.address = this.supplier.address;
         this.details = this.supplier.details;
         this.status = this.supplier.status;
+
+        this.hasAdditionalContacts = this.supplier.additional_contacts?.length > 0;
+
+        if (this.hasAdditionalContacts) {
+          this.additionalContacts = this.supplier.additional_contacts;
+        }
       },
       immediate: true,
     },
@@ -215,6 +337,20 @@ export default {
       email: {
         email: withI18nMessage(email),
       },
+      additionalContacts: {
+        required: withI18nMessage(requiredIf(() => this.hasAdditionalContacts)),
+        $each: helpers.forEach({
+          fullname: {
+            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+          },
+          phone: {
+            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+          },
+          email: {
+            email: withI18nMessage(email, { messagePath: () => ("validations.email") }),
+          },
+        }),
+      },
     };
   },
   methods: {
@@ -229,6 +365,12 @@ export default {
           details: this.details,
           status: this.status,
         };
+
+        if (this.hasAdditionalContacts) {
+          supplier.additional_contacts = this.additionalContacts;
+        } else {
+          supplier.additional_contacts = null;
+        }
 
         axios.put(route("api.suppliers.update", this.supplier.id), supplier).then(() => {
           this.$toast.add({

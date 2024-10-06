@@ -16,9 +16,11 @@ class Supplier extends Model
         'address',
         'details',
         'status',
+        'additional_contacts',
     ];
 
     protected $casts = [
+        'additional_contacts' => 'array',
         'created_at' => 'datetime:Y-m-d H:i',
         'updated_at' => 'datetime:Y-m-d H:i',
     ];
