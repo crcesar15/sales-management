@@ -6,6 +6,8 @@
       </h2>
       <p-button
         :label="$t('Add Product')"
+        style="text-transform: uppercase"
+        icon="fa fa-add"
         class="ml-2"
         @click="$inertia.visit(route('products.create'))"
       />
@@ -38,6 +40,7 @@
               <div class="xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12 flex md:justify-start justify-center">
                 <SelectButton
                   v-model="status"
+                  :allow-empty="false"
                   :options="[{
                     label: $t('All'),
                     value: 'all',

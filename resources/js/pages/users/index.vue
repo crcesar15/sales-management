@@ -7,6 +7,8 @@
       <p-button
         :label="$t('Add User')"
         class="ml-2"
+        style="text-transform: uppercase"
+        icon="fa fa-add"
         @click="$inertia.visit(route('users.create'))"
       />
     </div>
@@ -44,6 +46,7 @@
               >
                 <SelectButton
                   v-model="status"
+                  :allow-empty="false"
                   :options="[{
                     label: $t('All'),
                     value: 'all',
@@ -71,7 +74,7 @@
                   lg:col-start-9
                   md:col-span-6
                   md:col-start-7
-                  col-12
+                  col-span-12
                   md:justify-content-end
                   justify-content-center
                 "

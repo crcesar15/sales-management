@@ -1,14 +1,14 @@
 <template>
   <div>
-    <div class="flex justify-between mb-2">
-      <div class="flex ">
+    <div class="flex justify-between mb-3">
+      <div class="flex">
         <PButton
           icon="fa fa-arrow-left"
           text
           severity="secondary"
           @click="$inertia.visit(route('products'))"
         />
-        <h4 class="ml-2">
+        <h4 class="text-2xl font-bold flex items-center m-0">
           {{ $t('Edit Product') }}
         </h4>
       </div>

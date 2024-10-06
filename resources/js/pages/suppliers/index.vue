@@ -6,6 +6,8 @@
       </h2>
       <PButton
         :label="$t('Add Supplier')"
+        style="text-transform: uppercase"
+        icon="fa fa-add"
         class="ml-2"
         @click="$inertia.visit(route('suppliers.create'))"
       />
@@ -44,6 +46,7 @@
               >
                 <SelectButton
                   v-model="status"
+                  :allow-empty="false"
                   :options="[{
                     label: $t('All'),
                     value: 'all',
@@ -68,7 +71,7 @@
                   lg:col-start-9
                   md:col-span-6
                   md:col-start-7
-                  col-12
+                  col-span-12
                   md:justify-content-end
                   justify-content-center
                 "

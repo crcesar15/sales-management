@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="flex justify-between mb-2">
+    <div class="flex justify-between mb-3">
       <div class="flex">
         <PButton
           icon="fa fa-arrow-left"
@@ -8,7 +8,7 @@
           severity="secondary"
           @click="$inertia.visit(route('users'))"
         />
-        <h4 class="ml-2">
+        <h4 class="text-2xl font-bold flex items-center m-0">
           {{ $t('Edit User') }}
         </h4>
       </div>
