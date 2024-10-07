@@ -190,14 +190,14 @@
                   icon="fa-solid fa-eye"
                   text
                   size="sm"
-                  @click="editProduct(data.id)"
+                  @click="viewSuppliers(data.id)"
                 />
                 <p-button
                   v-tooltip.top="$t('Edit Suppliers')"
                   icon="fa fa-edit"
                   text
                   size="sm"
-                  @click="editProduct(data.id)"
+                  @click="editSuppliers(data.id)"
                 />
               </span>
             </template>
@@ -347,6 +347,9 @@ export default {
       this.pagination.sortField = event.sortField;
       this.pagination.sortOrder = event.sortOrder;
       this.fetchVariants();
+    },
+    editSuppliers(id) {
+      this.$inertia.visit(route("catalog.edit", id));
     },
   },
 };
