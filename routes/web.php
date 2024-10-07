@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\UsersController;
@@ -70,4 +71,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/suppliers', [SuppliersController::class, 'index'])->name('suppliers');
     Route::get('/suppliers/create', [SuppliersController::class, 'create'])->name('suppliers.create');
     Route::get('/suppliers/{supplier}/edit', [SuppliersController::class, 'edit'])->name('suppliers.edit');
+
+    // Catalog Routes
+    Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 });

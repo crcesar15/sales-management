@@ -95,7 +95,8 @@ export default {
             {
               label: "Catalog",
               icon: "fa fa-tags",
-              to: "home",
+              to: "catalog",
+              route: route("catalog"),
             },
             {
               label: "Orders",
