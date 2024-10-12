@@ -63,7 +63,7 @@
                 />
               </div>
               <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
-                <label for="identifier">{{ $t('Identifier') }}</label>
+                <label for="identifier">{{ $t('Bar Code or Identifier') }}</label>
                 <InputText
                   id="identifier"
                   :value="variant.identifier"
@@ -95,24 +95,29 @@
               table-class="border-surface border"
               resizable-columns
             >
+              <template #empty>
+                <p class="text-red-400 dark:text-red-300">
+                  {{ $t('At least one provided must be added') }}
+                </p>
+              </template>
               <Column
                 field="supplier"
                 :header="$t('Name')"
               >
                 <template #body="slotProps">
                   <div class="flex flex-col">
-                    <AutoComplete
+                    <Select
                       v-model="slotProps.data.supplier"
-                      dropdown
                       class="w-full"
-                      force-selection
-                      :suggestions="suppliers"
+                      :options="suppliers"
                       :placeholder="$t('Supplier')"
                       option-label="fullname"
+                      option-value="id"
+                      filter
                       :loading="slotProps.data.suppliersLoading"
                       :fluid="true"
                       :invalid="v$.catalog.$each.$response.$errors[slotProps.index].supplier.length > 0"
-                      @complete="searchSuppliers"
+                      @filter="searchSuppliers"
                     />
                     <small
                       v-if="v$.catalog.$each.$response.$errors[slotProps.index].supplier.length > 0"
@@ -147,7 +152,7 @@
               </Column>
               <Column
                 field="payment_terms"
-                :header="$t('Payment Terms')"
+                :header="$t('Payment Term')"
               >
                 <template #body="slotProps">
                   <div class="flex flex-col">
@@ -157,7 +162,7 @@
                       option-label="label"
                       option-value="value"
                       :options="[
-                        { label: $t('Debit'), value: 'debit' },
+                        { label: $t('Cash'), value: 'debit' },
                         { label: $t('Credit'), value: 'credit' },
                         { label: $t('Both'), value: 'both' },
                       ]"
@@ -187,10 +192,12 @@
               <Column
                 field="actions"
                 :header="$t('Actions')"
+                header-class="flex justify-center"
+                class="flex justify-center"
               >
                 <template #body="slotProps">
                   <PButton
-                    v-tooltip.top="$t('View Supplier')"
+                    v-tooltip.top="$t('View')"
                     icon="fa-solid fa-eye"
                     text
                     size="small"
@@ -198,7 +205,7 @@
                     @click="viewSupplier(slotProps.data)"
                   />
                   <PButton
-                    v-tooltip.top="$t('Remove Supplier')"
+                    v-tooltip.top="$t('Delete')"
                     icon="fa fa-trash"
                     text
                     size="small"
@@ -218,16 +225,14 @@
 import Card from "primevue/card";
 import PButton from "primevue/button";
 import InputText from "primevue/inputtext";
-import { Inertia } from "@inertiajs/inertia";
 import Textarea from "primevue/textarea";
 import Select from "primevue/select";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import InputNumber from "primevue/inputnumber";
-import AutoComplete from "primevue/autocomplete";
 import { useVuelidate } from "@vuelidate/core";
 import {
-  helpers, required, minLength, minValue, requiredIf,
+  helpers, required, minValue,
   createI18nMessage,
 } from "@vuelidate/validators";
 import AppLayout from "../../../layouts/admin.vue";
@@ -243,12 +248,19 @@ export default {
     DataTable,
     Column,
     InputNumber,
-    AutoComplete,
   },
   layout: AppLayout,
   props: {
     variant: {
       type: Object,
+      required: true,
+    },
+    savedCatalog: {
+      type: Array,
+      required: true,
+    },
+    savedSuppliers: {
+      type: Array,
       required: true,
     },
   },
@@ -268,6 +280,17 @@ export default {
       }],
       suppliers: [],
     };
+  },
+  mounted() {
+    this.catalog = this.savedCatalog.map((supplier) => ({
+      suppliersLoading: false,
+      supplier: supplier.id,
+      price: supplier.pivot.price,
+      payment_terms: supplier.pivot.payment_terms,
+      details: supplier.pivot.details,
+    }));
+
+    this.suppliers = this.savedSuppliers;
   },
   validations() {
     const { t } = i18n.global;
@@ -306,7 +329,7 @@ export default {
             page: 1,
             order_by: "fullname",
             order_direction: "asc",
-            filter: event.query.toLowerCase(),
+            filter: event.value.toLowerCase(),
           },
         })
         .then((response) => {
@@ -327,20 +350,60 @@ export default {
     submit() {
       this.v$.$touch();
 
-      if (!this.v$.$error) {
-        return 1;
-      }
-
-      const data = {
-        catalog: this.catalog.map((item) => ({
-          supplier_id: item.supplier.id,
+      if (!this.v$.$invalid) {
+        const selectedSuppliers = this.catalog.map((item) => ({
+          id: item.supplier,
           price: item.price,
           payment_terms: item.payment_terms,
           details: item.details,
-        })),
-      };
+        }));
 
-      Inertia.post(route("catalog.suppliers.update", this.variant.id), data);
+        // check if any of the selected suppliers is duplicated
+        const duplicates = selectedSuppliers.filter((supplier, index, self) => (
+          index !== self.findIndex((t) => (
+            t.id === supplier.id
+          ))
+        ));
+
+        if (duplicates.length > 0) {
+          this.$toast.add({
+            severity: "error",
+            summary: this.$t("Error"),
+            detail: this.$t("You have selected the same supplier more than once"),
+            life: 3000,
+          });
+
+          return;
+        }
+
+        axios.put(
+          route("api.variants.suppliers.update", this.variant.id),
+          { suppliers: selectedSuppliers },
+        )
+          .then((response) => {
+            this.$toast.add({
+              severity: "success",
+              summary: this.$t("Success"),
+              detail: response.data.message,
+              life: 3000,
+            });
+          })
+          .catch((error) => {
+            this.$toast.add({
+              severity: "error",
+              summary: this.$t("Error"),
+              detail: error.response.data.message,
+              life: 3000,
+            });
+          });
+      } else {
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("Error"),
+          detail: this.$t("Please review the errors in the form"),
+          life: 3000,
+        });
+      }
     },
     addSupplier() {
       this.catalog.push({

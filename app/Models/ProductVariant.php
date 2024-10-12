@@ -47,4 +47,10 @@ class ProductVariant extends Model
 
         return $formattedMedia;
     }
+
+    public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class, 'catalog', 'product_variant_id', 'supplier_id')
+            ->withPivot('price', 'payment_terms', 'details');
+    }
 }

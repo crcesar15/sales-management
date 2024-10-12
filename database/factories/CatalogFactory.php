@@ -18,6 +18,8 @@ class CatalogFactory extends Factory
     {
         return [
             'price' => $this->faker->randomFloat(2, 1, 1000),
+            'payment_terms' => $this->faker->randomElement(['debit', 'credit']),
+            'details' => $this->faker->text(100),
         ];
     }
 }

@@ -195,4 +195,36 @@ class VariantsController extends Controller
             return response()->json(['message' => 'Product not found'], 404);
         }
     }
+
+    // Get suppliers
+    public function getSuppliers($id)
+    {
+        $variant = ProductVariant::find($id);
+
+        $suppliers = $variant->suppliers;
+
+        return response()->json(['data' => $suppliers], 200);
+    }
+
+    // Update variant supplier
+    public function updateSuppliers(Request $request, $id)
+    {
+        $variant = ProductVariant::find($id);
+
+        $suppliers = $request->input('suppliers', []);
+
+        $variant->suppliers()->detach();
+
+        if (count($suppliers) > 0) {
+            foreach ($suppliers as $supplier) {
+                $variant->suppliers()->attach($supplier['id'], [
+                    'price' => $supplier['price'],
+                    'payment_terms' => $supplier['payment_terms'],
+                    'details' => $supplier['details'],
+                ]);
+            }
+        }
+
+        return response()->json(['data' => $variant], 200);
+    }
 }
