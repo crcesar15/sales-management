@@ -2,7 +2,7 @@
   <div>
     <div class="flex justify-between mb-3">
       <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ $t("Catalog") }}
+        {{ $t("Product Catalog") }}
       </h2>
     </div>
     <ConfirmDialog />

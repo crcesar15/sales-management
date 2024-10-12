@@ -137,6 +137,9 @@
     "Both": "Ambos",
     "You have selected the same supplier more than once": "Has seleccionado el mismo proveedor más de una vez",
     "At least one provided must be added": "Al menos un proveedor debe ser agregado",
+    "View Suppliers": "Ver Proveedores",
+    "Supplier": "Proveedor",
+    "Product Catalog": "Catálogo de Productos",
     "validations": {
         "required": "Este campo es requerido",
         "requiredIf": "Este campo es requerido",

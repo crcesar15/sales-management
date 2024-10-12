@@ -93,7 +93,7 @@ export default {
           type: "multiple",
           items: [
             {
-              label: "Catalog",
+              label: "Product Catalog",
               icon: "fa fa-tags",
               to: "catalog",
               route: route("catalog"),

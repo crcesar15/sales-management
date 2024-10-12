@@ -137,6 +137,9 @@
     "Both": "Both",
     "You have selected the same supplier more than once": "You have selected the same supplier more than once",
     "At least one provided must be added": "At least one provided must be added",
+    "View Suppliers": "View Suppliers",
+    "Supplier": "Supplier",
+    "Product Catalog": "Product Catalog",
     "validations": {
         "required": "This field is required",
         "requiredIf": "This field is required",
