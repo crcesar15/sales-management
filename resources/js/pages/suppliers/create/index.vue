@@ -285,13 +285,7 @@ export default {
       phone: "",
       status: "active",
       hasAdditionalContacts: false,
-      additionalContacts: [
-        {
-          fullname: "",
-          phone: "",
-          email: "",
-        },
-      ],
+      additionalContacts: [],
     };
   },
   validations() {
