@@ -81,7 +81,7 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::get('variants', [VariantsController::class, 'index'])->name('variants');
 
     //Routes for Variant Suppliers
-    Route::get('variants/{id}/suppliers', [VariantsController::class, 'suppliers'])->name('variants.suppliers');
+    Route::get('variants/{id}/suppliers', [VariantsController::class, 'getSuppliers'])->name('variants.suppliers');
     Route::put('variants/{id}/suppliers', [VariantsController::class, 'updateSuppliers'])
         ->name('variants.suppliers.update');
 });

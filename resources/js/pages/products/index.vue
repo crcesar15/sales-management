@@ -119,7 +119,7 @@
                 >
                 <div
                   v-else
-                  class="bg-gray-200 rounded-border justify-center items-center flex"
+                  class="bg-surface-50 dark:bg-surface-950 rounded-border justify-center items-center flex"
                   style="height: 55px; width: 55px;"
                 >
                   <p style="font-size: 18px; font-weight: bold;">

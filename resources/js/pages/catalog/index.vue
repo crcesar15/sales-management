@@ -31,6 +31,7 @@
               <div
                 class="
                   flex
+                  xl:col-span-3
                   lg:col-span-4
                   md:col-span-6
                   col-span-12
@@ -63,36 +64,14 @@
               <div
                 class="
                   flex
-                  flex-wrap
+                  xl:col-span-3
+                  xl:col-start-10
                   lg:col-span-4
-                  lg:col-start-5
+                  lg:col-start-9
                   md:col-span-6
                   md:col-start-7
                   col-span-12
-                  lg:content-start
-                  md:content-end
-                  content-center"
-              >
-                <AutoComplete
-                  v-model="selectedSupplier"
-                  dropdown
-                  class="mx-8 mt-2 md:mx-0 lg:mx-8 w-full"
-                  force-selection
-                  :suggestions="suppliers"
-                  :placeholder="$t('Supplier')"
-                  option-label="fullname"
-                  :loading="suppliersLoading"
-                  :fluid="true"
-                  @complete="searchSuppliers"
-                />
-              </div>
-              <div
-                class="
-                  flex
-                  lg:col-span-4
-                  lg:col-start-9
-                  md:col-span-12
-                  col-span-12
+                  md:justify-end
                   justify-center
                 "
               >
@@ -107,6 +86,11 @@
                     class="w-full"
                   />
                 </IconField>
+                <PButton
+                  icon="fa-solid fa-filter"
+                  class="mt-2 ml-2"
+                  @click="toggleFilter"
+                />
               </div>
             </div>
           </template>
@@ -132,7 +116,7 @@
                 >
                 <div
                   v-else
-                  class="bg-gray-200 rounded-border justify-center items-center flex"
+                  class="bg-surface-50 dark:bg-surface-950 rounded-border justify-center items-center flex"
                   style="height: 55px; width: 55px;"
                 >
                   <p style="font-size: 18px; font-weight: bold;">
@@ -205,6 +189,126 @@
         </DataTable>
       </template>
     </Card>
+    <Popover ref="filters">
+      <div class="bg-surface-50 dark:bg-surface-950 p-4 border-rounded">
+        <label>
+          {{ $t("Filter By Supplier") }}
+        </label>
+        <AutoComplete
+          v-model="selectedSupplier"
+          dropdown
+          class="w-full mt-2"
+          force-selection
+          :suggestions="suppliers"
+          :placeholder="$t('Supplier')"
+          option-label="fullname"
+          :loading="suppliersLoading"
+          @complete="searchSuppliers"
+        />
+      </div>
+    </Popover>
+    <Dialog
+      v-model:visible="showSuppliers"
+      modal
+      :header="$t('Suppliers')"
+      :style="{ width: '50rem' }"
+      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    >
+      <DataTable
+        :value="productSuppliers"
+        resizable-columns
+        :rows="10"
+        table-class="border border-surface"
+      >
+        <template #empty>
+          <div class="flex w-full justify-between">
+            <p class="m-0 flex items-center">
+              {{ $t("No suppliers found") }}
+            </p>
+            <PButton
+              icon="fa fa-plus"
+              :label="$t('Add Supplier')"
+
+              @click="editSuppliers(selectedVariantId)"
+            />
+          </div>
+        </template>
+        <Column
+          field="fullname"
+          :header="$t('Supplier')"
+        />
+        <Column
+          field="email"
+          :header="$t('Email')"
+        />
+        <Column
+          field="phone"
+          :header="$t('Phone')"
+        />
+        <Column
+          field="price"
+          :header="$t('Price')"
+        />
+        <Column
+          field="payment_terms"
+          :header="$t('Payment Term')"
+        >
+          <template #body="{ data }">
+            <span v-if="data.payment_terms === 'debit'">
+              {{ $t('Cash') }}
+            </span>
+            <span v-else-if="data.payment_terms === 'credit'">
+              {{ $t('Credit') }}
+            </span>
+          </template>
+        </Column>
+        <Column
+          field="status"
+          :header="$t('Status')"
+          header-class="flex justify-center"
+          class="flex justify-center"
+        >
+          <template #body="{ data }">
+            <div
+              style="height: 55px;"
+              class="flex items-center"
+            >
+              <Tag
+                v-if="data.status === 'active'"
+                severity="success"
+                :value="$t('Active')"
+              />
+              <Tag
+                v-else-if="data.status === 'inactive'"
+                severity="warn"
+                :value="$t('Inactive')"
+              />
+              <Tag
+                v-else
+                severity="danger"
+                :value="$t('Archived')"
+              />
+            </div>
+          </template>
+        </Column>
+        <Column
+          :header="$t('Actions')"
+          :pt="{columnHeaderContent: 'justify-center'}"
+        >
+          <template #body="{ data }">
+            <span class="p-buttonset flex justify-center">
+              <p-button
+                v-tooltip.top="$t('Edit')"
+                icon="fa fa-edit"
+                text
+                size="sm"
+                @click="$inertia.visit(route('suppliers.edit', {supplier: data.id}))"
+              />
+            </span>
+          </template>
+        </Column>
+      </DataTable>
+    </Dialog>
   </div>
 </template>
 <script>
@@ -218,6 +322,8 @@ import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
 import SelectButton from "primevue/selectbutton";
 import AutoComplete from "primevue/autocomplete";
+import Popover from "primevue/popover";
+import Dialog from "primevue/dialog";
 import Tag from "primevue/tag";
 import AppLayout from "../../layouts/admin.vue";
 
@@ -234,6 +340,8 @@ export default {
     SelectButton,
     Tag,
     AutoComplete,
+    Popover,
+    Dialog,
   },
   layout: AppLayout,
   data() {
@@ -251,8 +359,11 @@ export default {
       loading: false,
       status: "all",
       selectedSupplier: null,
+      selectedVariantId: null,
       suppliers: [],
       suppliersLoading: false,
+      showSuppliers: false,
+      productSuppliers: [],
     };
   },
   watch: {
@@ -350,6 +461,35 @@ export default {
     },
     editSuppliers(id) {
       this.$inertia.visit(route("catalog.edit", id));
+    },
+    toggleFilter(event) {
+      this.$refs.filters.toggle(event);
+    },
+    viewSuppliers(id) {
+      this.selectedVariantId = id;
+      this.showSuppliers = true;
+      this.productSuppliers = [];
+
+      axios.get(route("api.variants.suppliers", id))
+        .then((response) => {
+          this.productSuppliers = response.data.data.map((supplier) => ({
+            id: supplier.id,
+            fullname: supplier.fullname,
+            email: supplier.email,
+            phone: supplier.phone,
+            price: supplier.pivot.price,
+            payment_terms: supplier.pivot.payment_terms,
+            status: supplier.status,
+          }));
+        })
+        .catch((error) => {
+          this.$toast.add({
+            severity: "error",
+            summary: this.$t("Error"),
+            detail: error.response.data.message,
+            life: 3000,
+          });
+        });
     },
   },
 };

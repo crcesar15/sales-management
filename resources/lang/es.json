@@ -140,6 +140,8 @@
     "View Suppliers": "Ver Proveedores",
     "Supplier": "Proveedor",
     "Product Catalog": "Catálogo de Productos",
+    "Filter By Supplier": "Filtrar por Proveedor",
+    "No products found": "No se encontraron productos",
     "validations": {
         "required": "Este campo es requerido",
         "requiredIf": "Este campo es requerido",
