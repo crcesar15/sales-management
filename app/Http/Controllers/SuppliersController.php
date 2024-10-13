@@ -24,4 +24,11 @@ class SuppliersController extends Controller
 
         return Inertia::render('suppliers/edit/index', ['supplier' => $supplier]);
     }
+
+    public function products($id)
+    {
+        $supplier = Supplier::find($id);
+
+        return Inertia::render('suppliers/products/index', ['supplier' => $supplier]);
+    }
 }

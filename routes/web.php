@@ -71,6 +71,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/suppliers', [SuppliersController::class, 'index'])->name('suppliers');
     Route::get('/suppliers/create', [SuppliersController::class, 'create'])->name('suppliers.create');
     Route::get('/suppliers/{supplier}/edit', [SuppliersController::class, 'edit'])->name('suppliers.edit');
+    Route::get('/suppliers/{supplier}/products', [SuppliersController::class, 'products'])->name('suppliers.products');
 
     // Catalog Routes
     Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');

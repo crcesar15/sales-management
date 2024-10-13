@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 
@@ -90,5 +92,55 @@ class SuppliersController extends Controller
         } else {
             return response()->json(['message' => 'Role not found'], 404);
         }
+    }
+
+    public function products(Request $request, $id)
+    {
+        $query = ProductVariant::query();
+
+        $query->with(['product', 'suppliers']);
+
+        // Filter by supplier id
+        $query->whereHas('suppliers', function ($query) use ($id) {
+            $query->where('supplier_id', $id);
+        });
+
+        $filter = $request->input('filter', '');
+        $filter_by = $request->input('filter_by', 'name');
+
+        if (!empty($filter)) {
+            $filter = '%' . $filter . '%';
+
+            $query->where(
+                function ($query) use ($filter, $filter_by) {
+                    $query->where($filter_by, 'like', $filter);
+
+                    $query->orWhereHas('product', function ($query) use ($filter, $filter_by) {
+                        $query->where($filter_by, 'like', $filter);
+                    });
+                }
+            );
+        }
+
+        $status = $request->input('status', 'all');
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        $order_by = $request->has('order_by')
+            ? $order_by = $request->get('order_by')
+            : 'name';
+
+        $order_direction = $request->has('order_direction')
+            ? $request->get('order_direction')
+            : 'ASC';
+
+        $response = $query->orderBy(
+            $request->input('order_by', $order_by),
+            $request->input('order_direction', $order_direction)
+        )->paginate($request->input('per_page', 10));
+
+        return new ApiCollection($response);
     }
 }

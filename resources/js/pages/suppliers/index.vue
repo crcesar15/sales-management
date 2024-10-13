@@ -143,6 +143,13 @@
             <template #body="row">
               <div class="flex justify-center">
                 <p-button
+                  v-tooltip.top="$t('Products')"
+                  icon="fa fa-table-list"
+                  text
+                  size="sm"
+                  @click="showProducts(row.data.id)"
+                />
+                <p-button
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
@@ -270,6 +277,9 @@ export default {
     },
     editSupplier(id) {
       this.$inertia.visit(route("suppliers.edit", id));
+    },
+    showProducts(id) {
+      this.$inertia.visit(route("suppliers.products", id));
     },
     deleteSupplier(id) {
       this.$confirm.require({
