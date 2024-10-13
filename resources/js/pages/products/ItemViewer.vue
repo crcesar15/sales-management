@@ -51,7 +51,7 @@
           <div v-else>
             <!-- not found div -->
             <div
-              class="flex flex-wrap justify-center content-center text-primary shadow-lg rounded-border"
+              class="bg-surface-50 dark:bg-surface-950 flex flex-wrap justify-center content-center text-primary shadow-lg rounded-border"
               style="height: 250px; width: 250px;"
             >
               <p>
@@ -60,7 +60,7 @@
             </div>
           </div>
         </div>
-        <div class="bg-surface-100 rounded-border grid grid-cols-12 p-8 w-full">
+        <div class="bg-surface-50 dark:bg-surface-950 rounded-border grid grid-cols-12 p-8 w-full">
           <div class="md:col-span-6 col-span-12 pt-0 pb-0">
             <p>
               <strong>

@@ -194,16 +194,17 @@
         <label>
           {{ $t("Filter By Supplier") }}
         </label>
-        <AutoComplete
+        <Select
           v-model="selectedSupplier"
-          dropdown
           class="w-full mt-2"
-          force-selection
-          :suggestions="suppliers"
+          :options="suppliers"
           :placeholder="$t('Supplier')"
           option-label="fullname"
+          option-value="id"
+          filter
+          show-clear
           :loading="suppliersLoading"
-          @complete="searchSuppliers"
+          @filter="searchSuppliers"
         />
       </div>
     </Popover>
@@ -321,7 +322,7 @@ import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
 import SelectButton from "primevue/selectbutton";
-import AutoComplete from "primevue/autocomplete";
+import Select from "primevue/select";
 import Popover from "primevue/popover";
 import Dialog from "primevue/dialog";
 import Tag from "primevue/tag";
@@ -339,7 +340,7 @@ export default {
     ConfirmDialog,
     SelectButton,
     Tag,
-    AutoComplete,
+    Select,
     Popover,
     Dialog,
   },
@@ -374,13 +375,17 @@ export default {
       },
     },
     status() {
-      this.expandedRows = [];
+      this.pagination.page = 1;
+      this.fetchVariants();
+    },
+    selectedSupplier() {
       this.pagination.page = 1;
       this.fetchVariants();
     },
   },
   mounted() {
     this.fetchVariants();
+    this.searchSuppliers();
   },
   methods: {
     fetchVariants() {
@@ -391,11 +396,15 @@ export default {
         page: this.pagination.page,
         sortField: this.pagination.sortField,
         status: this.status,
-        includes: "product",
+        includes: "product,suppliers",
       };
 
       if (this.pagination.filter) {
         params.filter = this.pagination.filter;
+      }
+
+      if (this.selectedSupplier) {
+        params.supplier = this.selectedSupplier;
       }
 
       if (this.pagination.sortOrder === -1) {
@@ -421,19 +430,24 @@ export default {
           this.loading = false;
         });
     },
-    searchSuppliers(event) {
+    searchSuppliers(event = null) {
       this.suppliersLoading = true;
 
+      const body = {
+        params: {
+          per_page: 10,
+          page: 1,
+          order_by: "fullname",
+          order_direction: "asc",
+        },
+      };
+
+      if (event) {
+        body.params.filter = event.value.toLowerCase();
+      }
+
       axios
-        .get(route("api.suppliers"), {
-          params: {
-            per_page: 10,
-            page: 1,
-            order_by: "fullname",
-            order_direction: "asc",
-            filter: event.query.toLowerCase(),
-          },
-        })
+        .get(route("api.suppliers"), body)
         .then((response) => {
           this.suppliers = response.data.data;
         })

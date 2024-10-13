@@ -197,14 +197,6 @@
               >
                 <template #body="slotProps">
                   <PButton
-                    v-tooltip.top="$t('View')"
-                    icon="fa-solid fa-eye"
-                    text
-                    size="small"
-                    :disabled="!slotProps.data.supplier"
-                    @click="viewSupplier(slotProps.data)"
-                  />
-                  <PButton
                     v-tooltip.top="$t('Delete')"
                     icon="fa fa-trash"
                     text
@@ -380,13 +372,15 @@ export default {
           route("api.variants.suppliers.update", this.variant.id),
           { suppliers: selectedSuppliers },
         )
-          .then((response) => {
+          .then(() => {
             this.$toast.add({
               severity: "success",
               summary: this.$t("Success"),
-              detail: response.data.message,
+              detail: this.$t("Suppliers updated successfully"),
               life: 3000,
             });
+
+            this.$inertia.visit(route("catalog"));
           })
           .catch((error) => {
             this.$toast.add({

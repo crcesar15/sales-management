@@ -142,6 +142,7 @@
     "Product Catalog": "Catálogo de Productos",
     "Filter By Supplier": "Filtrar por Proveedor",
     "No products found": "No se encontraron productos",
+    "Suppliers updated successfully": "Proveedores actualizados exitosamente",
     "validations": {
         "required": "Este campo es requerido",
         "requiredIf": "Este campo es requerido",

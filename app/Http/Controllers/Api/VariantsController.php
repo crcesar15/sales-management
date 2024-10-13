@@ -21,19 +21,28 @@ class VariantsController extends Controller
             $query->with(explode(',', $includes));
         }
 
+        if ($request->has('supplier')) {
+            // filter products with at least one supplier
+            $query->whereHas('suppliers', function ($query) use ($request) {
+                $query->where('suppliers.id', '=', $request->get('supplier'));
+            });
+        }
+
         $filter = $request->input('filter', '');
 
         if (!empty($filter)) {
             $filter_by = $request->input('filter_by', 'name');
 
             $filter = '%' . $filter . '%';
-            $query->where($filter_by, 'like', $filter);
+            $query->where(function ($query) use ($filter, $filter_by, $includes) {
+                $query->where($filter_by, 'like', $filter);
 
-            if (strpos($includes, 'product') !== false) {
-                $query->orWhereHas('product', function ($query) use ($filter, $filter_by) {
-                    $query->where($filter_by, 'like', $filter);
-                });
-            }
+                if (strpos($includes, 'product') !== false) {
+                    $query->orWhereHas('product', function ($query) use ($filter, $filter_by) {
+                        $query->where($filter_by, 'like', $filter);
+                    });
+                }
+            });
         }
 
         $status = $request->input('status', 'all');

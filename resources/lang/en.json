@@ -142,6 +142,7 @@
     "Product Catalog": "Product Catalog",
     "Filter By Supplier": "Filter By Supplier",
     "No products found": "No products found",
+    "Suppliers updated successfully": "Suppliers updated successfully",
     "validations": {
         "required": "This field is required",
         "requiredIf": "This field is required",
