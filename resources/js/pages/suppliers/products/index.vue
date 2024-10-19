@@ -178,6 +178,9 @@
         </Card>
       </div>
     </div>
+    <ProductEditor
+      :product="selectedProduct"
+    />
   </div>
 </template>
 
@@ -192,6 +195,7 @@ import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import InputText from "primevue/inputtext";
 import AppLayout from "../../../layouts/admin.vue";
+import ProductEditor from "./editor.vue";
 import i18n from "../../../app";
 
 export default {
@@ -205,6 +209,7 @@ export default {
     InputIcon,
     InputText,
     PButton,
+    ProductEditor,
   },
   layout: AppLayout,
   props: {
@@ -227,6 +232,7 @@ export default {
       },
       loading: false,
       status: "all",
+      selectedProduct: null,
     };
   },
   watch: {
@@ -272,6 +278,7 @@ export default {
             const relatedSupplier = product.suppliers.find((supplier) => supplier.id === this.supplier.id);
 
             return {
+              id: product.id,
               name: `${product.name} - ${product.product.name}`,
               status: product.status,
               price: relatedSupplier.pivot.price,
@@ -296,6 +303,9 @@ export default {
       this.pagination.sortField = event.sortField;
       this.pagination.sortOrder = event.sortOrder;
       this.fetchProducts();
+    },
+    editProduct(id) {
+      this.selectedProduct = this.products.find((product) => product.id === id);
     },
   },
 };
