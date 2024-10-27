@@ -76,7 +76,12 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::post('/suppliers', [SuppliersController::class, 'store'])->name('suppliers.store');
     Route::put('/suppliers/{id}', [SuppliersController::class, 'update'])->name('suppliers.update');
     Route::delete('/suppliers/{id}', [SuppliersController::class, 'destroy'])->name('suppliers.destroy');
-    Route::get('/suppliers/{id}/products', [SuppliersController::class, 'products'])->name('suppliers.products');
+    Route::get('/suppliers/{id}/variants', [SuppliersController::class, 'getProductVariants'])
+        ->name('suppliers.variants');
+    Route::put('/suppliers/{supplier}/variants', [SuppliersController::class, 'updateProductVariants'])
+        ->name('suppliers.variants.update');
+    Route::delete('/suppliers/{supplier}/variants/{variant}', [SuppliersController::class, 'removeProductVariant'])
+        ->name('suppliers.variants.delete');
 
     // Routes for Product Variants
     Route::get('variants', [VariantsController::class, 'index'])->name('variants');

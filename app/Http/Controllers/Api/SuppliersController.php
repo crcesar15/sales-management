@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
-use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
@@ -94,7 +93,7 @@ class SuppliersController extends Controller
         }
     }
 
-    public function products(Request $request, $id)
+    public function getProductVariants(Request $request, $id)
     {
         $query = ProductVariant::query();
 
@@ -142,5 +141,41 @@ class SuppliersController extends Controller
         )->paginate($request->input('per_page', 10));
 
         return new ApiCollection($response);
+    }
+
+    public function updateProductVariants(Request $request, Supplier $supplier)
+    {
+        $products = $request->input('variants');
+
+        $formattedProducts = [];
+
+        foreach ($products as $product) {
+            $formattedProducts[$product['id']] = [
+                'price' => $product['price'],
+                'details' => $product['details'],
+                'payment_terms' => $product['payment_terms'],
+            ];
+        }
+
+        if ($supplier && $product) {
+            $supplier->variants()->syncWithoutDetaching($formattedProducts);
+
+            return response()->json(['data' => $supplier], 200);
+        } else {
+            return 2;
+
+            return response()->json(['message' => 'Supplier or Product not found'], 404);
+        }
+    }
+
+    public function removeProductVariant(Supplier $supplier, ProductVariant $variant)
+    {
+        if ($supplier && $variant) {
+            $supplier->variants()->detach($variant);
+
+            return response()->json(['data' => $supplier], 200);
+        } else {
+            return response()->json(['message' => 'Supplier or Product not found'], 404);
+        }
     }
 }

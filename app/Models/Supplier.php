@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Http\Resources\Variants;
+use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,9 +26,10 @@ class Supplier extends Model
         'updated_at' => 'datetime:Y-m-d H:i',
     ];
 
-    public function products()
+    public function variants()
     {
-        return $this->hasMany(Variants::class, 'supplier_id', 'id', 'product_variant_id')
+        return $this->belongsToMany(ProductVariant::class, 'catalog', 'supplier_id', 'product_variant_id')
+            ->withTimestamps()
             ->withPivot('price', 'payment_terms', 'details');
     }
 }

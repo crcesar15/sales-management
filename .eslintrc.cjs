@@ -6,10 +6,6 @@ module.exports = {
   },
   globals: {
     Vue: true,
-    BpmnModdle: true,
-    Snap: true,
-    Dispatcher: true,
-    ProcessMaker: true,
     _: true,
     axios: true,
     route: true,

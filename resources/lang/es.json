@@ -132,6 +132,7 @@
     "This supplier has additional contacts?": "¿Este proveedor tiene contactos adicionales?",
     "Add More Contacts": "Agregar Más Contactos",
     "Payment Term": "Modo de Pago",
+    "Payment Terms": "Modos de Pago",
     "Cash": "Efectivo",
     "Credit": "Crédito",
     "Both": "Ambos",
@@ -143,6 +144,9 @@
     "Filter By Supplier": "Filtrar por Proveedor",
     "No products found": "No se encontraron productos",
     "Suppliers updated successfully": "Proveedores actualizados exitosamente",
+    "Are you sure you want to delete this product for this supplier?": "¿Estás seguro de que deseas eliminar este producto para este proveedor?",
+    "Product has been saved successfully": "Producto ha sido guardado exitosamente",
+    "Product has been deleted successfully": "Producto ha sido eliminado exitosamente",
     "validations": {
         "required": "Este campo es requerido",
         "requiredIf": "Este campo es requerido",

@@ -9,18 +9,19 @@
           @click="$inertia.visit(route('suppliers'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
-          {{ supplier.fullname }} - {{ $t("Product Catalog") }}
+          {{ $t("Product Catalog") }} - {{ supplier.fullname }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
         <PButton
-          icon="fa fa-save"
-          :label="$t('Save')"
+          icon="fa fa-plus"
+          :label="$t('Add Product')"
           style="text-transform: uppercase"
-          @click="submit()"
+          @click="addProduct()"
         />
       </div>
     </div>
+    <ConfirmDialog />
     <div class="grid grid-cols-12 gap-4">
       <div class="col-span-12">
         <Card class="mb-4">
@@ -40,6 +41,9 @@
               @page="onPage($event)"
               @sort="onSort($event)"
             >
+              <template #empty>
+                {{ $t('No products found') }}
+              </template>
               <template #header>
                 <div class="grid grid-cols-12">
                   <div class="xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12 flex md:justify-start justify-center">
@@ -127,11 +131,11 @@
               </Column>
               <Column
                 field="price"
-                header="Price"
+                :header="$t('Price')"
               />
               <Column
                 field="payment_terms"
-                header="Payment Terms"
+                :header="$t('Payment Terms')"
               >
                 <template #body="slotProps">
                   <span v-if="slotProps.data.payment_terms === 'debit'">
@@ -147,10 +151,10 @@
               </Column>
               <Column
                 field="details"
-                header="Details"
+                :header="$t('Details')"
               />
               <Column
-                header="Actions"
+                :header="$t('Actions')"
                 :pt="{columnHeaderContent: 'justify-center'}"
               >
                 <template #body="{ data }">
@@ -180,6 +184,9 @@
     </div>
     <ProductEditor
       :product="selectedProduct"
+      :show="showProductEditor"
+      @save="saveProduct"
+      @close="closeProductEditor"
     />
   </div>
 </template>
@@ -194,8 +201,10 @@ import SelectButton from "primevue/selectbutton";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import InputText from "primevue/inputtext";
+import ConfirmDialog from "primevue/confirmdialog";
 import AppLayout from "../../../layouts/admin.vue";
 import ProductEditor from "./editor.vue";
+
 import i18n from "../../../app";
 
 export default {
@@ -210,6 +219,7 @@ export default {
     InputText,
     PButton,
     ProductEditor,
+    ConfirmDialog,
   },
   layout: AppLayout,
   props: {
@@ -232,7 +242,8 @@ export default {
       },
       loading: false,
       status: "all",
-      selectedProduct: null,
+      selectedProduct: {},
+      showProductEditor: false,
     };
   },
   watch: {
@@ -272,7 +283,7 @@ export default {
       }
 
       axios
-        .get(route("api.suppliers.products", this.supplier.id), { params })
+        .get(route("api.suppliers.variants", this.supplier.id), { params })
         .then((response) => {
           this.products = response.data.data.map((product) => {
             const relatedSupplier = product.suppliers.find((supplier) => supplier.id === this.supplier.id);
@@ -306,6 +317,53 @@ export default {
     },
     editProduct(id) {
       this.selectedProduct = this.products.find((product) => product.id === id);
+      this.showProductEditor = true;
+    },
+    addProduct() {
+      this.selectedProduct = {};
+      this.showProductEditor = true;
+    },
+    saveProduct(product) {
+      axios
+        .put(route("api.suppliers.variants.update", { supplier: this.supplier.id }), { variants: [product] })
+        .then(() => {
+          this.$toast.add({
+            severity: "success",
+            summary: this.$t("Success"),
+            detail: this.$t("Product has been saved successfully"),
+            life: 3000,
+          });
+          this.closeProductEditor();
+          this.fetchProducts();
+        });
+    },
+    deleteProduct(id) {
+      // confirm
+      this.$confirm.require({
+        message: this.$t("Are you sure you want to delete this product for this supplier?"),
+        header: this.$t("Confirm"),
+        icon: "fas fa-exclamation-triangle",
+        rejectLabel: this.$t("Cancel"),
+        acceptLabel: this.$t("Delete"),
+        rejectClass: "p-button-secondary",
+        accept: () => {
+          axios
+            .delete(route("api.suppliers.variants.delete", { supplier: this.supplier.id, variant: id }))
+            .then(() => {
+              this.$toast.add({
+                severity: "success",
+                summary: this.$t("Success"),
+                detail: this.$t("Product has been deleted successfully"),
+                life: 3000,
+              });
+              this.fetchProducts();
+            });
+        },
+      });
+    },
+    closeProductEditor() {
+      this.showProductEditor = false;
+      this.selectedProduct = {};
     },
   },
 };
