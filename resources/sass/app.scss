@@ -1,6 +1,7 @@
+@use "sass:meta";
 // Bootstrap
 @import "@fortawesome/fontawesome-free/css/all.min.css";
-@import "./layout/layout.scss";
+@include meta.load-css("layout/layout.scss");
 @import "../css/app.css";
 
 /* adjust the font size for mobile */
