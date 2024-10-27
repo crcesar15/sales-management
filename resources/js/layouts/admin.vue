@@ -93,15 +93,16 @@ export default {
           type: "multiple",
           items: [
             {
+              label: "Orders",
+              icon: "fa fa-file-lines",
+              to: "purchase-orders",
+              route: route("purchase-orders"),
+            },
+            {
               label: "Product Catalog",
               icon: "fa fa-tags",
               to: "catalog",
               route: route("catalog"),
-            },
-            {
-              label: "Orders",
-              icon: "fa fa-file-lines",
-              to: "home",
             },
             {
               label: "Suppliers",

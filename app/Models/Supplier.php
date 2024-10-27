@@ -32,4 +32,9 @@ class Supplier extends Model
             ->withTimestamps()
             ->withPivot('price', 'payment_terms', 'details');
     }
+
+    public function purchaseOrders()
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
 }

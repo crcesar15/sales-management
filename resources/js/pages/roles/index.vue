@@ -18,7 +18,6 @@
         <DataTable
           :value="roles"
           resizable-columns
-
           lazy
           :total-records="pagination.total"
           :rows="pagination.rows"

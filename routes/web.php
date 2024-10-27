@@ -76,4 +76,9 @@ Route::group(['middleware' => ['auth']], function () {
     // Catalog Routes
     Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
     Route::get('/catalog/{variant}/edit', [CatalogController::class, 'edit'])->name('catalog.edit');
+
+    // Purchase Orders Routes
+    Route::get('/purchase-orders', function () {
+        return Inertia::render('purchase-orders/index');
+    })->name('purchase-orders');
 });

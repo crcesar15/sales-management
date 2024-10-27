@@ -90,4 +90,9 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::get('variants/{id}/suppliers', [VariantsController::class, 'getSuppliers'])->name('variants.suppliers');
     Route::put('variants/{id}/suppliers', [VariantsController::class, 'updateSuppliers'])
         ->name('variants.suppliers.update');
+
+    // Routes for purchase orders
+    Route::get('purchase-orders', function () {
+        return Inertia::render('purchase-orders/index');
+    })->name('purchase-orders');
 });
