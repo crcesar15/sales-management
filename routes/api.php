@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\MeasureUnitsController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
+use App\Http\Controllers\Api\PurchaseOrdersController;
 use App\Http\Controllers\Api\RolesController;
 use App\Http\Controllers\Api\SuppliersController;
 use App\Http\Controllers\Api\UsersController;
@@ -92,7 +93,8 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
         ->name('variants.suppliers.update');
 
     // Routes for purchase orders
-    Route::get('purchase-orders', function () {
-        return Inertia::render('purchase-orders/index');
-    })->name('purchase-orders');
+    Route::get('purchase-orders', [PurchaseOrdersController:: class, 'index'])->name('purchase-orders');
+    Route::get('purchase-orders/{order}', [PurchaseOrdersController:: class, 'show'])->name('purchase-orders.show');
+    Route::post('purchase-orders', [PurchaseOrdersController:: class, 'store'])->name('purchase-orders.store');
+    Route::put('purchase-orders/{order}', [PurchaseOrdersController:: class, 'update'])->name('purchase-orders.update');
 });
