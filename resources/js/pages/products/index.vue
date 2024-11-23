@@ -8,6 +8,8 @@
         :label="$t('Add Product')"
         style="text-transform: uppercase"
         icon="fa fa-add"
+        size="small"
+        raised
         class="ml-2"
         @click="$inertia.visit(route('products.create'))"
       />
@@ -28,7 +30,6 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          table-class="border-surface border"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -114,12 +115,27 @@
                   v-if="data.media.length"
                   :src="data.media[0].url"
                   alt="Product Image"
-                  class="border-round"
+                  class="
+                    rounded-xl
+                    border-slate-300
+                    dark:border-slate-700
+                    shadow-md
+                  "
                   style="height: 55px; width: 55px;"
                 >
                 <div
                   v-else
-                  class="bg-surface-50 dark:bg-surface-950 rounded-border justify-center items-center flex"
+                  class="
+                    bg-surface-50
+                    dark:bg-surface-950
+                    rounded-xl
+                    justify-center
+                    items-center
+                    flex
+                    border-slate-300
+                    dark:border-slate-700
+                    shadow-md
+                  "
                   style="height: 55px; width: 55px;"
                 >
                   <p style="font-size: 18px; font-weight: bold;">
@@ -185,11 +201,13 @@
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="{ data }">
-              <span class="p-buttonset flex justify-center">
+              <span class="flex justify-center gap-2">
                 <p-button
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="editProduct(data.id)"
                 />
@@ -197,6 +215,8 @@
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text
+                  rounded
+                  raised
                   size="sm"
                   class="btn-danger"
                   @click="deleteProduct(data.id)"

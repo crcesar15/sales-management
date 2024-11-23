@@ -8,6 +8,8 @@
         :label="$t('Purchase Order')"
         style="text-transform: uppercase"
         icon="fa fa-add"
+        size="small"
+        raised
         class="ml-2"
         @click="addPurchaseOrder"
       />
@@ -26,7 +28,6 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >

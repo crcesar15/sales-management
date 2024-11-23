@@ -37,7 +37,7 @@
                     </div>
 
                     <div class="grid mt-2">
-                        <div class="md:col-8 md:col-offset-2 flex flex-wrap justify-content-center">
+                        <div class="md:col-8 md:col-offset-2 flex flex-wrap justify-center">
                             <p-button type="submit" :loading="btnLoading">
                                 {{ __('Send Password Reset Link') }}
                             </p-button>

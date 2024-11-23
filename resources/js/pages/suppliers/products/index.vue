@@ -6,6 +6,7 @@
           icon="fa fa-arrow-left"
           text
           severity="secondary"
+          class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('suppliers'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
@@ -14,9 +15,11 @@
       </div>
       <div class="flex flex-col justify-center">
         <PButton
-          icon="fa fa-plus"
           :label="$t('Add Product')"
           style="text-transform: uppercase"
+          icon="fa fa-plus"
+          size="small"
+          raised
           @click="addProduct()"
         />
       </div>
@@ -158,11 +161,13 @@
                 :pt="{columnHeaderContent: 'justify-center'}"
               >
                 <template #body="{ data }">
-                  <span class="p-buttonset flex justify-center">
+                  <span class="flex justify-center gap-2">
                     <p-button
                       v-tooltip.top="$t('Edit')"
                       icon="fa fa-edit"
                       text
+                      rounded
+                      raised
                       size="sm"
                       @click="editProduct(data.id)"
                     />
@@ -170,6 +175,8 @@
                       v-tooltip.top="$t('Delete')"
                       icon="fa fa-trash"
                       text
+                      rounded
+                      raised
                       size="sm"
                       class="btn-danger"
                       @click="deleteProduct(data.id)"

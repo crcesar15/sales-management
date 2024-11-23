@@ -8,6 +8,8 @@
         :label="$t('Add Role')"
         style="text-transform: uppercase"
         icon="fa fa-add"
+        size="small"
+        raised
         class="ml-2"
         @click="addRole"
       />
@@ -26,7 +28,6 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -44,7 +45,7 @@
                   md:col-start-9
                   col-12
                   md:justify-content-end
-                  justify-content-center
+                  justify-center
                 "
               >
                 <IconField
@@ -105,11 +106,13 @@
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
-              <div class="flex justify-center">
+              <div class="flex justify-center gap-2">
                 <p-button
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="editRole(row.data)"
                 />
@@ -117,6 +120,8 @@
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="deleteRole(row.data.id)"
                 />

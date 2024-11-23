@@ -1,6 +1,6 @@
 <template>
   <div
-    class="surface-card border-round shadow-2 flex flex-wrap justify-content-center align-items-center p-2 flex-column mb-4 sm:mb-1"
+    class="surface-card border-round shadow-2 flex flex-wrap justify-center items-center p-2 flex-column mb-4 sm:mb-1"
     style="height: 500px;"
   >
     <h4>{{ product.name }}</h4>
@@ -14,7 +14,7 @@
       />
       <div
         v-else
-        class="flex flex-wrap justify-content-center align-items-center border-round shadow-2"
+        class="flex flex-wrap justify-center items-center border-round shadow-2"
         style="height: 200px; width: 200px;"
       >
         <p><i class="fa fa-image" /> No images yet</p>

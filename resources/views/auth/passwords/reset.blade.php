@@ -56,7 +56,7 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap justify-content-center">
+                    <div class="flex flex-wrap justify-center">
                         <p-button type="submit" :loading="btnLoading">
                             {{ __('Reset Password') }}
                         </p-button>

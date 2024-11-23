@@ -8,6 +8,8 @@
         :label="$t('Add Measure Unit')"
         style="text-transform: uppercase"
         icon="fa fa-add"
+        size="small"
+        raised
         class="ml-2"
         @click="addMeasureUnit"
       />
@@ -26,7 +28,6 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -87,11 +88,13 @@
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
-              <div class="flex justify-center">
+              <div class="flex justify-center gap-2">
                 <p-button
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="editMeasureUnit(row.data)"
                 />
@@ -99,6 +102,8 @@
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="deleteMeasureUnit(row.data.id)"
                 />

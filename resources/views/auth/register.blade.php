@@ -67,7 +67,7 @@
                         </div>
                     </div>
 
-                    <div class="grid mt-2 flex justify-content-center">
+                    <div class="mt-2 flex justify-center">
                         <p-button type="submit">
                             {{ __('Register') }}
                         </p-button>

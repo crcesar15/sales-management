@@ -3,18 +3,3 @@
 @import "@fortawesome/fontawesome-free/css/all.min.css";
 @include meta.load-css("layout/layout.scss");
 @import "../css/app.css";
-
-/* adjust the font size for mobile */
-@media (max-width: 768px) {
-    html {
-        font-size: 12px !important;
-    }
-}
-
-html {
-    font-size: 1rem;
-}
-
-.p-badge {
-    font-size: 0.95rem;
-}

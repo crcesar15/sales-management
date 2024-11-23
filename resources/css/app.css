@@ -2,3 +2,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* adjust the font size for mobile */
+@media (max-width: 768px) {
+    html {
+        font-size: 12px !important;
+    }
+}
+
+html {
+    font-size: 1rem;
+}
+
+.p-badge {
+    font-size: 0.95rem;
+}
+
+.p-datatable-header {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+}
+
+.p-datatable-table-container {
+    @apply border-x;
+    @apply border-slate-300;
+    @apply dark:border-slate-700;
+}

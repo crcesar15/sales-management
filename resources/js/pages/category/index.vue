@@ -8,6 +8,8 @@
         :label="$t('Add Category')"
         style="text-transform: uppercase"
         icon="fa fa-add"
+        size="small"
+        raised
         class="ml-2"
         @click="addCategory"
       />
@@ -27,7 +29,6 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -43,9 +44,9 @@
                   lg:col-start-10
                   md:col-span-4
                   md:col-start-9
-                  md:justify-content-end
+                  md:justify-end
                   col-span-12
-                  justify-content-center
+                  justify-center
                 "
               >
                 <IconField
@@ -99,11 +100,13 @@
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
-              <div class="flex justify-center">
+              <div class="flex justify-center gap-2">
                 <p-button
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="editCategory(row.data)"
                 />
@@ -111,6 +114,8 @@
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="deleteCategory(row.data.id)"
                 />

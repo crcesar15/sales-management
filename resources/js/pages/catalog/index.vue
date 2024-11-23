@@ -19,7 +19,6 @@
           paginator
           sort-field="name"
           :sort-order="1"
-          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -41,7 +40,6 @@
               >
                 <SelectButton
                   v-model="status"
-                  class="mt-2"
                   :allow-empty="false"
                   :options="[{
                     label: $t('All'),
@@ -77,7 +75,7 @@
               >
                 <IconField
                   icon-position="left"
-                  class="w-full mt-2"
+                  class="w-full"
                 >
                   <InputIcon class="fa fa-search" />
                   <InputText
@@ -87,8 +85,10 @@
                   />
                 </IconField>
                 <PButton
+                  v-tooltip.top="$t('Filter')"
                   icon="fa-solid fa-filter"
-                  class="mt-2 ml-2"
+                  class="ml-2"
+                  raised
                   @click="toggleFilter"
                 />
               </div>
@@ -168,11 +168,13 @@
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="{ data }">
-              <span class="p-buttonset flex justify-center">
+              <span class="flex justify-center gap-2">
                 <p-button
                   v-tooltip.top="$t('View Suppliers')"
                   icon="fa-solid fa-eye"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="viewSuppliers(data.id)"
                 />
@@ -180,6 +182,8 @@
                   v-tooltip.top="$t('Edit Suppliers')"
                   icon="fa fa-edit"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="editSuppliers(data.id)"
                 />

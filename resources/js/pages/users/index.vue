@@ -9,6 +9,8 @@
         class="ml-2"
         style="text-transform: uppercase"
         icon="fa fa-add"
+        size="small"
+        raised
         @click="$inertia.visit(route('users.create'))"
       />
     </div>
@@ -26,7 +28,6 @@
           paginator
           sort-field="first_name"
           :sort-order="1"
-          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -75,8 +76,8 @@
                   md:col-span-6
                   md:col-start-7
                   col-span-12
-                  md:justify-content-end
-                  justify-content-center
+                  md:justify-end
+                  justify-center
                 "
               >
                 <IconField
@@ -159,11 +160,13 @@
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
-              <div class="flex justify-center">
+              <div class="flex justify-center gap-2">
                 <p-button
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="editUser(row.data)"
                 />
@@ -172,6 +175,8 @@
                   v-tooltip.top="$t('Restore')"
                   icon="fa fa-trash-arrow-up"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="restoreUser(row.data)"
                 />
@@ -181,6 +186,8 @@
                   :disabled="isCurrentUser(row.data.id)"
                   icon="fa fa-trash"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="deleteUser(row.data.id)"
                 />

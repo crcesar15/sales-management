@@ -8,6 +8,8 @@
         :label="$t('Add Supplier')"
         style="text-transform: uppercase"
         icon="fa fa-add"
+        size="small"
+        raised
         class="ml-2"
         @click="$inertia.visit(route('suppliers.create'))"
       />
@@ -73,7 +75,7 @@
                   md:col-start-7
                   col-span-12
                   md:justify-content-end
-                  justify-content-center
+                  justify-center
                 "
               >
                 <IconField
@@ -141,11 +143,13 @@
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
-              <div class="flex justify-center">
+              <div class="flex justify-center gap-2">
                 <p-button
                   v-tooltip.top="$t('Products')"
                   icon="fa fa-table-list"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="showProducts(row.data.id)"
                 />
@@ -153,6 +157,8 @@
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="editSupplier(row.data)"
                 />
@@ -161,6 +167,8 @@
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text
+                  rounded
+                  raised
                   size="sm"
                   @click="deleteSupplier(row.data.id)"
                 />

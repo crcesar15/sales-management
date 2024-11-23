@@ -1,10 +1,10 @@
 <template>
   <AppLayout>
-    <div class="flex justify-content-around flex-wrap">
+    <div class="flex justify-around flex-wrap">
       <div
         v-for="product in products"
         :key="product.id"
-        class="flex align-items-center justify-content-center"
+        class="flex align-items-center justify-center"
       >
         <Card
           style="width: 20em; min"
@@ -21,7 +21,7 @@
             <div
               v-else
               style="height: 20em;"
-              class="flex flex-wrap justify-content-center align-items-center "
+              class="flex flex-wrap justify-center items-center "
             >
               <p><i class="fa fa-image" /> No images yet</p>
             </div>
