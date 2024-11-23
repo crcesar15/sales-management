@@ -20,19 +20,22 @@
             :key="file.id"
             class="p-2 flex flex-col items-center xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12"
           >
-            <div class="flex flex-col items-center border surface-border rounded-border">
+            <div class="flex flex-col items-center">
               <img
                 role="presentation"
                 :src="file.url"
                 width="200"
                 height="200"
-                class="mb-3"
+                class="mb-3 rounded-lg border-2 border-slate-300 dark:border-slate-700"
               >
               <PButton
+                v-tooltip.bottom="'Remove image'"
                 icon="fa fa-trash"
-                outlined
                 rounded
+                raised
                 severity="danger"
+                size="small"
+                style="margin-top: -25px;"
                 @click="removeFile(file.id)"
               />
             </div>
@@ -56,6 +59,8 @@
     </div>
     <Dialog
       v-model:visible="cropperToggle"
+      :style="{ width: '50rem' }"
+      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
       modal
       :closable="false"
     >

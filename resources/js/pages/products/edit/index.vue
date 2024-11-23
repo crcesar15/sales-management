@@ -178,11 +178,29 @@
                       v-if="slotProps.data.media.length > 0"
                       :src="slotProps.data.media[0].url"
                       alt="product"
-                      class="rounded-border border h-20 w-20"
+                      class="
+                        rounded-lg
+                        border-2
+                        h-20
+                        w-20
+                        border-slate-300
+                        dark:border-slate-700
+                      "
                     >
                     <div
                       v-else
-                      class="border-dashed border-surface border-4 h-20 w-20 flex justify-center items-center"
+                      class="
+                        border-dashed
+                        rounded-lg
+                        border-4
+                        h-20
+                        w-20
+                        flex
+                        justify-center
+                        items-center
+                        border-slate-300
+                        dark:border-slate-700
+                      "
                     >
                       <i class="fa fa-file-circle-plus" />
                     </div>
@@ -376,7 +394,13 @@
               <img
                 :src="file.url"
                 alt="product"
-                class="rounder-border border-surface border"
+                class="
+                  rounded-lg
+                  border-2
+                  w-full
+                  border-slate-300
+                  dark:border-slate-700
+                "
               >
               <div
                 class="flex justify-center"
