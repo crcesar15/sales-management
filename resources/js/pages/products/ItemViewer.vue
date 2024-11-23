@@ -29,12 +29,20 @@
               :value="product.media"
               :num-visible="1"
               :num-scroll="1"
+              style="width: 300px;"
               class="lg:w-4/6 md:w-5/6 w-full"
             >
               <template #item="image">
                 <Image
                   :src="image.data.url"
-                  image-class="w-full rounded-border shadow-lg border border-surface"
+                  image-class="
+                    w-full
+                    rounded-3xl
+                    shadow-xl
+                    border-2
+                    border-slate-300
+                    dark:border-slate-700
+                  "
                 />
               </template>
             </Carousel>
@@ -45,13 +53,30 @@
           >
             <Image
               :src="product.media[0].url"
-              image-class="w-full rounded-border shadow-lg border border-surface"
+              image-class="
+                w-full
+                rounded-3xl
+                shadow-xl
+                border-2
+                border-slate-300
+                dark:border-slate-700
+              "
             />
           </div>
           <div v-else>
             <!-- not found div -->
             <div
-              class="bg-surface-50 dark:bg-surface-950 flex flex-wrap justify-center content-center text-primary shadow-lg rounded-border"
+              class="
+                bg-surface-50
+                dark:bg-surface-950
+                flex
+                flex-wrap
+                justify-center
+                content-center
+                text-primary
+                shadow-lg
+                rounded
+              "
               style="height: 250px; width: 250px;"
             >
               <p>

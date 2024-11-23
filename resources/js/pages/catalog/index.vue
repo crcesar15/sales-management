@@ -111,12 +111,27 @@
                   v-if="data.media.length"
                   :src="data.media[0].url"
                   alt="Product Image"
-                  class="border-round"
+                  class="
+                    rounded-xl
+                    border-slate-300
+                    dark:border-slate-700
+                    shadow-md
+                  "
                   style="height: 55px; width: 55px;"
                 >
                 <div
                   v-else
-                  class="bg-surface-50 dark:bg-surface-950 rounded-border justify-center items-center flex"
+                  class="
+                    bg-surface-50
+                    dark:bg-surface-950
+                    rounded-xl
+                    justify-center
+                    items-center
+                    flex
+                    border-slate-300
+                    dark:border-slate-700
+                    shadow-md
+                  "
                   style="height: 55px; width: 55px;"
                 >
                   <p style="font-size: 18px; font-weight: bold;">
@@ -223,7 +238,7 @@
         :value="productSuppliers"
         resizable-columns
         :rows="10"
-        table-class="border border-surface"
+        table-class="border-t"
       >
         <template #empty>
           <div class="flex w-full justify-between">
