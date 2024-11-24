@@ -10,7 +10,9 @@
       @hide="close"
     >
       <template #header>
-        <h3>{{ $t(modalTitle) }}</h3>
+        <h3 class="text-2xl">
+          {{ $t(modalTitle) }}
+        </h3>
       </template>
       <template #default>
         <div class="grid grid-cols-12 gap-4">

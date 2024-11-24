@@ -24,6 +24,7 @@
             v-show="!option.saved"
             icon="fa fa-floppy-disk"
             style="width: 25px; height: 25px; padding: 0px; margin-right: 4px;"
+            raised
             outlined
             size="small"
             :disabled="option.name.length === 0 || option.values.length === 0"
@@ -32,8 +33,10 @@
           <Button
             icon="fa fa-trash"
             style="width: 25px; height: 25px; padding: 0px;"
+            raised
             outlined
             size="small"
+            severity="danger"
             @click="deleteOption(index)"
           />
         </div>

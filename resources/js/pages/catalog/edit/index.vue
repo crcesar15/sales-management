@@ -5,7 +5,9 @@
         <PButton
           icon="fa fa-arrow-left"
           text
+          size="small"
           severity="secondary"
+          class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('catalog'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
@@ -17,6 +19,8 @@
           icon="fa fa-save"
           :label="$t('Save')"
           style="text-transform: uppercase"
+          size="small"
+          raised
           @click="submit()"
         />
       </div>
@@ -92,7 +96,7 @@
           <template #content>
             <DataTable
               :value="catalog"
-              table-class="border-surface border"
+              table-class="border-t"
               resizable-columns
             >
               <template #empty>
@@ -200,6 +204,9 @@
                     v-tooltip.top="$t('Delete')"
                     icon="fa fa-trash"
                     text
+                    raised
+                    rounded
+                    class="mb-2"
                     size="small"
                     @click="removeSupplier(slotProps.data)"
                   />

@@ -5,7 +5,9 @@
         <PButton
           icon="fa fa-arrow-left"
           text
+          size="small"
           severity="secondary"
+          class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('suppliers'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
@@ -17,6 +19,8 @@
           icon="fa fa-save"
           :label="$t('Save')"
           style="text-transform: uppercase;"
+          size="small"
+          raised
           @click="submit()"
         />
       </div>
@@ -137,7 +141,8 @@
                       v-tooltip.top="$t('Delete')"
                       icon="fa fa-trash"
                       size="small"
-                      text
+                      outlined
+                      raised
                       class="!p-3 !m-0 !w-[21px] !h-[21px]"
                       @click="additionalContacts.splice(index, 1)"
                     />

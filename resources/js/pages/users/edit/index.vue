@@ -5,7 +5,9 @@
         <PButton
           icon="fa fa-arrow-left"
           text
+          size="small"
           severity="secondary"
+          class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('users'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
@@ -17,6 +19,8 @@
           icon="fa fa-save"
           :label="$t('Save')"
           style="text-transform: uppercase"
+          size="small"
+          raised
           @click="submit()"
         />
       </div>

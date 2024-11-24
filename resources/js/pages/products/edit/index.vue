@@ -5,7 +5,9 @@
         <PButton
           icon="fa fa-arrow-left"
           text
+          size="small"
           severity="secondary"
+          class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('products'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
@@ -17,6 +19,8 @@
           icon="fa fa-save"
           :label="$t('Save')"
           style="text-transform: uppercase"
+          size="small"
+          raised
           @click="submit()"
         />
       </div>
@@ -150,10 +154,14 @@
                 <PButton
                   :label="$t('Add Variant')"
                   class="mr-2"
+                  size="small"
+                  raised
                   @click="addVariant()"
                 />
                 <PButton
                   outlined
+                  size="small"
+                  raised
                   :label="$t('Generate Variants')"
                   @click="generateVariants()"
                 />

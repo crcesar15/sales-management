@@ -6,7 +6,9 @@
     >
       <PButton
         :label="$t('Upload Image')"
-        outlined
+        icon="fa fa-add"
+        size="small"
+        raised
         @click="openFileUpload"
       />
     </div>
@@ -44,8 +46,16 @@
       </div>
     </div>
     <div class="flex justify-center mt-4">
-      <FileUpload
+      <PButton
         v-show="files.length > 0"
+        icon="fa fa-add"
+        :label="$t('Upload Image')"
+        size="small"
+        raised
+        @click="openFileUpload"
+      />
+      <FileUpload
+        v-show="false"
         ref="fileUpload"
         choose-label="Upload Image"
         mode="basic"

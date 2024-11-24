@@ -5,6 +5,7 @@
         <PButton
           icon="fa fa-arrow-left"
           text
+          size="small"
           severity="secondary"
           class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('suppliers'))"
@@ -40,7 +41,6 @@
               paginator
               sort-field="name"
               :sort-order="1"
-              table-class="border-surface border"
               @page="onPage($event)"
               @sort="onSort($event)"
             >
