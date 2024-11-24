@@ -263,12 +263,27 @@
                         v-if="data.media.length"
                         :src="data.media[0].url"
                         alt="Product Image"
-                        class="rounded-border"
+                        class="
+                          rounded-xl
+                          border-slate-300
+                          dark:border-slate-700
+                          shadow-md
+                        "
                         style="height: 55px; width: 55px;"
                       >
                       <div
                         v-else
-                        class="bg-gray-200 rounded-border flex justify-center items-center"
+                        class="
+                          bg-surface-50
+                          dark:bg-surface-950
+                          rounded-xl
+                          justify-center
+                          items-center
+                          flex
+                          border-slate-300
+                          dark:border-slate-700
+                          shadow-md
+                        "
                         style="height: 55px; width: 55px;"
                       >
                         <p style="font-size:18px; font-weight: bold">
