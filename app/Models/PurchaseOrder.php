@@ -13,7 +13,7 @@ class PurchaseOrder extends Model
 
     protected $fillable = [
         'user_id',
-        'supplier_id',
+        'vendor_id',
         'status',
         'order_date',
         'expected_delivery_date',
@@ -30,8 +30,8 @@ class PurchaseOrder extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function supplier()
+    public function vendor()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Vendor::class);
     }
 }

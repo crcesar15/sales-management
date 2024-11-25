@@ -12,7 +12,7 @@ class Catalog extends Model
     protected $table = 'catalog';
 
     protected $fillable = [
-        'supplier_id',
+        'vendor_id',
         'product_variant_id',
         'price',
         'payment_terms',

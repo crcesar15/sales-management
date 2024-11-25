@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProductVariant;
-use App\Models\Supplier;
+use App\Models\Vendor;
 use Inertia\Inertia;
 
 class CatalogController extends Controller
@@ -25,24 +25,24 @@ class CatalogController extends Controller
             'product.measureUnit',
         ])->where('id', $i)->first();
 
-        $catalog = $variant->suppliers;
+        $catalog = $variant->vendors;
 
-        $suppliers = Supplier::limit(10)->get();
+        $vendors = Vendor::limit(10)->get();
 
-        //merge catalog to suppliers
-        $catalog->each(function ($item) use ($suppliers) {
-            // check if item is already in suppliers
-            $supplier = $suppliers->where('id', $item->id)->first();
+        //merge catalog to vendors
+        $catalog->each(function ($item) use ($vendors) {
+            // check if item is already in vendors
+            $vendor = $vendors->where('id', $item->id)->first();
 
-            if (!$supplier) {
-                $suppliers->push($item);
+            if (!$vendor) {
+                $vendors->push($item);
             }
         });
 
         return Inertia::render('catalog/edit/index', [
             'variant' => $variant,
             'savedCatalog' => $catalog,
-            'savedSuppliers' => $suppliers,
+            'savedVendors' => $vendors,
         ]);
     }
 }

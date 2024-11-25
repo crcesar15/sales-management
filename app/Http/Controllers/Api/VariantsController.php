@@ -21,10 +21,10 @@ class VariantsController extends Controller
             $query->with(explode(',', $includes));
         }
 
-        if ($request->has('supplier')) {
-            // filter products with at least one supplier
-            $query->whereHas('suppliers', function ($query) use ($request) {
-                $query->where('suppliers.id', '=', $request->get('supplier'));
+        if ($request->has('vendor')) {
+            // filter products with at least one vendor
+            $query->whereHas('vendors', function ($query) use ($request) {
+                $query->where('vendors.id', '=', $request->get('vendor'));
             });
         }
 
@@ -205,31 +205,31 @@ class VariantsController extends Controller
         }
     }
 
-    // Get suppliers
-    public function getSuppliers($id)
+    // Get vendors
+    public function getVendors($id)
     {
         $variant = ProductVariant::find($id);
 
-        $suppliers = $variant->suppliers;
+        $vendors = $variant->vendors;
 
-        return response()->json(['data' => $suppliers], 200);
+        return response()->json(['data' => $vendors], 200);
     }
 
-    // Update variant supplier
-    public function updateSuppliers(Request $request, $id)
+    // Update variant vendor
+    public function updateVendors(Request $request, $id)
     {
         $variant = ProductVariant::find($id);
 
-        $suppliers = $request->input('suppliers', []);
+        $vendors = $request->input('vendors', []);
 
-        $variant->suppliers()->detach();
+        $variant->vendors()->detach();
 
-        if (count($suppliers) > 0) {
-            foreach ($suppliers as $supplier) {
-                $variant->suppliers()->attach($supplier['id'], [
-                    'price' => $supplier['price'],
-                    'payment_terms' => $supplier['payment_terms'],
-                    'details' => $supplier['details'],
+        if (count($vendors) > 0) {
+            foreach ($vendors as $vendor) {
+                $variant->vendors()->attach($vendor['id'], [
+                    'price' => $vendor['price'],
+                    'payment_terms' => $vendor['payment_terms'],
+                    'details' => $vendor['details'],
                 ]);
             }
         }

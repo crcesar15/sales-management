@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
 use App\Models\ProductVariant;
-use App\Models\Supplier;
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 
-class SuppliersController extends Controller
+class VendorController extends Controller
 {
-    //Get all suppliers
+    //Get all vendors
     public function index(Request $request)
     {
-        $query = Supplier::query();
+        $query = Vendor::query();
 
         $filter = $request->input('filter', '');
 
@@ -47,47 +47,47 @@ class SuppliersController extends Controller
         return new ApiCollection($response);
     }
 
-    //Get a supplier by id
+    //Get a vendor by id
     public function show($id)
     {
-        $supplier = Supplier::find($id);
-        if ($supplier) {
-            return response()->json(['data' => $supplier], 200);
+        $vendor = Vendor::find($id);
+        if ($vendor) {
+            return response()->json(['data' => $vendor], 200);
         } else {
-            return response()->json(['message' => 'Supplier not found'], 404);
+            return response()->json(['message' => 'Vendor not found'], 404);
         }
     }
 
-    //Create a new supplier
+    //Create a new vendor
     public function store(Request $request)
     {
-        $supplier = Supplier::create($request->all());
+        $vendor = Vendor::create($request->all());
 
-        return response()->json(['data' => $supplier], 201);
+        return response()->json(['data' => $vendor], 201);
     }
 
-    //Update a supplier
+    //Update a vendor
     public function update(Request $request, $id)
     {
-        $supplier = Supplier::find($id);
-        if ($supplier) {
-            $supplier->update($request->all());
+        $vendor = Vendor::find($id);
+        if ($vendor) {
+            $vendor->update($request->all());
 
-            return response()->json(['data' => $supplier], 200);
+            return response()->json(['data' => $vendor], 200);
         } else {
-            return response()->json(['message' => 'Supplier not found'], 404);
+            return response()->json(['message' => 'Vendor not found'], 404);
         }
     }
 
-    //Delete a supplier
+    //Delete a vendor
     public function destroy($id)
     {
-        $supplier = Supplier::find($id);
+        $vendor = Vendor::find($id);
 
-        if ($supplier) {
-            $supplier->delete();
+        if ($vendor) {
+            $vendor->delete();
 
-            return response()->json(['data' => $supplier], 200);
+            return response()->json(['data' => $vendor], 200);
         } else {
             return response()->json(['message' => 'Role not found'], 404);
         }
@@ -97,11 +97,11 @@ class SuppliersController extends Controller
     {
         $query = ProductVariant::query();
 
-        $query->with(['product', 'suppliers']);
+        $query->with(['product', 'vendors']);
 
-        // Filter by supplier id
-        $query->whereHas('suppliers', function ($query) use ($id) {
-            $query->where('supplier_id', $id);
+        // Filter by vendor id
+        $query->whereHas('vendors', function ($query) use ($id) {
+            $query->where('vendor_id', $id);
         });
 
         $filter = $request->input('filter', '');
@@ -143,7 +143,7 @@ class SuppliersController extends Controller
         return new ApiCollection($response);
     }
 
-    public function updateProductVariants(Request $request, Supplier $supplier)
+    public function updateProductVariants(Request $request, Vendor $vendor)
     {
         $products = $request->input('variants');
 
@@ -157,25 +157,25 @@ class SuppliersController extends Controller
             ];
         }
 
-        if ($supplier && $product) {
-            $supplier->variants()->syncWithoutDetaching($formattedProducts);
+        if ($vendor && $product) {
+            $vendor->variants()->syncWithoutDetaching($formattedProducts);
 
-            return response()->json(['data' => $supplier], 200);
+            return response()->json(['data' => $vendor], 200);
         } else {
             return 2;
 
-            return response()->json(['message' => 'Supplier or Product not found'], 404);
+            return response()->json(['message' => 'Vendor or Product not found'], 404);
         }
     }
 
-    public function removeProductVariant(Supplier $supplier, ProductVariant $variant)
+    public function removeProductVariant(Vendor $vendor, ProductVariant $variant)
     {
-        if ($supplier && $variant) {
-            $supplier->variants()->detach($variant);
+        if ($vendor && $variant) {
+            $vendor->variants()->detach($variant);
 
-            return response()->json(['data' => $supplier], 200);
+            return response()->json(['data' => $vendor], 200);
         } else {
-            return response()->json(['message' => 'Supplier or Product not found'], 404);
+            return response()->json(['message' => 'Vendor or Product not found'], 404);
         }
     }
 }

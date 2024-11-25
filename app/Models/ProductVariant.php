@@ -48,9 +48,9 @@ class ProductVariant extends Model
         return $formattedMedia;
     }
 
-    public function suppliers()
+    public function vendors()
     {
-        return $this->belongsToMany(Supplier::class, 'catalog', 'product_variant_id', 'supplier_id')
+        return $this->belongsToMany(Vendor::class, 'catalog', 'product_variant_id', 'vendor_id')
             ->withPivot('price', 'payment_terms', 'details');
     }
 }

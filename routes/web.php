@@ -3,8 +3,8 @@
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PurchaseOrdersController;
-use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\VendorsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -68,11 +68,11 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/users/{user}/edit', [UsersController::class, 'edit'])->name('users.edit');
     Route::get('/users/create', [UsersController::class, 'create'])->name('users.create');
 
-    // Suppliers Routes
-    Route::get('/suppliers', [SuppliersController::class, 'index'])->name('suppliers');
-    Route::get('/suppliers/create', [SuppliersController::class, 'create'])->name('suppliers.create');
-    Route::get('/suppliers/{supplier}/edit', [SuppliersController::class, 'edit'])->name('suppliers.edit');
-    Route::get('/suppliers/{supplier}/products', [SuppliersController::class, 'products'])->name('suppliers.products');
+    // Vendors Routes
+    Route::get('/vendors', [VendorsController::class, 'index'])->name('vendors');
+    Route::get('/vendors/create', [VendorsController::class, 'create'])->name('vendors.create');
+    Route::get('/vendors/{vendor}/edit', [VendorsController::class, 'edit'])->name('vendors.edit');
+    Route::get('/vendors/{vendor}/products', [VendorsController::class, 'products'])->name('vendors.products');
 
     // Catalog Routes
     Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');

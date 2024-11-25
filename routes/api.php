@@ -7,9 +7,9 @@ use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
 use App\Http\Controllers\Api\RolesController;
-use App\Http\Controllers\Api\SuppliersController;
 use App\Http\Controllers\Api\UsersController;
 use App\Http\Controllers\Api\VariantsController;
+use App\Http\Controllers\Api\VendorsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -71,26 +71,26 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::delete('/users/{id}', [UsersController::class, 'destroy'])->name('users.destroy');
     Route::put('/users/{id}/restore', [UsersController::class, 'restore'])->name('users.restore');
 
-    // Routes for Suppliers
-    Route::get('/suppliers', [SuppliersController::class, 'index'])->name('suppliers');
-    Route::get('/suppliers/{id}', [SuppliersController::class, 'show'])->name('suppliers.show');
-    Route::post('/suppliers', [SuppliersController::class, 'store'])->name('suppliers.store');
-    Route::put('/suppliers/{id}', [SuppliersController::class, 'update'])->name('suppliers.update');
-    Route::delete('/suppliers/{id}', [SuppliersController::class, 'destroy'])->name('suppliers.destroy');
-    Route::get('/suppliers/{id}/variants', [SuppliersController::class, 'getProductVariants'])
-        ->name('suppliers.variants');
-    Route::put('/suppliers/{supplier}/variants', [SuppliersController::class, 'updateProductVariants'])
-        ->name('suppliers.variants.update');
-    Route::delete('/suppliers/{supplier}/variants/{variant}', [SuppliersController::class, 'removeProductVariant'])
-        ->name('suppliers.variants.delete');
+    // Routes for Vendors
+    Route::get('/vendors', [VendorsController::class, 'index'])->name('vendors');
+    Route::get('/vendors/{id}', [VendorsController::class, 'show'])->name('vendors.show');
+    Route::post('/vendors', [VendorsController::class, 'store'])->name('vendors.store');
+    Route::put('/vendors/{id}', [VendorsController::class, 'update'])->name('vendors.update');
+    Route::delete('/vendors/{id}', [VendorsController::class, 'destroy'])->name('vendors.destroy');
+    Route::get('/vendors/{id}/variants', [VendorsController::class, 'getProductVariants'])
+        ->name('vendors.variants');
+    Route::put('/vendors/{vendor}/variants', [VendorsController::class, 'updateProductVariants'])
+        ->name('vendors.variants.update');
+    Route::delete('/vendors/{vendor}/variants/{variant}', [VendorsController::class, 'removeProductVariant'])
+        ->name('vendors.variants.delete');
 
     // Routes for Product Variants
     Route::get('variants', [VariantsController::class, 'index'])->name('variants');
 
-    //Routes for Variant Suppliers
-    Route::get('variants/{id}/suppliers', [VariantsController::class, 'getSuppliers'])->name('variants.suppliers');
-    Route::put('variants/{id}/suppliers', [VariantsController::class, 'updateSuppliers'])
-        ->name('variants.suppliers.update');
+    //Routes for Variant Vendors
+    Route::get('variants/{id}/vendors', [VariantsController::class, 'getVendors'])->name('variants.vendors');
+    Route::put('variants/{id}/vendors', [VariantsController::class, 'updateVendors'])
+        ->name('variants.vendors.update');
 
     // Routes for purchase orders
     Route::get('purchase-orders', [PurchaseOrdersController:: class, 'index'])->name('purchase-orders');

@@ -6,7 +6,7 @@ use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Supplier extends Model
+class Vendor extends Model
 {
     use HasFactory;
 
@@ -28,7 +28,7 @@ class Supplier extends Model
 
     public function variants()
     {
-        return $this->belongsToMany(ProductVariant::class, 'catalog', 'supplier_id', 'product_variant_id')
+        return $this->belongsToMany(ProductVariant::class, 'catalog', 'vendor', 'product_variant_id')
             ->withTimestamps()
             ->withPivot('price', 'payment_terms', 'details');
     }
