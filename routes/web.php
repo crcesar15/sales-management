@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
@@ -78,7 +79,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/catalog/{variant}/edit', [CatalogController::class, 'edit'])->name('catalog.edit');
 
     // Purchase Orders Routes
-    Route::get('/purchase-orders', function () {
-        return Inertia::render('purchase-orders/index');
-    })->name('purchase-orders');
+    Route::get('/purchase-orders', [PurchaseOrdersController::class, 'index'])->name('purchase-orders');
+    Route::get('/purchase-orders/create', [PurchaseOrdersController::class, 'create'])->name('purchase-orders.create');
 });

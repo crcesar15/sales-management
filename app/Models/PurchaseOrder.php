@@ -9,6 +9,8 @@ class PurchaseOrder extends Model
 {
     use HasFactory;
 
+    protected $table = 'purchase_orders';
+
     protected $fillable = [
         'user_id',
         'supplier_id',

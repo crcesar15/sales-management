@@ -218,12 +218,12 @@ export default {
     onPage(event) {
       this.pagination.page = event.page + 1;
       this.pagination.per_page = event.rows;
-      this.fetchProducts();
+      this.fetch();
     },
     onSort(event) {
       this.pagination.sortField = event.sortField;
       this.pagination.sortOrder = event.sortOrder;
-      this.fetchProducts();
+      this.fetch();
     },
     fetch() {
       this.loading = true;
