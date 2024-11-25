@@ -32,25 +32,25 @@
             <div class="grid grid-cols-12 gap-4">
               <div class="col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
-                  <label for="first_name">{{ $t('Supplier') }}</label>
+                  <label for="first_name">{{ $t('Vendor') }}</label>
                   <Select
-                    v-model="supplier"
+                    v-model="vendor"
                     class="w-full mt-2"
-                    :options="suppliers"
-                    :placeholder="$t('Supplier')"
+                    :options="vendors"
+                    :placeholder="$t('Vendor')"
                     option-label="fullname"
                     option-value="id"
                     filter
                     show-clear
-                    :loading="suppliersLoading"
-                    :invalid="v$.supplier.$invalid && v$.supplier.$dirty"
-                    @filter="searchSuppliers"
+                    :loading="vendorsLoading"
+                    :invalid="v$.vendor.$invalid && v$.vendor.$dirty"
+                    @filter="searchVendors"
                   />
                   <small
-                    v-if="v$.supplier.$invalid && v$.supplier.$dirty"
+                    v-if="v$.vendor.$invalid && v$.vendor.$dirty"
                     class="text-red-400 dark:text-red-300"
                   >
-                    {{ v$.supplier.$errors[0].$message }}
+                    {{ v$.vendor.$errors[0].$message }}
                   </small>
                 </div>
               </div>
@@ -96,16 +96,17 @@ export default {
   },
   data() {
     return {
-      supplier: "",
-      suppliersLoading: false,
+      vendor: "",
+      vendorsLoading: false,
+      vendors: [],
     };
   },
   mounted() {
-    this.searchSuppliers();
+    this.searchVendors();
   },
   methods: {
-    searchSuppliers(event = null) {
-      this.suppliersLoading = true;
+    searchVendors(event = null) {
+      this.vendorsLoading = true;
 
       const body = {
         params: {
@@ -121,9 +122,9 @@ export default {
       }
 
       axios
-        .get(route("api.suppliers"), body)
+        .get(route("api.vendors"), body)
         .then((response) => {
-          this.suppliers = response.data.data;
+          this.vendors = response.data.data;
         })
         .catch((error) => {
           this.$toast.add({
@@ -134,7 +135,7 @@ export default {
           });
         })
         .finally(() => {
-          this.suppliersLoading = false;
+          this.vendorsLoading = false;
         });
     },
   },
@@ -147,7 +148,7 @@ export default {
     });
 
     return {
-      supplier: {
+      vendor: {
         required: withI18nMessage(required),
       },
     };

@@ -8,10 +8,10 @@
           size="small"
           severity="secondary"
           class="hover:shadow-md mr-2"
-          @click="$inertia.visit(route('suppliers'))"
+          @click="$inertia.visit(route('vendors'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
-          {{ $t("Product Catalog") }} - {{ supplier.fullname }}
+          {{ $t("Product Catalog") }} - {{ vendor.fullname }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
@@ -230,7 +230,7 @@ export default {
   },
   layout: AppLayout,
   props: {
-    supplier: {
+    vendor: {
       type: Object,
       required: true,
     },
@@ -290,18 +290,18 @@ export default {
       }
 
       axios
-        .get(route("api.suppliers.variants", this.supplier.id), { params })
+        .get(route("api.vendors.variants", this.vendor.id), { params })
         .then((response) => {
           this.products = response.data.data.map((product) => {
-            const relatedSupplier = product.suppliers.find((supplier) => supplier.id === this.supplier.id);
+            const relatedVendor = product.vendors.find((vendor) => vendor.id === this.vendor.id);
 
             return {
               id: product.id,
               name: `${product.name} - ${product.product.name}`,
               status: product.status,
-              price: relatedSupplier.pivot.price,
-              payment_terms: relatedSupplier.pivot.payment_terms,
-              details: relatedSupplier.pivot.details,
+              price: relatedVendor.pivot.price,
+              payment_terms: relatedVendor.pivot.payment_terms,
+              details: relatedVendor.pivot.details,
             };
           });
 
@@ -332,7 +332,7 @@ export default {
     },
     saveProduct(product) {
       axios
-        .put(route("api.suppliers.variants.update", { supplier: this.supplier.id }), { variants: [product] })
+        .put(route("api.vendors.variants.update", { vendor: this.vendor.id }), { variants: [product] })
         .then(() => {
           this.$toast.add({
             severity: "success",
@@ -347,7 +347,7 @@ export default {
     deleteProduct(id) {
       // confirm
       this.$confirm.require({
-        message: this.$t("Are you sure you want to delete this product for this supplier?"),
+        message: this.$t("Are you sure you want to delete this product for this vendor?"),
         header: this.$t("Confirm"),
         icon: "fas fa-exclamation-triangle",
         rejectLabel: this.$t("Cancel"),
@@ -355,7 +355,7 @@ export default {
         rejectClass: "p-button-secondary",
         accept: () => {
           axios
-            .delete(route("api.suppliers.variants.delete", { supplier: this.supplier.id, variant: id }))
+            .delete(route("api.vendors.variants.delete", { vendor: this.vendor.id, variant: id }))
             .then(() => {
               this.$toast.add({
                 severity: "success",

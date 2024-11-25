@@ -11,7 +11,7 @@
           @click="$inertia.visit(route('catalog'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
-          {{ $t('Edit Suppliers') }}
+          {{ $t('Edit Vendors') }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
@@ -81,14 +81,14 @@
           <template #title>
             <div class="flex justify-between mb-3">
               <div>
-                {{ $t('Suppliers') }}
+                {{ $t('Vendors') }}
               </div>
               <div>
                 <PButton
                   icon="fa fa-plus"
                   size="small"
-                  :label="$t('Add Supplier')"
-                  @click="addSupplier()"
+                  :label="$t('Add Vendor')"
+                  @click="addVendor()"
                 />
               </div>
             </div>
@@ -105,29 +105,29 @@
                 </p>
               </template>
               <Column
-                field="supplier"
+                field="vendor"
                 :header="$t('Name')"
               >
                 <template #body="slotProps">
                   <div class="flex flex-col">
                     <Select
-                      v-model="slotProps.data.supplier"
+                      v-model="slotProps.data.vendor"
                       class="w-full"
-                      :options="suppliers"
-                      :placeholder="$t('Supplier')"
+                      :options="vendors"
+                      :placeholder="$t('Vendor')"
                       option-label="fullname"
                       option-value="id"
                       filter
-                      :loading="slotProps.data.suppliersLoading"
+                      :loading="slotProps.data.vendorsLoading"
                       :fluid="true"
-                      :invalid="v$.catalog.$each.$response.$errors[slotProps.index].supplier.length > 0"
-                      @filter="searchSuppliers"
+                      :invalid="v$.catalog.$each.$response.$errors[slotProps.index].vendor.length > 0"
+                      @filter="searchVendors"
                     />
                     <small
-                      v-if="v$.catalog.$each.$response.$errors[slotProps.index].supplier.length > 0"
+                      v-if="v$.catalog.$each.$response.$errors[slotProps.index].vendor.length > 0"
                       class="text-red-400 dark:text-red-300"
                     >
-                      {{ v$.catalog.$each.$response.$errors[slotProps.index].supplier[0].$message }}
+                      {{ v$.catalog.$each.$response.$errors[slotProps.index].vendor[0].$message }}
                     </small>
                   </div>
                 </template>
@@ -208,7 +208,7 @@
                     rounded
                     class="mb-2"
                     size="small"
-                    @click="removeSupplier(slotProps.data)"
+                    @click="removeVendor(slotProps.data)"
                   />
                 </template>
               </Column>
@@ -258,7 +258,7 @@ export default {
       type: Array,
       required: true,
     },
-    savedSuppliers: {
+    savedVendors: {
       type: Array,
       required: true,
     },
@@ -271,25 +271,25 @@ export default {
   data() {
     return {
       catalog: [{
-        suppliersLoading: false,
-        supplier: null,
+        vendorsLoading: false,
+        vendor: null,
         price: 0,
         payment_terms: "debit",
         details: "",
       }],
-      suppliers: [],
+      vendors: [],
     };
   },
   mounted() {
-    this.catalog = this.savedCatalog.map((supplier) => ({
-      suppliersLoading: false,
-      supplier: supplier.id,
-      price: supplier.pivot.price,
-      payment_terms: supplier.pivot.payment_terms,
-      details: supplier.pivot.details,
+    this.catalog = this.savedCatalog.map((vendor) => ({
+      vendorsLoading: false,
+      vendor: vendor.id,
+      price: vendor.pivot.price,
+      payment_terms: vendor.pivot.payment_terms,
+      details: vendor.pivot.details,
     }));
 
-    this.suppliers = this.savedSuppliers;
+    this.vendors = this.savedVendors;
   },
   validations() {
     const { t } = i18n.global;
@@ -303,7 +303,7 @@ export default {
       catalog: {
         required: withI18nMessage(required),
         $each: helpers.forEach({
-          supplier: {
+          vendor: {
             required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
           },
           price: {
@@ -318,11 +318,11 @@ export default {
     };
   },
   methods: {
-    searchSuppliers(event) {
-      this.suppliersLoading = true;
+    searchVendors(event) {
+      this.vendorsLoading = true;
 
       axios
-        .get(route("api.suppliers"), {
+        .get(route("api.vendors"), {
           params: {
             per_page: 10,
             page: 1,
@@ -332,7 +332,7 @@ export default {
           },
         })
         .then((response) => {
-          this.suppliers = response.data.data;
+          this.vendors = response.data.data;
         })
         .catch((error) => {
           this.$toast.add({
@@ -343,24 +343,24 @@ export default {
           });
         })
         .finally(() => {
-          this.suppliersLoading = false;
+          this.vendorsLoading = false;
         });
     },
     submit() {
       this.v$.$touch();
 
       if (!this.v$.$invalid) {
-        const selectedSuppliers = this.catalog.map((item) => ({
-          id: item.supplier,
+        const selectedVendors = this.catalog.map((item) => ({
+          id: item.vendor,
           price: item.price,
           payment_terms: item.payment_terms,
           details: item.details,
         }));
 
-        // check if any of the selected suppliers is duplicated
-        const duplicates = selectedSuppliers.filter((supplier, index, self) => (
+        // check if any of the selected vendors is duplicated
+        const duplicates = selectedVendors.filter((vendor, index, self) => (
           index !== self.findIndex((t) => (
-            t.id === supplier.id
+            t.id === vendor.id
           ))
         ));
 
@@ -368,7 +368,7 @@ export default {
           this.$toast.add({
             severity: "error",
             summary: this.$t("Error"),
-            detail: this.$t("You have selected the same supplier more than once"),
+            detail: this.$t("You have selected the same vendor more than once"),
             life: 3000,
           });
 
@@ -376,14 +376,14 @@ export default {
         }
 
         axios.put(
-          route("api.variants.suppliers.update", this.variant.id),
-          { suppliers: selectedSuppliers },
+          route("api.variants.vendors.update", this.variant.id),
+          { vendors: selectedVendors },
         )
           .then(() => {
             this.$toast.add({
               severity: "success",
               summary: this.$t("Success"),
-              detail: this.$t("Suppliers updated successfully"),
+              detail: this.$t("Vendors updated successfully"),
               life: 3000,
             });
 
@@ -406,17 +406,17 @@ export default {
         });
       }
     },
-    addSupplier() {
+    addVendor() {
       this.catalog.push({
-        suppliersLoading: false,
-        supplier: null,
+        vendorsLoading: false,
+        vendor: null,
         price: 0,
         payment_terms: "debit",
         details: "",
       });
     },
-    removeSupplier(supplier) {
-      const index = this.catalog.indexOf(supplier);
+    removeVendor(vendor) {
+      const index = this.catalog.indexOf(vendor);
       this.catalog.splice(index, 1);
     },
   },

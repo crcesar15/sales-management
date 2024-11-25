@@ -8,7 +8,7 @@ use App\Models\ProductVariant;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
 
-class VendorController extends Controller
+class VendorsController extends Controller
 {
     //Get all vendors
     public function index(Request $request)

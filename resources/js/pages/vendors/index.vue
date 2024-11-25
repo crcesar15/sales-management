@@ -2,23 +2,23 @@
   <div>
     <div class="flex justify-between mb-3">
       <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ $t("Suppliers") }}
+        {{ $t("Vendors") }}
       </h2>
       <PButton
-        :label="$t('Add Supplier')"
+        :label="$t('Add Vendor')"
         style="text-transform: uppercase"
         icon="fa fa-add"
         size="small"
         raised
         class="ml-2"
-        @click="$inertia.visit(route('suppliers.create'))"
+        @click="$inertia.visit(route('vendors.create'))"
       />
     </div>
     <ConfirmDialog />
     <Card>
       <template #content>
         <DataTable
-          :value="suppliers"
+          :value="vendors"
           resizable-columns
           lazy
           :total-records="pagination.total"
@@ -28,12 +28,11 @@
           paginator
           sort-field="fullname"
           :sort-order="1"
-          table-class="border border-surface"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ $t("No suppliers found") }}
+            {{ $t("No vendors found") }}
           </template>
           <template #header>
             <div class="grid grid-cols-12">
@@ -160,7 +159,7 @@
                   rounded
                   raised
                   size="sm"
-                  @click="editSupplier(row.data)"
+                  @click="editVendor(row.data)"
                 />
                 <p-button
                   v-show="row.data.status !== 'archived'"
@@ -170,7 +169,7 @@
                   rounded
                   raised
                   size="sm"
-                  @click="deleteSupplier(row.data.id)"
+                  @click="deleteVendor(row.data.id)"
                 />
               </div>
             </template>
@@ -209,7 +208,7 @@ export default {
   layout: AppLayout,
   data() {
     return {
-      suppliers: [],
+      vendors: [],
       pagination: {
         total: 0,
         first: 0,
@@ -227,32 +226,32 @@ export default {
     "pagination.filter": {
       handler() {
         this.pagination.page = 1;
-        this.fetchSuppliers();
+        this.fetchVendors();
       },
     },
     status() {
       this.pagination.page = 1;
-      this.fetchSuppliers();
+      this.fetchVendors();
     },
   },
   mounted() {
-    this.fetchSuppliers();
+    this.fetchVendors();
   },
   methods: {
     onPage(event) {
       this.pagination.page = event.page + 1;
       this.pagination.per_page = event.rows;
-      this.fetchSuppliers();
+      this.fetchVendors();
     },
     onSort(event) {
       this.pagination.sortField = event.sortField;
       this.pagination.sortOrder = event.sortOrder;
-      this.fetchSuppliers();
+      this.fetchVendors();
     },
-    fetchSuppliers() {
+    fetchVendors() {
       this.loading = true;
 
-      let url = `${route("api.suppliers")}?per_page=${this.pagination.rows}
+      let url = `${route("api.vendors")}?per_page=${this.pagination.rows}
         &page=${this.pagination.page}
         &order_by=${this.pagination.sortField}
         &status=${this.status}`;
@@ -269,7 +268,7 @@ export default {
 
       axios.get(url)
         .then((response) => {
-          this.suppliers = response.data.data;
+          this.vendors = response.data.data;
           this.pagination.total = response.data.meta.total;
           this.loading = false;
         })
@@ -283,30 +282,30 @@ export default {
           this.loading = false;
         });
     },
-    editSupplier(id) {
-      this.$inertia.visit(route("suppliers.edit", id));
+    editVendor(id) {
+      this.$inertia.visit(route("vendors.edit", id));
     },
     showProducts(id) {
-      this.$inertia.visit(route("suppliers.products", id));
+      this.$inertia.visit(route("vendors.products", id));
     },
-    deleteSupplier(id) {
+    deleteVendor(id) {
       this.$confirm.require({
-        message: this.$t("Are you sure you want to delete this supplier?"),
+        message: this.$t("Are you sure you want to delete this vendor?"),
         header: this.$t("Confirm"),
         icon: "fas fa-exclamation-triangle",
         rejectLabel: this.$t("Cancel"),
         acceptLabel: this.$t("Delete"),
         rejectClass: "p-button-secondary",
         accept: () => {
-          axios.delete(route("api.suppliers.destroy", id))
+          axios.delete(route("api.vendors.destroy", id))
             .then(() => {
               this.$toast.add({
                 severity: "success",
                 summary: "Success",
-                detail: this.$t("Supplier deleted successfully"),
+                detail: this.$t("Vendor deleted successfully"),
                 life: 3000,
               });
-              this.fetchSuppliers();
+              this.fetchVendors();
             })
             .catch((error) => {
               this.$toast.add({

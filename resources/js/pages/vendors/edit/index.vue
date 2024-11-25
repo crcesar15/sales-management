@@ -8,10 +8,10 @@
           size="small"
           severity="secondary"
           class="hover:shadow-md mr-2"
-          @click="$inertia.visit(route('suppliers'))"
+          @click="$inertia.visit(route('vendors'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
-          {{ $t("Add Supplier") }}
+          {{ $t("Edit Vendor") }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
@@ -113,7 +113,7 @@
                   class="mr-3 text-primary"
                   style="font-size: 14px;"
                 >
-                  {{ $t("This supplier has additional contacts?") }}
+                  {{ $t("This vendor has additional contacts?") }}
                 </label>
                 <ToggleSwitch
                   v-model="hasAdditionalContacts"
@@ -276,6 +276,12 @@ export default {
     ToggleSwitch,
   },
   layout: AppLayout,
+  props: {
+    vendor: {
+      type: Object,
+      required: true,
+    },
+  },
   setup() {
     return {
       v$: useVuelidate(),
@@ -290,8 +296,33 @@ export default {
       phone: "",
       status: "active",
       hasAdditionalContacts: false,
-      additionalContacts: [],
+      additionalContacts: [
+        {
+          fullname: "",
+          phone: "",
+          email: "",
+        },
+      ],
     };
+  },
+  watch: {
+    vendor: {
+      handler() {
+        this.fullname = this.vendor.fullname;
+        this.phone = this.vendor.phone;
+        this.email = this.vendor.email;
+        this.address = this.vendor.address;
+        this.details = this.vendor.details;
+        this.status = this.vendor.status;
+
+        this.hasAdditionalContacts = this.vendor.additional_contacts?.length > 0;
+
+        if (this.hasAdditionalContacts) {
+          this.additionalContacts = this.vendor.additional_contacts;
+        }
+      },
+      immediate: true,
+    },
   },
   validations() {
     const { t } = i18n.global;
@@ -331,7 +362,7 @@ export default {
     submit() {
       this.v$.$touch();
       if (!this.v$.$invalid) {
-        const supplier = {
+        const vendor = {
           fullname: this.fullname,
           phone: this.phone,
           email: this.email,
@@ -341,18 +372,20 @@ export default {
         };
 
         if (this.hasAdditionalContacts) {
-          supplier.additional_contacts = this.additionalContacts;
+          vendor.additional_contacts = this.additionalContacts;
+        } else {
+          vendor.additional_contacts = null;
         }
 
-        axios.post(route("api.suppliers.store"), supplier).then(() => {
+        axios.put(route("api.vendors.update", this.vendor.id), vendor).then(() => {
           this.$toast.add({
             severity: "success",
             summary: this.$t("Success"),
-            detail: this.$t("Supplier has been created successfully"),
+            detail: this.$t("Vendor has been updated successfully"),
             life: 3000,
           });
 
-          this.$inertia.visit(route("suppliers"));
+          this.$inertia.visit(route("vendors"));
         }).catch((error) => {
           this.$toast.add({
             severity: "error",

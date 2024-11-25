@@ -100,8 +100,8 @@
             </div>
           </template>
           <Column
-            field="supplier.fullname"
-            :header="$t('Supplier')"
+            field="vendor.fullname"
+            :header="$t('Vendor')"
           />
           <Column
             field="user.full_name"
@@ -233,7 +233,7 @@ export default {
         page: this.pagination.page,
         order_by: this.pagination.sortField,
         order_direction: this.pagination.sortOrder === 1 ? "asc" : "desc",
-        include: "supplier,user",
+        include: "vendor,user",
         status: this.status,
       };
 

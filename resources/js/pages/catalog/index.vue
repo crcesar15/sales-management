@@ -185,22 +185,22 @@
             <template #body="{ data }">
               <span class="flex justify-center gap-2">
                 <p-button
-                  v-tooltip.top="$t('View Suppliers')"
+                  v-tooltip.top="$t('View Vendors')"
                   icon="fa-solid fa-eye"
                   text
                   rounded
                   raised
                   size="sm"
-                  @click="viewSuppliers(data.id)"
+                  @click="viewVendors(data.id)"
                 />
                 <p-button
-                  v-tooltip.top="$t('Edit Suppliers')"
+                  v-tooltip.top="$t('Edit Vendors')"
                   icon="fa fa-edit"
                   text
                   rounded
                   raised
                   size="sm"
-                  @click="editSuppliers(data.id)"
+                  @click="editVendors(data.id)"
                 />
               </span>
             </template>
@@ -211,31 +211,31 @@
     <Popover ref="filters">
       <div class="bg-surface-50 dark:bg-surface-950 p-4 border-rounded">
         <label>
-          {{ $t("Filter By Supplier") }}
+          {{ $t("Filter By Vendor") }}
         </label>
         <Select
-          v-model="selectedSupplier"
+          v-model="selectedVendor"
           class="w-full mt-2"
-          :options="suppliers"
-          :placeholder="$t('Supplier')"
+          :options="vendors"
+          :placeholder="$t('Vendor')"
           option-label="fullname"
           option-value="id"
           filter
           show-clear
-          :loading="suppliersLoading"
-          @filter="searchSuppliers"
+          :loading="vendorsLoading"
+          @filter="searchVendors"
         />
       </div>
     </Popover>
     <Dialog
-      v-model:visible="showSuppliers"
+      v-model:visible="showVendors"
       modal
-      :header="$t('Suppliers')"
+      :header="$t('Vendors')"
       :style="{ width: '50rem' }"
       :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     >
       <DataTable
-        :value="productSuppliers"
+        :value="productVendors"
         resizable-columns
         :rows="10"
         table-class="border-t"
@@ -243,19 +243,19 @@
         <template #empty>
           <div class="flex w-full justify-between">
             <p class="m-0 flex items-center">
-              {{ $t("No suppliers found") }}
+              {{ $t("No vendors found") }}
             </p>
             <PButton
               icon="fa fa-plus"
-              :label="$t('Add Supplier')"
+              :label="$t('Add Vendor')"
 
-              @click="editSuppliers(selectedVariantId)"
+              @click="editVendors(selectedVariantId)"
             />
           </div>
         </template>
         <Column
           field="fullname"
-          :header="$t('Supplier')"
+          :header="$t('Vendor')"
         />
         <Column
           field="email"
@@ -322,7 +322,7 @@
                 icon="fa fa-edit"
                 text
                 size="sm"
-                @click="$inertia.visit(route('suppliers.edit', {supplier: data.id}))"
+                @click="$inertia.visit(route('vendors.edit', {vendor: data.id}))"
               />
             </span>
           </template>
@@ -378,12 +378,12 @@ export default {
       },
       loading: false,
       status: "all",
-      selectedSupplier: null,
+      selectedVendor: null,
       selectedVariantId: null,
-      suppliers: [],
-      suppliersLoading: false,
-      showSuppliers: false,
-      productSuppliers: [],
+      vendors: [],
+      vendorsLoading: false,
+      showVendors: false,
+      productVendors: [],
     };
   },
   watch: {
@@ -397,14 +397,14 @@ export default {
       this.pagination.page = 1;
       this.fetchVariants();
     },
-    selectedSupplier() {
+    selectedVendor() {
       this.pagination.page = 1;
       this.fetchVariants();
     },
   },
   mounted() {
     this.fetchVariants();
-    this.searchSuppliers();
+    this.searchVendors();
   },
   methods: {
     fetchVariants() {
@@ -415,15 +415,15 @@ export default {
         page: this.pagination.page,
         sortField: this.pagination.sortField,
         status: this.status,
-        includes: "product,suppliers",
+        includes: "product,vendors",
       };
 
       if (this.pagination.filter) {
         params.filter = this.pagination.filter;
       }
 
-      if (this.selectedSupplier) {
-        params.supplier = this.selectedSupplier;
+      if (this.selectedVendor) {
+        params.vendor = this.selectedVendor;
       }
 
       if (this.pagination.sortOrder === -1) {
@@ -449,8 +449,8 @@ export default {
           this.loading = false;
         });
     },
-    searchSuppliers(event = null) {
-      this.suppliersLoading = true;
+    searchVendors(event = null) {
+      this.vendorsLoading = true;
 
       const body = {
         params: {
@@ -466,9 +466,9 @@ export default {
       }
 
       axios
-        .get(route("api.suppliers"), body)
+        .get(route("api.vendors"), body)
         .then((response) => {
-          this.suppliers = response.data.data;
+          this.vendors = response.data.data;
         })
         .catch((error) => {
           this.$toast.add({
@@ -479,7 +479,7 @@ export default {
           });
         })
         .finally(() => {
-          this.suppliersLoading = false;
+          this.vendorsLoading = false;
         });
     },
     onPage(event) {
@@ -492,27 +492,27 @@ export default {
       this.pagination.sortOrder = event.sortOrder;
       this.fetchVariants();
     },
-    editSuppliers(id) {
+    editVendors(id) {
       this.$inertia.visit(route("catalog.edit", id));
     },
     toggleFilter(event) {
       this.$refs.filters.toggle(event);
     },
-    viewSuppliers(id) {
+    viewVendors(id) {
       this.selectedVariantId = id;
-      this.showSuppliers = true;
-      this.productSuppliers = [];
+      this.showVendors = true;
+      this.productVendors = [];
 
-      axios.get(route("api.variants.suppliers", id))
+      axios.get(route("api.variants.vendors", id))
         .then((response) => {
-          this.productSuppliers = response.data.data.map((supplier) => ({
-            id: supplier.id,
-            fullname: supplier.fullname,
-            email: supplier.email,
-            phone: supplier.phone,
-            price: supplier.pivot.price,
-            payment_terms: supplier.pivot.payment_terms,
-            status: supplier.status,
+          this.productVendors = response.data.data.map((vendor) => ({
+            id: vendor.id,
+            fullname: vendor.fullname,
+            email: vendor.email,
+            phone: vendor.phone,
+            price: vendor.pivot.price,
+            payment_terms: vendor.pivot.payment_terms,
+            status: vendor.status,
           }));
         })
         .catch((error) => {

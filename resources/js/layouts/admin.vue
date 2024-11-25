@@ -105,10 +105,10 @@ export default {
               route: route("catalog"),
             },
             {
-              label: "Suppliers",
+              label: "Vendors",
               icon: "fa fa-truck-field",
-              to: "suppliers",
-              route: route("suppliers"),
+              to: "vendors",
+              route: route("vendors"),
             },
           ],
         },

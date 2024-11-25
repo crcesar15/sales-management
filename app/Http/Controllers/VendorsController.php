@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Vendor;
 use Inertia\Inertia;
 
-class VendorController extends Controller
+class VendorsController extends Controller
 {
     public function index()
     {

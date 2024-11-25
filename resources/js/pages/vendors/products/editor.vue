@@ -3,7 +3,7 @@
     <Dialog
       v-model:visible="showModal"
       modal
-      :header="$t('Suppliers')"
+      :header="$t('Vendors')"
       :style="{ width: '50rem' }"
       :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
       :close-on-escape="true"
