@@ -8,13 +8,12 @@ use App\Models\Brand;
 use App\Models\Catalog;
 use App\Models\Category;
 use App\Models\MeasureUnit;
-use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\Role;
-use App\Models\Supplier;
 use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
@@ -101,13 +100,13 @@ class DatabaseSeeder extends Seeder
             });
         });
 
-        //Create 10 suppliers
-        Supplier::factory(10)->create();
+        //Create 10 vendors
+        Vendor::factory(10)->create();
 
         //Create 10 catalogs
         Catalog::factory(10)->create(
             [
-                'supplier_id' => Supplier::all()->random()->id,
+                'vendor_id' => Vendor::all()->random()->id,
                 'product_variant_id' => Product::all()->random()->id,
             ]
         );
@@ -116,7 +115,7 @@ class DatabaseSeeder extends Seeder
         PurchaseOrder::factory(10)->create(
             [
                 'user_id' => User::all()->random()->id,
-                'supplier_id' => Supplier::all()->random()->id,
+                'vendor_id' => Vendor::all()->random()->id,
             ]
         );
 

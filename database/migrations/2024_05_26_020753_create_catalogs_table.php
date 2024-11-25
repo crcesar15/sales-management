@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('catalog', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
+            $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
             $table->float('price', 8, 2);
             $table->string('payment_terms', 15)->nullable();

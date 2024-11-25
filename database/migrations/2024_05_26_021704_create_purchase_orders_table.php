@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('purchase_orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('supplier_id')->constrained();
+            $table->foreignId('vendor_id')->constrained();
             $table->enum('status', ['draft', 'pending', 'paid', 'cancelled'])->default('draft');
             $table->date('order_date')->nullable();
             $table->date('expected_arrival_date')->nullable();

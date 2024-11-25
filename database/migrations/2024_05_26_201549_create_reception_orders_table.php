@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('purchase_order_id')->constrained();
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('supplier_id')->constrained();
+            $table->foreignId('vendor_id')->constrained();
             $table->date('reception_date')->nullable();
             $table->text('notes')->nullable();
             $table->enum('status', ['pending', 'uncompleted', 'completed', 'cancelled'])->default('pending');
