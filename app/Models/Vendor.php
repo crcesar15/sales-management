@@ -28,7 +28,7 @@ class Vendor extends Model
 
     public function variants()
     {
-        return $this->belongsToMany(ProductVariant::class, 'catalog', 'vendor', 'product_variant_id')
+        return $this->belongsToMany(ProductVariant::class, 'catalog', 'vendor_id', 'product_variant_id')
             ->withTimestamps()
             ->withPivot('price', 'payment_terms', 'details');
     }
