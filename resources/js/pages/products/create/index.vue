@@ -356,6 +356,7 @@
       <Dialog
         v-model:visible="showVariantEditor"
         modal
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
         :header="$t('Add Variant')"
       >
         <div

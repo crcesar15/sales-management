@@ -3,6 +3,7 @@
     <Dialog
       v-model:visible="visible"
       :header="$t('Measure Unit')"
+      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
       modal
       @hide="clearSelection"
     >

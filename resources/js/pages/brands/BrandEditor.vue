@@ -2,6 +2,7 @@
   <div>
     <Dialog
       v-model:visible="visible"
+      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
       :header="$t('Brand')"
       modal
       @hide="clearSelection"
