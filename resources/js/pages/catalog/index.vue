@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="flex justify-between mb-3">
+    <div class="flex justify-between my-3">
       <h2 class="text-2xl font-bold flex items-end m-0">
         {{ $t("Product Catalog") }}
       </h2>

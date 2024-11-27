@@ -6,11 +6,9 @@
       </h2>
       <PButton
         :label="$t('Add Vendor')"
-        style="text-transform: uppercase"
         icon="fa fa-add"
-        size="small"
         raised
-        class="ml-2"
+        class="ml-2 uppercase"
         @click="$inertia.visit(route('vendors.create'))"
       />
     </div>

@@ -5,9 +5,8 @@
         <PButton
           icon="fa fa-arrow-left"
           text
-          size="small"
           severity="secondary"
-          class="hover:shadow-md mr-2"
+          class="hover:shadow-md mr-2 uppercase"
           @click="$inertia.visit(route('vendors'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
@@ -17,9 +16,8 @@
       <div class="flex flex-col justify-center">
         <PButton
           :label="$t('Add Product')"
-          style="text-transform: uppercase"
           icon="fa fa-plus"
-          size="small"
+          class="uppercase"
           raised
           @click="addProduct()"
         />

@@ -6,10 +6,8 @@
       </h2>
       <p-button
         :label="$t('Add User')"
-        class="ml-2"
-        style="text-transform: uppercase"
+        class="ml-2 uppercase"
         icon="fa fa-add"
-        size="small"
         raised
         @click="$inertia.visit(route('users.create'))"
       />

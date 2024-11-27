@@ -5,7 +5,6 @@
         <PButton
           icon="fa fa-arrow-left"
           text
-          size="small"
           severity="secondary"
           class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('catalog'))"
@@ -19,7 +18,6 @@
           icon="fa fa-save"
           :label="$t('Save')"
           style="text-transform: uppercase"
-          size="small"
           raised
           @click="submit()"
         />
@@ -86,7 +84,7 @@
               <div>
                 <PButton
                   icon="fa fa-plus"
-                  size="small"
+                  class="uppercase"
                   :label="$t('Add Vendor')"
                   @click="addVendor()"
                 />
@@ -207,7 +205,6 @@
                     raised
                     rounded
                     class="mb-2"
-                    size="small"
                     @click="removeVendor(slotProps.data)"
                   />
                 </template>

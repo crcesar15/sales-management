@@ -5,7 +5,6 @@
         <PButton
           icon="fa fa-arrow-left"
           text
-          size="small"
           severity="secondary"
           class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('products'))"
@@ -18,8 +17,7 @@
         <PButton
           icon="fa fa-save"
           :label="$t('Save')"
-          style="text-transform: uppercase"
-          size="small"
+          class="uppercase"
           raised
           @click="submit()"
         />
@@ -153,14 +151,13 @@
               <div>
                 <PButton
                   :label="$t('Add Variant')"
-                  class="mr-2"
-                  size="small"
+                  class="mr-2 uppercase"
                   raised
                   @click="addVariant()"
                 />
                 <PButton
                   outlined
-                  size="small"
+                  class="uppercase"
                   raised
                   :label="$t('Generate Variants')"
                   @click="generateVariants()"
@@ -268,9 +265,12 @@
               >
                 <template #body="slotProps">
                   <PButton
+                    v-tooltip.top="$t('Remove Variant')"
                     icon="fa fa-trash"
                     severity="primary"
-                    outlined
+                    rounded
+                    raised
+                    text
                     @click="removeVariant(slotProps.data.hash)"
                   />
                 </template>

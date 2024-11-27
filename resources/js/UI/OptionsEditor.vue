@@ -22,6 +22,7 @@
         >
           <Button
             v-show="!option.saved"
+            v-tooltip.left="$t('Save')"
             icon="fa fa-floppy-disk"
             style="width: 25px; height: 25px; padding: 0px; margin-right: 4px;"
             raised
@@ -31,6 +32,7 @@
             @click="saveOption(index)"
           />
           <Button
+            v-tooltip.left="$t('Delete')"
             icon="fa fa-trash"
             style="width: 25px; height: 25px; padding: 0px;"
             raised

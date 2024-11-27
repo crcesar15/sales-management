@@ -6,11 +6,9 @@
       </h2>
       <p-button
         :label="$t('Add Product')"
-        style="text-transform: uppercase"
         icon="fa fa-add"
-        size="small"
         raised
-        class="ml-2"
+        class="ml-2 uppercase"
         @click="$inertia.visit(route('products.create'))"
       />
     </div>

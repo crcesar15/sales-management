@@ -6,11 +6,9 @@
       </h2>
       <p-button
         :label="$t('Add Measure Unit')"
-        style="text-transform: uppercase"
         icon="fa fa-add"
-        size="small"
         raised
-        class="ml-2"
+        class="ml-2 uppercase"
         @click="addMeasureUnit"
       />
     </div>

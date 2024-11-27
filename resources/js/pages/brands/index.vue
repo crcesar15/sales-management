@@ -8,7 +8,6 @@
         :label="$t('Add Brand')"
         style="text-transform: uppercase"
         icon="fa fa-add"
-        size="small"
         raised
         class="ml-2"
         @click="addBrand"

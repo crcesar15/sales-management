@@ -7,7 +7,7 @@
       <PButton
         :label="$t('Upload Image')"
         icon="fa fa-add"
-        size="small"
+        class="uppercase"
         raised
         @click="openFileUpload"
       />
@@ -50,7 +50,7 @@
         v-show="files.length > 0"
         icon="fa fa-add"
         :label="$t('Upload Image')"
-        size="small"
+        class="uppercase"
         raised
         @click="openFileUpload"
       />
