@@ -135,10 +135,18 @@ class VendorsController extends Controller
             ? $request->get('order_direction')
             : 'ASC';
 
-        $response = $query->orderBy(
+        $query->orderBy(
             $request->input('order_by', $order_by),
             $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+        );
+
+        if ($request->has('all')) {
+            $response = $query->get();
+
+            return response()->json(['data' => $response], 200);
+        }
+
+        $response = $query->paginate($request->input('per_page', 10));
 
         return new ApiCollection($response);
     }
@@ -152,7 +160,7 @@ class VendorsController extends Controller
         foreach ($products as $product) {
             $formattedProducts[$product['id']] = [
                 'price' => $product['price'],
-                'details' => $product['details'],
+                'details' => $product['details'] ?? null,
                 'payment_terms' => $product['payment_terms'],
             ];
         }

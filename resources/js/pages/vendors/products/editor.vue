@@ -53,10 +53,10 @@
             />
           </div>
           <div class="col-span-12 flex flex-col">
-            <label for="product-description">{{ $t("Description") }}</label>
+            <label for="product-details">{{ $t("Details") }}</label>
             <Textarea
-              id="product-description"
-              v-model="description"
+              id="product-details"
+              v-model="details"
               :readonly="false"
             />
           </div>
@@ -82,7 +82,6 @@
 </template>
 
 <script>
-import InputText from "primevue/inputtext";
 import Select from "primevue/select";
 import Dialog from "primevue/dialog";
 import PButton from "primevue/button";
@@ -93,7 +92,6 @@ import i18n from "../../../app";
 export default {
   components: {
     Textarea,
-    InputText,
     Select,
     PButton,
     Dialog,
@@ -119,7 +117,7 @@ export default {
     return {
       productId: "",
       paymentTerm: "",
-      description: "",
+      details: "",
       price: "",
       payment_terms: [
         { label: "Cash", value: "debit" },
@@ -147,7 +145,7 @@ export default {
         this.productId = val?.id;
         this.price = val?.price;
         this.paymentTerm = val?.payment_terms;
-        this.description = val?.details;
+        this.details = val?.details;
       },
       deep: true,
     },
@@ -158,9 +156,6 @@ export default {
       deep: true,
     },
   },
-  mounted() {
-    console.log(this.product);
-  },
   methods: {
     close() {
       this.$emit("close");
@@ -170,7 +165,7 @@ export default {
         id: this.productId,
         price: this.price,
         payment_terms: this.paymentTerm,
-        details: this.description,
+        details: this.details,
       };
       this.$emit("save", formattedProduct);
     },
