@@ -86,25 +86,36 @@
                     {{ v$.vendor.$errors[0].$message }}
                   </small>
                 </div>
-                <label for="Products">{{ $t('Products') }}</label>
                 <DataTable
-                  v-model:editingRows="editingItems"
+                  v-show="vendor"
                   data-key="id"
                   :value="items"
-                  edit-mode="row"
+                  edit-mode="cell"
                 >
+                  <template #header>
+                    <div class="flex justify-between items-center">
+                      <label for="Products">{{ $t('Products') }}</label>
+                      <PButton
+                        icon="fa fa-plus"
+                        :label="$t('Product')"
+                        raised
+                        style="text-transform: uppercase"
+                        size="small"
+                        @click="showSelectProductModal = true"
+                      />
+                    </div>
+                  </template>
                   <Column
                     field="product"
                     header="Product"
                   >
                     <template #body="{data, field}">
-                      <p>{{ data[field] }}</p>
+                      <p>{{ data[field].name }}</p>
                     </template>
                     <template #editor="{data, field}">
                       <Select
                         v-model="data[field]"
-                        class="w-full"
-                        :options="products"
+                        :options="availableProducts"
                         option-label="name"
                       />
                     </template>
@@ -119,9 +130,9 @@
                     <template #editor="{data, field}">
                       <InputNumber
                         v-model="data[field]"
-                        class="w-full"
-                        mode="decimal"
-                        :min="0"
+                        show-buttons
+                        :step="1"
+                        :min="1"
                       />
                     </template>
                   </Column>
@@ -130,7 +141,16 @@
                     header="Unit Price"
                   >
                     <template #body="{data, field}">
-                      <p>BOB. {{ data['product']['price'] }}</p>
+                      <p>BOB. {{ data[field] }}</p>
+                    </template>
+                    <template #editor="{data, field}">
+                      <InputNumber
+                        v-model="data[field]"
+                        mode="currency"
+                        currency="BOB"
+                        show-buttons
+                        :step="0.50"
+                      />
                     </template>
                   </Column>
                   <Column
@@ -138,38 +158,12 @@
                     header="SubTotal"
                   >
                     <template #body="{data, field}">
-                      <p>{{ productSubTotal(data['quantity'], data['unit_price']) }}</p>
+                      <p>{{ data[field] }}</p>
                     </template>
                   </Column>
-                  <Column
-                    :row-editor="true"
-                    style="width: 10%; min-width: 8rem"
-                    body-style="text-align:center"
-                  />
                   <template #empty>
-                    <div class="flex justify-start">
-                      <PButton
-                        icon="fa fa-plus"
-                        :label="$t('Add Product')"
-                        class="uppercase"
-                        link
-                        @click="addProduct"
-                      />
-                    </div>
-                  </template>
-                  <template #footer>
-                    <div
-                      v-show="items.length > 0"
-                      class="flex justify-start"
-                    >
-                      <PButton
-                        icon="fa fa-plus"
-                        :label="$t('Add Product')"
-                        style="text-transform: uppercase"
-                        size="small"
-                        link
-                        @click="addProduct"
-                      />
+                    <div class="flex justify-center">
+                      <p>{{ $t('Please add a product') }}</p>
                     </div>
                   </template>
                 </DataTable>
@@ -219,6 +213,12 @@
         </Card>
       </div>
     </div>
+    <ProductSelector
+      :products="availableProducts"
+      :show-modal="showSelectProductModal"
+      @save="addProduct"
+      @close="showSelectProductModal = false"
+    />
   </div>
 </template>
 
@@ -239,6 +239,7 @@ import {
   Column,
   InputNumber,
 } from "primevue";
+import ProductSelector from "./ProductSelector.vue";
 
 import AppLayout from "../../../layouts/admin.vue";
 import i18n from "../../../app";
@@ -253,6 +254,7 @@ export default {
     DataTable,
     Column,
     InputNumber,
+    ProductSelector,
   },
   layout: AppLayout,
   props: {
@@ -280,8 +282,8 @@ export default {
       orderDate: "",
       expectedArrivalDate: "",
       items: [],
-      editingItems: [],
-      products: [],
+      availableProducts: [],
+      showSelectProductModal: false,
     };
   },
   computed: {
@@ -302,7 +304,7 @@ export default {
   methods: {
     fetchProductByVendor(id) {
       axios.get(route("api.vendors.variants", id)).then((response) => {
-        this.products = response.data.data;
+        this.availableProducts = response.data.data;
       });
     },
     searchVendors(event = null) {
@@ -345,14 +347,13 @@ export default {
       // open vendor in a new tab
       window.open(route("vendors.edit", id), "_blank");
     },
-    addProduct() {
+    addProduct(item) {
       this.items.push({
         id: Math.random().toString(36).substr(2, 9),
-        product: "",
-        description: "",
-        quantity: 0,
-        unit_price: 0,
-        subtotal: 0,
+        product: item.product,
+        quantity: item.quantity,
+        unit_price: item.price,
+        subtotal: item.total,
       });
     },
     productSubTotal(quantity, price) {
