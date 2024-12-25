@@ -86,87 +86,9 @@
                     {{ v$.vendor.$errors[0].$message }}
                   </small>
                 </div>
-                <DataTable
-                  v-show="vendor"
-                  data-key="id"
-                  :value="items"
-                  edit-mode="cell"
-                >
-                  <template #header>
-                    <div class="flex justify-between items-center">
-                      <label for="Products">{{ $t('Products') }}</label>
-                      <PButton
-                        icon="fa fa-plus"
-                        :label="$t('Product')"
-                        raised
-                        style="text-transform: uppercase"
-                        size="small"
-                        @click="showSelectProductModal = true"
-                      />
-                    </div>
-                  </template>
-                  <Column
-                    field="product"
-                    header="Product"
-                  >
-                    <template #body="{data, field}">
-                      <p>{{ data[field].name }}</p>
-                    </template>
-                    <template #editor="{data, field}">
-                      <Select
-                        v-model="data[field]"
-                        :options="availableProducts"
-                        option-label="name"
-                      />
-                    </template>
-                  </Column>
-                  <Column
-                    field="quantity"
-                    header="Quantity"
-                  >
-                    <template #body="{data, field}">
-                      <p>{{ data[field] }}</p>
-                    </template>
-                    <template #editor="{data, field}">
-                      <InputNumber
-                        v-model="data[field]"
-                        show-buttons
-                        :step="1"
-                        :min="1"
-                      />
-                    </template>
-                  </Column>
-                  <Column
-                    field="unit_price"
-                    header="Unit Price"
-                  >
-                    <template #body="{data, field}">
-                      <p>BOB. {{ data[field] }}</p>
-                    </template>
-                    <template #editor="{data, field}">
-                      <InputNumber
-                        v-model="data[field]"
-                        mode="currency"
-                        currency="BOB"
-                        show-buttons
-                        :step="0.50"
-                      />
-                    </template>
-                  </Column>
-                  <Column
-                    field="subtotal"
-                    header="SubTotal"
-                  >
-                    <template #body="{data, field}">
-                      <p>{{ data[field] }}</p>
-                    </template>
-                  </Column>
-                  <template #empty>
-                    <div class="flex justify-center">
-                      <p>{{ $t('Please add a product') }}</p>
-                    </div>
-                  </template>
-                </DataTable>
+                <order-grid
+                  :items="items"
+                />
               </div>
             </div>
           </template>
@@ -240,6 +162,7 @@ import {
   InputNumber,
 } from "primevue";
 import ProductSelector from "./ProductSelector.vue";
+import OrderGrid from "./OrderGrid.vue";
 
 import AppLayout from "../../../layouts/admin.vue";
 import i18n from "../../../app";
@@ -255,6 +178,7 @@ export default {
     Column,
     InputNumber,
     ProductSelector,
+    OrderGrid,
   },
   layout: AppLayout,
   props: {
@@ -281,7 +205,22 @@ export default {
       status: "draft",
       orderDate: "",
       expectedArrivalDate: "",
-      items: [],
+      items: [
+        {
+          id: Math.random().toString(36).substr(2, 9),
+          product: "Product 1",
+          quantity: 1,
+          unit_price: 100,
+          subtotal: 100,
+        },
+        {
+          id: Math.random().toString(36).substr(2, 9),
+          product: "Product 2",
+          quantity: 2,
+          unit_price: 200,
+          subtotal: 400,
+        },
+      ],
       availableProducts: [],
       showSelectProductModal: false,
     };
