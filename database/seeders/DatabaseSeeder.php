@@ -62,29 +62,6 @@ class DatabaseSeeder extends Seeder
         Storage::deleteDirectory('public/products');
         Storage::makeDirectory('public/products');
 
-        //Product categories
-        // Category::factory(10)->create()->each(function ($category) use ($medias) {
-        //     //create 5 products for each category
-        //     Product::factory(5)->create([
-        //         'category_id' => $category->id,
-        //     ])->each(function ($product) use ($medias) {
-        //         Media::factory(rand(1, 2))->create([
-        //             'filename' => $medias->random()->filename,
-        //             'model_id' => $product->id,
-        //             'model_type' => Product::class,
-        //         ])->each(function ($media) use ($product) {
-        //             ProductVariant::factory(1)->create([
-        //                 'product_id' => $product->id,
-        //                 'media' => [
-        //                     [
-        //                         'id' => $media->id,
-        //                     ],
-        //                 ],
-        //             ]);
-        //         });
-        //     });
-        // });
-
         Category::factory(10)->create()->each(function ($category) {
             //create 5 products for each category
             Product::factory(5)->create([
@@ -117,7 +94,13 @@ class DatabaseSeeder extends Seeder
                 'user_id' => User::all()->random()->id,
                 'vendor_id' => Vendor::all()->random()->id,
             ]
-        );
+        )->each(function (PurchaseOrder $purchaseOrder) {
+            $purchaseOrder->products()->attach(Product::all()->random()->id, [
+                'quantity' => rand(1, 10),
+                'price' => rand(100, 1000),
+                'total' => rand(100, 1000),
+            ]);
+        });
 
         //Set permissions to storage folder
         exec('sudo chmod -R 777 storage/app/public/products');
