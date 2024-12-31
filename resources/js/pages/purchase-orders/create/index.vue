@@ -25,7 +25,7 @@
     </div>
     <div class="grid grid-cols-12 gap-4">
       <div class="md:col-span-8 col-span-12">
-        <Card>
+        <Card class="mb-4">
           <template #content>
             <div class="grid grid-cols-12 gap-4">
               <div class="col-span-12">
@@ -86,10 +86,31 @@
                     {{ v$.vendor.$errors[0].$message }}
                   </small>
                 </div>
-                <order-grid
-                  :items="items"
+              </div>
+            </div>
+          </template>
+        </Card>
+        <Card
+          v-show="vendor"
+          class="mb-4"
+        >
+          <template #content>
+            <div>
+              <div class="flex items-center justify-between">
+                <label for="vendor">{{ $t('Products') }}</label>
+                <PButton
+                  icon="fa fa-plus"
+                  :label="$t('Add Product')"
+                  style="text-transform: uppercase"
+                  raised
+                  size="small"
+                  @click="showSelectProductModal = true"
                 />
               </div>
+              <order-grid
+                :items="items"
+                class="mt-2"
+              />
             </div>
           </template>
         </Card>
@@ -205,22 +226,7 @@ export default {
       status: "draft",
       orderDate: "",
       expectedArrivalDate: "",
-      items: [
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          product: "Product 1",
-          quantity: 1,
-          unit_price: 100,
-          subtotal: 100,
-        },
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          product: "Product 2",
-          quantity: 2,
-          unit_price: 200,
-          subtotal: 400,
-        },
-      ],
+      items: [],
       availableProducts: [],
       showSelectProductModal: false,
     };

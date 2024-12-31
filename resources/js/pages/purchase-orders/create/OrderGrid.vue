@@ -11,7 +11,6 @@
         <table
           class="
             w-full
-            text-sm
             text-left
             rtl:text-right
             border
@@ -35,7 +34,7 @@
             "
           >
             <tr>
-              <th class="text-left p-4">
+              <th class="text-left px-6 py-3">
                 {{ $t('Product') }}
               </th>
               <th class="text-left px-6 py-3">
@@ -47,9 +46,7 @@
               <th class="text-left px-6 py-3">
                 {{ $t('Total') }}
               </th>
-              <th class="text-left px-6 py-3">
-                {{ $t('Actions') }}
-              </th>
+              <th class="text-left px-6 py-3" />
             </tr>
           </thead>
           <tbody>
@@ -64,8 +61,8 @@
                 dark:hover:bg-gray-600
               "
             >
-              <td class="w-4 p-4">
-                {{ item.product }}
+              <td class="px-6 py-4">
+                {{ item.product.name }}
               </td>
               <td class="px-6 py-4">
                 {{ item.quantity }}
@@ -78,7 +75,7 @@
               </td>
               <td class="px-6 py-4">
                 <button @click="removeItem(index)">
-                  {{ $t('Remove') }}
+                  <i class="fa fa-trash" />
                 </button>
               </td>
             </tr>
