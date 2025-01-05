@@ -192,13 +192,11 @@ import {
 } from "@vuelidate/validators";
 
 import {
-  DataTable,
   Button as PButton,
   Card,
   Select,
   DatePicker,
   Popover,
-  Column,
   InputNumber,
 } from "primevue";
 import ProductSelector from "./ProductSelector.vue";
@@ -214,8 +212,6 @@ export default {
     Select,
     DatePicker,
     Popover,
-    DataTable,
-    Column,
     InputNumber,
     ProductSelector,
     OrderGrid,
@@ -316,18 +312,28 @@ export default {
     addProduct(event) {
       const item = event.value;
 
-      this.items.push({
-        id: Math.random().toString(36).substr(2, 9),
-        product: item.product,
-        quantity: item.quantity,
-        unit_price: item.price,
-        subtotal: item.total,
-      });
+      // check if the product is already in the list
+      const index = this.items.findIndex((i) => i.product.id === item.id);
 
-      console.log(this.selectedProduct);
+      if (index === -1) {
+        this.items.push({
+          id: Math.random().toString(36).substring(2, 11),
+          product: item,
+          quantity: 1,
+          unit_price: item.price,
+          subtotal: item.price,
+        });
+      } else {
+        this.$toast.add({
+          severity: "warn",
+          summary: this.$t("Warning"),
+          detail: this.$t("Product already added"),
+          life: 3000,
+        });
+      }
+
       this.$nextTick(() => {
         this.selectedProduct = null;
-        console.log(this.selectedProduct);
       });
     },
     productSubTotal(quantity, price) {
