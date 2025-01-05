@@ -96,16 +96,35 @@
         >
           <template #content>
             <div>
-              <div class="flex items-center justify-between">
-                <label for="vendor">{{ $t('Products') }}</label>
-                <PButton
-                  icon="fa fa-plus"
-                  :label="$t('Add Product')"
-                  style="text-transform: uppercase"
-                  raised
-                  size="small"
-                  @click="showSelectProductModal = true"
-                />
+              <label for="vendor">{{ $t('Products') }}</label>
+              <div class="flex w-full">
+                <Select
+                  id="product-selector"
+                  v-model="selectedProduct"
+                  :options="availableProducts"
+                  option-label="name"
+                  class="w-full my-3"
+                  size="large"
+                  filter
+                  :placeholder="$t('Select a Product')"
+                  @change="addProduct"
+                >
+                  <template #option="slotProps">
+                    <div class="flex justify-between w-full">
+                      <div>
+                        {{ slotProps.option.name }}
+                        <p class="text-gray-500">
+                          Stock: {{ slotProps.option.stock }}
+                        </p>
+                      </div>
+                      <div>
+                        <p class="text-gray-500">
+                          Bs. {{ slotProps.option.price }}
+                        </p>
+                      </div>
+                    </div>
+                  </template>
+                </Select>
               </div>
               <order-grid
                 :items="items"
@@ -228,6 +247,7 @@ export default {
       expectedArrivalDate: "",
       items: [],
       availableProducts: [],
+      selectedProduct: null,
       showSelectProductModal: false,
     };
   },
@@ -248,9 +268,10 @@ export default {
   },
   methods: {
     fetchProductByVendor(id) {
-      axios.get(route("api.vendors.variants", id)).then((response) => {
-        this.availableProducts = response.data.data;
-      });
+      axios.get(route("api.vendors.variants", { id, _query: { per_pae: "" } }))
+        .then((response) => {
+          this.availableProducts = response.data.data;
+        });
     },
     searchVendors(event = null) {
       this.vendorsLoading = true;
@@ -292,13 +313,21 @@ export default {
       // open vendor in a new tab
       window.open(route("vendors.edit", id), "_blank");
     },
-    addProduct(item) {
+    addProduct(event) {
+      const item = event.value;
+
       this.items.push({
         id: Math.random().toString(36).substr(2, 9),
         product: item.product,
         quantity: item.quantity,
         unit_price: item.price,
         subtotal: item.total,
+      });
+
+      console.log(this.selectedProduct);
+      this.$nextTick(() => {
+        this.selectedProduct = null;
+        console.log(this.selectedProduct);
       });
     },
     productSubTotal(quantity, price) {
