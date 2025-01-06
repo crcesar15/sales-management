@@ -197,7 +197,6 @@ import {
   Select,
   DatePicker,
   Popover,
-  InputNumber,
 } from "primevue";
 import ProductSelector from "./ProductSelector.vue";
 import OrderGrid from "./OrderGrid.vue";
@@ -212,7 +211,6 @@ export default {
     Select,
     DatePicker,
     Popover,
-    InputNumber,
     ProductSelector,
     OrderGrid,
   },

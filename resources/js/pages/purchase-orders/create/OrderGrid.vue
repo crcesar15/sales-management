@@ -65,7 +65,12 @@
                 {{ item.product.name }}
               </td>
               <td class="px-6 py-4">
-                {{ item.quantity }}
+                <InputNumber
+                  v-model="item.quantity"
+                  :min="1"
+                  :increment="1"
+                  :decrement="1"
+                />
               </td>
               <td class="px-6 py-4">
                 {{ item.unit_price }}
@@ -83,22 +88,38 @@
         </table>
       </div>
     </div>
-    <div v-else>
-      <h1>No items</h1>
+    <div
+      v-else
+      class="
+        flex
+        justify-center
+        items-center
+        h-16
+        border
+        border-gray-300
+        dark:border-gray-600
+        rounded
+      "
+    >
+      <h6 class="m-0 text-gray-500 dark:text-gray-400">
+        Add Some Products
+      </h6>
     </div>
   </div>
 </template>
 
 <script>
+import { InputNumber } from "primevue";
+
 export default {
+  components: {
+    InputNumber,
+  },
   props: {
     items: {
       type: Array,
       default: () => [],
     },
-  },
-  mounted() {
-    console.log("OrderGrid.vue mounted");
   },
 };
 </script>
