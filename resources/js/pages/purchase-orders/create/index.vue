@@ -66,18 +66,19 @@
                       </div>
                     </Popover>
                   </div>
-                  <Select
+                  <AutoComplete
                     id="vendor"
                     v-model="vendor"
                     class="w-full"
-                    :options="vendors"
-                    :placeholder="$t('Select a Vendor')"
-                    option-value="id"
+                    input-class="w-full"
+                    force-selection
                     option-label="fullname"
-                    filter
-                    :loading="vendorsLoading"
+                    :delay="500"
                     :invalid="v$.vendor.$invalid && v$.vendor.$dirty"
-                    @filter="searchVendors"
+                    :loading="vendorsLoading"
+                    :placeholder="$t('Select a Vendor')"
+                    :suggestions="vendors"
+                    @complete="searchVendors"
                   />
                   <small
                     v-if="v$.vendor.$invalid && v$.vendor.$dirty"
@@ -91,7 +92,7 @@
           </template>
         </Card>
         <Card
-          v-show="vendor"
+          v-show="vendor?.id"
           class="mb-4"
         >
           <template #content>
@@ -197,6 +198,7 @@ import {
   Select,
   DatePicker,
   Popover,
+  AutoComplete,
 } from "primevue";
 import ProductSelector from "./ProductSelector.vue";
 import OrderGrid from "./OrderGrid.vue";
@@ -213,6 +215,7 @@ export default {
     Popover,
     ProductSelector,
     OrderGrid,
+    AutoComplete,
   },
   layout: AppLayout,
   props: {
@@ -252,7 +255,7 @@ export default {
   },
   watch: {
     vendor(value) {
-      this.fetchProductByVendor(value);
+      // this.fetchProductByVendor(value);
       this.selectedVendor = this.vendors.find((vendor) => vendor.id === value);
     },
   },
@@ -268,37 +271,35 @@ export default {
         });
     },
     searchVendors(event = null) {
-      this.vendorsLoading = true;
+      if (event !== null && event.query.trim().length) {
+        this.vendorsLoading = true;
+        const body = {
+          params: {
+            per_page: 10,
+            page: 1,
+            order_by: "fullname",
+            order_direction: "asc",
+            filter: event.query.toLowerCase(),
+          },
+        };
 
-      const body = {
-        params: {
-          per_page: 10,
-          page: 1,
-          order_by: "fullname",
-          order_direction: "asc",
-        },
-      };
-
-      if (event) {
-        body.params.filter = event.value.toLowerCase();
-      }
-
-      axios
-        .get(route("api.vendors"), body)
-        .then((response) => {
-          this.vendors = response.data.data;
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
+        axios
+          .get(route("api.vendors"), body)
+          .then((response) => {
+            this.vendors = response.data.data;
+          })
+          .catch((error) => {
+            this.$toast.add({
+              severity: "error",
+              summary: this.$t("Error"),
+              detail: error.response.data.message,
+              life: 3000,
+            });
+          })
+          .finally(() => {
+            this.vendorsLoading = false;
           });
-        })
-        .finally(() => {
-          this.vendorsLoading = false;
-        });
+      }
     },
     toggleVendorInfo(event) {
       this.$refs.vendorInfo.toggle(event);
