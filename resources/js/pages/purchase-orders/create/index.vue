@@ -33,7 +33,7 @@
                   <div class="flex items-end">
                     <label for="vendor">{{ $t('Vendor') }}</label>
                     <PButton
-                      v-show="vendor"
+                      v-if="selectedVendor?.id"
                       v-tooltip.top="$t('View Vendor')"
                       icon="fa fa-eye"
                       size="small"
@@ -57,18 +57,18 @@
                           />
                         </div>
                         <p>
-                          <strong>{{ $t('Fullname') }}:</strong> {{ selectedVendor.fullname }} <br>
-                          <strong>{{ $t('Email') }}:</strong> {{ selectedVendor.email }} <br>
-                          <strong>{{ $t('Phone') }}:</strong> {{ selectedVendor.phone }} <br>
-                          <strong>{{ $t('Address') }}:</strong> {{ selectedVendor.address }} <br>
-                          <strong>{{ $t('Details') }}:</strong> {{ selectedVendor.details }} <br>
+                          <strong>{{ $t('Fullname') }}:</strong> {{ selectedVendor?.fullname }} <br>
+                          <strong>{{ $t('Email') }}:</strong> {{ selectedVendor?.email }} <br>
+                          <strong>{{ $t('Phone') }}:</strong> {{ selectedVendor?.phone }} <br>
+                          <strong>{{ $t('Address') }}:</strong> {{ selectedVendor?.address }} <br>
+                          <strong>{{ $t('Details') }}:</strong> {{ selectedVendor?.details }} <br>
                         </p>
                       </div>
                     </Popover>
                   </div>
                   <AutoComplete
                     id="vendor"
-                    v-model="vendor"
+                    v-model="selectedVendor"
                     class="w-full"
                     input-class="w-full"
                     force-selection
@@ -92,23 +92,26 @@
           </template>
         </Card>
         <Card
-          v-show="vendor?.id"
+          v-show="selectedVendor?.id"
           class="mb-4"
         >
           <template #content>
             <div>
               <label for="vendor">{{ $t('Products') }}</label>
               <div class="flex w-full">
-                <Select
+                <AutoComplete
                   id="product-selector"
                   v-model="selectedProduct"
-                  :options="availableProducts"
+                  class="w-full my-2"
+                  force-selection
+                  input-class="w-full"
                   option-label="name"
-                  class="w-full my-3"
                   size="large"
-                  filter
+                  :delay="500"
                   :placeholder="$t('Select a Product')"
-                  @change="addProduct"
+                  :suggestions="availableProducts"
+                  @complete="fetchProductByVendor"
+                  @option-select="addProduct"
                 >
                   <template #option="slotProps">
                     <div class="flex justify-between w-full">
@@ -125,7 +128,7 @@
                       </div>
                     </div>
                   </template>
-                </Select>
+                </AutoComplete>
               </div>
               <order-grid
                 :items="items"
@@ -236,7 +239,6 @@ export default {
   data() {
     return {
       selectedVendor: null,
-      vendor: "",
       vendorsLoading: false,
       vendors: [],
       status: "draft",
@@ -253,22 +255,20 @@ export default {
       return new Date(this.date);
     },
   },
-  watch: {
-    vendor(value) {
-      // this.fetchProductByVendor(value);
-      this.selectedVendor = this.vendors.find((vendor) => vendor.id === value);
-    },
-  },
   mounted() {
     this.orderDate = this.date;
     this.searchVendors();
   },
   methods: {
-    fetchProductByVendor(id) {
-      axios.get(route("api.vendors.variants", { id, _query: { per_pae: "" } }))
-        .then((response) => {
-          this.availableProducts = response.data.data;
-        });
+    fetchProductByVendor(event) {
+      if (event.query.trim().length) {
+        this.vendorsLoading = true;
+        const vendorId = this.selectedVendor.id;
+        axios.get(route("api.vendors.variants", { id: vendorId, _query: { per_page: 10 } }))
+          .then((response) => {
+            this.availableProducts = response.data.data;
+          });
+      }
     },
     searchVendors(event = null) {
       if (event !== null && event.query.trim().length) {
