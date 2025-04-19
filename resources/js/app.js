@@ -20,7 +20,7 @@ import ConfirmationService from "primevue/confirmationservice";
 import PButton from "primevue/button";
 import { InertiaProgress } from "@inertiajs/progress";
 import { ZiggyVue } from "ziggy-js";
-import Aura from "@primevue/themes/aura";
+import Aura from "@primeuix/themes/aura";
 
 import en from "../lang/en.json";
 import es from "../lang/es.json";

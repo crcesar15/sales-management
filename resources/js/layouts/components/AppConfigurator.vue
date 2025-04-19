@@ -1,8 +1,8 @@
 <script setup>
-import { updatePreset, updateSurfacePalette, $t as $theme } from "@primevue/themes";
+import { updatePreset, updateSurfacePalette, $t as $theme } from "@primeuix/themes";
 import SelectButton from "primevue/selectbutton";
-import Aura from "@primevue/themes/aura";
-import Lara from "@primevue/themes/lara";
+import Aura from "@primeuix/themes/aura";
+import Lara from "@primeuix/themes/lara";
 import { ref } from "vue";
 import { useLayout } from "./composables/layout";
 
