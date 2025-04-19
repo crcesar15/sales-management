@@ -131,9 +131,77 @@
                 </AutoComplete>
               </div>
               <order-grid
-                :items="items"
+                v-model="items"
                 class="mt-2"
               />
+              <div
+                v-show="items.length"
+                class="grid grid-cols-12 mt-2"
+              >
+                <div
+                  class="col-span-12 md:col-span-6 md:col-start-7"
+                >
+                  <label
+                    for="subtotal"
+                  >
+                    Subtotal
+                  </label>
+                  <InputNumber
+                    id="subtotal"
+                    v-model="subtotal"
+                    class="mt-1 mb-2"
+                    mode="currency"
+                    currency="BOB"
+                    fluid
+                    readonly
+                  />
+                  <label
+                    for="percentage-discount"
+                  >
+                    Discount (Percentage)
+                  </label>
+                  <InputNumber
+                    id="percentage-discount"
+                    v-model="percentageDiscount"
+                    class="mt-1 mb-2"
+                    prefix="%"
+                    :min="0"
+                    :max="100"
+                    fluid
+                    @value-change="setAmountDiscount"
+                  />
+                  <label
+                    for="amount-discount"
+                  >
+                    Discount (Amount)
+                  </label>
+                  <InputNumber
+                    id="amount-discount"
+                    v-model="amountDiscount"
+                    class="mt-1 mb-2"
+                    mode="currency"
+                    currency="BOB"
+                    :max="subtotal"
+                    :min="0"
+                    fluid
+                    @value-change="setPercentageDiscount"
+                  />
+                  <label
+                    for="total"
+                  >
+                    Total
+                  </label>
+                  <InputNumber
+                    id="total"
+                    v-model="total"
+                    class="mt-1 mb-2"
+                    mode="currency"
+                    currency="BOB"
+                    fluid
+                    readonly
+                  />
+                </div>
+              </div>
             </div>
           </template>
         </Card>
@@ -202,6 +270,7 @@ import {
   DatePicker,
   Popover,
   AutoComplete,
+  InputNumber,
 } from "primevue";
 import ProductSelector from "./ProductSelector.vue";
 import OrderGrid from "./OrderGrid.vue";
@@ -219,6 +288,7 @@ export default {
     ProductSelector,
     OrderGrid,
     AutoComplete,
+    InputNumber,
   },
   layout: AppLayout,
   props: {
@@ -248,11 +318,20 @@ export default {
       availableProducts: [],
       selectedProduct: null,
       showSelectProductModal: false,
+      amountDiscount: 0,
+      percentageDiscount: 0,
     };
   },
   computed: {
     currentDate() {
       return new Date(this.date);
+    },
+    subtotal() {
+      return this.items.reduce((acc, item) => acc + (item.quantity * item.unit_price), 0);
+    },
+    total() {
+      const discount = this.amountDiscount || (this.subtotal * this.percentageDiscount / 100);
+      return this.subtotal - discount;
     },
   },
   mounted() {
@@ -260,9 +339,18 @@ export default {
     this.searchVendors();
   },
   methods: {
+    setAmountDiscount() {
+      this.$nextTick(() => {
+        this.amountDiscount = ((this.subtotal * this.percentageDiscount) / 100).toFixed(2);
+      });
+    },
+    setPercentageDiscount() {
+      this.$nextTick(() => {
+        this.percentageDiscount = ((this.amountDiscount / this.subtotal) * 100).toFixed(2);
+      });
+    },
     fetchProductByVendor(event) {
       if (event.query.trim().length) {
-        this.vendorsLoading = true;
         const vendorId = this.selectedVendor.id;
         axios.get(route("api.vendors.variants", { id: vendorId, _query: { per_page: 10 } }))
           .then((response) => {

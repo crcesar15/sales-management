@@ -38,6 +38,9 @@
                 {{ $t('Product') }}
               </th>
               <th class="text-left px-6 py-3">
+                {{ $t('Stock') }}
+              </th>
+              <th class="text-left px-6 py-3">
                 {{ $t('Quantity') }}
               </th>
               <th class="text-left px-6 py-3">
@@ -65,18 +68,34 @@
                 {{ item.product.name }}
               </td>
               <td class="px-6 py-4">
+                {{ item.product.stock }}
+              </td>
+              <td class="px-6 py-4">
                 <InputNumber
                   v-model="item.quantity"
                   :min="1"
                   :increment="1"
                   :decrement="1"
-                />
+                  show-buttons
+                  button-layout="horizontal"
+                  :pt="{
+                    pcInputText: { root: { class: 'w-[80px] text-left' } },
+                  }"
+                  @input="refocus($event)"
+                >
+                  <template #decrementicon>
+                    <i class="fa fa-minus" />
+                  </template>
+                  <template #incrementicon>
+                    <i class="fa fa-plus" />
+                  </template>
+                </InputNumber>
               </td>
               <td class="px-6 py-4">
-                {{ item.unit_price }}
+                BOB. {{ item.unit_price }}
               </td>
               <td class="px-6 py-4">
-                {{ item.subtotal }}
+                BOB. {{ getSubtotal(item).toFixed(2) }}
               </td>
               <td class="px-6 py-4">
                 <button @click="removeItem(index)">
@@ -116,10 +135,37 @@ export default {
     InputNumber,
   },
   props: {
-    items: {
+    modelValue: {
       type: Array,
       default: () => [],
     },
   },
+  data() {
+    return {
+      items: this.modelValue,
+    };
+  },
+  watch: {
+    items: {
+      handler(value) {
+        this.$emit("update:modelValue", value);
+      },
+      deep: true,
+    },
+  },
+  methods: {
+    getSubtotal(item) {
+      return item.quantity * item.unit_price;
+    },
+    removeItem(index) {
+      this.items.splice(index, 1);
+    },
+    refocus($event) {
+      const { target } = $event.originalEvent;
+      target.blur();
+      target.focus();
+    },
+  },
 };
+
 </script>
