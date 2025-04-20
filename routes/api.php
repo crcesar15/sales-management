@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
 use App\Http\Controllers\Api\RolesController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UsersController;
 use App\Http\Controllers\Api\VariantsController;
 use App\Http\Controllers\Api\VendorsController;
@@ -97,4 +98,7 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     Route::get('purchase-orders/{order}', [PurchaseOrdersController:: class, 'show'])->name('purchase-orders.show');
     Route::post('purchase-orders', [PurchaseOrdersController:: class, 'store'])->name('purchase-orders.store');
     Route::put('purchase-orders/{order}', [PurchaseOrdersController:: class, 'update'])->name('purchase-orders.update');
+
+    //Routes for settings
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
 });

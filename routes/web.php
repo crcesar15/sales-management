@@ -81,4 +81,9 @@ Route::group(['middleware' => ['auth']], function () {
     // Purchase Orders Routes
     Route::get('/purchase-orders', [PurchaseOrdersController::class, 'index'])->name('purchase-orders');
     Route::get('/purchase-orders/create', [PurchaseOrdersController::class, 'create'])->name('purchase-orders.create');
+
+    //Settings
+    Route::get('/settings', function () {
+        return Inertia::render('settings/index');
+    })->name('settings');
 });
