@@ -80,7 +80,7 @@ function itemClick(event, item) {
       v-if="root && item.visible !== false"
       class="layout-menuitem-root-text"
     >
-      {{ item.label }}
+      {{ $t(item.label) }}
     </div>
     <a
       v-if="(!item.to || item.items) && item.visible !== false"

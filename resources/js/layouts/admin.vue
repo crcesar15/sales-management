@@ -142,7 +142,7 @@ export default {
           to: "home",
         },
         {
-          label: "Settings",
+          label: "Admin",
           icon: "fa fa-cogs",
           type: "multiple",
           items: [
@@ -162,6 +162,12 @@ export default {
               label: "Permissions",
               icon: "fa fa-user-lock",
               to: "home",
+            },
+            {
+              label: "Settings",
+              icon: "fa fa-cog",
+              to: "settings",
+              route: route("settings"),
             },
           ],
         },
