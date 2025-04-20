@@ -164,5 +164,7 @@
     "sameAsPassword": "La confirmación de la contraseña no coincide",
     "alphaNum": "Este campo no debe contener caracteres especiales",
     "username": "Este campo debe contener solo letras, números, guiones y guiones bajos"
-  }
+  },
+  "Admin": "Administrador",
+  "Settings": "Configuraciones"
 }

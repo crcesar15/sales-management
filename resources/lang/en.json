@@ -164,5 +164,7 @@
     "sameAsPassword": "The password confirmation does not match",
     "alphaNum": "This field must not contain special characters",
     "username": "This field must only contain letters, numbers, dashes and underscores"
-  }
+  },
+  "Admin": "Admin",
+  "Settings": "Settings"
 }
