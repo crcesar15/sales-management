@@ -16,22 +16,16 @@
     <Card>
       <template #content>
         <div class="grid grid-cols-12 gap-4">
-          <div class="col-span-12 md:col-span-6">
+          <div
+            v-for="setting in settings"
+            :key="setting.id"
+            class="col-span-12 md:col-span-6"
+          >
             <div class="flex flex-col gap-2 mb-3">
-              <label for="business_name">{{ $t('Business Name') }}</label>
+              <label :for="setting.id">{{ setting.name }}</label>
               <InputText
-                id="business_name"
-                v-model="businessName"
-                autocomplete="off"
-              />
-            </div>
-          </div>
-          <div class="col-span-12 md:col-span-6">
-            <div class="flex flex-col gap-2 mb-3">
-              <label for="currency">{{ $t('Currency') }}</label>
-              <InputText
-                id="currency"
-                v-model="currency"
+                :id="setting.id"
+                v-model="setting.value"
                 autocomplete="off"
               />
             </div>
@@ -68,7 +62,7 @@ export default {
   methods: {
     async getSettings() {
       const response = await axios.get(route("api.settings"));
-      this.settings = response.data;
+      this.settings = response.data.data;
     },
   },
 };

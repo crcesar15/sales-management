@@ -19,7 +19,7 @@ class SettingsController extends Controller
             : 'name';
         $order_direction = $request->has('order_direction')
             ? $request->get('order_direction')
-            : 'ASC';
+            : 'desc';
 
         $response = $query->orderBy(
             $request->input('order_by', $order_by),
