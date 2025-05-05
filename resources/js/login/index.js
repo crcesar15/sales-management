@@ -1,7 +1,7 @@
 import "../bootstrap";
 
 import { createApp } from "vue";
-import { definePreset } from "@primevue/themes";
+import { definePreset } from "@primeuix/themes";
 import PrimeVue from "primevue/config";
 import InputText from "primevue/inputtext";
 import PPassword from "primevue/password";
@@ -9,7 +9,7 @@ import Checkbox from "primevue/checkbox";
 import PButton from "primevue/button";
 import ToastService from "primevue/toastservice";
 import Toast from "primevue/toast";
-import Aura from "@primevue/themes/aura";
+import Aura from "@primeuix/themes/aura";
 
 const app = createApp({
   components: {
