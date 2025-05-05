@@ -14,6 +14,7 @@ use App\Models\PurchaseOrder;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Vendor;
+use Database\Seeders\SettingsSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
@@ -104,5 +105,8 @@ class DatabaseSeeder extends Seeder
 
         //Set permissions to storage folder
         exec('sudo chmod -R 777 storage/app/public/products');
+
+        //Run settings seeder
+        $this->call(SettingsSeeder::class);
     }
 }

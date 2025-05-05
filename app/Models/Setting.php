@@ -14,4 +14,27 @@ class Setting extends Model
         'value',
         'name',
     ];
+
+    public static function populateSettings()
+    {
+        $settings = [
+            [
+                'key' => 'site_name',
+                'value' => 'My Application',
+                'name' => 'Site Name',
+            ],
+            [
+                'key' => 'currency_symbol',
+                'value' => '$',
+                'name' => 'Currency Symbol',
+            ],
+        ];
+
+        foreach ($settings as $setting) {
+            self::updateOrCreate(
+                ['key' => $setting['key']],
+                ['value' => $setting['value'], 'name' => $setting['name']]
+            );
+        }
+    }
 }
