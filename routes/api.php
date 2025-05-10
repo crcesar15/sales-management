@@ -101,4 +101,5 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
 
     //Routes for settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 });

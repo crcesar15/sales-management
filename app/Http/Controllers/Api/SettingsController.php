@@ -29,51 +29,18 @@ class SettingsController extends Controller
         return new ApiCollection($response);
     }
 
-    //Get a role by id
-    public function show($id)
-    {
-        $role = Setting::find($id);
-        if ($role) {
-            return response()->json(['data' => $role], 200);
-        } else {
-            return response()->json(['message' => 'Role not found'], 404);
-        }
-    }
-
-    //Create a new role
-    public function store(Request $request)
-    {
-        $role = Setting::create($request->all());
-
-        return response()->json(['data' => $role], 201);
-    }
-
     //Update a role
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        $role = Setting::find($id);
-        if ($role) {
-            $role->update($request->all());
+        $settings = $request->get('settings');
 
-            return response()->json(['data' => $role], 200);
-        } else {
-            return response()->json(['message' => 'Role not found'], 404);
+        foreach ($settings as $setting) {
+            Setting::updateOrCreate(
+                ['key' => $setting['key']],
+                ['value' => $setting['value']]
+            );
         }
-    }
 
-    //Delete a role
-    public function destroy($id)
-    {
-        $role = Setting::find($id);
-        if ($role) {
-            //remove the role from the users
-            $role->users()->update(['role_id' => null]);
-
-            $role->delete();
-
-            return response()->json(['data' => $role], 200);
-        } else {
-            return response()->json(['message' => 'Role not found'], 404);
-        }
+        return response()->json(['message' => 'Settings updated successfully'], 200);
     }
 }
