@@ -27,6 +27,14 @@ if (user) {
   window.user = null;
 }
 
+const currencySymbol = document.head.querySelector("meta[name=\"currency-symbol\"]");
+
+if (currencySymbol) {
+  window.currencySymbol = currencySymbol.content;
+} else {
+  window.currencySymbol = "$";
+}
+
 window.moment = moment;
 
 window.axios.defaults.baseURL = `${window.location.protocol}//${window.location.hostname}/api/`;
