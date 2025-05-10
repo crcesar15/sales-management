@@ -60,9 +60,42 @@ export default {
     this.getSettings();
   },
   methods: {
-    async getSettings() {
-      const response = await axios.get(route("api.settings"));
-      this.settings = response.data.data;
+    getSettings() {
+      axios.get(route("api.settings")).then((response) => {
+        this.settings = response.data.data;
+      });
+    },
+    submit() {
+      this.$confirm.require({
+        message: this.$t("Are you sure you want to save these settings?"),
+        header: this.$t("Confirm"),
+        icon: "fas fa-exclamation-triangle",
+        rejectLabel: this.$t("Cancel"),
+        acceptLabel: this.$t("Save"),
+        rejectClass: "p-button-secondary",
+        accept: () => {
+          axios
+            .put(route("api.settings.update"), { settings: this.settings })
+            .then(() => {
+              this.$toast.add({
+                severity: "success",
+                summary: this.$t("Success"),
+                detail: this.$t("Settings updated successfully."),
+                life: 3000,
+              });
+              // reload the page to apply changes
+              window.location.reload();
+            })
+            .catch((error) => {
+              this.$toast.add({
+                severity: "error",
+                summary: this.$t("Error"),
+                detail: error.response.data.message,
+                life: 3000,
+              });
+            });
+        },
+      });
     },
   },
 };
