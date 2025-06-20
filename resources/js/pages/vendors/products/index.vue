@@ -275,6 +275,7 @@ export default {
         page: this.pagination.page,
         sortField: this.pagination.sortField,
         status: this.status,
+        includes: "products",
       };
 
       if (this.pagination.filter) {
