@@ -98,7 +98,19 @@
             field="name"
             :header="$t('Name')"
             sortable
-          />
+          >
+            <template #body="{ data }">
+              <div class="flex flex-col">
+                <span class="font-bold">{{ data.name }}</span>
+                <span
+                  v-if="data.variant"
+                  class="p-tag p-component p-tag-secondary font-bold w-fit"
+                >
+                  {{ data.variant }}
+                </span>
+              </div>
+            </template>
+          </Column>
           <Column
             field="media"
             :header="$t('Image')"
