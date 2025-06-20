@@ -6,62 +6,41 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Variants as ApiCollection;
 use App\Models\Media;
 use App\Models\ProductVariant;
+use App\Services\VariantService;
+use DebugBar;
 use Illuminate\Http\Request;
 
 class VariantsController extends Controller
 {
     //Get all variants
-    public function index(Request $request)
+    public function index(Request $request, VariantService $variantService)
     {
-        $query = ProductVariant::query();
-
         $includes = $request->input('includes', '');
+        $includes = explode(',', $includes);
 
-        if (!empty($includes)) {
-            $query->with(explode(',', $includes));
-        }
+        $page = $request->input('page', 1);
+        $per_page = $request->input('per_page', 10);
 
-        if ($request->has('vendor')) {
-            // filter products with at least one vendor
-            $query->whereHas('vendors', function ($query) use ($request) {
-                $query->where('vendors.id', '=', $request->get('vendor'));
-            });
-        }
+        $order_by = $request->input('order_by', 'product_name');
+        $order_direction = $request->input('order_direction', 'ASC');
 
         $filter = $request->input('filter', '');
-
-        if (!empty($filter)) {
-            $filter_by = $request->input('filter_by', 'name');
-
-            $filter = '%' . $filter . '%';
-            $query->where(function ($query) use ($filter, $filter_by, $includes) {
-                $query->where($filter_by, 'like', $filter);
-
-                if (strpos($includes, 'product') !== false) {
-                    $query->orWhereHas('product', function ($query) use ($filter, $filter_by) {
-                        $query->where($filter_by, 'like', $filter);
-                    });
-                }
-            });
-        }
-
+        $filterBy = $request->input('filter_by', 'name');
         $status = $request->input('status', 'all');
 
-        if ($status !== 'all') {
-            $query->where('status', $status);
-        }
+        $config = [
+            'includes' => $includes,
+            'order_by' => $order_by,
+            'order_direction' => $order_direction,
+            'filter' => $filter,
+            'filter_by' => $filterBy,
+            'status' => $status,
+            'page' => $page,
+            'per_page' => $per_page,
+        ];
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'name';
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
-
-        $response = $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+        // Fetch variants using the service
+        $response = $variantService->getVariants($config);
 
         return new ApiCollection($response);
     }
