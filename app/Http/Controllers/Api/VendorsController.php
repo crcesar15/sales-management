@@ -93,15 +93,15 @@ class VendorsController extends Controller
         }
     }
 
-    public function getProductVariants(Request $request, $id)
+    public function getProductVariants(Request $request, Vendor $vendor)
     {
         $query = ProductVariant::query();
 
         $query->with(['product', 'vendors']);
 
         // Filter by vendor id
-        $query->whereHas('vendors', function ($query) use ($id) {
-            $query->where('vendor_id', $id);
+        $query->whereHas('vendors', function ($query) use ($vendor) {
+            $query->where('vendor_id', $vendor->id);
         });
 
         $filter = $request->input('filter', '');
@@ -162,6 +162,7 @@ class VendorsController extends Controller
                 'price' => $product['price'],
                 'details' => $product['details'] ?? null,
                 'payment_terms' => $product['payment_terms'],
+                'status' => $product['status'] ?? 'active',
             ];
         }
 
