@@ -32,9 +32,12 @@
               @filter="searchProducts"
             >
               <template #option="slotProps">
-                <div class="flex flex-row gap-2">
+                <div class="flex flex-row gap-2 h-6">
                   <p>{{ slotProps.option.name }}</p>
-                  <span class="font-bold w-fit">({{ slotProps.option.variant }})</span>
+                  <span
+                    v-if="slotProps.option.variant"
+                    class="font-bold italic w-fit"
+                  >({{ slotProps.option.variant }})</span>
                 </div>
               </template>
             </Select>
@@ -55,6 +58,16 @@
               id="product-payment-term"
               v-model="paymentTerm"
               :options="payment_terms"
+              option-value="value"
+              option-label="label"
+            />
+          </div>
+          <div class="col-span-12 flex flex-col">
+            <label for="product-status">{{ $t("Status") }}</label>
+            <Select
+              id="product-status"
+              v-model="status"
+              :options="statusOptions"
               option-value="value"
               option-label="label"
             />
@@ -94,7 +107,6 @@ import Dialog from "primevue/dialog";
 import PButton from "primevue/button";
 import Textarea from "primevue/textarea";
 import InputNumber from "primevue/inputnumber";
-import Tag from "primevue/tag";
 import i18n from "../../../app";
 
 export default {
@@ -104,7 +116,6 @@ export default {
     PButton,
     Dialog,
     InputNumber,
-    Tag,
   },
   props: {
     product: {
@@ -128,9 +139,14 @@ export default {
       paymentTerm: "",
       details: "",
       price: "",
+      status: "active",
       payment_terms: [
         { label: "Cash", value: "debit" },
         { label: "Credit", value: "credit" },
+      ],
+      statusOptions: [
+        { label: i18n.global.t("Active"), value: "active" },
+        { label: i18n.global.t("Inactive"), value: "inactive" },
       ],
       showModal: false,
       products: [],
@@ -155,6 +171,7 @@ export default {
         this.price = val?.price;
         this.paymentTerm = val?.payment_terms;
         this.details = val?.details;
+        this.status = val?.status || "active";
       },
       deep: true,
     },
@@ -175,6 +192,7 @@ export default {
         price: this.price,
         payment_terms: this.paymentTerm,
         details: this.details,
+        status: this.status,
       };
       this.$emit("save", formattedProduct);
     },

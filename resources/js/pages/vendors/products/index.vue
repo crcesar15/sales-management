@@ -210,8 +210,6 @@ import ConfirmDialog from "primevue/confirmdialog";
 import AppLayout from "../../../layouts/admin.vue";
 import ProductEditor from "./editor.vue";
 
-import i18n from "../../../app";
-
 export default {
   components: {
     Card,
@@ -297,7 +295,7 @@ export default {
             return {
               id: product.id,
               name: `${product.name} - ${product.product.name}`,
-              status: product.status,
+              status: relatedVendor.pivot.status,
               price: relatedVendor.pivot.price,
               payment_terms: relatedVendor.pivot.payment_terms,
               details: relatedVendor.pivot.details,
