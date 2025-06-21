@@ -30,7 +30,14 @@
               :loading="productsLoading"
               :fluid="true"
               @filter="searchProducts"
-            />
+            >
+              <template #option="slotProps">
+                <div class="flex flex-row gap-2">
+                  <p>{{ slotProps.option.name }}</p>
+                  <span class="font-bold w-fit">({{ slotProps.option.variant }})</span>
+                </div>
+              </template>
+            </Select>
           </div>
           <div class="col-span-12 flex flex-col">
             <label for="product-price">{{ $t("Price") }}</label>
@@ -87,6 +94,7 @@ import Dialog from "primevue/dialog";
 import PButton from "primevue/button";
 import Textarea from "primevue/textarea";
 import InputNumber from "primevue/inputnumber";
+import Tag from "primevue/tag";
 import i18n from "../../../app";
 
 export default {
@@ -96,6 +104,7 @@ export default {
     PButton,
     Dialog,
     InputNumber,
+    Tag,
   },
   props: {
     product: {
@@ -181,6 +190,7 @@ export default {
             order_by: "name",
             order_direction: "asc",
             filter: event ? event.value.toLowerCase() : "",
+            includes: "product",
           },
         },
       ).then((response) => {
