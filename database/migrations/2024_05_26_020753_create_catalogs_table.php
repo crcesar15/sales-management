@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->float('price', 8, 2);
             $table->string('payment_terms', 15)->nullable();
             $table->string('details', 300)->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }
