@@ -99,8 +99,21 @@
               </template>
               <Column
                 field="name"
-                header="Name"
-              />
+                :header="$t('Name')"
+                sortable
+              >
+                <template #body="{ data }">
+                  <div class="flex flex-col">
+                    <span class="font-bold">{{ data.name }}</span>
+                    <span
+                      v-if="data.variant"
+                      class="p-tag p-component p-tag-secondary font-bold w-fit"
+                    >
+                      {{ data.variant }}
+                    </span>
+                  </div>
+                </template>
+              </Column>
               <Column
                 field="status"
                 :header="$t('Status')"
@@ -273,7 +286,7 @@ export default {
         page: this.pagination.page,
         sortField: this.pagination.sortField,
         status: this.status,
-        includes: "products",
+        includes: "product,vendors",
       };
 
       if (this.pagination.filter) {
@@ -289,6 +302,7 @@ export default {
       axios
         .get(route("api.vendors.variants", this.vendor.id), { params })
         .then((response) => {
+          console.log(response.data.data);
           this.products = response.data.data.map((product) => {
             const relatedVendor = product.vendors.find((vendor) => vendor.id === this.vendor.id);
 

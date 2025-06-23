@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
+use App\Http\Resources\Variants as VariantsResource;
 use App\Models\ProductVariant;
 use App\Models\Vendor;
+use App\Services\VariantService;
 use Illuminate\Http\Request;
 
 class VendorsController extends Controller
@@ -93,62 +95,39 @@ class VendorsController extends Controller
         }
     }
 
-    public function getProductVariants(Request $request, Vendor $vendor)
+    public function getProductVariants(Request $request, VariantService $variantService, Vendor $vendor)
     {
-        $query = ProductVariant::query();
+        $includes = $request->input('includes', '');
+        $includes = explode(',', $includes);
 
-        $query->with(['product', 'vendors']);
+        $page = $request->input('page', 1);
+        $per_page = $request->input('per_page', 10);
 
-        // Filter by vendor id
-        $query->whereHas('vendors', function ($query) use ($vendor) {
-            $query->where('vendor_id', $vendor->id);
-        });
+        $order_by = $request->input('order_by', 'product_name');
+        $order_direction = $request->input('order_direction', 'ASC');
 
         $filter = $request->input('filter', '');
-        $filter_by = $request->input('filter_by', 'name');
-
-        if (!empty($filter)) {
-            $filter = '%' . $filter . '%';
-
-            $query->where(
-                function ($query) use ($filter, $filter_by) {
-                    $query->where($filter_by, 'like', $filter);
-
-                    $query->orWhereHas('product', function ($query) use ($filter, $filter_by) {
-                        $query->where($filter_by, 'like', $filter);
-                    });
-                }
-            );
-        }
-
+        $filterBy = $request->input('filter_by', 'name');
         $status = $request->input('status', 'all');
 
-        if ($status !== 'all') {
-            $query->where('status', $status);
-        }
+        $vendorId = $vendor->id;
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'name';
+        $config = [
+            'includes' => $includes,
+            'order_by' => $order_by,
+            'order_direction' => $order_direction,
+            'filter' => $filter,
+            'filter_by' => $filterBy,
+            'status' => $status,
+            'page' => $page,
+            'per_page' => $per_page,
+            // 'vendor_id' => $vendorId,
+        ];
 
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
+        // Fetch variants using the service
+        $response = $variantService->getVariants($config);
 
-        $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        );
-
-        if ($request->has('all')) {
-            $response = $query->get();
-
-            return response()->json(['data' => $response], 200);
-        }
-
-        $response = $query->paginate($request->input('per_page', 10));
-
-        return new ApiCollection($response);
+        return new VariantsResource($response);
     }
 
     public function updateProductVariants(Request $request, Vendor $vendor)

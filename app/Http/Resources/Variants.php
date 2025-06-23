@@ -26,6 +26,7 @@ class Variants extends ResourceCollection
                         : $variant->name,
                     'status' => $variant->status,
                     'media' => $variant->media ?? [],
+                    'vendors' => $variant->vendors ?? [],
                 ];
 
                 return $formattedProduct;
