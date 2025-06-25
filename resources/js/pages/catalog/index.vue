@@ -425,7 +425,7 @@ export default {
       const params = {
         per_page: this.pagination.rows,
         page: this.pagination.page,
-        sortField: this.pagination.sortField,
+        order_by: this.pagination.sortField,
         status: this.status,
         includes: "product,vendors",
       };

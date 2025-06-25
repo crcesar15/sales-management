@@ -18,10 +18,10 @@ class Variants extends ResourceCollection
             'data' => $this->collection->map(function ($variant) {
                 $formattedProduct = [
                     'id' => $variant->id,
-                    'categories' => $variant->categories,
-                    'brand' => $variant->brand_name,
-                    'name' => $variant->product_name,
-                    'variant' => ($variant->product_name === $variant->name)
+                    'categories' => $variant->product->categories->pluck('name')->join(', '),
+                    'brand' => $variant->product->brand->name,
+                    'name' => $variant->product->name,
+                    'variant' => ($variant->product->name === $variant->name)
                         ? null
                         : $variant->name,
                     'status' => $variant->status,
