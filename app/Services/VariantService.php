@@ -24,6 +24,13 @@ class VariantService
             switch ($include) {
                 case 'vendors':
                     $query->with('vendors');
+                    // Filter by vendor id
+                    if (isset($config['vendor_id']) && !empty($config['vendor_id'])) {
+                        $query->join('catalog', 'product_variants.id', '=', 'catalog.product_variant_id');
+                        $query->join('vendors', 'catalog.vendor_id', '=', 'vendors.id');
+                        $query->where('vendors.id', $config['vendor_id']);
+                    }
+
                     break;
                 case 'product':
                     $query->join('products', 'product_variants.product_id', '=', 'products.id');
@@ -34,7 +41,7 @@ class VariantService
 
         // Filter by status
         if ($config['status'] !== 'all') {
-            $query->where('product.status', $config['status']);
+            $query->where('products.status', $config['status']);
         }
 
         // Filter by name or other fields
@@ -42,11 +49,6 @@ class VariantService
             $filter = '%' . $config['filter'] . '%';
             $filterBy = $config['filter_by'] === 'name' ? 'products.name' : $config['filter_by'];
             $query->where($filterBy, 'like', $filter);
-        }
-
-        // Filter by vendor id
-        if (isset($config['vendor_id']) && !empty($config['vendor_id'])) {
-            $query->where('vendors.id', $config['vendor_id']);
         }
 
         // Order by

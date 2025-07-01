@@ -121,13 +121,49 @@ class VendorsController extends Controller
             'status' => $status,
             'page' => $page,
             'per_page' => $per_page,
-            // 'vendor_id' => $vendorId,
+            'vendor_id' => $vendorId,
         ];
 
         // Fetch variants using the service
         $response = $variantService->getVariants($config);
 
         return new VariantsResource($response);
+    }
+
+    public function storeProductVariant(Request $request, Vendor $vendor, ProductVariant $variant)
+    {
+        $product = $request->input('record');
+
+        if ($vendor && $variant) {
+            // Check if the variant already exists for the vendor
+            $existingVariant = $vendor->variants()->where('product_variant_id', $variant->id)->first();
+
+            // Remove the existing variant if it exists
+            if ($existingVariant) {
+                $vendor->variants()->detach($existingVariant->id);
+            }
+
+            if (isset($product['previous_product_id'])) {
+                // Check if the variant already exists for the vendor
+                $existingVariant = $vendor->variants()->where('product_variant_id', $product['previous_product_id'])->first();
+
+                // Remove the existing variant if it exists
+                if ($existingVariant) {
+                    $vendor->variants()->detach($existingVariant->id);
+                }
+            }
+
+            $vendor->variants()->attach($variant->id, [
+                'price' => $product['price'],
+                'details' => $product['details'] ?? null,
+                'payment_terms' => $product['payment_terms'],
+                'status' => $product['status'] ?? 'active',
+            ]);
+
+            return response()->json(['data' => $vendor], 201);
+        } else {
+            return response()->json(['message' => 'Vendor or Product not found'], 404);
+        }
     }
 
     public function updateProductVariants(Request $request, Vendor $vendor)
