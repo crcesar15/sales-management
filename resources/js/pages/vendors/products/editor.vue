@@ -24,8 +24,8 @@
               class="w-full"
               :options="products"
               :placeholder="$t('Product')"
-              option-label="name"
               option-value="id"
+              option-label="label"
               filter
               :loading="productsLoading"
               :fluid="true"
@@ -187,14 +187,15 @@ export default {
       this.$emit("close");
     },
     save() {
-      const formattedProduct = {
+      const formattedRecord = {
         id: this.productId,
         price: this.price,
         payment_terms: this.paymentTerm,
         details: this.details,
         status: this.status,
+        previous_product_id: this.product.id,
       };
-      this.$emit("save", formattedProduct);
+      this.$emit("save", formattedRecord);
     },
     searchProducts(event) {
       this.productsLoading = true;
@@ -212,14 +213,13 @@ export default {
           },
         },
       ).then((response) => {
-        let products = response.data.data;
+        this.products = response.data.data.map((product) => ({
+          id: product.id,
+          name: product.name,
+          label: (product.variant) ? `${product.name} - (${product.variant})` : product.name,
+          variant: product.variant,
+        }));
 
-        if (this.product?.id) {
-          // add the selected product to the list
-          products = products.filter((product) => product.id !== this.product.id);
-        }
-
-        this.products = products;
         this.productsLoading = false;
       });
     },

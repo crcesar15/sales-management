@@ -203,7 +203,7 @@
     <ProductEditor
       :product="selectedProduct"
       :show="showProductEditor"
-      @save="saveProduct"
+      @save="saveRecord"
       @close="closeProductEditor"
     />
   </div>
@@ -284,7 +284,7 @@ export default {
       const params = {
         per_page: this.pagination.rows,
         page: this.pagination.page,
-        sortField: this.pagination.sortField,
+        order_by: this.pagination.sortField,
         status: this.status,
         includes: "product,vendors",
       };
@@ -302,13 +302,14 @@ export default {
       axios
         .get(route("api.vendors.variants", this.vendor.id), { params })
         .then((response) => {
-          console.log(response.data.data);
           this.products = response.data.data.map((product) => {
             const relatedVendor = product.vendors.find((vendor) => vendor.id === this.vendor.id);
 
             return {
               id: product.id,
-              name: `${product.name} - ${product.product.name}`,
+              name: product.name,
+              label: (product.variant) ? `${product.name} - (${product.variant})` : product.name,
+              variant: product.variant,
               status: relatedVendor.pivot.status,
               price: relatedVendor.pivot.price,
               payment_terms: relatedVendor.pivot.payment_terms,
@@ -341,9 +342,9 @@ export default {
       this.selectedProduct = {};
       this.showProductEditor = true;
     },
-    saveProduct(product) {
+    saveRecord(record) {
       axios
-        .put(route("api.vendors.variants.update", { vendor: this.vendor.id }), { variants: [product] })
+        .post(route("api.vendors.variants.store", { vendor: this.vendor.id, variant: record.id }), { record })
         .then(() => {
           this.$toast.add({
             severity: "success",
