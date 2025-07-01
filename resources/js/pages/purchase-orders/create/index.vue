@@ -352,7 +352,9 @@ export default {
     fetchProductByVendor(event) {
       if (event.query.trim().length) {
         const vendorId = this.selectedVendor.id;
-        axios.get(route("api.vendors.variants", { id: vendorId, _query: { per_page: 10 } }))
+        axios.get(route("api.vendors.variants", {
+          vendor: vendorId, per_page: 10, includes: "product,vendors", order_by: "name", order_direction: "asc",
+        }))
           .then((response) => {
             this.availableProducts = response.data.data;
           });
