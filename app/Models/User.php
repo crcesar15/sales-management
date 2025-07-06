@@ -25,7 +25,6 @@ class User extends Authenticatable
         'username',
         'phone',
         'status',
-        'role_id',
         'date_of_birth',
         'additional_properties',
         'password',
@@ -60,11 +59,6 @@ class User extends Authenticatable
         'created_at' => 'datetime:Y-m-d H:i',
         'updated_at' => 'datetime:Y-m-d H:i',
     ];
-
-    public function role()
-    {
-        return $this->belongsTo(Role::class);
-    }
 
     public function purchaseOrders()
     {
