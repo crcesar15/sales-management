@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
-use App\Models\Role;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class RolesController extends Controller
 {
@@ -24,8 +24,6 @@ class RolesController extends Controller
                 }
             );
         }
-
-        $query->withCount('users');
 
         $order_by = $request->has('order_by')
             ? $order_by = $request->get('order_by')
