@@ -9,7 +9,7 @@
         icon="fa fa-add"
         raised
         class="ml-2 uppercase"
-        @click="addRole"
+        @click="$inertia.visit(route('roles.create'))"
       />
     </div>
     <ConfirmDialog />
@@ -66,29 +66,6 @@
             sortable
           />
           <Column
-            field="description"
-            :header="$t('Description')"
-            sortable
-          />
-          <Column
-            field="users_count"
-            :header="$t('Users')"
-            :pt="{columnHeaderContent: 'justify-center'}"
-          >
-            <template
-              #body="row"
-            >
-              <div
-                class="flex justify-center"
-              >
-                <Tag
-                  rounded
-                  :value="row.data.users_count"
-                />
-              </div>
-            </template>
-          </Column>
-          <Column
             field="created_at"
             :header="$t('Created At')"
             sortable
@@ -112,7 +89,7 @@
                   rounded
                   raised
                   size="sm"
-                  @click="editRole(row.data)"
+                  @click="$inertia.visit(route('roles.edit'), row.data.id)"
                 />
                 <p-button
                   v-tooltip.top="$t('Delete')"
@@ -129,12 +106,6 @@
         </DataTable>
       </template>
     </Card>
-    <ItemEditor
-      :role="selectedRole"
-      :show-dialog="editorToggle"
-      @clearSelection="selectedRole = {}; editorToggle = false;"
-      @submitted="saveRole"
-    />
   </div>
 </template>
 
@@ -147,22 +118,18 @@ import InputText from "primevue/inputtext";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import ConfirmDialog from "primevue/confirmdialog";
-import Tag from "primevue/tag";
 import AppLayout from "../../layouts/admin.vue";
-import ItemEditor from "./ItemEditor.vue";
 
 export default {
   components: {
     DataTable,
     Column,
     PButton,
-    ItemEditor,
     InputText,
     ConfirmDialog,
     Card,
     IconField,
     InputIcon,
-    Tag,
   },
   layout: AppLayout,
   data() {
@@ -214,7 +181,11 @@ export default {
 
       axios.get(url)
         .then((response) => {
-          this.roles = response.data.data;
+          this.roles = response.data.data.map((item) => ({
+            ...item,
+            created_at: moment(item.created_at).tz(window.timezone).format(window.datetimeFormat),
+            updated_at: moment(item.updated_at).tz(window.timezone).format(window.datetimeFormat),
+          }));
           this.pagination.total = response.data.meta.total;
           this.loading = false;
         })
@@ -237,14 +208,6 @@ export default {
       this.pagination.sortField = event.sortField;
       this.pagination.sortOrder = event.sortOrder;
       this.fetchRoles();
-    },
-    addRole() {
-      this.editorToggle = true;
-      this.selectedRole = {};
-    },
-    editRole(role) {
-      this.editorToggle = true;
-      this.selectedRole = role;
     },
     deleteRole(id) {
       this.$confirm.require({
@@ -275,53 +238,6 @@ export default {
             });
         },
       });
-    },
-    saveRole(id, role) {
-      if (id) {
-        this.updateRole(id, role);
-      } else {
-        this.createRole(role);
-      }
-    },
-    createRole(role) {
-      axios.post(route("api.roles.store"), role)
-        .then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: this.$t("Success"),
-            detail: this.$t("Role created successfully"),
-            life: 3000,
-          });
-          this.fetchRoles();
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        });
-    },
-    updateRole(id, role) {
-      axios.put(`${route("api.roles.update", id)}`, role)
-        .then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: this.$t("Success"),
-            detail: this.$t("Role updated successfully"),
-            life: 3000,
-          });
-          this.fetchRoles();
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        });
     },
   },
 };
