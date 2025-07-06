@@ -5,7 +5,7 @@
  */
 
 import axios from "axios";
-import moment from "moment";
+import moment from "moment-timezone";
 
 window.axios = axios;
 
@@ -33,6 +33,21 @@ if (currencySymbol) {
   window.currencySymbol = currencySymbol.content;
 } else {
   window.currencySymbol = "$";
+}
+
+const timezone = document.head.querySelector("meta[name=\"timezone\"]");
+
+if (timezone) {
+  window.timezone = timezone.content;
+} else {
+  window.timezone = "UTC";
+}
+const datetimeFormat = document.head.querySelector("meta[name=\"datetime-format\"]");
+
+if (datetimeFormat) {
+  window.datetimeFormat = datetimeFormat.content;
+} else {
+  window.datetimeFormat = "YYYY-MM-DD HH:mm";
 }
 
 window.moment = moment;

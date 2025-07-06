@@ -19,14 +19,24 @@ class Setting extends Model
     {
         $settings = [
             [
-                'key' => 'site_name',
+                'key' => 'site-name',
                 'value' => 'My Application',
                 'name' => 'Site Name',
             ],
             [
-                'key' => 'currency_symbol',
+                'key' => 'currency-symbol',
                 'value' => '$',
                 'name' => 'Currency Symbol',
+            ],
+            [
+                'key' => 'timezone',
+                'value' => 'UTC-04:00',
+                'name' => 'Timezone',
+            ],
+            [
+                'key' => 'datetime-format',
+                'value' => 'YYYY-MM-DD HH:mm',
+                'name' => 'Timezone',
             ],
         ];
 

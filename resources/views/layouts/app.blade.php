@@ -1,8 +1,7 @@
 @php
     use App\Models\Setting;
 
-    $siteName = Setting::where('key', 'site_name')->first();
-    $currencySymbol = Setting::where('key', 'currency_symbol')->first();
+    $settings = Setting::all();
 @endphp
 
 <!doctype html>
@@ -17,8 +16,9 @@
 
     <!-- user ID -->
     <meta name="user" content="{{ Auth::user() }}">
-    <meta name="site-name" content="{{ $siteName->value }}">
-    <meta name="currency-symbol" content="{{ $currencySymbol->value }}">
+    @foreach ($settings as $setting)
+        <meta name="{{ $setting->key }}" content="{{ $setting->value }}">
+    @endforeach
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
