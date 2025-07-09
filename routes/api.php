@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\BrandsController;
 use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\MeasureUnitsController;
+use App\Http\Controllers\Api\PermissionsController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
@@ -106,4 +107,7 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
     //Routes for settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+
+    //Routes for permissions
+    Route::get('/permissions', [PermissionsController::class, 'index'])->name('permissions');
 });

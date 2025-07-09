@@ -3,6 +3,7 @@
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PurchaseOrdersController;
+use App\Http\Controllers\RolesController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\VendorsController;
 use Illuminate\Support\Facades\Route;
@@ -59,9 +60,9 @@ Route::group(['middleware' => ['auth']], function () {
         return Inertia::render('measure-units/index');
     })->name('measure-units');
 
-    Route::get('/roles', function () {
-        return Inertia::render('roles/index');
-    })->name('roles');
+    // Role routes
+    Route::get('/roles', [RolesController::class, 'index'])->name('roles');
+    Route::get('/roles/create', [RolesController::class, 'create'])->name('roles.create');
 
     // User Routes
     Route::get('/users', [UsersController::class, 'index'])->name('users');
