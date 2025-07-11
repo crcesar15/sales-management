@@ -11,9 +11,10 @@ use App\Models\MeasureUnit;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
-use App\Models\Role;
 use App\Models\User;
 use App\Models\Vendor;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Database\Seeders\SettingsSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
@@ -25,33 +26,33 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Roles Admin
-        Role::factory(1)->create([
-            'name' => 'Administrator',
-        ]);
-
-        //Roles Salesman
-        Role::factory(1)->create([
-            'name' => 'Salesman',
-        ]);
+        // Run Role Seeder
+        $this->call(RoleSeeder::class);
 
         // Admin user
-        User::factory(1)->create([
-            'first_name' => 'Cesar',
-            'last_name' => 'Rodriguez',
-            'email' => 'crcesar15@gmail.com',
-            'username' => 'admin',
-            'phone' => '123456789',
-            'status' => 'ACTIVE',
-            'date_of_birth' => '1990-01-01',
-            'role_id' => 1,
-            'password' => bcrypt('123456'),
-        ]);
+        $admin = User::factory()->create(
+            [
+                'first_name' => 'Cesar',
+                'last_name' => 'Rodriguez',
+                'email' => 'crcesar15@gmail.com',
+                'username' => 'admin',
+                'phone' => '123456789',
+                'status' => 'ACTIVE',
+                'date_of_birth' => '1990-01-01',
+                'password' => bcrypt('123456'),
+            ]
+        );
+
+        $admin->assignRole(['Super Administrator']);
+
+        //Run settings and permissions seeder
+        $this->call(SettingsSeeder::class);
+        $this->call(PermissionSeeder::class);
 
         // Create 10 Salesman users
-        User::factory(10)->create([
-            'role_id' => 2,
-        ]);
+        User::factory(10)->create()->each(function ($user) {
+            $user->assignRole(['Salesman']);
+        });
 
         //Create 10 Brands
         Brand::factory(10)->create();
@@ -60,7 +61,10 @@ class DatabaseSeeder extends Seeder
         MeasureUnit::factory(10)->create();
 
         //Delete and create products folder
-        Storage::deleteDirectory('public/products');
+        if (is_dir('public/products')) {
+            Storage::deleteDirectory('public/products');
+        }
+
         Storage::makeDirectory('public/products');
 
         Category::factory(10)->create()->each(function ($category) {
@@ -105,8 +109,5 @@ class DatabaseSeeder extends Seeder
 
         //Set permissions to storage folder
         exec('sudo chmod -R 777 storage/app/public/products');
-
-        //Run settings seeder
-        $this->call(SettingsSeeder::class);
     }
 }
