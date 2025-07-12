@@ -165,13 +165,53 @@ export default {
           formattedPermissions.push({
             value: value.toString(),
             category: item.category,
-            permissions: [{ id: item.id, name: item.name, enabled: item.enabled }],
+            permissions: [{ id: item.id, name: item.name, enabled: false }],
           });
           value += 1;
         }
       });
 
       return formattedPermissions;
+    },
+    getEnabledPermissions(permissionsGroups) {
+      const enabledPermissions = [];
+
+      permissionsGroups.forEach((group) => {
+        group.permissions.forEach((permission) => {
+          if (permission.enabled) {
+            enabledPermissions.push(permission.name);
+          }
+        });
+      });
+
+      return enabledPermissions;
+    },
+    submit() {
+      this.v$.$touch();
+
+      if (!this.v$.$invalid) {
+        const body = {
+          name: this.name,
+          permissions: this.getEnabledPermissions(this.availablePermissions),
+        };
+
+        axios.post(route("api.roles.store"), body)
+          .then(() => {
+            this.$toast.add({
+              severity: "success",
+              summary: this.$t("Success"),
+              detail: this.$t("Role created successfully"),
+            });
+            this.$inertia.visit(route("roles"));
+          })
+          .catch((error) => {
+            this.$toast.add({
+              severity: "error",
+              summary: this.$t("Error"),
+              detail: error.message,
+            });
+          });
+      }
     },
   },
   validations() {
