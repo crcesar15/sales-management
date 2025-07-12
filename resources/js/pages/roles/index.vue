@@ -5,7 +5,7 @@
         {{ $t("Roles") }}
       </h2>
       <p-button
-        :label="$t('Add Role')"
+        :label="$t('add role')"
         icon="fa fa-add"
         raised
         class="ml-2 uppercase"
@@ -39,9 +39,9 @@
                   flex
                   lg:col-span-3
                   lg:col-start-10
-                  md:col-span-4
-                  md:col-start-9
-                  col-12
+                  md:col-span-6
+                  md:col-start-7
+                  col-span-12
                   md:justify-content-end
                   justify-center
                 "
@@ -89,7 +89,7 @@
                   rounded
                   raised
                   size="sm"
-                  @click="$inertia.visit(route('roles.edit'), row.data.id)"
+                  @click="$inertia.visit(route('roles.edit', row.data.id))"
                 />
                 <p-button
                   v-tooltip.top="$t('Delete')"
@@ -140,6 +140,7 @@ export default {
         first: 0,
         rows: 10,
         page: 1,
+        perPage: 10,
         sortField: "name",
         sortOrder: 1,
         filter: "",
@@ -164,20 +165,18 @@ export default {
     fetchRoles() {
       this.loading = true;
 
-      let url = `${route("api.roles")}?
-        &per_page=${this.pagination.rows}
-        &page=${this.pagination.page}
-        &order_by=${this.pagination.sortField}`;
+      const params = new URLSearchParams();
 
-      if (this.pagination.sortOrder === -1) {
-        url += "&order_direction=desc";
-      } else {
-        url += "&order_direction=asc";
-      }
+      params.append("per_page", this.pagination.perPage);
+      params.append("page", this.pagination.page);
+      params.append("order_by", this.pagination.sortField);
+      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
 
       if (this.pagination.filter) {
-        url += `&filter=${this.pagination.filter}`;
+        params.append("filter", this.pagination.filter);
       }
+
+      const url = `${route("api.roles")}?${params.toString()}`;
 
       axios.get(url)
         .then((response) => {
@@ -201,7 +200,7 @@ export default {
     },
     onPage(event) {
       this.pagination.page = event.page + 1;
-      this.pagination.per_page = event.rows;
+      this.pagination.perPage = event.rows;
       this.fetchRoles();
     },
     onSort(event) {
