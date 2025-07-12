@@ -60,10 +60,10 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
 
     // Routes for Roles
     Route::get('/roles', [RolesController::class, 'index'])->name('roles');
-    Route::get('/roles/{id}', [RolesController::class, 'show'])->name('roles.show');
+    Route::get('/roles/{role}', [RolesController::class, 'show'])->name('roles.show');
     Route::post('/roles', [RolesController::class, 'store'])->name('roles.store');
-    Route::put('/roles/{id}', [RolesController::class, 'update'])->name('roles.update');
-    Route::delete('/roles/{id}', [RolesController::class, 'destroy'])->name('roles.destroy');
+    Route::put('/roles/{role}', [RolesController::class, 'update'])->name('roles.update');
+    Route::delete('/roles/{role}', [RolesController::class, 'destroy'])->name('roles.destroy');
 
     // Routes for Users
     Route::get('/users', [UsersController::class, 'index'])->name('users');

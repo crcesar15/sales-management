@@ -9,8 +9,8 @@
           class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('roles'))"
         />
-        <h4 class="text-2xl font-bold flex items-center m-0">
-          {{ $t('Add Role') }}
+        <h4 class="text-2xl font-bold flex items-center m-0 capitalize">
+          {{ $t('add role') }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
@@ -208,7 +208,7 @@ export default {
             this.$toast.add({
               severity: "error",
               summary: this.$t("Error"),
-              detail: error.message,
+              detail: this.$t(error.response.data.message),
             });
           });
       }

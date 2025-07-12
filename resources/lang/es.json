@@ -76,7 +76,8 @@
   "Measure Unit created successfully": "Unidad de Medida creada exitosamente",
   "Measure Unit updated successfully": "Unidad de Medida actualizada exitosamente",
   "Roles": "Roles",
-  "Add Role": "Agregar Rol",
+  "add role": "agregar rol",
+  "edit role": "editar rol",
   "No roles found": "No se encontraron roles",
   "Are you sure you want to delete this role?": "¿Estás seguro de que deseas eliminar este rol?",
   "Role deleted successfully": "Rol eliminado exitosamente",
@@ -176,5 +177,7 @@
   "users-view": "ver usuarios",
   "users-create": "crear usuarios",
   "users-edit": "editar usuarios",
-  "users-delete": "eliminar usuarios"
+  "users-delete": "eliminar usuarios",
+  "This action is unauthorized.": "Esta acción no está autorizada.",
+  "The name has already been taken.": "El nombre ya ha sido tomado."
 }

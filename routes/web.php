@@ -63,6 +63,7 @@ Route::group(['middleware' => ['auth']], function () {
     // Role routes
     Route::get('/roles', [RolesController::class, 'index'])->name('roles');
     Route::get('/roles/create', [RolesController::class, 'create'])->name('roles.create');
+    Route::get('/roles/{role}/edit', [RolesController::class, 'edit'])->name('roles.edit');
 
     // User Routes
     Route::get('/users', [UsersController::class, 'index'])->name('users');

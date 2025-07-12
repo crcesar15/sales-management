@@ -9,8 +9,8 @@
           class="hover:shadow-md mr-2"
           @click="$inertia.visit(route('roles'))"
         />
-        <h4 class="text-2xl font-bold flex items-center m-0">
-          {{ $t('Add Role') }}
+        <h4 class="text-2xl font-bold flex items-center m-0 capitalize">
+          {{ $t('edit role') }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
@@ -123,6 +123,24 @@ export default {
     AccordionContent,
   },
   layout: AppLayout,
+  props: {
+    role: {
+      type: Object,
+      required: true,
+      default() {
+        return {
+          name: "test",
+        };
+      },
+    },
+    permissions: {
+      type: Array,
+      required: true,
+      default() {
+        return [];
+      },
+    },
+  },
   setup() {
     return {
       v$: useVuelidate(),
@@ -135,6 +153,7 @@ export default {
     };
   },
   mounted() {
+    this.name = this.role.name;
     this.fetchPermissions();
   },
   methods: {
@@ -158,20 +177,61 @@ export default {
 
       permissions.forEach((item) => {
         const indexFound = formattedPermissions.findIndex((i) => i.category === item.category);
+        const enabled = this.permissions.includes(item.name);
 
         if (indexFound >= 0) {
-          formattedPermissions[indexFound].permissions.push({ id: item.id, name: item.name, enabled: item.enabled });
+          formattedPermissions[indexFound].permissions.push({ id: item.id, name: item.name, enabled });
         } else {
           formattedPermissions.push({
             value: value.toString(),
             category: item.category,
-            permissions: [{ id: item.id, name: item.name, enabled: item.enabled }],
+            permissions: [{ id: item.id, name: item.name, enabled }],
           });
           value += 1;
         }
       });
 
       return formattedPermissions;
+    },
+    getEnabledPermissions(permissionsGroups) {
+      const enabledPermissions = [];
+
+      permissionsGroups.forEach((group) => {
+        group.permissions.forEach((permission) => {
+          if (permission.enabled) {
+            enabledPermissions.push(permission.name);
+          }
+        });
+      });
+
+      return enabledPermissions;
+    },
+    submit() {
+      this.v$.$touch();
+
+      if (!this.v$.$invalid) {
+        const body = {
+          name: this.name,
+          permissions: this.getEnabledPermissions(this.availablePermissions),
+        };
+
+        axios.put(route("api.roles.update", this.role.id), body)
+          .then(() => {
+            this.$toast.add({
+              severity: "success",
+              summary: this.$t("Success"),
+              detail: this.$t("Role created successfully"),
+            });
+            this.$inertia.visit(route("roles"));
+          })
+          .catch((error) => {
+            this.$toast.add({
+              severity: "error",
+              summary: this.$t("Error"),
+              detail: this.$t(error.response.data.message),
+            });
+          });
+      }
     },
   },
   validations() {

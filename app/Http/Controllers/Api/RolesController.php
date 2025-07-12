@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Roles\ListRoleRequest;
 use App\Http\Requests\Api\Roles\StoreRoleRequest;
+use App\Http\Requests\Api\Roles\UpdateRoleRequest;
 use App\Http\Resources\ApiCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -68,16 +69,23 @@ class RolesController extends Controller
     }
 
     //Update a role
-    public function update(Request $request, $id)
+    public function update(UpdateRoleRequest $request, Role $role)
     {
-        $role = Role::find($id);
-        if ($role) {
-            $role->update($request->all());
+        $request->validated();
 
-            return response()->json(['data' => $role], 200);
-        } else {
-            return response()->json(['message' => 'Role not found'], 404);
-        }
+        $updatedRole = DB::transaction(function () use ($request, $role) {
+            $role->update([
+                'name' => $request->input('name'),
+            ]);
+
+            if ($request->has('permissions')) {
+                $role->syncPermissions($request->input('permissions'));
+            }
+
+            return $role;
+        });
+
+        return response()->json(['data' => $updatedRole], 200);
     }
 
     //Delete a role

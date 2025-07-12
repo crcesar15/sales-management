@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Inertia\Inertia;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolesController extends Controller
 {
@@ -16,8 +18,13 @@ class RolesController extends Controller
         return Inertia::render('roles/create/index');
     }
 
-    public function edit()
+    public function edit(Role $role)
     {
-        return Inertia::render('roles/edit/index');
+        $permissions = $role->permissions->pluck('name')->toArray();
+
+        return Inertia::render('roles/edit/index', [
+            'role' => $role,
+            'permissions' => $permissions,
+        ]);
     }
 }
