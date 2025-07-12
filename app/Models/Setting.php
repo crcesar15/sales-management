@@ -30,7 +30,7 @@ class Setting extends Model
             ],
             [
                 'key' => 'timezone',
-                'value' => 'UTC-04:00',
+                'value' => 'America/La_Paz',
                 'name' => 'Timezone',
             ],
             [

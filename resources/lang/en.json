@@ -169,14 +169,12 @@
   "Settings": "Settings",
   "users": "users",
   "roles": "roles",
-  "role-list": "list roles",
-  "role-view": "view roles",
-  "role-create": "create roles",
-  "role-edit": "edit roles",
-  "role-delete": "delete roles",
-  "user-list": "list users",
-  "user-view": "view users",
-  "user-create": "create users",
-  "user-edit": "edit users",
-  "user-delete": "delete users"
+  "roles-view": "view roles",
+  "roles-create": "create roles",
+  "roles-edit": "edit roles",
+  "roles-delete": "delete roles",
+  "users-view": "view users",
+  "users-create": "create users",
+  "users-edit": "edit users",
+  "users-delete": "delete users"
 }

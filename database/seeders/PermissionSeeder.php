@@ -15,18 +15,16 @@ class PermissionSeeder extends Seeder
     {
         $categories = [
             'roles' => [
-                'role-list',
-                'role-view',
-                'role-create',
-                'role-edit',
-                'role-delete',
+                'roles-view',
+                'roles-create',
+                'roles-edit',
+                'roles-delete',
             ],
             'users' => [
-                'user-list',
-                'user-view',
-                'user-create',
-                'user-edit',
-                'user-delete',
+                'users-view',
+                'users-create',
+                'users-edit',
+                'users-delete',
             ],
         ];
 
