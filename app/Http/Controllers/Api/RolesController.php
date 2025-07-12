@@ -3,39 +3,33 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Roles\ListRoleRequest;
+use App\Http\Requests\Api\Roles\StoreRoleRequest;
 use App\Http\Resources\ApiCollection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class RolesController extends Controller
 {
     //Get all roles
-    public function index(Request $request)
+    public function index(ListRoleRequest $request): ApiCollection
     {
+        $request->validated();
+
         $query = Role::query();
 
-        $filter = $request->input('filter', '');
-
-        if (!empty($filter)) {
-            $filter = '%' . $filter . '%';
-            $query->where(
-                function ($query) use ($filter) {
-                    $query->where('name', 'like', $filter);
-                }
-            );
+        if ($request->has('filter')) {
+            $query->where('name', 'like', $request->input('filter'));
         }
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'name';
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
+        if ($request->has('include')) {
+            $query->with($request->input('include'));
+        }
 
-        $response = $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+        $query->orderBy($request->input('order_by'), $request->input('order_direction'));
+
+        $response = $query->paginate($request->input('per_page'));
 
         return new ApiCollection($response);
     }
@@ -52,9 +46,23 @@ class RolesController extends Controller
     }
 
     //Create a new role
-    public function store(Request $request)
+    public function store(StoreRoleRequest $request)
     {
-        $role = Role::create($request->all());
+        $request->validated();
+
+        $role = DB::transaction(function () use ($request) {
+            $role = Role::create([
+                'name' => $request->input('name'),
+                'guard_name' => 'web',
+            ]);
+
+            // Assign permissions
+            if ($request->has('permissions')) {
+                $role->syncPermissions($request->input('permissions'));
+            }
+
+            return $role;
+        });
 
         return response()->json(['data' => $role], 201);
     }
