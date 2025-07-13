@@ -109,8 +109,22 @@
           />
           <Column
             field="role.name"
-            :header="$t('Role')"
-          />
+            :header="$t('Roles')"
+          >
+            <template #body="{ data }">
+              <div
+                style="height: 55px;"
+                class="flex items-center"
+              >
+                <Tag
+                  v-if="data.roles.length > 0"
+                  severity="secondary"
+                >
+                  {{ data.roles }}
+                </Tag>
+              </div>
+            </template>
+          </Column>
           <Column
             field="status"
             :header="$t('Status')"
@@ -199,23 +213,16 @@
 </template>
 
 <script>
-import DataTable from "primevue/datatable";
-import Card from "primevue/card";
-import Column from "primevue/column";
-import PButton from "primevue/button";
-import InputText from "primevue/inputtext";
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
-import ConfirmDialog from "primevue/confirmdialog";
-import SelectButton from "primevue/selectbutton";
-import Tag from "primevue/tag";
+import {
+  DataTable, Card, Column, Button, InputText, IconField, InputIcon, ConfirmDialog, SelectButton, Tag,
+} from "primevue";
 import AppLayout from "../../layouts/admin.vue";
 
 export default {
   components: {
     DataTable,
     Column,
-    PButton,
+    PButton: Button,
     InputText,
     ConfirmDialog,
     Card,
@@ -233,6 +240,7 @@ export default {
         first: 0,
         rows: 10,
         page: 1,
+        perPage: 10,
         sortField: "first_name",
         sortOrder: 1,
         filter: "",
@@ -268,25 +276,30 @@ export default {
     fetchUsers() {
       this.loading = true;
 
-      let url = `${route("api.users")}?includes=role
-        &per_page=${this.pagination.rows}
-        &page=${this.pagination.page}
-        &order_by=${this.pagination.sortField}
-        &status=${this.status}`;
+      const params = new URLSearchParams();
 
-      if (this.pagination.sortOrder === -1) {
-        url += "&order_direction=desc";
-      } else {
-        url += "&order_direction=asc";
+      params.append("include", "roles");
+      params.append("per_page", this.pagination.perPage);
+      params.append("page", this.pagination.page);
+      params.append("order_by", this.pagination.sortField);
+      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
+
+      if (this.status !== "all") {
+        params.append("status", this.status);
       }
-
       if (this.pagination.filter) {
-        url += `&filter=${this.pagination.filter}`;
+        params.append("filter", this.pagination.filter);
       }
+      const url = `${route("api.users")}?${params.toString()}`;
 
       axios.get(url)
         .then((response) => {
-          this.users = response.data.data;
+          this.users = response.data.data.map((user) => ({
+            ...user,
+            created_at: window.moment(user.created_at).tz(window.timezone).format(window.datetimeFormat),
+            updated_at: window.moment(user.updated_at).tz(window.timezone).format(window.datetimeFormat),
+            roles: user.roles.map((role) => role.name).join(", "),
+          }));
           this.pagination.total = response.data.meta.total;
           this.loading = false;
         })
@@ -294,7 +307,7 @@ export default {
           this.$toast.add({
             severity: "error",
             summary: this.$t("Error"),
-            detail: error.response.data.message,
+            detail: error.response,
             life: 3000,
           });
           this.loading = false;
@@ -302,7 +315,7 @@ export default {
     },
     onPage(event) {
       this.pagination.page = event.page + 1;
-      this.pagination.per_page = event.rows;
+      this.pagination.perPage = event.rows;
       this.fetchUsers();
     },
     onSort(event) {

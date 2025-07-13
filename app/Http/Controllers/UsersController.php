@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
 use App\Models\User;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class UsersController extends Controller
 {
@@ -35,7 +35,7 @@ class UsersController extends Controller
     public function edit(User $user)
     {
         // Include the user role with media
-        $user->load(['role']);
+        $user->with('roles');
 
         // List of Roles
         $roles = Role::all();

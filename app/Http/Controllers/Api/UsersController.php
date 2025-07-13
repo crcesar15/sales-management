@@ -3,57 +3,42 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Users\ListUserRequest;
 use App\Http\Resources\ApiCollection;
+use App\Http\Resources\UserCollection;
 use App\Models\User;
 use Illuminate\Http\Request;
 
 class UsersController extends Controller
 {
     //Get all users
-    public function index(Request $request)
+    public function index(ListUserRequest $request)
     {
+        $request->validated();
+
         $query = User::query();
 
-        $filter = $request->input('filter', '');
-
-        if (!empty($filter)) {
-            $filter = '%' . $filter . '%';
-            $query->where(
-                function ($query) use ($filter) {
-                    $query->where('first_name', 'like', $filter);
-                }
-            );
+        if ($request->has('filter')) {
+            $query->where('name', 'like', $query->input('filter'));
         }
 
-        $status = $request->input('status', 'all');
-
-        if ($status === 'archived') {
-            $query->onlyTrashed();
-        } else {
-            if ($status !== 'all') {
-                $query->where('status', $status);
+        if ($request->has('status')) {
+            if ($request->input('status') === 'archived') {
+                $query->onlyTrashed();
+            } else {
+                $query->where('status', $request->input('status'));
             }
         }
 
-        $includes = $request->input('includes', '');
-
-        if (!empty($includes)) {
-            $query->with(explode(',', $includes));
+        if ($request->has('include')) {
+            $query->with($request->input('include'));
         }
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'first_name';
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
+        $query->orderBy($request->input('order_by'), $request->input('order_direction'));
 
-        $response = $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+        $response = $query->paginate($request->input('per_page', 10));
 
-        return new ApiCollection($response);
+        return new UserCollection($response);
     }
 
     //Get a user by id
