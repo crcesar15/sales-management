@@ -34,8 +34,10 @@ class UsersController extends Controller
      */
     public function edit(User $user)
     {
-        // Include the user role with media
-        $user->with('roles');
+        // Include the user role with only id and name without pivot
+        $user->load(['roles' => function ($query) {
+            $query->select('id', 'name');
+        }]);
 
         // List of Roles
         $roles = Role::all();

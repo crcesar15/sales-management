@@ -174,6 +174,7 @@
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <p-button
+                  v-show="row.data.status !== 'archived'"
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text

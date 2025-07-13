@@ -118,6 +118,7 @@
             <div class="flex flex-col gap-2 mb-3">
               <label for="status">{{ $t('Status') }}</label>
               <Select
+                id="status"
                 v-model="status"
                 :options="[
                   { name: $t('Active'), value: 'active' },
@@ -128,20 +129,22 @@
               />
             </div>
             <div class="flex flex-col gap-2 mb-3">
-              <label for="status">{{ $t('Role') }}</label>
-              <Select
-                v-model="role"
-                :options="roles"
+              <label for="roles">{{ $t('Roles') }}</label>
+              <MultiSelect
+                id="roles"
+                v-model="roles"
+                display="chip"
+                :options="availableRoles"
                 option-label="name"
                 option-value="id"
-                :class="{'p-invalid': v$.role.$invalid && v$.role.$dirty}"
-                @blur="v$.role.$touch"
+                :class="{'p-invalid': v$.roles.$invalid && v$.roles.$dirty}"
+                @blur="v$.roles.$touch"
               />
               <small
-                v-if="v$.role.$invalid && v$.role.$dirty"
+                v-if="v$.roles.$invalid && v$.roles.$dirty"
                 class="text-red-400 dark:text-red-300"
               >
-                {{ v$.role.$errors[0].$message }}
+                {{ v$.roles.$errors[0].$message }}
               </small>
             </div>
           </template>
@@ -216,13 +219,6 @@
 </template>
 
 <script>
-import Card from "primevue/card";
-import InputText from "primevue/inputtext";
-import Select from "primevue/select";
-import PButton from "primevue/button";
-import DatePicker from "primevue/datepicker";
-import Password from "primevue/password";
-
 import { useVuelidate } from "@vuelidate/core";
 import {
   required,
@@ -232,6 +228,17 @@ import {
   minLength,
   requiredIf,
 } from "@vuelidate/validators";
+
+import {
+  Button,
+  MultiSelect,
+  Card,
+  InputText,
+  Select,
+  DatePicker,
+  Password,
+} from "primevue";
+
 import AppLayout from "../../../layouts/admin.vue";
 import i18n from "../../../app";
 
@@ -247,9 +254,10 @@ export default {
     Card,
     InputText,
     Select,
-    PButton,
+    PButton: Button,
     DatePicker,
     Password,
+    MultiSelect,
   },
   layout: AppLayout,
   props: {
@@ -257,7 +265,7 @@ export default {
       type: Object,
       default: () => ({}),
     },
-    roles: {
+    availableRoles: {
       type: Array,
       default: () => [],
     },
@@ -273,7 +281,7 @@ export default {
       last_name: "",
       email: "",
       status: "active",
-      role: "",
+      roles: [],
       phone: "",
       date_of_birth: "",
       username: "",
@@ -288,10 +296,15 @@ export default {
         this.last_name = user.last_name;
         this.email = user.email;
         this.status = user.status;
-        this.role = user.role_id;
         this.phone = user.phone;
         this.date_of_birth = user.date_of_birth;
         this.username = user.username;
+
+        if (typeof (user.roles) === "object" && user.roles.length > 0) {
+          this.roles = user.roles.map((role) => role.id);
+        } else {
+          this.roles = [];
+        }
       },
       immediate: true,
     },
@@ -320,7 +333,7 @@ export default {
         minLength: withI18nMessage(minLength(6)),
         username: withI18nMessage(username),
       },
-      role: {
+      roles: {
         required: withI18nMessage(required),
       },
       password: {
@@ -343,9 +356,9 @@ export default {
           last_name: this.last_name,
           email: this.email,
           status: this.status,
-          role_id: this.role,
+          roles: this.roles,
           phone: this.phone,
-          date_of_birth: moment(this.date_of_birth).format("YYYY-MM-DD"),
+          date_of_birth: window.moment(this.date_of_birth).format("YYYY-MM-DD"),
           username: this.username,
         };
 
