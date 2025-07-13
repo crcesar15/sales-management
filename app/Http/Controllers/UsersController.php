@@ -25,7 +25,7 @@ class UsersController extends Controller
         $roles = Role::all();
 
         return Inertia::render('users/create/index', [
-            'roles' => $roles,
+            'availableRoles' => $roles,
         ]);
     }
 
@@ -42,7 +42,7 @@ class UsersController extends Controller
 
         return Inertia::render('users/edit/index', [
             'user' => $user,
-            'roles' => $roles,
+            'availableRoles' => $roles,
         ]);
     }
 }

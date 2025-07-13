@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Users\ListUserRequest;
+use App\Http\Requests\StoreUserRequest;
 use App\Http\Resources\ApiCollection;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UsersController extends Controller
 {
@@ -53,24 +55,21 @@ class UsersController extends Controller
     }
 
     //Create a new user
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        // check if the username already exists
-        $user = User::where('username', $request->input('username'))->first();
+        $request->validated();
 
-        if ($user) {
-            return response()->json(['message' => 'Username is not available'], 400);
-        }
+        $user = DB::transaction(function () use ($request) {
+            // Create a new user
+            $user = User::create($request->all());
 
-        // check if the email already exists
-        $user = User::where('email', $request->input('email'))->first();
+            // Assign roles if provided
+            if ($request->has('roles')) {
+                $user->syncRoles($request->input('roles'));
+            }
 
-        if ($user) {
-            return response()->json(['message' => 'Email is not available'], 400);
-        }
-
-        // create a new user
-        $user = User::create($request->all());
+            return $user;
+        });
 
         return response()->json(['data' => $user], 201);
     }
