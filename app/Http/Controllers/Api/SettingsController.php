@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
 use App\Models\Setting;
@@ -10,7 +11,7 @@ use Illuminate\Http\Request;
 class SettingsController extends Controller
 {
     //Get all roles
-    public function index(Request $request)
+    public function index(Request $request): ApiCollection
     {
         $query = Setting::query();
 
@@ -30,17 +31,14 @@ class SettingsController extends Controller
     }
 
     //Update a role
-    public function update(Request $request)
+    public function update(Request $request): JsonResponse
     {
         $settings = $request->get('settings');
 
         foreach ($settings as $setting) {
-            Setting::updateOrCreate(
-                ['key' => $setting['key']],
-                ['value' => $setting['value']]
-            );
+            Setting::query()->updateOrCreate(['key' => $setting['key']], ['value' => $setting['value']]);
         }
 
-        return response()->json(['message' => 'Settings updated successfully'], 200);
+        return new JsonResponse(['message' => 'Settings updated successfully'], 200);
     }
 }

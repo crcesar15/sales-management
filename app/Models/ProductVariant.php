@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -29,23 +30,25 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function getMediaAttribute($value)
+    /**
+     * @return list
+     */
+    protected function media(): Attribute
     {
-        // Get images from variants
-        $media = json_decode($value);
-
-        $formattedMedia = [];
-
-        if (count($media) > 0) {
-            // Get images from product
-            $product = $this->product->load('media');
-
-            foreach ($media as $item) {
-                $formattedMedia[] = $product->media->where('id', $item->id)->first();
+        return Attribute::make(get: function ($value) {
+            // Get images from variants
+            $media = json_decode($value);
+            $formattedMedia = [];
+            if (count($media) > 0) {
+                // Get images from product
+                $product = $this->product->load('media');
+    
+                foreach ($media as $item) {
+                    $formattedMedia[] = $product->media->where('id', $item->id)->first();
+                }
             }
-        }
-
-        return $formattedMedia;
+            return $formattedMedia;
+        });
     }
 
     public function vendors()

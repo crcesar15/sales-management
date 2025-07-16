@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -48,35 +49,33 @@ class User extends Authenticatable
 
     // additional properties
     protected $appends = ['full_name'];
-
-    public function getFullNameAttribute()
+    protected function fullName(): Attribute
     {
-        return $this->first_name . ' ' . $this->last_name;
+        return Attribute::make(get: fn(): string => $this->first_name . ' ' . $this->last_name);
     }
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'created_at' => 'datetime:Y-m-d H:i',
-        'updated_at' => 'datetime:Y-m-d H:i',
-    ];
 
     public function purchaseOrders()
     {
         return $this->hasMany(PurchaseOrder::class);
     }
 
-    public static function boot()
+    protected static function boot()
     {
-        Route::bind('user', function ($value) {
-            return User::withTrashed()->findOrFail($value);
-        });
-
         parent::boot();
+        Route::bind('user', fn($value) => User::withTrashed()->findOrFail($value));
+    }
+    /**
+     * The attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'created_at' => 'datetime:Y-m-d H:i',
+            'updated_at' => 'datetime:Y-m-d H:i',
+        ];
     }
 }

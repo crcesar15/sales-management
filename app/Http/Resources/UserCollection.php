@@ -15,7 +15,7 @@ class UserCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->map(function ($user) use ($request) {
+            'data' => $this->collection->map(function ($user) use ($request): array {
                 $collect = [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -27,13 +27,11 @@ class UserCollection extends ResourceCollection
                     'updated_at' => $user->updated_at,
                 ];
 
-                if (in_array('roles', explode(',', $request->input('include', '')))) {
-                    $collect['roles'] = $user->roles->map(function ($role) {
-                        return [
-                            'id' => $role->id,
-                            'name' => $role->name,
-                        ];
-                    });
+                if (in_array('roles', explode(',', (string) $request->input('include', '')))) {
+                    $collect['roles'] = $user->roles->map(fn($role): array => [
+                        'id' => $role->id,
+                        'name' => $role->name,
+                    ]);
                 }
 
                 return $collect;

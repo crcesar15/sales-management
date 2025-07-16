@@ -41,7 +41,7 @@ class UsersController extends Controller
         $this->authorize('users-edit', auth()->user());
 
         // Include the user role with only id and name without pivot
-        $user->load(['roles' => function ($query) {
+        $user->load(['roles' => function ($query): void {
             $query->select('id', 'name');
         }]);
 

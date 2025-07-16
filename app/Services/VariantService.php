@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Database\Eloquent\Collection;
 use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +13,7 @@ class VariantService
      *
      * @param array $filters
      * @param array $includes
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function getVariants(array $config)
     {

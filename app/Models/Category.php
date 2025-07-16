@@ -18,8 +18,11 @@ class Category extends Model
         return $this->belongsToMany(Product::class);
     }
 
-    protected $casts = [
-        'created_at' => 'datetime:Y-m-d H:i',
-        'updated_at' => 'datetime:Y-m-d H:i',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime:Y-m-d H:i',
+            'updated_at' => 'datetime:Y-m-d H:i',
+        ];
+    }
 }

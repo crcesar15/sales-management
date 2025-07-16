@@ -15,7 +15,7 @@ class Setting extends Model
         'name',
     ];
 
-    public static function populateSettings()
+    public static function populateSettings(): void
     {
         $settings = [
             [
@@ -41,10 +41,7 @@ class Setting extends Model
         ];
 
         foreach ($settings as $setting) {
-            self::updateOrCreate(
-                ['key' => $setting['key']],
-                ['value' => $setting['value'], 'name' => $setting['name']]
-            );
+            self::query()->updateOrCreate(['key' => $setting['key']], ['value' => $setting['value'], 'name' => $setting['name']]);
         }
     }
 }

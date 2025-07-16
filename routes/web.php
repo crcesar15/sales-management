@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PurchaseOrdersController;
@@ -25,40 +26,29 @@ Route::get('/', function () {
     if (Auth::check()) {
         //user is logged in
         return redirect('/home');
-    } else {
-        //user is not logged in
-        return redirect('/login');
     }
+    //user is not logged in
+    return redirect('/login');
 });
 
 Auth::routes();
 
-Route::group(['middleware' => ['auth']], function () {
+Route::group(['middleware' => ['auth']], function (): void {
     // Home Routes
-    Route::get('/home', function () {
-        return Inertia::render('dashboard/index');
-    })->name('home');
+    Route::get('/home', fn() => Inertia::render('dashboard/index'))->name('home');
 
     // Products Routes
     Route::get('/products', [ProductsController::class, 'index'])->name('products');
     Route::get('/products/{product}/edit', [ProductsController::class, 'edit'])->name('products.edit');
     Route::get('/products/create', [ProductsController::class, 'create'])->name('products.create');
 
-    Route::get('/gallery', function () {
-        return Inertia::render('gallery/index');
-    })->name('gallery');
+    Route::get('/gallery', fn() => Inertia::render('gallery/index'))->name('gallery');
 
-    Route::get('/categories', function () {
-        return Inertia::render('category/index');
-    })->name('categories');
+    Route::get('/categories', fn() => Inertia::render('category/index'))->name('categories');
 
-    Route::get('/brands', function () {
-        return Inertia::render('brands/index');
-    })->name('brands');
+    Route::get('/brands', fn() => Inertia::render('brands/index'))->name('brands');
 
-    Route::get('/measure-units', function () {
-        return Inertia::render('measure-units/index');
-    })->name('measure-units');
+    Route::get('/measure-units', fn() => Inertia::render('measure-units/index'))->name('measure-units');
 
     // Role routes
     Route::get('/roles', [RolesController::class, 'index'])->name('roles');
@@ -85,7 +75,5 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/purchase-orders/create', [PurchaseOrdersController::class, 'create'])->name('purchase-orders.create');
 
     //Settings
-    Route::get('/settings', function () {
-        return Inertia::render('settings/index');
-    })->name('settings');
+    Route::get('/settings', fn() => Inertia::render('settings/index'))->name('settings');
 });

@@ -20,12 +20,6 @@ class Vendor extends Model
         'additional_contacts',
     ];
 
-    protected $casts = [
-        'additional_contacts' => 'array',
-        'created_at' => 'datetime:Y-m-d H:i',
-        'updated_at' => 'datetime:Y-m-d H:i',
-    ];
-
     public function variants()
     {
         return $this->belongsToMany(ProductVariant::class, 'catalog', 'vendor_id', 'product_variant_id')
@@ -36,5 +30,13 @@ class Vendor extends Model
     public function purchaseOrders()
     {
         return $this->hasMany(PurchaseOrder::class);
+    }
+    protected function casts(): array
+    {
+        return [
+            'additional_contacts' => 'array',
+            'created_at' => 'datetime:Y-m-d H:i',
+            'updated_at' => 'datetime:Y-m-d H:i',
+        ];
     }
 }

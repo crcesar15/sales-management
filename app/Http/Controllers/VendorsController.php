@@ -19,14 +19,14 @@ class VendorsController extends Controller
 
     public function edit($id)
     {
-        $vendor = Vendor::find($id);
+        $vendor = Vendor::query()->find($id);
 
         return Inertia::render('vendors/edit/index', ['vendor' => $vendor]);
     }
 
     public function products($id)
     {
-        $vendor = Vendor::find($id);
+        $vendor = Vendor::query()->find($id);
 
         return Inertia::render('vendors/products/index', ['vendor' => $vendor]);
     }

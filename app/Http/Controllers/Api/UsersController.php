@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Users\ListUserRequest;
 use App\Http\Requests\Api\Users\StoreUserRequest;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class UsersController extends Controller
 {
     //Get all users
-    public function index(ListUserRequest $request)
+    public function index(ListUserRequest $request): UserCollection
     {
         $request->validated();
 
@@ -45,24 +46,23 @@ class UsersController extends Controller
     }
 
     //Get a user by id
-    public function show($id)
+    public function show($id): JsonResponse
     {
-        $user = User::find($id);
+        $user = User::query()->find($id);
         if ($user) {
-            return response()->json(['data' => $user], 200);
-        } else {
-            return response()->json(['message' => 'User not found'], 404);
+            return new JsonResponse(['data' => $user], 200);
         }
+        return new JsonResponse(['message' => 'User not found'], 404);
     }
 
     //Create a new user
-    public function store(StoreUserRequest $request)
+    public function store(StoreUserRequest $request): JsonResponse
     {
         $request->validated();
 
         $user = DB::transaction(function () use ($request) {
             // Create a new user
-            $user = User::create($request->all());
+            $user = User::query()->create($request->all());
 
             // Assign roles if provided
             if ($request->has('roles')) {
@@ -72,15 +72,15 @@ class UsersController extends Controller
             return $user;
         });
 
-        return response()->json(['data' => $user], 201);
+        return new JsonResponse(['data' => $user], 201);
     }
 
     //Update a user
-    public function update(UpdateUserRequest $request, User $user)
+    public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
         $request->validated();
 
-        $updateUser = DB::transaction(function () use ($request, $user) {
+        $updateUser = DB::transaction(function () use ($request, $user): User {
             // Create a new user
             $user->update($request->all());
 
@@ -92,7 +92,7 @@ class UsersController extends Controller
             return $user;
         });
 
-        return response()->json(['data' => $updateUser], 200);
+        return new JsonResponse(['data' => $updateUser], 200);
     }
 
     //Delete a user

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Variants as ApiCollection;
 use App\Models\Media;
@@ -13,10 +14,10 @@ use Illuminate\Http\Request;
 class VariantsController extends Controller
 {
     //Get all variants
-    public function index(Request $request, VariantService $variantService)
+    public function index(Request $request, VariantService $variantService): ApiCollection
     {
         $includes = $request->input('includes', '');
-        $includes = explode(',', $includes);
+        $includes = explode(',', (string) $includes);
 
         $page = $request->input('page', 1);
         $per_page = $request->input('per_page', 10);
@@ -46,27 +47,26 @@ class VariantsController extends Controller
     }
 
     //Get a product by id
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $product = Product::query();
 
         $includes = request()->input('includes', '');
 
         if (!empty($includes)) {
-            $product->with(explode(',', $includes));
+            $product->with(explode(',', (string) $includes));
         }
 
         $product = $product->find($id);
 
         if ($product) {
-            return response()->json(['data' => $product], 200);
-        } else {
-            return response()->json(['message' => 'Product not found'], 404);
+            return new JsonResponse(['data' => $product], 200);
         }
+        return new JsonResponse(['message' => 'Product not found'], 404);
     }
 
     //Create a new product
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         // create product
         $product = Product::create([
@@ -81,7 +81,7 @@ class VariantsController extends Controller
         // Associate media
         if ($request->has('media') && count($request->input('media')) > 0) {
             foreach ($request->input('media') as $media) {
-                Media::find($media['id'])->update([
+                Media::query()->find($media['id'])->update([
                     'model_id' => $product->id,
                 ]);
             }
@@ -112,11 +112,11 @@ class VariantsController extends Controller
             }
         }
 
-        return response()->json(['data' => $product], 201);
+        return new JsonResponse(['data' => $product], 201);
     }
 
     //Update a product
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): JsonResponse
     {
         $product = Product::find($id);
         if ($product) {
@@ -132,7 +132,7 @@ class VariantsController extends Controller
             // Associate media
             if ($request->has('media') && count($request->input('media')) > 0) {
                 foreach ($request->input('media') as $media) {
-                    Media::find($media['id'])->update([
+                    Media::query()->find($media['id'])->update([
                         'model_id' => $product->id,
                     ]);
                 }
@@ -165,39 +165,37 @@ class VariantsController extends Controller
                 }
             }
 
-            return response()->json(['data' => $product], 200);
-        } else {
-            return response()->json(['message' => 'Product not found'], 404);
+            return new JsonResponse(['data' => $product], 200);
         }
+        return new JsonResponse(['message' => 'Product not found'], 404);
     }
 
     //Delete a product
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
         $product = Product::find($id);
         if ($product) {
             $product->delete();
 
-            return response()->json(['data' => $product], 200);
-        } else {
-            return response()->json(['message' => 'Product not found'], 404);
+            return new JsonResponse(['data' => $product], 200);
         }
+        return new JsonResponse(['message' => 'Product not found'], 404);
     }
 
     // Get vendors
-    public function getVendors($id)
+    public function getVendors($id): JsonResponse
     {
-        $variant = ProductVariant::find($id);
+        $variant = ProductVariant::query()->find($id);
 
         $vendors = $variant->vendors;
 
-        return response()->json(['data' => $vendors], 200);
+        return new JsonResponse(['data' => $vendors], 200);
     }
 
     // Update variant vendor
-    public function updateVendors(Request $request, $id)
+    public function updateVendors(Request $request, $id): JsonResponse
     {
-        $variant = ProductVariant::find($id);
+        $variant = ProductVariant::query()->find($id);
 
         $vendors = $request->input('vendors', []);
 
@@ -213,6 +211,6 @@ class VariantsController extends Controller
             }
         }
 
-        return response()->json(['data' => $variant], 200);
+        return new JsonResponse(['data' => $variant], 200);
     }
 }

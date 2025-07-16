@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Products as ApiCollection;
 use App\Models\Media;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 class ProductsController extends Controller
 {
     //Get all products
-    public function index(Request $request)
+    public function index(Request $request): ApiCollection
     {
         $query = Product::query();
 
@@ -33,7 +34,7 @@ class ProductsController extends Controller
         $includes = $request->input('includes', '');
 
         if (!empty($includes)) {
-            $query->with(explode(',', $includes));
+            $query->with(explode(',', (string) $includes));
         }
 
         $order_by = $request->has('order_by')
@@ -52,30 +53,29 @@ class ProductsController extends Controller
     }
 
     //Get a product by id
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $product = Product::query();
 
         $includes = request()->input('includes', '');
 
         if (!empty($includes)) {
-            $product->with(explode(',', $includes));
+            $product->with(explode(',', (string) $includes));
         }
 
         $product = $product->find($id);
 
         if ($product) {
-            return response()->json(['data' => $product], 200);
-        } else {
-            return response()->json(['message' => 'Product not found'], 404);
+            return new JsonResponse(['data' => $product], 200);
         }
+        return new JsonResponse(['message' => 'Product not found'], 404);
     }
 
     //Create a new product
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         // create product
-        $product = Product::create([
+        $product = Product::query()->create([
             'brand_id' => $request->input('brand_id'),
             'measure_unit_id' => $request->input('measure_unit_id'),
             'name' => $request->input('name'),
@@ -87,7 +87,7 @@ class ProductsController extends Controller
         // Associate media
         if ($request->has('media') && count($request->input('media')) > 0) {
             foreach ($request->input('media') as $media) {
-                Media::find($media['id'])->update([
+                Media::query()->find($media['id'])->update([
                     'model_id' => $product->id,
                 ]);
             }
@@ -118,13 +118,13 @@ class ProductsController extends Controller
             }
         }
 
-        return response()->json(['data' => $product], 201);
+        return new JsonResponse(['data' => $product], 201);
     }
 
     //Update a product
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): JsonResponse
     {
-        $product = Product::find($id);
+        $product = Product::query()->find($id);
         if ($product) {
             $product->update([
                 'brand_id' => $request->input('brand_id'),
@@ -138,7 +138,7 @@ class ProductsController extends Controller
             // Associate media
             if ($request->has('media') && count($request->input('media')) > 0) {
                 foreach ($request->input('media') as $media) {
-                    Media::find($media['id'])->update([
+                    Media::query()->find($media['id'])->update([
                         'model_id' => $product->id,
                     ]);
                 }
@@ -171,22 +171,20 @@ class ProductsController extends Controller
                 }
             }
 
-            return response()->json(['data' => $product], 200);
-        } else {
-            return response()->json(['message' => 'Product not found'], 404);
+            return new JsonResponse(['data' => $product], 200);
         }
+        return new JsonResponse(['message' => 'Product not found'], 404);
     }
 
     //Delete a product
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
-        $product = Product::find($id);
+        $product = Product::query()->find($id);
         if ($product) {
             $product->delete();
 
-            return response()->json(['data' => $product], 200);
-        } else {
-            return response()->json(['message' => 'Product not found'], 404);
+            return new JsonResponse(['data' => $product], 200);
         }
+        return new JsonResponse(['message' => 'Product not found'], 404);
     }
 }

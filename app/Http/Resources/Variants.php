@@ -15,22 +15,18 @@ class Variants extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->map(function ($variant) {
-                $formattedProduct = [
-                    'id' => $variant->id,
-                    'categories' => $variant->product->categories->pluck('name')->join(', '),
-                    'brand' => $variant->product->brand->name,
-                    'name' => $variant->product->name,
-                    'variant' => ($variant->product->name === $variant->name)
-                        ? null
-                        : $variant->name,
-                    'status' => $variant->status,
-                    'media' => $variant->media ?? [],
-                    'vendors' => $variant->vendors ?? [],
-                ];
-
-                return $formattedProduct;
-            }),
+            'data' => $this->collection->map(fn($variant): array => [
+                'id' => $variant->id,
+                'categories' => $variant->product->categories->pluck('name')->join(', '),
+                'brand' => $variant->product->brand->name,
+                'name' => $variant->product->name,
+                'variant' => ($variant->product->name === $variant->name)
+                    ? null
+                    : $variant->name,
+                'status' => $variant->status,
+                'media' => $variant->media ?? [],
+                'vendors' => $variant->vendors ?? [],
+            ]),
             'links' => [
                 'self' => 'link-value',
             ],

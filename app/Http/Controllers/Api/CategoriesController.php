@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
 use App\Models\Category;
@@ -10,7 +11,7 @@ use Illuminate\Http\Request;
 class CategoriesController extends Controller
 {
     //Get all products
-    public function index(Request $request)
+    public function index(Request $request): ApiCollection
     {
         $query = Category::query();
 
@@ -19,7 +20,7 @@ class CategoriesController extends Controller
         if (!empty($filter)) {
             $filter = '%' . $filter . '%';
             $query->where(
-                function ($query) use ($filter) {
+                function ($query) use ($filter): void {
                     $query->where('name', 'like', $filter);
                 }
             );
@@ -43,50 +44,47 @@ class CategoriesController extends Controller
     }
 
     //Get a category by id
-    public function show($id)
+    public function show($id): JsonResponse
     {
-        $category = Category::find($id);
+        $category = Category::query()->find($id);
         if ($category) {
-            return response()->json(['data' => $category], 200);
-        } else {
-            return response()->json(['message' => 'Category not found'], 404);
+            return new JsonResponse(['data' => $category], 200);
         }
+        return new JsonResponse(['message' => 'Category not found'], 404);
     }
 
     //Create a new category
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $category = Category::create($request->all());
+        $category = Category::query()->create($request->all());
 
-        return response()->json(['data' => $category], 201);
+        return new JsonResponse(['data' => $category], 201);
     }
 
     //Update a category
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): JsonResponse
     {
-        $category = Category::find($id);
+        $category = Category::query()->find($id);
         if ($category) {
             $category->update($request->all());
 
-            return response()->json(['data' => $category], 200);
-        } else {
-            return response()->json(['message' => 'Category not found'], 404);
+            return new JsonResponse(['data' => $category], 200);
         }
+        return new JsonResponse(['message' => 'Category not found'], 404);
     }
 
     //Delete a category
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
-        $category = Category::find($id);
+        $category = Category::query()->find($id);
         if ($category) {
             // remove the category from the intermediate table
             $category->products()->detach();
 
             $category->delete();
 
-            return response()->json(['data' => $category], 200);
-        } else {
-            return response()->json(['message' => 'Category not found'], 404);
+            return new JsonResponse(['data' => $category], 200);
         }
+        return new JsonResponse(['message' => 'Category not found'], 404);
     }
 }

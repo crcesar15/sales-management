@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
 use App\Http\Resources\Variants as VariantsResource;
@@ -13,7 +14,7 @@ use Illuminate\Http\Request;
 class VendorsController extends Controller
 {
     //Get all vendors
-    public function index(Request $request)
+    public function index(Request $request): ApiCollection
     {
         $query = Vendor::query();
 
@@ -22,7 +23,7 @@ class VendorsController extends Controller
         if (!empty($filter)) {
             $filter = '%' . $filter . '%';
             $query->where(
-                function ($query) use ($filter) {
+                function ($query) use ($filter): void {
                     $query->where('fullname', 'like', $filter);
                 }
             );
@@ -50,55 +51,52 @@ class VendorsController extends Controller
     }
 
     //Get a vendor by id
-    public function show($id)
+    public function show($id): JsonResponse
     {
-        $vendor = Vendor::find($id);
+        $vendor = Vendor::query()->find($id);
         if ($vendor) {
-            return response()->json(['data' => $vendor], 200);
-        } else {
-            return response()->json(['message' => 'Vendor not found'], 404);
+            return new JsonResponse(['data' => $vendor], 200);
         }
+        return new JsonResponse(['message' => 'Vendor not found'], 404);
     }
 
     //Create a new vendor
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $vendor = Vendor::create($request->all());
+        $vendor = Vendor::query()->create($request->all());
 
-        return response()->json(['data' => $vendor], 201);
+        return new JsonResponse(['data' => $vendor], 201);
     }
 
     //Update a vendor
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): JsonResponse
     {
-        $vendor = Vendor::find($id);
+        $vendor = Vendor::query()->find($id);
         if ($vendor) {
             $vendor->update($request->all());
 
-            return response()->json(['data' => $vendor], 200);
-        } else {
-            return response()->json(['message' => 'Vendor not found'], 404);
+            return new JsonResponse(['data' => $vendor], 200);
         }
+        return new JsonResponse(['message' => 'Vendor not found'], 404);
     }
 
     //Delete a vendor
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
-        $vendor = Vendor::find($id);
+        $vendor = Vendor::query()->find($id);
 
         if ($vendor) {
             $vendor->delete();
 
-            return response()->json(['data' => $vendor], 200);
-        } else {
-            return response()->json(['message' => 'Role not found'], 404);
+            return new JsonResponse(['data' => $vendor], 200);
         }
+        return new JsonResponse(['message' => 'Role not found'], 404);
     }
 
-    public function getProductVariants(Request $request, VariantService $variantService, Vendor $vendor)
+    public function getProductVariants(Request $request, VariantService $variantService, Vendor $vendor): VariantsResource
     {
         $includes = $request->input('includes', '');
-        $includes = explode(',', $includes);
+        $includes = explode(',', (string) $includes);
 
         $page = $request->input('page', 1);
         $per_page = $request->input('per_page', 10);
@@ -130,7 +128,7 @@ class VendorsController extends Controller
         return new VariantsResource($response);
     }
 
-    public function storeProductVariant(Request $request, Vendor $vendor, ProductVariant $variant)
+    public function storeProductVariant(Request $request, Vendor $vendor, ProductVariant $variant): JsonResponse
     {
         $product = $request->input('record');
 
@@ -160,13 +158,12 @@ class VendorsController extends Controller
                 'status' => $product['status'] ?? 'active',
             ]);
 
-            return response()->json(['data' => $vendor], 201);
-        } else {
-            return response()->json(['message' => 'Vendor or Product not found'], 404);
+            return new JsonResponse(['data' => $vendor], 201);
         }
+        return new JsonResponse(['message' => 'Vendor or Product not found'], 404);
     }
 
-    public function updateProductVariants(Request $request, Vendor $vendor)
+    public function updateProductVariants(Request $request, Vendor $vendor): \JsonResponse|int
     {
         $products = $request->input('variants');
 
@@ -184,22 +181,18 @@ class VendorsController extends Controller
         if ($vendor && $product) {
             $vendor->variants()->syncWithoutDetaching($formattedProducts);
 
-            return response()->json(['data' => $vendor], 200);
-        } else {
-            return 2;
-
-            return response()->json(['message' => 'Vendor or Product not found'], 404);
+            return new JsonResponse(['data' => $vendor], 200);
         }
+        return 2;
     }
 
-    public function removeProductVariant(Vendor $vendor, ProductVariant $variant)
+    public function removeProductVariant(Vendor $vendor, ProductVariant $variant): JsonResponse
     {
         if ($vendor && $variant) {
             $vendor->variants()->detach($variant);
 
-            return response()->json(['data' => $vendor], 200);
-        } else {
-            return response()->json(['message' => 'Vendor or Product not found'], 404);
+            return new JsonResponse(['data' => $vendor], 200);
         }
+        return new JsonResponse(['message' => 'Vendor or Product not found'], 404);
     }
 }

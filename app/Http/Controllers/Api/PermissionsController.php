@@ -9,7 +9,7 @@ use Spatie\Permission\Models\Permission;
 
 class PermissionsController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): ApiCollection
     {
         $query = Permission::query();
 
@@ -18,14 +18,14 @@ class PermissionsController extends Controller
         if (!empty($filter)) {
             $filter = '%' . $filter . '%';
             $query->where(
-                function ($query) use ($filter) {
+                function ($query) use ($filter): void {
                     $query->where('name', 'like', $filter);
                 }
             );
         }
 
         if ($request->has('select')) {
-            $query->select(explode(',', $request->input('select')));
+            $query->select(explode(',', (string) $request->input('select')));
         }
 
         $order_by = $request->has('order_by')
