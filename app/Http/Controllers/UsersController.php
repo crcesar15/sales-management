@@ -13,6 +13,8 @@ class UsersController extends Controller
      */
     public function index()
     {
+        $this->authorize('users-view', auth()->user());
+
         return Inertia::render('users/index');
     }
 
@@ -21,6 +23,8 @@ class UsersController extends Controller
      */
     public function create()
     {
+        $this->authorize('users-create', auth()->user());
+
         // List of Roles
         $roles = Role::all();
 
@@ -34,6 +38,8 @@ class UsersController extends Controller
      */
     public function edit(User $user)
     {
+        $this->authorize('users-edit', auth()->user());
+
         // Include the user role with only id and name without pivot
         $user->load(['roles' => function ($query) {
             $query->select('id', 'name');
