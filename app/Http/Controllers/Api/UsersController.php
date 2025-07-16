@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Users\ListUserRequest;
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Resources\ApiCollection;
+use App\Http\Requests\Api\Users\StoreUserRequest;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
 use Illuminate\Http\Request;
