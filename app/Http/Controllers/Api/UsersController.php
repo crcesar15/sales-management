@@ -8,6 +8,8 @@ use App\Http\Requests\Api\Users\StoreUserRequest;
 use App\Http\Requests\Api\Users\UpdateUserRequest;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class UsersController extends Controller
@@ -94,30 +96,28 @@ class UsersController extends Controller
     }
 
     //Delete a user
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        $user = User::find($id);
-        if ($user) {
-            // Inactive user
-            $user->update(['status' => 'archived']);
+        $this->authorize('users-delete', auth()->user());
 
-            // soft delete
-            $user->delete();
-        } else {
-            return response()->json(['message' => 'User not found'], 404);
-        }
+        // Inactive user
+        $user->update(['status' => 'archived']);
+
+        // soft delete
+        $user->delete();
+
+        return response(null, 204);
     }
 
-    //Restore a user
-    public function restore($id)
+    //Restore a user, search deleted_at
+    public function restore(User $user)
     {
-        $user = User::withTrashed()->find($id);
-        if ($user) {
-            $user->restore();
+        $this->authorize('users-edit', auth()->user());
 
-            $user->update(['status' => 'active']);
-        } else {
-            return response()->json(['message' => 'User not found'], 404);
-        }
+        $user->restore();
+
+        $user->update(['status' => 'active']);
+
+        return response(null, 204);
     }
 }

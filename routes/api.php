@@ -67,11 +67,11 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function () {
 
     // Routes for Users
     Route::get('/users', [UsersController::class, 'index'])->name('users');
-    Route::get('/users/{id}', [UsersController::class, 'show'])->name('users.show');
+    Route::get('/users/{user}', [UsersController::class, 'show'])->name('users.show');
     Route::post('/users', [UsersController::class, 'store'])->name('users.store');
-    Route::put('/users/{id}', [UsersController::class, 'update'])->name('users.update');
-    Route::delete('/users/{id}', [UsersController::class, 'destroy'])->name('users.destroy');
-    Route::put('/users/{id}/restore', [UsersController::class, 'restore'])->name('users.restore');
+    Route::put('/users/{user}', [UsersController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
+    Route::put('/users/{user}/restore', [UsersController::class, 'restore'])->name('users.restore');
 
     // Routes for Vendors
     Route::get('/vendors', [VendorsController::class, 'index'])->name('vendors');
