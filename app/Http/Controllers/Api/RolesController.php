@@ -89,18 +89,17 @@ class RolesController extends Controller
     }
 
     //Delete a role
-    public function destroy($id)
+    public function destroy(Role $role)
     {
-        $role = Role::find($id);
-        if ($role) {
-            //remove the role from the users
-            $role->users()->update(['role_id' => null]);
+        $this->authorize('roles-delete', auth()->user());
+
+        DB::transaction(function () use ($role) {
+            // remove role from users
+            $role->users()->detach();
 
             $role->delete();
+        });
 
-            return response()->json(['data' => $role], 200);
-        } else {
-            return response()->json(['message' => 'Role not found'], 404);
-        }
+        return response()->json(null, 204);
     }
 }
