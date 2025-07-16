@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
@@ -8,7 +10,7 @@ use App\Models\MeasureUnit;
 use App\Models\Product;
 use Inertia\Inertia;
 
-class ProductsController extends Controller
+final class ProductsController extends Controller
 {
     /**
      * Display a listing of the resource.

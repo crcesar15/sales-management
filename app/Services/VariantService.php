@@ -1,18 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
-use Illuminate\Database\Eloquent\Collection;
 use App\Models\ProductVariant;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Collection;
 
-class VariantService
+final class VariantService
 {
     /**
      * Get all variants with optional filters and includes.
      *
-     * @param array $filters
-     * @param array $includes
+     * @param  array  $filters
+     * @param  array  $includes
      * @return Collection
      */
     public function getVariants(array $config)
@@ -26,7 +27,7 @@ class VariantService
                 case 'vendors':
                     $query->with('vendors');
                     // Filter by vendor id
-                    if (isset($config['vendor_id']) && !empty($config['vendor_id'])) {
+                    if (isset($config['vendor_id']) && ! empty($config['vendor_id'])) {
                         $query->join('catalog', 'product_variants.id', '=', 'catalog.product_variant_id');
                         $query->join('vendors', 'catalog.vendor_id', '=', 'vendors.id');
                         $query->where('vendors.id', $config['vendor_id']);
@@ -46,7 +47,7 @@ class VariantService
         }
 
         // Filter by name or other fields
-        if (!empty($config['filter'])) {
+        if (! empty($config['filter'])) {
             $filter = '%' . $config['filter'] . '%';
             $filterBy = $config['filter_by'] === 'name' ? 'products.name' : $config['filter_by'];
             $query->where($filterBy, 'like', $filter);
@@ -57,7 +58,7 @@ class VariantService
         $orderDirection = $config['order_direction'] ?? 'ASC';
         $query->orderBy($orderBy, $orderDirection);
 
-        //pagination
+        // pagination
         $page = $config['page'];
         $perPage = $config['per_page'];
 

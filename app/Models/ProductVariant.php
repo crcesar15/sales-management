@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductVariant extends Model
+final class ProductVariant extends Model
 {
     use HasFactory;
 
@@ -30,6 +32,12 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function vendors()
+    {
+        return $this->belongsToMany(Vendor::class, 'catalog', 'product_variant_id', 'vendor_id')
+            ->withPivot('price', 'payment_terms', 'details', 'status');
+    }
+
     /**
      * @return list
      */
@@ -42,18 +50,13 @@ class ProductVariant extends Model
             if (count($media) > 0) {
                 // Get images from product
                 $product = $this->product->load('media');
-    
+
                 foreach ($media as $item) {
                     $formattedMedia[] = $product->media->where('id', $item->id)->first();
                 }
             }
+
             return $formattedMedia;
         });
-    }
-
-    public function vendors()
-    {
-        return $this->belongsToMany(Vendor::class, 'catalog', 'product_variant_id', 'vendor_id')
-            ->withPivot('price', 'payment_terms', 'details', 'status');
     }
 }

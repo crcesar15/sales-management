@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,13 +13,13 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+final class User extends Authenticatable
 {
     use HasApiTokens;
     use HasFactory;
+    use HasRoles;
     use Notifiable;
     use SoftDeletes;
-    use HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -49,10 +50,6 @@ class User extends Authenticatable
 
     // additional properties
     protected $appends = ['full_name'];
-    protected function fullName(): Attribute
-    {
-        return Attribute::make(get: fn(): string => $this->first_name . ' ' . $this->last_name);
-    }
 
     public function purchaseOrders()
     {
@@ -62,8 +59,14 @@ class User extends Authenticatable
     protected static function boot()
     {
         parent::boot();
-        Route::bind('user', fn($value) => User::withTrashed()->findOrFail($value));
+        Route::bind('user', fn ($value) => User::withTrashed()->findOrFail($value));
     }
+
+    protected function fullName(): Attribute
+    {
+        return Attribute::make(get: fn (): string => $this->first_name . ' ' . $this->last_name);
+    }
+
     /**
      * The attributes that should be cast.
      *

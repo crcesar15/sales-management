@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\User;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
-class UsersController extends Controller
+final class UsersController extends Controller
 {
     /**
      * Display a listing of users.
@@ -45,7 +47,7 @@ class UsersController extends Controller
             $query->select('id', 'name');
         }]);
 
-        //remove password and remember_token from the user object
+        // remove password and remember_token from the user object
         $user->makeHidden(['password', 'remember_token']);
 
         // List of Roles

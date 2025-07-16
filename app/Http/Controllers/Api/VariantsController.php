@@ -1,19 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Variants as ApiCollection;
 use App\Models\Media;
 use App\Models\ProductVariant;
 use App\Services\VariantService;
-use DebugBar;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class VariantsController extends Controller
+final class VariantsController extends Controller
 {
-    //Get all variants
+    // Get all variants
     public function index(Request $request, VariantService $variantService): ApiCollection
     {
         $includes = $request->input('includes', '');
@@ -46,14 +47,14 @@ class VariantsController extends Controller
         return new ApiCollection($response);
     }
 
-    //Get a product by id
+    // Get a product by id
     public function show($id): JsonResponse
     {
         $product = Product::query();
 
         $includes = request()->input('includes', '');
 
-        if (!empty($includes)) {
+        if (! empty($includes)) {
             $product->with(explode(',', (string) $includes));
         }
 
@@ -62,10 +63,11 @@ class VariantsController extends Controller
         if ($product) {
             return new JsonResponse(['data' => $product], 200);
         }
+
         return new JsonResponse(['message' => 'Product not found'], 404);
     }
 
-    //Create a new product
+    // Create a new product
     public function store(Request $request): JsonResponse
     {
         // create product
@@ -115,7 +117,7 @@ class VariantsController extends Controller
         return new JsonResponse(['data' => $product], 201);
     }
 
-    //Update a product
+    // Update a product
     public function update(Request $request, $id): JsonResponse
     {
         $product = Product::find($id);
@@ -167,10 +169,11 @@ class VariantsController extends Controller
 
             return new JsonResponse(['data' => $product], 200);
         }
+
         return new JsonResponse(['message' => 'Product not found'], 404);
     }
 
-    //Delete a product
+    // Delete a product
     public function destroy($id): JsonResponse
     {
         $product = Product::find($id);
@@ -179,6 +182,7 @@ class VariantsController extends Controller
 
             return new JsonResponse(['data' => $product], 200);
         }
+
         return new JsonResponse(['message' => 'Product not found'], 404);
     }
 

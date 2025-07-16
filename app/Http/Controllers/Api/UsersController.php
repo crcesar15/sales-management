@@ -1,21 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Users\ListUserRequest;
 use App\Http\Requests\Api\Users\StoreUserRequest;
 use App\Http\Requests\Api\Users\UpdateUserRequest;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
-use Illuminate\Http\Client\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-class UsersController extends Controller
+final class UsersController extends Controller
 {
-    //Get all users
+    // Get all users
     public function index(ListUserRequest $request): UserCollection
     {
         $request->validated();
@@ -45,17 +45,18 @@ class UsersController extends Controller
         return new UserCollection($response);
     }
 
-    //Get a user by id
+    // Get a user by id
     public function show($id): JsonResponse
     {
         $user = User::query()->find($id);
         if ($user) {
             return new JsonResponse(['data' => $user], 200);
         }
+
         return new JsonResponse(['message' => 'User not found'], 404);
     }
 
-    //Create a new user
+    // Create a new user
     public function store(StoreUserRequest $request): JsonResponse
     {
         $request->validated();
@@ -75,7 +76,7 @@ class UsersController extends Controller
         return new JsonResponse(['data' => $user], 201);
     }
 
-    //Update a user
+    // Update a user
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
         $request->validated();
@@ -95,7 +96,7 @@ class UsersController extends Controller
         return new JsonResponse(['data' => $updateUser], 200);
     }
 
-    //Delete a user
+    // Delete a user
     public function destroy(User $user)
     {
         $this->authorize('users-delete', auth()->user());
@@ -109,7 +110,7 @@ class UsersController extends Controller
         return response(null, 204);
     }
 
-    //Restore a user, search deleted_at
+    // Restore a user, search deleted_at
     public function restore(User $user)
     {
         $this->authorize('users-edit', auth()->user());

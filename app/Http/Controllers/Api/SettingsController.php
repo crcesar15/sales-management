@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
 use App\Models\Setting;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class SettingsController extends Controller
+final class SettingsController extends Controller
 {
-    //Get all roles
+    // Get all roles
     public function index(Request $request): ApiCollection
     {
         $query = Setting::query();
@@ -30,7 +32,7 @@ class SettingsController extends Controller
         return new ApiCollection($response);
     }
 
-    //Update a role
+    // Update a role
     public function update(Request $request): JsonResponse
     {
         $settings = $request->get('settings');

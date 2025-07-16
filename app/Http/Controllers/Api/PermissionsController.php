@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -7,7 +9,7 @@ use App\Http\Resources\ApiCollection;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 
-class PermissionsController extends Controller
+final class PermissionsController extends Controller
 {
     public function index(Request $request): ApiCollection
     {
@@ -15,7 +17,7 @@ class PermissionsController extends Controller
 
         $filter = $request->input('filter', '');
 
-        if (!empty($filter)) {
+        if (! empty($filter)) {
             $filter = '%' . $filter . '%';
             $query->where(
                 function ($query) use ($filter): void {

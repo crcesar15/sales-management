@@ -1,20 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Roles\ListRoleRequest;
 use App\Http\Requests\Api\Roles\StoreRoleRequest;
 use App\Http\Requests\Api\Roles\UpdateRoleRequest;
 use App\Http\Resources\ApiCollection;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
-class RolesController extends Controller
+final class RolesController extends Controller
 {
-    //Get all roles
+    // Get all roles
     public function index(ListRoleRequest $request): ApiCollection
     {
         $request->validated();
@@ -36,17 +37,18 @@ class RolesController extends Controller
         return new ApiCollection($response);
     }
 
-    //Get a role by id
+    // Get a role by id
     public function show($id): JsonResponse
     {
         $role = Role::query()->find($id);
         if ($role) {
             return new JsonResponse(['data' => $role], 200);
         }
+
         return new JsonResponse(['message' => 'Role not found'], 404);
     }
 
-    //Create a new role
+    // Create a new role
     public function store(StoreRoleRequest $request): JsonResponse
     {
         $request->validated();
@@ -68,7 +70,7 @@ class RolesController extends Controller
         return new JsonResponse(['data' => $role], 201);
     }
 
-    //Update a role
+    // Update a role
     public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
         $request->validated();
@@ -88,7 +90,7 @@ class RolesController extends Controller
         return new JsonResponse(['data' => $updatedRole], 200);
     }
 
-    //Delete a role
+    // Delete a role
     public function destroy(Role $role): JsonResponse
     {
         $this->authorize('roles-delete', auth()->user());

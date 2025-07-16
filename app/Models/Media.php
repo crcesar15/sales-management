@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -7,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
-class Media extends Model
+final class Media extends Model
 {
     use HasFactory;
 
@@ -18,18 +20,19 @@ class Media extends Model
         'meta',
     ];
 
-    //add url attribute
+    // add url attribute
     protected $appends = ['url'];
-
-    protected function url(): Attribute
-    {
-        return Attribute::make(get: fn() => Storage::url('products/' . $this->filename));
-    }
 
     public function product()
     {
         return $this->morphTo();
     }
+
+    protected function url(): Attribute
+    {
+        return Attribute::make(get: fn () => Storage::url('products/' . $this->filename));
+    }
+
     protected function casts(): array
     {
         return [

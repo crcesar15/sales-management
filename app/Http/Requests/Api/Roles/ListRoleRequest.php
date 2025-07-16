@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Api\Roles;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class ListRoleRequest extends FormRequest
+final class ListRoleRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

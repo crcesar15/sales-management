@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Media;
 use App\Models\Product;
+use Illuminate\Http\JsonResponse;
 
-class ProductsMediaController extends Controller
+final class ProductsMediaController extends Controller
 {
     public function destroy($id, $media_id): JsonResponse
     {
@@ -15,6 +17,7 @@ class ProductsMediaController extends Controller
 
         if ($media && ($media->model_id === $id && $media->model_type === Product::class)) {
             $media->delete();
+
             return new JsonResponse(['message' => 'Media deleted'], 200);
         }
 

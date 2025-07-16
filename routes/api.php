@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Controllers\Api\BrandsController;
 use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\MeasureUnitsController;
@@ -15,39 +17,39 @@ use App\Http\Controllers\Api\VendorsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->get('/user', fn(Request $request) => $request->user());
+Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $request->user());
 
-//Routes for Products
+// Routes for Products
 Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void {
-    //Routes for Products
+    // Routes for Products
     Route::get('/products', [ProductsController::class, 'index'])->name('products');
     Route::get('/products/{id}', [ProductsController::class, 'show'])->name('products.show');
     Route::post('/products', [ProductsController::class, 'store'])->name('products.store');
     Route::put('/products/{id}', [ProductsController::class, 'update'])->name('products.update');
     Route::delete('/products/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
 
-    //Routes for Categories
+    // Routes for Categories
     Route::get('/categories', [CategoriesController::class, 'index'])->name('categories');
     Route::get('/categories/{id}', [CategoriesController::class, 'show'])->name('categories.show');
     Route::post('/categories', [CategoriesController::class, 'store'])->name('categories.store');
     Route::put('/categories/{id}', [CategoriesController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{id}', [CategoriesController::class, 'destroy'])->name('categories.destroy');
 
-    //Routes for Brands
+    // Routes for Brands
     Route::get('/brands', [BrandsController::class, 'index'])->name('brands');
     Route::get('/brands/{id}', [BrandsController::class, 'show'])->name('brands.show');
     Route::post('/brands', [BrandsController::class, 'store'])->name('brands.store');
     Route::put('/brands/{id}', [BrandsController::class, 'update'])->name('brands.update');
     Route::delete('/brands/{id}', [BrandsController::class, 'destroy'])->name('brands.destroy');
 
-    //Routes for Measure Units
+    // Routes for Measure Units
     Route::get('/measure-units', [MeasureUnitsController::class, 'index'])->name('measure-units');
     Route::get('/measure-units/{id}', [MeasureUnitsController::class, 'show'])->name('measure-units.show');
     Route::post('/measure-units', [MeasureUnitsController::class, 'store'])->name('measure-units.store');
     Route::put('/measure-units/{id}', [MeasureUnitsController::class, 'update'])->name('measure-units.update');
     Route::delete('/measure-units/{id}', [MeasureUnitsController::class, 'destroy'])->name('measure-units.destroy');
 
-    //Products Media
+    // Products Media
     Route::post('/products/media', [ProductsMediaController::class, 'draft'])
         ->name('products.media.draft');
     Route::post('/products/{id}/media', [ProductsMediaController::class, 'store'])->name('products.media.store');
@@ -91,21 +93,21 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
     // Routes for Product Variants
     Route::get('variants', [VariantsController::class, 'index'])->name('variants');
 
-    //Routes for Variant Vendors
+    // Routes for Variant Vendors
     Route::get('variants/{id}/vendors', [VariantsController::class, 'getVendors'])->name('variants.vendors');
     Route::put('variants/{id}/vendors', [VariantsController::class, 'updateVendors'])
         ->name('variants.vendors.update');
 
     // Routes for purchase orders
-    Route::get('purchase-orders', [PurchaseOrdersController:: class, 'index'])->name('purchase-orders');
-    Route::get('purchase-orders/{order}', [PurchaseOrdersController:: class, 'show'])->name('purchase-orders.show');
-    Route::post('purchase-orders', [PurchaseOrdersController:: class, 'store'])->name('purchase-orders.store');
-    Route::put('purchase-orders/{order}', [PurchaseOrdersController:: class, 'update'])->name('purchase-orders.update');
+    Route::get('purchase-orders', [PurchaseOrdersController::class, 'index'])->name('purchase-orders');
+    Route::get('purchase-orders/{order}', [PurchaseOrdersController::class, 'show'])->name('purchase-orders.show');
+    Route::post('purchase-orders', [PurchaseOrdersController::class, 'store'])->name('purchase-orders.store');
+    Route::put('purchase-orders/{order}', [PurchaseOrdersController::class, 'update'])->name('purchase-orders.update');
 
-    //Routes for settings
+    // Routes for settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
-    //Routes for permissions
+    // Routes for permissions
     Route::get('/permissions', [PermissionsController::class, 'index'])->name('permissions');
 });

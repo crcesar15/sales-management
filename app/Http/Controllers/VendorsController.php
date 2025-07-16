@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Vendor;
 use Inertia\Inertia;
 
-class VendorsController extends Controller
+final class VendorsController extends Controller
 {
     public function index()
     {

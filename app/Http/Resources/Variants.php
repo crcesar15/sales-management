@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class Variants extends ResourceCollection
+final class Variants extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -15,7 +17,7 @@ class Variants extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->map(fn($variant): array => [
+            'data' => $this->collection->map(fn ($variant): array => [
                 'id' => $variant->id,
                 'categories' => $variant->product->categories->pluck('name')->join(', '),
                 'brand' => $variant->product->brand->name,

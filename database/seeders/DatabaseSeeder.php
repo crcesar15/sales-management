@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -13,13 +15,10 @@ use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Models\Vendor;
-use Database\Seeders\PermissionSeeder;
-use Database\Seeders\RoleSeeder;
-use Database\Seeders\SettingsSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
-class DatabaseSeeder extends Seeder
+final class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
@@ -45,7 +44,7 @@ class DatabaseSeeder extends Seeder
 
         $admin->assignRole(['Super Administrator']);
 
-        //Run settings and permissions seeder
+        // Run settings and permissions seeder
         $this->call(SettingsSeeder::class);
         $this->call(PermissionSeeder::class);
 
@@ -54,13 +53,13 @@ class DatabaseSeeder extends Seeder
             $user->assignRole(['Salesman']);
         });
 
-        //Create 10 Brands
+        // Create 10 Brands
         Brand::factory(10)->create();
 
-        //Create 10 Measure Units
+        // Create 10 Measure Units
         MeasureUnit::factory(10)->create();
 
-        //Delete and create products folder
+        // Delete and create products folder
         if (is_dir('public/products')) {
             Storage::deleteDirectory('public/products');
         }
@@ -68,7 +67,7 @@ class DatabaseSeeder extends Seeder
         Storage::makeDirectory('public/products');
 
         Category::factory(10)->create()->each(function ($category) {
-            //create 5 products for each category
+            // create 5 products for each category
             Product::factory(5)->create([
                 'measure_unit_id' => MeasureUnit::all()->random()->id,
                 'brand_id' => Brand::all()->random()->id,
@@ -82,10 +81,10 @@ class DatabaseSeeder extends Seeder
             });
         });
 
-        //Create 10 vendors
+        // Create 10 vendors
         Vendor::factory(10)->create();
 
-        //Create 10 catalogs
+        // Create 10 catalogs
         Catalog::factory(10)->create(
             [
                 'vendor_id' => Vendor::all()->random()->id,
@@ -93,7 +92,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        //Create 10 purchase orders
+        // Create 10 purchase orders
         PurchaseOrder::factory(10)->create(
             [
                 'user_id' => User::all()->random()->id,
@@ -107,7 +106,7 @@ class DatabaseSeeder extends Seeder
             ]);
         });
 
-        //Set permissions to storage folder
+        // Set permissions to storage folder
         exec('sudo chmod -R 777 storage/app/public/products');
     }
 }

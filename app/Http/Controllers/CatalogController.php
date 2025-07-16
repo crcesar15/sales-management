@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\ProductVariant;
 use App\Models\Vendor;
 use Inertia\Inertia;
 
-class CatalogController extends Controller
+final class CatalogController extends Controller
 {
     /**
      * Display a listing of variants.
@@ -29,12 +31,12 @@ class CatalogController extends Controller
 
         $vendors = Vendor::query()->limit(10)->get();
 
-        //merge catalog to vendors
+        // merge catalog to vendors
         $catalog->each(function ($item) use ($vendors): void {
             // check if item is already in vendors
             $vendor = $vendors->where('id', $item->id)->first();
 
-            if (!$vendor) {
+            if (! $vendor) {
                 $vendors->push($item);
             }
         });

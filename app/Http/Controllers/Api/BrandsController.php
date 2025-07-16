@@ -1,23 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
 use App\Models\Brand;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class BrandsController extends Controller
+final class BrandsController extends Controller
 {
-    //Get all brands
+    // Get all brands
     public function index(Request $request): ApiCollection
     {
         $query = Brand::query();
 
         $filter = $request->input('filter', '');
 
-        if (!empty($filter)) {
+        if (! empty($filter)) {
             $filter = '%' . $filter . '%';
             $query->where(
                 function ($query) use ($filter): void {
@@ -43,17 +45,18 @@ class BrandsController extends Controller
         return new ApiCollection($response);
     }
 
-    //Get a brand by id
+    // Get a brand by id
     public function show($id): JsonResponse
     {
         $brand = Brand::query()->find($id);
         if ($brand) {
             return new JsonResponse(['data' => $brand], 200);
         }
+
         return new JsonResponse(['message' => 'Brand not found'], 404);
     }
 
-    //Create a new brand
+    // Create a new brand
     public function store(Request $request): JsonResponse
     {
         $brand = Brand::query()->create($request->all());
@@ -61,7 +64,7 @@ class BrandsController extends Controller
         return new JsonResponse(['data' => $brand], 201);
     }
 
-    //Update a brand
+    // Update a brand
     public function update(Request $request, $id): JsonResponse
     {
         $brand = Brand::query()->find($id);
@@ -70,21 +73,23 @@ class BrandsController extends Controller
 
             return new JsonResponse(['data' => $brand], 200);
         }
+
         return new JsonResponse(['message' => 'Brand not found'], 404);
     }
 
-    //Delete a brand
+    // Delete a brand
     public function destroy($id): ?\JsonResponse
     {
         $brand = Brand::query()->find($id);
         if ($brand) {
-            //remove the brand from all products
+            // remove the brand from all products
             $brand->products()->update(['brand_id' => null]);
 
             $brand->delete();
         } else {
             return new JsonResponse(['message' => 'Brand not found'], 404);
         }
+
         return null;
     }
 }

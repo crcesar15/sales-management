@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class PurchaseOrdersController extends Controller
+final class PurchaseOrdersController extends Controller
 {
     //
     public function index()
@@ -16,10 +17,10 @@ class PurchaseOrdersController extends Controller
 
     public function create()
     {
-        //current date
+        // current date
         $date = Carbon::now()->format('Y-m-d');
 
-        //current time
+        // current time
         $time = Carbon::now()->format('H:i:s');
 
         return Inertia::render('purchase-orders/create/index', [

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class UserCollection extends ResourceCollection
+final class UserCollection extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -28,7 +30,7 @@ class UserCollection extends ResourceCollection
                 ];
 
                 if (in_array('roles', explode(',', (string) $request->input('include', '')))) {
-                    $collect['roles'] = $user->roles->map(fn($role): array => [
+                    $collect['roles'] = $user->roles->map(fn ($role): array => [
                         'id' => $role->id,
                         'name' => $role->name,
                     ]);

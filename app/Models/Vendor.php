@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Vendor extends Model
+final class Vendor extends Model
 {
     use HasFactory;
 
@@ -31,6 +32,7 @@ class Vendor extends Model
     {
         return $this->hasMany(PurchaseOrder::class);
     }
+
     protected function casts(): array
     {
         return [

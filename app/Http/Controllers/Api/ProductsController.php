@@ -1,24 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Products as ApiCollection;
 use App\Models\Media;
 use App\Models\Product;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class ProductsController extends Controller
+final class ProductsController extends Controller
 {
-    //Get all products
+    // Get all products
     public function index(Request $request): ApiCollection
     {
         $query = Product::query();
 
         $filter = $request->input('filter', '');
 
-        if (!empty($filter)) {
+        if (! empty($filter)) {
             $filter_by = $request->input('filter_by', 'name');
 
             $filter = '%' . $filter . '%';
@@ -33,7 +35,7 @@ class ProductsController extends Controller
 
         $includes = $request->input('includes', '');
 
-        if (!empty($includes)) {
+        if (! empty($includes)) {
             $query->with(explode(',', (string) $includes));
         }
 
@@ -52,14 +54,14 @@ class ProductsController extends Controller
         return new ApiCollection($response);
     }
 
-    //Get a product by id
+    // Get a product by id
     public function show($id): JsonResponse
     {
         $product = Product::query();
 
         $includes = request()->input('includes', '');
 
-        if (!empty($includes)) {
+        if (! empty($includes)) {
             $product->with(explode(',', (string) $includes));
         }
 
@@ -68,10 +70,11 @@ class ProductsController extends Controller
         if ($product) {
             return new JsonResponse(['data' => $product], 200);
         }
+
         return new JsonResponse(['message' => 'Product not found'], 404);
     }
 
-    //Create a new product
+    // Create a new product
     public function store(Request $request): JsonResponse
     {
         // create product
@@ -121,7 +124,7 @@ class ProductsController extends Controller
         return new JsonResponse(['data' => $product], 201);
     }
 
-    //Update a product
+    // Update a product
     public function update(Request $request, $id): JsonResponse
     {
         $product = Product::query()->find($id);
@@ -173,10 +176,11 @@ class ProductsController extends Controller
 
             return new JsonResponse(['data' => $product], 200);
         }
+
         return new JsonResponse(['message' => 'Product not found'], 404);
     }
 
-    //Delete a product
+    // Delete a product
     public function destroy($id): JsonResponse
     {
         $product = Product::query()->find($id);
@@ -185,6 +189,7 @@ class ProductsController extends Controller
 
             return new JsonResponse(['data' => $product], 200);
         }
+
         return new JsonResponse(['message' => 'Product not found'], 404);
     }
 }
