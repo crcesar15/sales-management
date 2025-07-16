@@ -358,7 +358,9 @@ export default {
           status: this.status,
           roles: this.roles,
           phone: this.phone,
-          date_of_birth: window.moment(this.date_of_birth).format("YYYY-MM-DD"),
+          date_of_birth: this.date_of_birth
+            ? window.moment(this.date_of_birth).format("YYYY-MM-DD")
+            : null,
           username: this.username,
         };
 
@@ -371,7 +373,7 @@ export default {
           this.$toast.add({
             severity: "success",
             summary: this.$t("Success"),
-            detail: this.$t("User has been created successfully"),
+            detail: this.$t("User has been updated successfully"),
             life: 3000,
           });
 

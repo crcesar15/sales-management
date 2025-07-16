@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Users\ListUserRequest;
 use App\Http\Requests\Api\Users\StoreUserRequest;
+use App\Http\Requests\Api\Users\UpdateUserRequest;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class UsersController extends Controller
@@ -74,42 +74,23 @@ class UsersController extends Controller
     }
 
     //Update a user
-    public function update(Request $request, $id)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        // check if the username already exists
-        $user = User::where(
-            [
-                ['username', '=', $request->input('username')],
-                ['id', '!=', $id],
-            ]
-        )->first();
+        $request->validated();
 
-        if ($user) {
-            return response()->json(['message' => 'Username is not available'], 400);
-        }
-
-        // check if the email already exists
-        $user = User::where(
-            [
-                ['email', '=', $request->input('email')],
-                ['id', '!=', $id],
-            ]
-        )->first();
-
-        if ($user) {
-            return response()->json(['message' => 'Email is not available'], 400);
-        }
-
-        // update user
-        $user = User::find($id);
-
-        if ($user) {
+        $updateUser = DB::transaction(function () use ($request, $user) {
+            // Create a new user
             $user->update($request->all());
 
-            return response()->json(['data' => $user], 200);
-        } else {
-            return response()->json(['message' => 'User not found'], 404);
-        }
+            // Assign roles if provided
+            if ($request->has('roles')) {
+                $user->syncRoles($request->input('roles'));
+            }
+
+            return $user;
+        });
+
+        return response()->json(['data' => $updateUser], 200);
     }
 
     //Delete a user

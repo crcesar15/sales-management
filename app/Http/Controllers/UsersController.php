@@ -39,6 +39,9 @@ class UsersController extends Controller
             $query->select('id', 'name');
         }]);
 
+        //remove password and remember_token from the user object
+        $user->makeHidden(['password', 'remember_token']);
+
         // List of Roles
         $roles = Role::all();
 
