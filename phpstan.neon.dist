@@ -1,0 +1,19 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+    - ./vendor/nesbot/carbon/extension.neon
+
+parameters:
+    level: max
+    paths:
+        - app
+        - config
+        - database
+        - public
+        - resources
+        - routes
+        - tests
+
+    ignoreErrors:
+        - "#PHPDoc tag @var#"
+
+    reportUnmatchedIgnoredErrors: true
