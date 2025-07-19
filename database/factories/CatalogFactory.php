@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Catalog;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Catalog>
+ * @extends Factory<Catalog>
  */
 final class CatalogFactory extends Factory
 {
@@ -19,9 +20,9 @@ final class CatalogFactory extends Factory
     public function definition(): array
     {
         return [
-            'price' => $this->faker->randomFloat(2, 1, 1000),
-            'payment_terms' => $this->faker->randomElement(['debit', 'credit']),
-            'details' => $this->faker->text(100),
+            'price' => fake()->randomFloat(2, 1, 1000),
+            'payment_terms' => fake()->randomElement(['debit', 'credit']),
+            'details' => fake()->text(100),
         ];
     }
 }

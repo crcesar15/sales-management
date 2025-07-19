@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ProductVariant>
+ * @extends Factory<ProductVariant>
  */
 final class ProductVariantFactory extends Factory
 {
@@ -19,11 +20,11 @@ final class ProductVariantFactory extends Factory
     public function definition(): array
     {
         return [
-            'identifier' => $this->faker->unique()->ean13(8),
-            'name' => $this->faker->sentence(3),
-            'price' => $this->faker->randomFloat(2, 10, 1000),
-            'stock' => $this->faker->numberBetween(0, 100),
-            'status' => $this->faker->randomElement(['active', 'inactive', 'archived']),
+            'identifier' => fake()->unique()->ean13(),
+            'name' => fake()->sentence(3),
+            'price' => fake()->randomFloat(2, 10, 1000),
+            'stock' => fake()->numberBetween(0, 100),
+            'status' => fake()->randomElement(['active', 'inactive', 'archived']),
         ];
     }
 }

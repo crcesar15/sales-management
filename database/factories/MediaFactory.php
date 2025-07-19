@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Media;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Media>
+ * @extends Factory<Media>
  */
 final class MediaFactory extends Factory
 {
@@ -19,7 +20,7 @@ final class MediaFactory extends Factory
     public function definition(): array
     {
         return [
-            'filename' => $this->faker->image(storage_path() . '/app/public/products', 100, 100, 'technics', false),
+            'filename' => fake()->image(storage_path() . '/app/public/products', 100, 100, 'technics', false),
         ];
     }
 }

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Batch;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Batch>
+ * @extends Factory<Batch>
  */
 final class BatchFactory extends Factory
 {
@@ -19,13 +20,13 @@ final class BatchFactory extends Factory
     public function definition(): array
     {
         return [
-            'expiry_date' => $this->faker->date(),
-            'initial_quantity' => $this->faker->numberBetween(1, 100),
-            'remaining_quantity' => $this->faker->numberBetween(1, 100),
-            'missing_quantity' => $this->faker->numberBetween(1, 100),
-            'sold_quantity' => $this->faker->numberBetween(1, 100),
-            'transferred_quantity' => $this->faker->numberBetween(1, 100),
-            'status' => $this->faker->randomElement(['queued', 'active', 'closed']),
+            'expiry_date' => fake()->date(),
+            'initial_quantity' => fake()->numberBetween(1, 100),
+            'remaining_quantity' => fake()->numberBetween(1, 100),
+            'missing_quantity' => fake()->numberBetween(1, 100),
+            'sold_quantity' => fake()->numberBetween(1, 100),
+            'transferred_quantity' => fake()->numberBetween(1, 100),
+            'status' => fake()->randomElement(['queued', 'active', 'closed']),
         ];
     }
 }

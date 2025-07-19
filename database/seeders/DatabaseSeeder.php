@@ -49,7 +49,7 @@ final class DatabaseSeeder extends Seeder
         $this->call(PermissionSeeder::class);
 
         // Create 10 Salesman users
-        User::factory(10)->create()->each(function ($user) {
+        User::factory(10)->create()->each(function ($user): void {
             $user->assignRole(['Salesman']);
         });
 
@@ -66,13 +66,13 @@ final class DatabaseSeeder extends Seeder
 
         Storage::makeDirectory('public/products');
 
-        Category::factory(10)->create()->each(function ($category) {
+        Category::factory(10)->create()->each(function ($category): void {
             // create 5 products for each category
             Product::factory(5)->create([
                 'measure_unit_id' => MeasureUnit::all()->random()->id,
                 'brand_id' => Brand::all()->random()->id,
-            ])->each(function ($product) use ($category) {
-                ProductVariant::factory(rand(1, 3))->create([
+            ])->each(function ($product) use ($category): void {
+                ProductVariant::factory(random_int(1, 3))->create([
                     'product_id' => $product->id,
                     'media' => json_encode([]),
                 ]);
@@ -98,11 +98,11 @@ final class DatabaseSeeder extends Seeder
                 'user_id' => User::all()->random()->id,
                 'vendor_id' => Vendor::all()->random()->id,
             ]
-        )->each(function (PurchaseOrder $purchaseOrder) {
+        )->each(function (PurchaseOrder $purchaseOrder): void {
             $purchaseOrder->products()->attach(Product::all()->random()->id, [
-                'quantity' => rand(1, 10),
-                'price' => rand(100, 1000),
-                'total' => rand(100, 1000),
+                'quantity' => random_int(1, 10),
+                'price' => random_int(100, 1000),
+                'total' => random_int(100, 1000),
             ]);
         });
 

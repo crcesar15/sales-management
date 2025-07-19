@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\SaleOrder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SaleOrder>
+ * @extends Factory<SaleOrder>
  */
 final class SaleOrderFactory extends Factory
 {
@@ -18,7 +19,7 @@ final class SaleOrderFactory extends Factory
      */
     public function definition(): array
     {
-        $total = $this->faker->randomFloat(2, 100, 1000);
+        $total = fake()->randomFloat(2, 100, 1000);
 
         return [
             'status' => 'draft',

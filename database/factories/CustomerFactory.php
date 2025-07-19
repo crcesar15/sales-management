@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Customer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Customer>
+ * @extends Factory<Customer>
  */
 final class CustomerFactory extends Factory
 {
@@ -19,12 +20,12 @@ final class CustomerFactory extends Factory
     public function definition(): array
     {
         return [
-            'first_name' => $this->faker->firstName,
-            'last_name' => $this->faker->lastName,
-            'email' => $this->faker->unique()->safeEmail,
-            'phone' => $this->faker->phoneNumber,
-            'tax_id' => $this->faker->numerify('##########'),
-            'tax_id_name' => $this->faker->company,
+            'first_name' => fake()->firstName,
+            'last_name' => fake()->lastName,
+            'email' => fake()->unique()->safeEmail,
+            'phone' => fake()->phoneNumber,
+            'tax_id' => fake()->numerify('##########'),
+            'tax_id_name' => fake()->company,
         ];
     }
 }

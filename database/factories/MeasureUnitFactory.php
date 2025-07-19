@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\MeasureUnit;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MeasureUnit>
+ * @extends Factory<MeasureUnit>
  */
 final class MeasureUnitFactory extends Factory
 {
@@ -19,8 +20,8 @@ final class MeasureUnitFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->word,
-            'description' => $this->faker->sentence,
+            'name' => fake()->unique()->word,
+            'description' => fake()->sentence,
         ];
     }
 }

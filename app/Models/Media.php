@@ -28,7 +28,7 @@ final class Media extends Model
         return $this->morphTo();
     }
 
-    protected function url(): Attribute
+    private function url(): Attribute
     {
         return Attribute::make(get: fn () => Storage::url('products/' . $this->filename));
     }

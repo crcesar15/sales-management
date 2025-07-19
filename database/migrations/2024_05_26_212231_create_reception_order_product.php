@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reception_order_product', function (Blueprint $table) {
+        Schema::create('reception_order_product', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('reception_order_id')->constrained();
             $table->foreignId('product_variant_id')->constrained();
-            $table->float('quantity', 8, 2);
-            $table->float('price', 8, 2);
-            $table->float('total', 8, 2);
+            $table->float('quantity', 8);
+            $table->float('price', 8);
+            $table->float('total', 8);
             $table->timestamps();
         });
     }

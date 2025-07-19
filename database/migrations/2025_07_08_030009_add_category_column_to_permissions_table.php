@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('permissions', function (Blueprint $table) {
+        Schema::table('permissions', function (Blueprint $table): void {
             $table->string('category')->after('name')->nullable();
         });
     }
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('permissions', function (Blueprint $table) {
+        Schema::table('permissions', function (Blueprint $table): void {
             $table->dropColumn('category');
         });
     }

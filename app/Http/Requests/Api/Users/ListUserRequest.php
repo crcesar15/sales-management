@@ -35,7 +35,7 @@ final class ListUserRequest extends FormRequest
         ];
     }
 
-    protected function prepareForValidation()
+    protected function prepareForValidation(): void
     {
         $this->merge([
             'per_page' => $this->query('per_page', 10),

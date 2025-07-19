@@ -13,11 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('catalog', function (Blueprint $table) {
+        Schema::create('catalog', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
-            $table->float('price', 8, 2);
+            $table->float('price', 8);
             $table->string('payment_terms', 15)->nullable();
             $table->string('details', 300)->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');

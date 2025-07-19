@@ -41,7 +41,7 @@ final class ProductVariant extends Model
     /**
      * @return list
      */
-    protected function media(): Attribute
+    private function media(): Attribute
     {
         return Attribute::make(get: function ($value) {
             // Get images from variants

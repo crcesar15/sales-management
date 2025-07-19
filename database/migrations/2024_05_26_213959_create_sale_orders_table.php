@@ -13,16 +13,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sale_orders', function (Blueprint $table) {
+        Schema::create('sale_orders', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('customer_id')->constrained();
             $table->foreignId('user_id')->constrained();
             $table->enum('status', ['draft', 'sent', 'paid', 'canceled'])->default('draft');
             $table->enum('payment_method', ['cash', 'credit_card', 'qr', 'stripe', 'transfer'])->default('cash');
             $table->text('notes')->nullable();
-            $table->float('sub_total', 10, 2);
-            $table->float('discount', 10, 2)->default(0);
-            $table->float('total', 10, 2);
+            $table->float('sub_total', 10);
+            $table->float('discount', 10)->default(0);
+            $table->float('total', 10);
             $table->timestamps();
         });
     }

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\ReceptionOrder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ReceptionOrder>
+ * @extends Factory<ReceptionOrder>
  */
 final class ReceptionOrderFactory extends Factory
 {
@@ -19,8 +20,8 @@ final class ReceptionOrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'reception_date' => $this->faker->date(),
-            'status' => $this->faker->randomElement(['pending', 'completed', 'cancelled']),
+            'reception_date' => fake()->date(),
+            'status' => fake()->randomElement(['pending', 'completed', 'cancelled']),
         ];
     }
 }

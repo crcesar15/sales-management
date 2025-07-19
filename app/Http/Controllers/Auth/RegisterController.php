@@ -28,10 +28,8 @@ final class RegisterController extends Controller
 
     /**
      * Where to redirect users after registration.
-     *
-     * @var string
      */
-    protected $redirectTo = RouteServiceProvider::HOME;
+    private string $redirectTo = RouteServiceProvider::HOME;
 
     /**
      * Create a new controller instance.
@@ -48,7 +46,7 @@ final class RegisterController extends Controller
      *
      * @return \Illuminate\Contracts\Validation\Validator
      */
-    protected function validator(array $data)
+    private function validator(array $data)
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
@@ -62,7 +60,7 @@ final class RegisterController extends Controller
      *
      * @return User
      */
-    protected function create(array $data)
+    private function create(array $data)
     {
         return User::query()->create([
             'name' => $data['name'],

@@ -56,13 +56,13 @@ final class User extends Authenticatable
         return $this->hasMany(PurchaseOrder::class);
     }
 
-    protected static function boot()
+    protected static function boot(): void
     {
         parent::boot();
         Route::bind('user', fn ($value) => User::withTrashed()->findOrFail($value));
     }
 
-    protected function fullName(): Attribute
+    private function fullName(): Attribute
     {
         return Attribute::make(get: fn (): string => $this->first_name . ' ' . $this->last_name);
     }

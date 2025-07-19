@@ -30,7 +30,7 @@ final class PermissionSeeder extends Seeder
             ],
         ];
 
-        $role = Role::find(1);
+        $role = Role::query()->find(1);
 
         foreach ($categories as $category => $permissions) {
             foreach ($permissions as $permission) {

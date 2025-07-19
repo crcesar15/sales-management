@@ -7,7 +7,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Products>
+ * @extends Factory<\App\Models\Products>
  */
 final class ProductFactory extends Factory
 {
@@ -19,11 +19,11 @@ final class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'brand_id' => rand(1, 10),
-            'measure_unit_id' => rand(1, 10),
+            'brand_id' => random_int(1, 10),
+            'measure_unit_id' => random_int(1, 10),
             'name' => fake()->text(20),
-            'description' => $this->faker->sentence(10),
-            'status' => $this->faker->randomElement(['active', 'inactive', 'archived']),
+            'description' => fake()->sentence(10),
+            'status' => fake()->randomElement(['active', 'inactive', 'archived']),
         ];
     }
 }

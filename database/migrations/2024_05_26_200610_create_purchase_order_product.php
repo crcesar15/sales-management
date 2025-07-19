@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchase_order_product', function (Blueprint $table) {
+        Schema::create('purchase_order_product', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('purchase_order_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
-            $table->float('quantity', 8, 2);
-            $table->float('price', 8, 2);
-            $table->float('total', 8, 2);
+            $table->float('quantity', 8);
+            $table->float('price', 8);
+            $table->float('total', 8);
             $table->timestamps();
         });
     }

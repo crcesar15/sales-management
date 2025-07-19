@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\PurchaseOrder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PurchaseOrder>
+ * @extends Factory<PurchaseOrder>
  */
 final class PurchaseOrderFactory extends Factory
 {
@@ -19,8 +20,8 @@ final class PurchaseOrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'order_date' => $this->faker->date(),
-            'expected_arrival_date' => $this->faker->date(),
+            'order_date' => fake()->date(),
+            'expected_arrival_date' => fake()->date(),
             'total' => 0,
             'status' => 'draft',
         ];
