@@ -9,15 +9,15 @@ use App\Http\Resources\ApiCollection;
 use App\Models\Brand;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 final class BrandsController extends Controller
 {
-    // Get all brands
     public function index(Request $request): ApiCollection
     {
         $query = Brand::query();
 
-        $filter = $request->input('filter', '');
+        $filter = $request->string('filter', '')->value();
 
         if (! empty($filter)) {
             $filter = '%' . $filter . '%';
@@ -30,66 +30,41 @@ final class BrandsController extends Controller
 
         $query->withCount('products');
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'name';
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
-
         $response = $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+            $request->string('order_by', 'name')->value(),
+            $request->string('order_direction', 'ASC')->value()
+        )->paginate($request->integer('per_page', 10));
 
         return new ApiCollection($response);
     }
 
-    // Get a brand by id
-    public function show($id): JsonResponse
+    public function show(Brand $brand): JsonResponse
     {
-        $brand = Brand::query()->find($id);
-        if ($brand) {
-            return new JsonResponse(['data' => $brand], 200);
-        }
-
-        return new JsonResponse(['message' => 'Brand not found'], 404);
+        return response()->json($brand, 200);
     }
 
-    // Create a new brand
     public function store(Request $request): JsonResponse
     {
+        // @phpstan-ignore-next-line
         $brand = Brand::query()->create($request->all());
 
-        return new JsonResponse(['data' => $brand], 201);
+        return response()->json($brand, 201);
     }
 
-    // Update a brand
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request, Brand $brand): JsonResponse
     {
-        $brand = Brand::query()->find($id);
-        if ($brand) {
-            $brand->update($request->all());
+        // @phpstan-ignore-next-line
+        $brand->update($request->all());
 
-            return new JsonResponse(['data' => $brand], 200);
-        }
-
-        return new JsonResponse(['message' => 'Brand not found'], 404);
+        return response()->json($brand, 200);
     }
 
-    // Delete a brand
-    public function destroy($id): ?\JsonResponse
+    public function destroy(Brand $brand): Response
     {
-        $brand = Brand::query()->find($id);
-        if ($brand) {
-            // remove the brand from all products
-            $brand->products()->update(['brand_id' => null]);
+        $brand->products()->update(['brand_id' => null]);
 
-            $brand->delete();
-        } else {
-            return new JsonResponse(['message' => 'Brand not found'], 404);
-        }
+        $brand->delete();
 
-        return null;
+        return response()->noContent();
     }
 }

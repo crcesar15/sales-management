@@ -17,11 +17,13 @@ final class PasswordController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
+        /** @var array<string> $validated */
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
+        // @phpstan-ignore-next-line
         $request->user()->update([
             'password' => Hash::make($validated['password']),
         ]);

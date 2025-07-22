@@ -18,9 +18,16 @@ use Illuminate\Foundation\Application;
 |
 */
 
-$app = new Application(
-    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
-);
+if (isset($_ENV['APP_BASE_PATH'])) {
+    /**
+     * @var string $basePath
+     */
+    $basePath = $_ENV['APP_BASE_PATH'];
+} else {
+    $basePath = dirname(__DIR__);
+}
+
+$app = new Application($basePath);
 
 /*
 |--------------------------------------------------------------------------

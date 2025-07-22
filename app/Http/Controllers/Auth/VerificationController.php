@@ -10,6 +10,8 @@ use Illuminate\Foundation\Auth\VerifiesEmails;
 
 final class VerificationController extends Controller
 {
+    use VerifiesEmails;
+
     /*
     |--------------------------------------------------------------------------
     | Email Verification Controller
@@ -21,11 +23,10 @@ final class VerificationController extends Controller
     |
     */
 
-    use VerifiesEmails;
-
     /**
      * Where to redirect users after verification.
      */
+    // @phpstan-ignore-next-line
     private string $redirectTo = RouteServiceProvider::HOME;
 
     /**

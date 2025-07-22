@@ -15,7 +15,6 @@ use Spatie\Permission\Models\Role;
 
 final class RolesController extends Controller
 {
-    // Get all roles
     public function index(ListRoleRequest $request): ApiCollection
     {
         $request->validated();
@@ -23,32 +22,30 @@ final class RolesController extends Controller
         $query = Role::query();
 
         if ($request->has('filter')) {
-            $query->where('name', 'like', $request->input('filter'));
+            $query->where('name', 'like', $request->string('filter')->value());
         }
 
         if ($request->has('include')) {
-            $query->with($request->input('include'));
+            /** @var array<string> $include */
+            $include = $request->array('include');
+            $query->with($include);
         }
 
-        $query->orderBy($request->input('order_by'), $request->input('order_direction'));
+        $query->orderBy(
+            $request->string('order_by')->value(),
+            $request->string('order_direction')->value()
+        );
 
-        $response = $query->paginate($request->input('per_page'));
+        $response = $query->paginate($request->integer('per_page'));
 
         return new ApiCollection($response);
     }
 
-    // Get a role by id
-    public function show($id): JsonResponse
+    public function show(Role $role): JsonResponse
     {
-        $role = Role::query()->find($id);
-        if ($role) {
-            return new JsonResponse(['data' => $role], 200);
-        }
-
-        return new JsonResponse(['message' => 'Role not found'], 404);
+        return response()->json($role, 200);
     }
 
-    // Create a new role
     public function store(StoreRoleRequest $request): JsonResponse
     {
         $request->validated();
@@ -61,16 +58,15 @@ final class RolesController extends Controller
 
             // Assign permissions
             if ($request->has('permissions')) {
-                $role->syncPermissions($request->input('permissions'));
+                $role->syncPermissions($request->array('permissions'));
             }
 
             return $role;
         });
 
-        return new JsonResponse(['data' => $role], 201);
+        return response()->json($role, 201);
     }
 
-    // Update a role
     public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
         $request->validated();
@@ -81,16 +77,15 @@ final class RolesController extends Controller
             ]);
 
             if ($request->has('permissions')) {
-                $role->syncPermissions($request->input('permissions'));
+                $role->syncPermissions($request->array('permissions'));
             }
 
             return $role;
         });
 
-        return new JsonResponse(['data' => $updatedRole], 200);
+        return response()->json($updatedRole, 200);
     }
 
-    // Delete a role
     public function destroy(Role $role): JsonResponse
     {
         $this->authorize('roles-delete', auth()->user());

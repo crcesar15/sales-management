@@ -9,15 +9,15 @@ use App\Http\Resources\ApiCollection;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 final class CategoriesController extends Controller
 {
-    // Get all products
     public function index(Request $request): ApiCollection
     {
         $query = Category::query();
 
-        $filter = $request->input('filter', '');
+        $filter = $request->string('filter', '')->value();
 
         if (! empty($filter)) {
             $filter = '%' . $filter . '%';
@@ -30,66 +30,43 @@ final class CategoriesController extends Controller
 
         $query->withCount('products');
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'name';
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
-
         $response = $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+            $request->string('order_by', 'name')->value(),
+            $request->string('order_direction', 'ASC')->value()
+        )->paginate($request->integer('per_page', 10));
 
         return new ApiCollection($response);
     }
 
-    // Get a category by id
-    public function show($id): JsonResponse
+    public function show(Category $category): JsonResponse
     {
-        $category = Category::query()->find($id);
-        if ($category) {
-            return new JsonResponse(['data' => $category], 200);
-        }
-
-        return new JsonResponse(['message' => 'Category not found'], 404);
+        return response()->json($category, 200);
     }
 
-    // Create a new category
     public function store(Request $request): JsonResponse
     {
+        // @phpstan-ignore-next-line
         $category = Category::query()->create($request->all());
 
-        return new JsonResponse(['data' => $category], 201);
+        return response()->json(['data' => $category], 201);
     }
 
     // Update a category
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request, Category $category): JsonResponse
     {
-        $category = Category::query()->find($id);
-        if ($category) {
-            $category->update($request->all());
+        // @phpstan-ignore-next-line
+        $category->update($request->all());
 
-            return new JsonResponse(['data' => $category], 200);
-        }
-
-        return new JsonResponse(['message' => 'Category not found'], 404);
+        return new JsonResponse($category, 200);
     }
 
-    // Delete a category
-    public function destroy($id): JsonResponse
+    public function destroy(Category $category): Response
     {
-        $category = Category::query()->find($id);
-        if ($category) {
-            // remove the category from the intermediate table
-            $category->products()->detach();
+        // remove the category from the intermediate table
+        $category->products()->detach();
 
-            $category->delete();
+        $category->delete();
 
-            return new JsonResponse(['data' => $category], 200);
-        }
-
-        return new JsonResponse(['message' => 'Category not found'], 404);
+        return response()->noContent();
     }
 }

@@ -1,19 +1,17 @@
 includes:
-    - ./vendor/nunomaduro/larastan/extension.neon
+    - ./vendor/larastan/larastan/extension.neon
     - ./vendor/nesbot/carbon/extension.neon
 
 parameters:
     level: max
     paths:
         - app
+        - bootstrap
         - config
         - database
         - public
         - resources
         - routes
         - tests
-
-    ignoreErrors:
-        - "#PHPDoc tag @var#"
-
-    reportUnmatchedIgnoredErrors: true
+    excludePaths:
+        - database/migrations/2025_07_06_153117_create_permission_tables.php

@@ -9,15 +9,15 @@ use App\Http\Resources\ApiCollection;
 use App\Models\MeasureUnit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 final class MeasureUnitsController extends Controller
 {
-    // Get all the measure units
     public function index(Request $request): ApiCollection
     {
         $query = MeasureUnit::query();
 
-        $filter = $request->input('filter', '');
+        $filter = $request->string('filter', '')->value();
 
         if (! empty($filter)) {
             $filter = '%' . $filter . '%';
@@ -28,66 +28,42 @@ final class MeasureUnitsController extends Controller
             );
         }
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'name';
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
-
         $response = $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+            $request->string('order_by', 'name')->value(),
+            $request->string('order_direction', 'ASC')->value()
+        )->paginate($request->integer('per_page', 10));
 
         return new ApiCollection($response);
     }
 
-    // Get a measure unit by id
-    public function show($id): JsonResponse
+    public function show(MeasureUnit $measureUnit): JsonResponse
     {
-        $measureUnit = MeasureUnit::query()->find($id);
-        if ($measureUnit) {
-            return new JsonResponse(['data' => $measureUnit], 200);
-        }
-
-        return new JsonResponse(['message' => 'Measure unit not found'], 404);
+        return response()->json($measureUnit, 200);
     }
 
-    // Create a new measure unit
     public function store(Request $request): JsonResponse
     {
+        // @phpstan-ignore-next-line
         $measureUnit = MeasureUnit::query()->create($request->all());
 
-        return new JsonResponse(['data' => $measureUnit], 201);
+        return response()->json($measureUnit, 201);
     }
 
-    // Update a measure unit
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request, MeasureUnit $measureUnit): JsonResponse
     {
-        $measureUnit = MeasureUnit::query()->find($id);
-        if ($measureUnit) {
-            $measureUnit->update($request->all());
+        // @phpstan-ignore-next-line
+        $measureUnit->update($request->all());
 
-            return new JsonResponse(['data' => $measureUnit], 200);
-        }
-
-        return new JsonResponse(['message' => 'Measure unit not found'], 404);
+        return response()->json($measureUnit, 200);
     }
 
-    // Delete a measure unit
-    public function destroy($id): ?\JsonResponse
+    public function destroy(MeasureUnit $measureUnit): Response
     {
-        $measureUnit = MeasureUnit::query()->find($id);
-        if ($measureUnit) {
-            // remove the measure unit from all products
-            $measureUnit->products()->update(['measure_unit_id' => null]);
+        // remove the measure unit from all products
+        $measureUnit->products()->update(['measure_unit_id' => null]);
 
-            $measureUnit->delete();
-        } else {
-            return new JsonResponse(['message' => 'Measure unit not found'], 404);
-        }
+        $measureUnit->delete();
 
-        return null;
+        return response()->noContent();
     }
 }

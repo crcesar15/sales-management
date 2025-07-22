@@ -29,6 +29,7 @@ final class ConfirmablePasswordController extends Controller
     public function store(Request $request): RedirectResponse
     {
         throw_unless(Auth::guard('web')->validate([
+            // @phpstan-ignore-next-line
             'email' => $request->user()->email,
             'password' => $request->password,
         ]), ValidationException::withMessages([

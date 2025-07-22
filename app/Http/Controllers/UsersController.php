@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use Spatie\Permission\Models\Role;
 
 final class UsersController extends Controller
@@ -13,7 +15,7 @@ final class UsersController extends Controller
     /**
      * Display a listing of users.
      */
-    public function index()
+    public function index(): InertiaResponse
     {
         $this->authorize('users-view', auth()->user());
 
@@ -23,7 +25,7 @@ final class UsersController extends Controller
     /**
      * Show the form for creating a new user.
      */
-    public function create()
+    public function create(): InertiaResponse
     {
         $this->authorize('users-create', auth()->user());
 
@@ -38,12 +40,12 @@ final class UsersController extends Controller
     /**
      * Show the form for editing the specified user.
      */
-    public function edit(User $user)
+    public function edit(User $user): InertiaResponse
     {
         $this->authorize('users-edit', auth()->user());
 
         // Include the user role with only id and name without pivot
-        $user->load(['roles' => function ($query): void {
+        $user->load(['roles' => function (Builder $query): void {
             $query->select('id', 'name');
         }]);
 

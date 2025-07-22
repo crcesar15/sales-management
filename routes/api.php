@@ -23,24 +23,24 @@ Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $reques
 Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void {
     // Routes for Products
     Route::get('/products', [ProductsController::class, 'index'])->name('products');
-    Route::get('/products/{id}', [ProductsController::class, 'show'])->name('products.show');
+    Route::get('/products/{product}', [ProductsController::class, 'show'])->name('products.show');
     Route::post('/products', [ProductsController::class, 'store'])->name('products.store');
-    Route::put('/products/{id}', [ProductsController::class, 'update'])->name('products.update');
-    Route::delete('/products/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
+    Route::put('/products/{product}', [ProductsController::class, 'update'])->name('products.update');
+    Route::delete('/products/{product}', [ProductsController::class, 'destroy'])->name('products.destroy');
 
     // Routes for Categories
     Route::get('/categories', [CategoriesController::class, 'index'])->name('categories');
-    Route::get('/categories/{id}', [CategoriesController::class, 'show'])->name('categories.show');
+    Route::get('/categories/{category}', [CategoriesController::class, 'show'])->name('categories.show');
     Route::post('/categories', [CategoriesController::class, 'store'])->name('categories.store');
-    Route::put('/categories/{id}', [CategoriesController::class, 'update'])->name('categories.update');
-    Route::delete('/categories/{id}', [CategoriesController::class, 'destroy'])->name('categories.destroy');
+    Route::put('/categories/{category}', [CategoriesController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [CategoriesController::class, 'destroy'])->name('categories.destroy');
 
     // Routes for Brands
     Route::get('/brands', [BrandsController::class, 'index'])->name('brands');
-    Route::get('/brands/{id}', [BrandsController::class, 'show'])->name('brands.show');
+    Route::get('/brands/{brand}', [BrandsController::class, 'show'])->name('brands.show');
     Route::post('/brands', [BrandsController::class, 'store'])->name('brands.store');
-    Route::put('/brands/{id}', [BrandsController::class, 'update'])->name('brands.update');
-    Route::delete('/brands/{id}', [BrandsController::class, 'destroy'])->name('brands.destroy');
+    Route::put('/brands/{brand}', [BrandsController::class, 'update'])->name('brands.update');
+    Route::delete('/brands/{brand}', [BrandsController::class, 'destroy'])->name('brands.destroy');
 
     // Routes for Measure Units
     Route::get('/measure-units', [MeasureUnitsController::class, 'index'])->name('measure-units');
@@ -52,10 +52,10 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
     // Products Media
     Route::post('/products/media', [ProductsMediaController::class, 'draft'])
         ->name('products.media.draft');
-    Route::post('/products/{id}/media', [ProductsMediaController::class, 'store'])->name('products.media.store');
-    Route::delete('/products/{id}/media/{media_id}', [ProductsMediaController::class, 'destroy'])
+    Route::post('/products/{product}/media', [ProductsMediaController::class, 'store'])->name('products.media.store');
+    Route::delete('/products/{product}/media/{media}', [ProductsMediaController::class, 'destroy'])
         ->name('products.media.destroy');
-    Route::delete('products/media/{media_id}', [ProductsMediaController::class, 'destroyDraft'])
+    Route::delete('products/media/draft/{media}', [ProductsMediaController::class, 'destroyDraft'])
         ->name('products.media.destroy-draft');
 
     // Routes for Roles
@@ -75,10 +75,10 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
 
     // Routes for Vendors
     Route::get('/vendors', [VendorsController::class, 'index'])->name('vendors');
-    Route::get('/vendors/{id}', [VendorsController::class, 'show'])->name('vendors.show');
+    Route::get('/vendors/{vendor}', [VendorsController::class, 'show'])->name('vendors.show');
     Route::post('/vendors', [VendorsController::class, 'store'])->name('vendors.store');
-    Route::put('/vendors/{id}', [VendorsController::class, 'update'])->name('vendors.update');
-    Route::delete('/vendors/{id}', [VendorsController::class, 'destroy'])->name('vendors.destroy');
+    Route::put('/vendors/{vendor}', [VendorsController::class, 'update'])->name('vendors.update');
+    Route::delete('/vendors/{vendor}', [VendorsController::class, 'destroy'])->name('vendors.destroy');
 
     // Routes for Vendor Products
     Route::get('/vendors/{vendor}/variants', [VendorsController::class, 'getProductVariants'])
@@ -94,8 +94,8 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
     Route::get('variants', [VariantsController::class, 'index'])->name('variants');
 
     // Routes for Variant Vendors
-    Route::get('variants/{id}/vendors', [VariantsController::class, 'getVendors'])->name('variants.vendors');
-    Route::put('variants/{id}/vendors', [VariantsController::class, 'updateVendors'])
+    Route::get('variants/{variant}/vendors', [VariantsController::class, 'getVendors'])->name('variants.vendors');
+    Route::put('variants/{variant}/vendors', [VariantsController::class, 'updateVendors'])
         ->name('variants.vendors.update');
 
     // Routes for purchase orders
@@ -103,6 +103,7 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
     Route::get('purchase-orders/{order}', [PurchaseOrdersController::class, 'show'])->name('purchase-orders.show');
     Route::post('purchase-orders', [PurchaseOrdersController::class, 'store'])->name('purchase-orders.store');
     Route::put('purchase-orders/{order}', [PurchaseOrdersController::class, 'update'])->name('purchase-orders.update');
+    Route::delete('purchase-orders/{order}', [PurchaseOrdersController::class, 'delete'])->name('purchase-orders.delete');
 
     // Routes for settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');

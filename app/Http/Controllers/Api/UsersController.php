@@ -11,11 +11,11 @@ use App\Http\Requests\Api\Users\UpdateUserRequest;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 final class UsersController extends Controller
 {
-    // Get all users
     public function index(ListUserRequest $request): UserCollection
     {
         $request->validated();
@@ -23,81 +23,81 @@ final class UsersController extends Controller
         $query = User::query();
 
         if ($request->has('filter')) {
-            $query->where('name', 'like', $query->input('filter'));
+            $query->where('name', 'like', $request->string('filter')->value());
         }
 
         if ($request->has('status')) {
-            if ($request->input('status') === 'archived') {
+            if ($request->string('status')->value() === 'archived') {
                 $query->onlyTrashed();
             } else {
-                $query->where('status', $request->input('status'));
+                $query->where('status', $request->string('status')->value());
             }
         }
 
         if ($request->has('include')) {
-            $query->with($request->input('include'));
+            /** @var array<string> $include */
+            $include = $request->array('include');
+
+            $query->with($include);
         }
 
-        $query->orderBy($request->input('order_by'), $request->input('order_direction'));
+        $query->orderBy($request->string('order_by')->value(), $request->string('order_direction')->value());
 
-        $response = $query->paginate($request->input('per_page', 10));
+        $response = $query->paginate($request->integer('per_page'));
 
         return new UserCollection($response);
     }
 
-    // Get a user by id
-    public function show($id): JsonResponse
+    public function show(User $user): JsonResponse
     {
-        $user = User::query()->find($id);
-        if ($user) {
-            return new JsonResponse(['data' => $user], 200);
-        }
-
-        return new JsonResponse(['message' => 'User not found'], 404);
+        return response()->json($user, 200);
     }
 
-    // Create a new user
     public function store(StoreUserRequest $request): JsonResponse
     {
-        $request->validated();
+        $validated = $request->validated();
 
-        $user = DB::transaction(function () use ($request) {
+        $user = DB::transaction(function () use ($request, $validated) {
             // Create a new user
-            $user = User::query()->create($request->all());
+            $user = User::query()->create($validated);
 
             // Assign roles if provided
             if ($request->has('roles')) {
-                $user->syncRoles($request->input('roles'));
+                /** @var array<string> $roles */
+                $roles = $request->input('roles');
+
+                $user->syncRoles($roles);
             }
 
             return $user;
         });
 
-        return new JsonResponse(['data' => $user], 201);
+        return response()->json($user, 201);
     }
 
-    // Update a user
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
-        $request->validated();
+        $validated = $request->validated();
 
-        $updateUser = DB::transaction(function () use ($request, $user): User {
+        $updateUser = DB::transaction(function () use ($request, $user, $validated): User {
             // Create a new user
-            $user->update($request->all());
+            $user->update($validated);
 
             // Assign roles if provided
             if ($request->has('roles')) {
-                $user->syncRoles($request->input('roles'));
+                /** @var array<string> */
+                $roles = $request->input('roles');
+
+                $user->syncRoles($roles);
             }
 
             return $user;
         });
 
-        return new JsonResponse(['data' => $updateUser], 200);
+        return response()->json($updateUser, 200);
     }
 
-    // Delete a user
-    public function destroy(User $user)
+    public function destroy(User $user): Response
     {
         $this->authorize('users-delete', auth()->user());
 
@@ -107,11 +107,10 @@ final class UsersController extends Controller
         // soft delete
         $user->delete();
 
-        return response(null, 204);
+        return response()->noContent();
     }
 
-    // Restore a user, search deleted_at
-    public function restore(User $user)
+    public function restore(User $user): Response
     {
         $this->authorize('users-edit', auth()->user());
 
@@ -119,6 +118,6 @@ final class UsersController extends Controller
 
         $user->update(['status' => 'active']);
 
-        return response(null, 204);
+        return response()->noContent();
     }
 }

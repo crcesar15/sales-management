@@ -12,17 +12,17 @@ use App\Models\Vendor;
 use App\Services\VariantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 final class VendorsController extends Controller
 {
-    // Get all vendors
     public function index(Request $request): ApiCollection
     {
         $query = Vendor::query();
 
-        $filter = $request->input('filter', '');
+        $filter = $request->string('filter', '')->value();
 
-        if (! empty($filter)) {
+        if ($request->has('filter')) {
             $filter = '%' . $filter . '%';
             $query->where(
                 function ($query) use ($filter): void {
@@ -31,87 +31,68 @@ final class VendorsController extends Controller
             );
         }
 
-        $status = $request->input('status', 'all');
+        $status = $request->string('status', 'all')->value();
 
         if ($status !== 'all') {
             $query->where('status', $status);
         }
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'name';
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
-
         $response = $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+            $request->string('order_by', 'name')->value(),
+            $request->string('order_direction', 'ASC')->value()
+        )->paginate($request->integer('per_page', 10));
 
         return new ApiCollection($response);
     }
 
-    // Get a vendor by id
-    public function show($id): JsonResponse
+    public function show(Vendor $vendor): JsonResponse
     {
-        $vendor = Vendor::query()->find($id);
-        if ($vendor) {
-            return new JsonResponse(['data' => $vendor], 200);
-        }
-
-        return new JsonResponse(['message' => 'Vendor not found'], 404);
+        return response()->json($vendor, 200);
     }
 
-    // Create a new vendor
     public function store(Request $request): JsonResponse
     {
+        // TODO Develop fromRequest
+        // @phpstan-ignore-next-line
         $vendor = Vendor::query()->create($request->all());
 
-        return new JsonResponse(['data' => $vendor], 201);
+        return response()->json($vendor, 201);
     }
 
-    // Update a vendor
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request, Vendor $vendor): JsonResponse
     {
-        $vendor = Vendor::query()->find($id);
-        if ($vendor) {
-            $vendor->update($request->all());
+        // TODO Develop formRequest
+        // @phpstan-ignore-next-line
+        $vendor->update($request->all());
 
-            return new JsonResponse(['data' => $vendor], 200);
-        }
-
-        return new JsonResponse(['message' => 'Vendor not found'], 404);
+        return response()->json($vendor, 200);
     }
 
-    // Delete a vendor
-    public function destroy($id): JsonResponse
+    public function destroy(Vendor $vendor): Response
     {
-        $vendor = Vendor::query()->find($id);
+        $vendor->delete();
 
-        if ($vendor) {
-            $vendor->delete();
-
-            return new JsonResponse(['data' => $vendor], 200);
-        }
-
-        return new JsonResponse(['message' => 'Role not found'], 404);
+        return response()->noContent();
     }
 
-    public function getProductVariants(Request $request, VariantService $variantService, Vendor $vendor): VariantsResource
-    {
-        $includes = $request->input('includes', '');
-        $includes = explode(',', (string) $includes);
+    public function getProductVariants(
+        Request $request,
+        VariantService $variantService,
+        Vendor $vendor
+    ): VariantsResource {
+        // TODO: Develop formRequest
+        $includes = $request->string('includes', '')->value();
+        $includes = explode(',', $includes);
 
-        $page = $request->input('page', 1);
-        $per_page = $request->input('per_page', 10);
+        $page = $request->integer('page', 1);
+        $per_page = $request->integer('per_page', 10);
 
-        $order_by = $request->input('order_by', 'product_name');
-        $order_direction = $request->input('order_direction', 'ASC');
+        $order_by = $request->string('order_by', 'product_name')->value();
+        $order_direction = $request->string('order_direction', 'ASC')->value();
 
-        $filter = $request->input('filter', '');
-        $filterBy = $request->input('filter_by', 'name');
-        $status = $request->input('status', 'all');
+        $filter = $request->string('filter', '')->value();
+        $filterBy = $request->string('filter_by', 'name')->value();
+        $status = $request->string('status', 'all')->value();
 
         $vendorId = $vendor->id;
 
@@ -135,43 +116,40 @@ final class VendorsController extends Controller
 
     public function storeProductVariant(Request $request, Vendor $vendor, ProductVariant $variant): JsonResponse
     {
-        $product = $request->input('record');
+        $product = $request->array('record');
 
-        if ($vendor && $variant) {
+        // Check if the variant already exists for the vendor
+        /** @var ProductVariant $existingVariant */
+        $existingVariant = $vendor->variants()->where('product_variant_id', $variant->id)->first();
+
+        // Remove the existing variant if it exists
+        $vendor->variants()->detach($existingVariant->id);
+
+        // TODO: Refactor logic
+        if (isset($product['previous_product_id'])) {
             // Check if the variant already exists for the vendor
-            $existingVariant = $vendor->variants()->where('product_variant_id', $variant->id)->first();
+            /** @var ProductVariant $existingVariant */
+            $existingVariant = $vendor->variants()
+                ->where('product_variant_id', $product['previous_product_id'])
+                ->first();
 
-            // Remove the existing variant if it exists
-            if ($existingVariant) {
-                $vendor->variants()->detach($existingVariant->id);
-            }
-
-            if (isset($product['previous_product_id'])) {
-                // Check if the variant already exists for the vendor
-                $existingVariant = $vendor->variants()->where('product_variant_id', $product['previous_product_id'])->first();
-
-                // Remove the existing variant if it exists
-                if ($existingVariant) {
-                    $vendor->variants()->detach($existingVariant->id);
-                }
-            }
-
-            $vendor->variants()->attach($variant->id, [
-                'price' => $product['price'],
-                'details' => $product['details'] ?? null,
-                'payment_terms' => $product['payment_terms'],
-                'status' => $product['status'] ?? 'active',
-            ]);
-
-            return new JsonResponse(['data' => $vendor], 201);
+            $vendor->variants()->detach($existingVariant->id);
         }
 
-        return new JsonResponse(['message' => 'Vendor or Product not found'], 404);
+        $vendor->variants()->attach($variant->id, [
+            'price' => $product['price'],
+            'details' => $product['details'] ?? null,
+            'payment_terms' => $product['payment_terms'],
+            'status' => $product['status'] ?? 'active',
+        ]);
+
+        return new JsonResponse(['data' => $vendor], 201);
     }
 
-    public function updateProductVariants(Request $request, Vendor $vendor): \JsonResponse|int
+    public function updateProductVariants(Request $request, Vendor $vendor): JsonResponse
     {
-        $products = $request->input('variants');
+        /** @var array<array<string,number>>$products */
+        $products = $request->array('variants');
 
         $formattedProducts = [];
 
@@ -184,23 +162,15 @@ final class VendorsController extends Controller
             ];
         }
 
-        if ($vendor && $product) {
-            $vendor->variants()->syncWithoutDetaching($formattedProducts);
+        $vendor->variants()->syncWithoutDetaching($formattedProducts);
 
-            return new JsonResponse(['data' => $vendor], 200);
-        }
-
-        return 2;
+        return response()->json($vendor, 200);
     }
 
     public function removeProductVariant(Vendor $vendor, ProductVariant $variant): JsonResponse
     {
-        if ($vendor && $variant) {
-            $vendor->variants()->detach($variant);
+        $vendor->variants()->detach($variant);
 
-            return new JsonResponse(['data' => $vendor], 200);
-        }
-
-        return new JsonResponse(['message' => 'Vendor or Product not found'], 404);
+        return response()->json(['data' => $vendor], 200);
     }
 }

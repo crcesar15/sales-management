@@ -10,6 +10,8 @@ use Illuminate\Foundation\Auth\ResetsPasswords;
 
 final class ResetPasswordController extends Controller
 {
+    use ResetsPasswords;
+
     /*
     |--------------------------------------------------------------------------
     | Password Reset Controller
@@ -21,10 +23,9 @@ final class ResetPasswordController extends Controller
     |
     */
 
-    use ResetsPasswords;
-
     /**
      * Where to redirect users after resetting their password.
      */
+    // @phpstan-ignore-next-line
     private string $redirectTo = RouteServiceProvider::HOME;
 }

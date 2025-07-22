@@ -8,33 +8,26 @@ use App\Http\Controllers\Controller;
 use App\Models\Media;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 final class ProductsMediaController extends Controller
 {
-    public function destroy($id, $media_id): JsonResponse
+    public function destroy(Product $product, Media $media): JsonResponse|Response
     {
-        $media = Media::query()->find($media_id);
-
-        if ($media && ($media->model_id === $id && $media->model_type === Product::class)) {
+        if ($media->model_id === $product->id && $media->model_type === Product::class) {
             $media->delete();
 
-            return new JsonResponse(['message' => 'Media deleted'], 200);
+            return response()->noContent();
         }
 
-        return new JsonResponse(['message' => 'Media not found'], 404);
+        return response()->json(['message' => 'Media not found'], 404);
     }
 
-    public function destroyDraft($id): JsonResponse
+    public function destroyDraft(Media $media): Response
     {
-        $media = Media::query()->find($id);
+        $media->delete();
 
-        if ($media) {
-            $media->delete();
-
-            return new JsonResponse(['message' => 'Media deleted'], 200);
-        }
-
-        return new JsonResponse(['message' => 'Media not found'], 404);
+        return response()->noContent();
     }
 
     public function draft(): JsonResponse
@@ -42,38 +35,41 @@ final class ProductsMediaController extends Controller
         $file = request()->file('file');
 
         if ($file) {
-            $path = $file->store('products', 'public');
+            // ! Review if $file->path works
+            $file->store('products', 'public');
+            $path = $file->path();
+
             $media = Media::query()->create([
                 'model_id' => 0,
                 'model_type' => Product::class,
                 'filename' => explode('/', $path)[1],
             ]);
 
-            return new JsonResponse(['data' => $media], 201);
+            return response()->json(['data' => $media], 201);
         }
 
-        return new JsonResponse(['message' => 'File not found'], 404);
+        return response()->json(['message' => 'File not found'], 404);
     }
 
-    public function store($id): JsonResponse
+    public function store(Product $product): JsonResponse
     {
-        $product = Product::query()->find($id);
+        $file = request()->file('file');
 
-        if ($product) {
-            $file = request()->file('file');
+        if ($file) {
+            // ! Review if $file->path works
+            $file->store('products', 'public');
+            $path = $file->path();
 
-            if ($file) {
-                $path = $file->store('products', 'public');
-                $media = Media::query()->create([
-                    'model_id' => $product->id,
-                    'model_type' => Product::class,
-                    'filename' => explode('/', $path)[1],
-                ]);
+            $media = Media::query()->create([
+                'model_id' => $product->id,
+                'model_type' => Product::class,
+                'filename' => explode('/', $path)[1],
+            ]);
 
-                return new JsonResponse(['data' => $media], 201);
-            }
+            return new JsonResponse($media, 201);
         }
 
-        return new JsonResponse(['message' => 'Product not found'], 404);
+        // TODO: validate with formRequest
+        return response()->json(['message' => 'Something went wrong'], 422);
     }
 }

@@ -1,4 +1,4 @@
-<template>
+w<template>
   <app-layout>
     <slot />
     <Toast />

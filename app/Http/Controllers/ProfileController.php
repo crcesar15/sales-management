@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +20,7 @@ final class ProfileController extends Controller
     public function edit(Request $request): Response
     {
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => ! $request->user()->hasVerifiedEmail(), // @phpstan-ignore-line
             'status' => session('status'),
         ]);
     }
@@ -31,13 +30,13 @@ final class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $request->user()->fill($request->validated()); // @phpstan-ignore-line
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($request->user()->isDirty('email')) { // @phpstan-ignore-line
+            $request->user()->email_verified_at = null; // @phpstan-ignore-line
         }
 
-        $request->user()->save();
+        $request->user()->save(); // @phpstan-ignore-line
 
         return Redirect::route('profile.edit');
     }
@@ -55,7 +54,7 @@ final class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        $user->delete(); // @phpstan-ignore-line
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
@@ -17,7 +18,8 @@ final class UserCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->map(function ($user) use ($request): array {
+            // @phpstan-ignore-next-line
+            'data' => $this->collection->map(function (User $user) use ($request): array {
                 $collect = [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -29,7 +31,7 @@ final class UserCollection extends ResourceCollection
                     'updated_at' => $user->updated_at,
                 ];
 
-                if (in_array('roles', explode(',', (string) $request->input('include', '')))) {
+                if (in_array('roles', explode(',', $request->string('include', '')->value()))) {
                     $collect['roles'] = $user->roles->map(fn ($role): array => [
                         'id' => $role->id,
                         'name' => $role->name,

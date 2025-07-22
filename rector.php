@@ -3,8 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
-use Rector\Set\ValueObject\SetList;
-use RectorLaravel\Rector\MethodCall\ResponseHelperCallToJsonResponseRector;
+use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use RectorLaravel\Set\LaravelLevelSetList;
 use RectorLaravel\Set\LaravelSetList;
 
@@ -20,6 +19,9 @@ return RectorConfig::configure()
         __DIR__ . '/tests',
     ])
     ->withImportNames()
+    ->withSkip([
+        PrivatizeFinalClassMethodRector::class,
+    ])
     ->withPreparedSets(
         deadCode: true,
         codeQuality: true,
@@ -28,20 +30,7 @@ return RectorConfig::configure()
         earlyReturn: true,
         strictBooleans: true,
     )
-    ->withRules([
-        ResponseHelperCallToJsonResponseRector::class,
-    ])
     ->withSets([
-        SetList::PHP_70,
-        SetList::PHP_71,
-        SetList::PHP_72,
-        SetList::PHP_73,
-        SetList::PHP_74,
-        SetList::PHP_80,
-        SetList::PHP_81,
-        SetList::PHP_82,
-        SetList::PHP_83,
-        SetList::PHP_84,
         LaravelLevelSetList::UP_TO_LARAVEL_120,
         LaravelSetList::LARAVEL_ARRAYACCESS_TO_METHOD_CALL,
         LaravelSetList::LARAVEL_ARRAY_STR_FUNCTION_TO_STATIC_CALL,

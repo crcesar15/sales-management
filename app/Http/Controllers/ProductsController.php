@@ -9,13 +9,14 @@ use App\Models\Category;
 use App\Models\MeasureUnit;
 use App\Models\Product;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 final class ProductsController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): InertiaResponse
     {
         return Inertia::render('products/index');
     }
@@ -23,7 +24,7 @@ final class ProductsController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): InertiaResponse
     {
         // List of Categories
         $categories = Category::all();
@@ -44,7 +45,7 @@ final class ProductsController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Product $product)
+    public function edit(Product $product): InertiaResponse
     {
         // Include the product variants with media
         $product->load(['media', 'variants', 'categories', 'brand', 'measureUnit']);

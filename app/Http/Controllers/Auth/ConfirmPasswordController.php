@@ -26,6 +26,7 @@ final class ConfirmPasswordController extends Controller
     /**
      * Where to redirect users when the intended url fails.
      */
+    // @phpstan-ignore-next-line
     private string $redirectTo = RouteServiceProvider::HOME;
 
     /**

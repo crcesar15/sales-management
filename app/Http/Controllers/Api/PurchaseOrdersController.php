@@ -9,6 +9,7 @@ use App\Http\Resources\ApiCollection;
 use App\Models\PurchaseOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 final class PurchaseOrdersController extends Controller
 {
@@ -18,16 +19,16 @@ final class PurchaseOrdersController extends Controller
         $query = PurchaseOrder::query();
 
         if ($request->has('include')) {
-            $query->with(explode(',', (string) $request->get('include')));
+            $query->with(explode(',', $request->string('include')->value()));
         }
 
-        $status = $request->input('status', 'all');
+        $status = $request->string('status', 'all')->value();
 
         if ($status !== 'all') {
             $query->where('status', $status);
         }
 
-        $filter = $request->input('filter', '');
+        $filter = $request->string('filter', '')->value();
 
         if (! empty($filter)) {
             $filter = '%' . $filter . '%';
@@ -38,65 +39,40 @@ final class PurchaseOrdersController extends Controller
             );
         }
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'created_at';
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
-
         $response = $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+            $request->string('order_by', 'created_at')->value(),
+            $request->string('order_direction', 'ASC')->value()
+        )->paginate($request->integer('per_page', 10));
 
         return new ApiCollection($response);
     }
 
-    // Get a brand by id
     public function show(PurchaseOrder $order): JsonResponse
     {
-        if ($order) {
-            return new JsonResponse(['data' => $order], 200);
-        }
-
-        return new JsonResponse(['message' => 'Purchase order not found'], 404);
+        return new JsonResponse($order, 200);
     }
 
-    // Create a new brand
     public function store(Request $request): JsonResponse
     {
-        $brand = PurchaseOrder::query()->create($request->all());
+        // @phpstan-ignore-next-line
+        $order = PurchaseOrder::query()->create($request->all());
 
-        return new JsonResponse(['data' => $brand], 201);
+        return response()->json($order, 201);
     }
 
-    // Update a brand
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request, PurchaseOrder $order): JsonResponse
     {
-        $brand = PurchaseOrder::query()->find($id);
-        if ($brand) {
-            $brand->update($request->all());
+        // @phpstan-ignore-next-line
+        $order->update($request->all());
 
-            return new JsonResponse(['data' => $brand], 200);
-        }
-
-        return new JsonResponse(['message' => 'PurchaseOrder not found'], 404);
+        return response()->json($order, 200);
     }
 
     // Delete a brand
-    public function destroy($id): ?\JsonResponse
+    public function destroy(PurchaseOrder $order): Response
     {
-        $brand = PurchaseOrder::query()->find($id);
-        if ($brand) {
-            // remove the brand from all products
-            $brand->products()->update(['brand_id' => null]);
+        $order->delete();
 
-            $brand->delete();
-        } else {
-            return new JsonResponse(['message' => 'PurchaseOrder not found'], 404);
-        }
-
-        return null;
+        return response()->noContent();
     }
 }

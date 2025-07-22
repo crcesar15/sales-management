@@ -5,18 +5,25 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\ProductVariant;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 final class VariantService
 {
     /**
-     * Get all variants with optional filters and includes.
-     *
-     * @param  array  $filters
-     * @param  array  $includes
-     * @return Collection
+     * @param  array{
+     *      includes:array<string>,
+     *      vendor_id?: int,
+     *      order_by: string,
+     *      order_direction: string|null,
+     *      filter: string|null,
+     *      filter_by: string,
+     *      status: string,
+     *      page: int,
+     *      per_page: int
+     * }  $config
+     * @return LengthAwarePaginator<int,ProductVariant>
      */
-    public function getVariants(array $config)
+    public function getVariants(array $config): LengthAwarePaginator
     {
         $query = ProductVariant::query();
         $query->select(['product_variants.*']);

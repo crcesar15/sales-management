@@ -14,7 +14,7 @@ final class ListUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('users-view');
+        return $this->user()?->can('users-view') ?? false;
     }
 
     /**
@@ -38,8 +38,8 @@ final class ListUserRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'per_page' => $this->query('per_page', 10),
-            'page' => $this->query('page', 1),
+            'per_page' => $this->query('per_page', '10'),
+            'page' => $this->query('page', '1'),
             'order_by' => $this->query('order_by', 'first_name'),
             'order_direction' => $this->query('order_direction', 'asc'),
         ]);

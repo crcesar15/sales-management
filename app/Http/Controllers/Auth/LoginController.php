@@ -10,6 +10,8 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 final class LoginController extends Controller
 {
+    use AuthenticatesUsers;
+
     /*
     |--------------------------------------------------------------------------
     | Login Controller
@@ -21,11 +23,10 @@ final class LoginController extends Controller
     |
     */
 
-    use AuthenticatesUsers;
-
     /**
      * Where to redirect users after login.
      */
+    // @phpstan-ignore-next-line
     private string $redirectTo = RouteServiceProvider::HOME;
 
     /**

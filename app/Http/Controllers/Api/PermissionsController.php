@@ -15,7 +15,7 @@ final class PermissionsController extends Controller
     {
         $query = Permission::query();
 
-        $filter = $request->input('filter', '');
+        $filter = $request->string('filter', '')->value();
 
         if (! empty($filter)) {
             $filter = '%' . $filter . '%';
@@ -27,20 +27,13 @@ final class PermissionsController extends Controller
         }
 
         if ($request->has('select')) {
-            $query->select(explode(',', (string) $request->input('select')));
+            $query->select(explode(',', $request->string('select')->value()));
         }
 
-        $order_by = $request->has('order_by')
-            ? $order_by = $request->get('order_by')
-            : 'name';
-        $order_direction = $request->has('order_direction')
-            ? $request->get('order_direction')
-            : 'ASC';
-
         $response = $query->orderBy(
-            $request->input('order_by', $order_by),
-            $request->input('order_direction', $order_direction)
-        )->paginate($request->input('per_page', 10));
+            $request->string('order_by', 'name')->value(),
+            $request->string('order_direction', 'ASC')->value()
+        )->paginate($request->integer('per_page', 10));
 
         return new ApiCollection($response);
     }

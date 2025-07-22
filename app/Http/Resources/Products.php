@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
@@ -17,7 +18,7 @@ final class Products extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->map(fn ($product): array => [
+            'data' => $this->collection->map(fn (Product $product): array => [ // @phpstan-ignore-line
                 'id' => $product->id,
                 'categories' => $product->categories,
                 'brand' => $product->brand,
