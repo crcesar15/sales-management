@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property int $id
@@ -21,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
  * @property-read \App\Models\Product $product
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Vendor> $vendors
  * @property-read int|null $vendors_count
@@ -39,10 +44,12 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-final class ProductVariant extends Model
+final class ProductVariant extends Model implements HasMedia
 {
     /** @use HasFactory<ProductVariantFactory> */
     use HasFactory;
+
+    use InteractsWithMedia;
 
     protected $fillable = [
         'product_id',
@@ -66,5 +73,14 @@ final class ProductVariant extends Model
     {
         return $this->belongsToMany(Vendor::class, 'catalog', 'product_variant_id', 'vendor_id')
             ->withPivot('price', 'payment_terms', 'details', 'status');
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this
+            ->addMediaConversion('thumb')
+            ->width(368)
+            ->height(232)
+            ->sharpen(10);
     }
 }

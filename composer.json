@@ -15,6 +15,9 @@
     "laravel/sanctum": "^4.0",
     "laravel/tinker": "^2.8",
     "laravel/ui": "^4.3",
+    "spatie/image": "^3.8",
+    "spatie/image-optimizer": "^1.8",
+    "spatie/laravel-medialibrary": "^11.13",
     "spatie/laravel-permission": "^6.20",
     "tightenco/ziggy": "^2.2"
   },
