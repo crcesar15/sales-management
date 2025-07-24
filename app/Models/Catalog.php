@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- *
  * @method static \Database\Factories\CatalogFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Catalog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Catalog newQuery()
@@ -32,7 +31,6 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Catalog whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Catalog whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Catalog whereVendorId($value)
- *
  * @mixin \Eloquent
  */
 final class Catalog extends Model

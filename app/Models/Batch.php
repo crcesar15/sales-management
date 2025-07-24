@@ -21,7 +21,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- *
  * @method static \Database\Factories\BatchFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch newQuery()
@@ -38,7 +37,6 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereTransferredQuantity($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereUpdatedAt($value)
- *
  * @mixin \Eloquent
  */
 final class Batch extends Model

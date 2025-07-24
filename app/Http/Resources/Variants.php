@@ -27,7 +27,6 @@ final class Variants extends ResourceCollection
                     ? null
                     : $variant->name,
                 'status' => $variant->status,
-                'media' => $variant->media ?? [],
                 'vendors' => $variant->vendors ?? [],
             ]),
             'links' => [

@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- *
  * @method static \Database\Factories\ReceptionOrderFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReceptionOrder newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReceptionOrder newQuery()
@@ -32,7 +31,6 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReceptionOrder whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReceptionOrder whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReceptionOrder whereVendorId($value)
- *
  * @mixin \Eloquent
  */
 final class ReceptionOrder extends Model

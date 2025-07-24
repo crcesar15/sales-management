@@ -72,17 +72,17 @@ final class ProductsController extends Controller
         ]);
 
         // Associate media
-        if ($request->has('media') && count($request->array('media')) > 0) {
-            /** @var array<array<int>> $medias */
-            $medias = $request->array('media');
+        // if ($request->has('media') && count($request->array('media')) > 0) {
+        //     /** @var array<array<int>> $medias */
+        //     $medias = $request->array('media');
 
-            foreach ($medias as $media) {
-                $media = Media::query()->findOrFail($media['id']);
-                $media->update([
-                    'model_id' => $product->getKey(),
-                ]);
-            }
-        }
+        //     foreach ($medias as $media) {
+        //         $media = Media::query()->findOrFail($media['id']);
+        //         $media->update([
+        //             'model_id' => $product->getKey(),
+        //         ]);
+        //     }
+        // }
 
         // save categories
         $categories = $request->array('categories');

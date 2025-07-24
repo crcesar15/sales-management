@@ -26,11 +26,10 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property string|null $proof_of_payment_number
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Product> $products
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
  * @property-read int|null $products_count
- * @property-read User $user
- * @property-read Vendor $vendor
- *
+ * @property-read \App\Models\User $user
+ * @property-read \App\Models\Vendor $vendor
  * @method static \Database\Factories\PurchaseOrderFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PurchaseOrder newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PurchaseOrder newQuery()
@@ -49,7 +48,6 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PurchaseOrder whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PurchaseOrder whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PurchaseOrder whereVendorId($value)
- *
  * @mixin \Eloquent
  */
 final class PurchaseOrder extends Model

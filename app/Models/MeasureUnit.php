@@ -15,9 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Product> $products
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
  * @property-read int|null $products_count
- *
  * @method static \Database\Factories\MeasureUnitFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MeasureUnit newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MeasureUnit newQuery()
@@ -27,7 +26,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MeasureUnit whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MeasureUnit whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MeasureUnit whereUpdatedAt($value)
- *
  * @mixin \Eloquent
  */
 final class MeasureUnit extends Model

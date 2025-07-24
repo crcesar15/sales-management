@@ -16,7 +16,6 @@ use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Storage;
 
 final class DatabaseSeeder extends Seeder
 {
@@ -59,13 +58,6 @@ final class DatabaseSeeder extends Seeder
         // Create 10 Measure Units
         MeasureUnit::factory(10)->create();
 
-        // Delete and create products folder
-        if (is_dir('public/products')) {
-            Storage::deleteDirectory('public/products');
-        }
-
-        Storage::makeDirectory('public/products');
-
         Category::factory(10)->create()->each(function ($category): void {
             // create 5 products for each category
             Product::factory(5)->create([
@@ -74,7 +66,6 @@ final class DatabaseSeeder extends Seeder
             ])->each(function ($product) use ($category): void {
                 ProductVariant::factory(random_int(1, 3))->create([
                     'product_id' => $product->id,
-                    'media' => json_encode([]),
                 ]);
                 // Add category to product
                 $product->categories()->attach($category->id);
@@ -105,8 +96,5 @@ final class DatabaseSeeder extends Seeder
                 'total' => random_int(100, 1000),
             ]);
         });
-
-        // Set permissions to storage folder
-        exec('sudo chmod -R 777 storage/app/public/products');
     }
 }
