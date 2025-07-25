@@ -1,5 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -12,8 +17,12 @@
 */
 
 pest()->extend(Tests\TestCase::class)
- // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
-    ->in('Feature');
+    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->in('Feature')
+    ->beforeEach(function () {
+        $this->seed(RoleSeeder::class);
+        $this->seed(PermissionSeeder::class);
+    });
 
 /*
 |--------------------------------------------------------------------------
