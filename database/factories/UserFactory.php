@@ -32,7 +32,7 @@ final class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'username' => fake()->unique()->userName(),
             'phone' => fake()->optional()->phoneNumber(),
-            'status' => 'ACTIVE',
+            'status' => 'active',
             'date_of_birth' => fake()->optional()->date(),
             'additional_properties' => '{}',
             'email_verified_at' => now(),
