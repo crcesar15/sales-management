@@ -57,13 +57,6 @@ return [
     'use_default_collection_serialization' => false,
 
     /*
-     * The fully qualified class name of the model used for temporary uploads.
-     *
-     * This model is only used in Media Library Pro (https://medialibrary.pro)
-     */
-    'temporary_upload_model' => Spatie\MediaLibraryPro\Models\TemporaryUpload::class,
-
-    /*
      * When enabled, Media Library Pro will only process temporary uploads that were uploaded
      * in the same session. You can opt to disable this for stateless usage of
      * the pro components.
