@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Roles\ListRoleRequest;
 use App\Http\Requests\Api\Roles\StoreRoleRequest;
@@ -43,6 +44,8 @@ final class RolesController extends Controller
 
     public function show(Role $role): JsonResponse
     {
+        $this->authorize(PermissionsEnum::ROLES_VIEW, auth()->user());
+
         return response()->json($role, 200);
     }
 
@@ -88,7 +91,7 @@ final class RolesController extends Controller
 
     public function destroy(Role $role): JsonResponse
     {
-        $this->authorize('roles-delete', auth()->user());
+        $this->authorize(PermissionsEnum::ROLES_DELETE, auth()->user());
 
         DB::transaction(function () use ($role): void {
             // remove role from users

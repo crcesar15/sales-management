@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\PermissionsEnum;
+use App\Enums\RolesEnum;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -17,23 +19,23 @@ final class PermissionSeeder extends Seeder
     {
         $categories = [
             'roles' => [
-                'roles-view',
-                'roles-create',
-                'roles-edit',
-                'roles-delete',
+                PermissionsEnum::ROLES_VIEW->value,
+                PermissionsEnum::ROLES_CREATE->value,
+                PermissionsEnum::ROLES_EDIT->value,
+                PermissionsEnum::ROLES_DELETE->value,
             ],
             'users' => [
-                'users-view',
-                'users-create',
-                'users-edit',
-                'users-delete',
+                PermissionsEnum::USERS_VIEW->value,
+                PermissionsEnum::USERS_CREATE->value,
+                PermissionsEnum::USERS_EDIT->value,
+                PermissionsEnum::USERS_DELETE->value,
             ],
         ];
 
         /**
          * @var Role $role
          */
-        $role = Role::query()->find(1);
+        $role = Role::query()->where('name', RolesEnum::ADMIN->value)->first();
 
         foreach ($categories as $category => $permissions) {
             foreach ($permissions as $permission) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\Roles;
 
+use App\Enums\PermissionsEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,7 @@ final class UpdateRoleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('roles-edit') ?? false;
+        return $this->user()?->can(PermissionsEnum::ROLES_EDIT->value) ?? false;
     }
 
     /**
@@ -32,7 +33,7 @@ final class UpdateRoleRequest extends FormRequest
                 'max:255',
                 Rule::unique('roles', 'name')->ignore($this->route('role')),
             ],
-            'permissions' => 'sometimes|array',
+            'permissions' => ['sometimes', 'array'],
             'permissions.*' => [
                 'sometimes',
                 Rule::exists('permissions', 'name'),
