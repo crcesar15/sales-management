@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
-final class UsersController extends Controller
+final class UserController extends Controller
 {
     public function index(ListUserRequest $request): UserCollection
     {

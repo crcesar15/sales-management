@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\ProductsMediaController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingsController;
-use App\Http\Controllers\Api\UsersController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VariantsController;
 use App\Http\Controllers\Api\VendorsController;
 use Illuminate\Http\Request;
@@ -66,12 +66,12 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
     Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
 
     // Routes for Users
-    Route::get('/users', [UsersController::class, 'index'])->name('users');
-    Route::get('/users/{user}', [UsersController::class, 'show'])->name('users.show');
-    Route::post('/users', [UsersController::class, 'store'])->name('users.store');
-    Route::put('/users/{user}', [UsersController::class, 'update'])->name('users.update');
-    Route::delete('/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
-    Route::put('/users/{user}/restore', [UsersController::class, 'restore'])->name('users.restore');
+    Route::get('/users', [UserController::class, 'index'])->name('users');
+    Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::put('/users/{user}/restore', [UserController::class, 'restore'])->name('users.restore');
 
     // Routes for Vendors
     Route::get('/vendors', [VendorsController::class, 'index'])->name('vendors');

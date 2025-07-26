@@ -10,7 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Spatie\Permission\Models\Role;
 
-final class UsersController extends Controller
+final class UserController extends Controller
 {
     /**
      * Display a listing of users.
