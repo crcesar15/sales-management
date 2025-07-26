@@ -32,10 +32,7 @@ final class PermissionSeeder extends Seeder
             ],
         ];
 
-        /**
-         * @var Role $role
-         */
-        $role = Role::query()->where('name', RolesEnum::ADMIN->value)->first();
+        $role = Role::query()->where('name', RolesEnum::ADMIN->value)->firstOrFail();
 
         foreach ($categories as $category => $permissions) {
             foreach ($permissions as $permission) {

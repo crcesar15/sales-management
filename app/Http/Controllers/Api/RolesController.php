@@ -53,7 +53,7 @@ final class RolesController extends Controller
     {
         $request->validated();
 
-        $role = DB::transaction(function () use ($request) {
+        $role = DB::transaction(function () use ($request): Role {
             $role = Role::create([
                 'name' => $request->input('name'),
                 'guard_name' => 'web',
