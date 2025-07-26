@@ -221,6 +221,7 @@ export default {
               severity: "success",
               summary: this.$t("Success"),
               detail: this.$t("Role created successfully"),
+              life: 3000,
             });
             this.$inertia.visit(route("roles"));
           })
@@ -229,6 +230,7 @@ export default {
               severity: "error",
               summary: this.$t("Error"),
               detail: this.$t(error.response.data.message),
+              life: 3000,
             });
           });
       }

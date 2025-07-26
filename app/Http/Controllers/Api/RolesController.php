@@ -54,10 +54,12 @@ final class RolesController extends Controller
         $request->validated();
 
         $role = DB::transaction(function () use ($request): Role {
-            $role = Role::create([
+            $role = new Role([
                 'name' => $request->input('name'),
                 'guard_name' => 'web',
             ]);
+
+            $role->save();
 
             // Assign permissions
             if ($request->has('permissions')) {

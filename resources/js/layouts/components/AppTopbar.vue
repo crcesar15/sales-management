@@ -1,5 +1,4 @@
 <script setup>
-import { Link } from "@inertiajs/inertia-vue3";
 import { ref, watch } from "vue";
 import Select from "primevue/select";
 import { useI18n } from "vue-i18n";

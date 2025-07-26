@@ -150,12 +150,14 @@ export default {
               label: "Users",
               icon: "fa fa-user",
               to: "users",
+              can: "users-view",
               route: route("users"),
             },
             {
               label: "Roles",
               icon: "fa fa-user-tag",
               to: "roles",
+              can: "roles-view",
               route: route("roles"),
             },
             {

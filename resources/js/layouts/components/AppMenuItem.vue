@@ -2,7 +2,7 @@
 import {
   onBeforeMount, ref, watch, onMounted,
 } from "vue";
-import { Link } from "@inertiajs/inertia-vue3";
+import { Link } from "@inertiajs/vue3";
 import { useLayout } from "./composables/layout";
 
 const { layoutState, setActiveMenuItem, onMenuToggle } = useLayout();
@@ -28,6 +28,7 @@ const props = defineProps({
 
 const isActiveMenu = ref(false);
 const itemKey = ref(null);
+const isVisible = ref(false);
 
 onBeforeMount(() => {
   itemKey.value = props.parentItemKey ? `${props.parentItemKey}-${props.index}` : String(props.index);
@@ -35,6 +36,12 @@ onBeforeMount(() => {
   const activeItem = layoutState.activeMenuItem;
 
   isActiveMenu.value = activeItem === itemKey.value || activeItem ? activeItem.startsWith(`${itemKey.value}-`) : false;
+
+  if (["Roles", "Users"].includes(props.item.label)) {
+    isVisible.value = props.item.can ?? false;
+  } else {
+    isVisible.value = true;
+  }
 });
 
 onMounted(() => {
@@ -102,6 +109,7 @@ function itemClick(event, item) {
     </a>
     <Link
       v-if="item.to && !item.items && item.visible !== false"
+      v-can="isVisible"
       :class="[item.class, { 'active-route': isActiveMenu }]"
       tabindex="0"
       :href="route(item.to)"

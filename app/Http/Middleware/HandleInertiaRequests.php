@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Spatie\Permission\Models\Permission;
 
 final class HandleInertiaRequests extends Middleware
 {
@@ -30,13 +31,25 @@ final class HandleInertiaRequests extends Middleware
 
     /**
      * Defines the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
      */
     public function share(Request $request): array // @phpstan-ignore-line
     {
-        return array_merge(parent::share($request), [
-            //
-        ]);
+        $shared = ['auth' => null];
+
+        if (auth()->user() !== null) {
+            $shared = [
+                'auth' => [
+                    'user' => auth()->user(),
+                    'permissions' => auth()
+                        ->user()
+                        ->getPermissionsViaRoles()
+                        ->filter(fn (Permission $permission): bool => auth()->user()->can($permission['name']))
+                        ->map(fn (Permission $permission) => $permission['name'])
+                        ->all(),
+                ],
+            ];
+        }
+
+        return array_merge(parent::share($request), $shared);
     }
 }

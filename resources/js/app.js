@@ -8,9 +8,8 @@ import "./bootstrap";
 
 import { createApp, h } from "vue";
 import { createI18n } from "vue-i18n";
-import { createInertiaApp, Link } from "@inertiajs/inertia-vue3";
+import { createInertiaApp, Link } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
-
 import Ripple from "primevue/ripple";
 import Tooltip from "primevue/tooltip";
 import StyleClass from "primevue/styleclass";
@@ -21,6 +20,7 @@ import PButton from "primevue/button";
 import { InertiaProgress } from "@inertiajs/progress";
 import { ZiggyVue } from "ziggy-js";
 import Aura from "@primeuix/themes/aura";
+import Can from "./directives/can";
 
 import en from "../lang/en.json";
 import es from "../lang/es.json";
@@ -64,6 +64,7 @@ createInertiaApp({
       .directive("ripple", Ripple)
       .directive("styleclass", StyleClass)
       .directive("tooltip", Tooltip)
+      .directive("can", Can)
       .mount(el);
   },
 });
