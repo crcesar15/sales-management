@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Middleware;
 use Spatie\Permission\Models\Permission;
 
@@ -37,14 +38,17 @@ final class HandleInertiaRequests extends Middleware
         $shared = ['auth' => null];
 
         if (auth()->user() !== null) {
+            /** @var Collection<int, Permission> $permissions */
+            $permissions = auth()
+                ->user()
+                ->getPermissionsViaRoles();
+
             $shared = [
                 'auth' => [
                     'user' => auth()->user(),
-                    'permissions' => auth()
-                        ->user()
-                        ->getPermissionsViaRoles()
-                        ->filter(fn (Permission $permission): bool => auth()->user()->can($permission['name']))
-                        ->map(fn (Permission $permission) => $permission['name'])
+                    'permissions' => $permissions
+                        ->filter(fn (Permission $permission): bool => auth()->user()->can($permission->name))
+                        ->map(fn (Permission $permission) => $permission->name)
                         ->all(),
                 ],
             ];
