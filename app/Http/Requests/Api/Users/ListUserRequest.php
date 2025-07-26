@@ -25,44 +25,44 @@ final class ListUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page' => 'sometimes|integer|min:1|max:100',
-            'page' => 'sometimes|integer|min:1',
-            'order_by' => 'sometimes|string|in:first_name,last_name,username,status,created_at,updated_at',
-            'order_direction' => 'sometimes|string|in:asc,desc',
-            'filter' => 'sometimes|string|max:255',
-            'include' => 'sometimes|array|in:roles',
-            'status' => 'sometimes|string|in:active,inactive,archived',
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'order_by' => ['sometimes', 'string', 'in:first_name,last_name,username,status,created_at,updated_at'],
+            'order_direction' => ['sometimes', 'string', 'in:asc,desc'],
+            'filter' => ['sometimes', 'string', 'max:255'],
+            'include' => ['sometimes', 'array', 'in:roles'],
+            'status' => ['sometimes', 'string', 'in:active,inactive,archived'],
         ];
     }
 
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'per_page' => $this->query('per_page', '10'),
-            'page' => $this->query('page', '1'),
-            'order_by' => $this->query('order_by', 'first_name'),
-            'order_direction' => $this->query('order_direction', 'asc'),
+            'per_page' => $this->integer('per_page', 10),
+            'page' => $this->integer('page', 1),
+            'order_by' => $this->string('order_by', 'first_name')->value(),
+            'order_direction' => $this->string('order_direction', 'asc')->value(),
         ]);
 
         if ($this->has('filter')) {
             $this->merge([
-                'filter' => '%' . $this->query('filter') . '%',
+                'filter' => "%{$this->string('filter')->value()}%",
             ]);
         }
 
         if ($this->has('include')) {
             $this->merge([
-                'include' => explode(',', $this->query('include')),
+                'include' => explode(',', $this->string('include')->value()),
             ]);
         }
 
         if ($this->has('status')) {
-            if ($this->query('status') === 'all') {
+            if ($this->string('status')->value() === 'all') {
                 // remove status from the query
                 $this->request->remove('status');
             } else {
                 $this->merge([
-                    'status' => $this->query('status'),
+                    'status' => $this->string('status')->value(),
                 ]);
             }
         }

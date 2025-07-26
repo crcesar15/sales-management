@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Spatie\Permission\Models\Role;
@@ -45,7 +45,7 @@ final class UserController extends Controller
         $this->authorize('users-edit', auth()->user());
 
         // Include the user role with only id and name without pivot
-        $user->load(['roles' => function (Builder $query): void {
+        $user->load(['roles' => function (MorphToMany $query) {
             $query->select('id', 'name');
         }]);
 

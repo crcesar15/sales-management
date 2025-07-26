@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
+use RectorLaravel\Rector\MethodCall\ValidationRuleArrayStringValueToArrayRector;
 use RectorLaravel\Set\LaravelLevelSetList;
 use RectorLaravel\Set\LaravelSetList;
 
@@ -21,6 +22,9 @@ return RectorConfig::configure()
     ->withImportNames()
     ->withSkip([
         PrivatizeFinalClassMethodRector::class,
+    ])
+    ->withRules([
+        ValidationRuleArrayStringValueToArrayRector::class,
     ])
     ->withPreparedSets(
         deadCode: true,
