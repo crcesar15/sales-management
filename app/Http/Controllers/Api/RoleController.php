@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
-final class RolesController extends Controller
+final class RoleController extends Controller
 {
     public function index(ListRoleRequest $request): ApiCollection
     {

@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\PermissionsController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
-use App\Http\Controllers\Api\RolesController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UsersController;
 use App\Http\Controllers\Api\VariantsController;
@@ -59,11 +59,11 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
         ->name('products.media.destroy-draft');
 
     // Routes for Roles
-    Route::get('/roles', [RolesController::class, 'index'])->name('roles');
-    Route::get('/roles/{role}', [RolesController::class, 'show'])->name('roles.show');
-    Route::post('/roles', [RolesController::class, 'store'])->name('roles.store');
-    Route::put('/roles/{role}', [RolesController::class, 'update'])->name('roles.update');
-    Route::delete('/roles/{role}', [RolesController::class, 'destroy'])->name('roles.destroy');
+    Route::get('/roles', [RoleController::class, 'index'])->name('roles');
+    Route::get('/roles/{role}', [RoleController::class, 'show'])->name('roles.show');
+    Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
 
     // Routes for Users
     Route::get('/users', [UsersController::class, 'index'])->name('users');

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PurchaseOrdersController;
-use App\Http\Controllers\RolesController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\VendorsController;
 use Illuminate\Support\Facades\Auth;
@@ -54,9 +54,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/measure-units', fn () => Inertia::render('measure-units/index'))->name('measure-units');
 
     // Role routes
-    Route::get('/roles', [RolesController::class, 'index'])->name('roles');
-    Route::get('/roles/create', [RolesController::class, 'create'])->name('roles.create');
-    Route::get('/roles/{role}/edit', [RolesController::class, 'edit'])->name('roles.edit');
+    Route::get('/roles', [RoleController::class, 'index'])->name('roles');
+    Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
+    Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
 
     // User Routes
     Route::get('/users', [UsersController::class, 'index'])->name('users');

@@ -9,7 +9,7 @@ use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Spatie\Permission\Models\Role;
 
-final class RolesController extends Controller
+final class RoleController extends Controller
 {
     public function index(): InertiaResponse
     {
