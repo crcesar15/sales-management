@@ -25,18 +25,18 @@ final class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'username' => 'required|string|max:255|unique:users,username',
-            'phone' => 'nullable|string|max:20',
-            'status' => 'required|string|in:active,inactive,archived',
-            'date_of_birth' => 'nullable|date',
-            'additional_properties' => 'nullable|array',
-            'password' => 'required|string|min:8|confirmed',
-            'password_confirmation' => 'required_with:password|string|min:8',
-            'roles' => 'sometimes|array',
-            'roles.*' => 'sometimes|exists:roles,id',
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'status' => ['required', 'string', 'in:active,inactive,archived'],
+            'date_of_birth' => ['nullable', 'date'],
+            'additional_properties' => ['nullable', 'array'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password_confirmation' => ['required_with:password', 'string', 'min:8'],
+            'roles' => ['sometimes', 'array'],
+            'roles.*' => ['sometimes', 'exists:roles,id'],
         ];
     }
 }

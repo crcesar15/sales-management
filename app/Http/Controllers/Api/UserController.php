@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Users\ListUserRequest;
 use App\Http\Requests\Api\Users\StoreUserRequest;
@@ -50,6 +51,8 @@ final class UserController extends Controller
 
     public function show(User $user): JsonResponse
     {
+        $this->authorize(PermissionsEnum::USERS_VIEW, auth()->user());
+
         return response()->json($user, 200);
     }
 
