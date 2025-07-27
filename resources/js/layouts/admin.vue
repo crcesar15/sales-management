@@ -56,6 +56,7 @@ export default {
               label: "Brands",
               icon: "fa fa-copyright",
               to: "brands",
+              can: "brands-view",
               route: route("brands"),
             },
             {

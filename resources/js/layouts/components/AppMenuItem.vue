@@ -37,7 +37,7 @@ onBeforeMount(() => {
 
   isActiveMenu.value = activeItem === itemKey.value || activeItem ? activeItem.startsWith(`${itemKey.value}-`) : false;
 
-  if (["Roles", "Users", "Categories"].includes(props.item.label)) {
+  if (["Roles", "Users", "Categories", "Brands"].includes(props.item.label)) {
     isVisible.value = props.item.can ?? false;
   } else {
     isVisible.value = true;
