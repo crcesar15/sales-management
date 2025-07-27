@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
@@ -47,7 +48,7 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     Route::get('/gallery', fn () => Inertia::render('gallery/index'))->name('gallery');
 
-    Route::get('/categories', fn () => Inertia::render('category/index'))->name('categories');
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
 
     Route::get('/brands', fn () => Inertia::render('brands/index'))->name('brands');
 
