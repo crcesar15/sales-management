@@ -7,11 +7,13 @@ namespace App\Http\Controllers\Api;
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Categories\ListCategoryRequest;
+use App\Http\Requests\Api\Categories\StoreCategoryRequest;
 use App\Http\Resources\ApiCollection;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 final class CategoryController extends Controller
 {
@@ -44,12 +46,15 @@ final class CategoryController extends Controller
         return response()->json($category, 200);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreCategoryRequest $request): JsonResponse
     {
-        // @phpstan-ignore-next-line
-        $category = Category::query()->create($request->all());
+        $validated = $request->validated();
 
-        return response()->json(['data' => $category], 201);
+        $category = DB::transaction(function () use ($validated) {
+            return Category::query()->create($validated);
+        });
+
+        return response()->json($category, 201);
     }
 
     // Update a category
