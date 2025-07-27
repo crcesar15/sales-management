@@ -5,6 +5,7 @@
         {{ $t("Users") }}
       </h2>
       <p-button
+        v-can="'users-create'"
         :label="$t('Add User')"
         class="ml-2 uppercase"
         icon="fa fa-add"
@@ -175,6 +176,7 @@
               <div class="flex justify-center gap-2">
                 <p-button
                   v-show="row.data.status !== 'archived'"
+                  v-can="'users-edit'"
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
@@ -185,6 +187,7 @@
                 />
                 <p-button
                   v-show="row.data.status === 'archived'"
+                  v-can="'users-edit'"
                   v-tooltip.top="$t('Restore')"
                   icon="fa fa-trash-arrow-up"
                   text
@@ -195,6 +198,7 @@
                 />
                 <p-button
                   v-show="row.data.status !== 'archived'"
+                  v-can="'users-delete'"
                   v-tooltip.top="$t('Delete')"
                   :disabled="isCurrentUser(row.data.id)"
                   icon="fa fa-trash"
