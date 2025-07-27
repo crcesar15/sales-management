@@ -8,10 +8,10 @@ use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Brands\ListBrandRequest;
 use App\Http\Requests\Api\Brands\StoreBrandRequest;
+use App\Http\Requests\Api\Brands\UpdateBrandRequest;
 use App\Http\Resources\ApiCollection;
 use App\Models\Brand;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
@@ -57,12 +57,15 @@ final class BrandController extends Controller
         return response()->json($brand, 201);
     }
 
-    public function update(Request $request, Brand $brand): JsonResponse
+    public function update(UpdateBrandRequest $request, Brand $brand): JsonResponse
     {
-        // @phpstan-ignore-next-line
-        $brand->update($request->all());
+        $validated = $request->validated();
 
-        return response()->json($brand, 200);
+        $updatedBrand = DB::transaction(function () use ($validated, $brand) {
+            return $brand->update($validated);
+        });
+
+        return response()->json($updatedBrand, 200);
     }
 
     public function destroy(Brand $brand): Response
