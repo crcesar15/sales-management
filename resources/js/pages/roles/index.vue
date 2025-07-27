@@ -185,8 +185,8 @@ export default {
         .then((response) => {
           this.roles = response.data.data.map((item) => ({
             ...item,
-            created_at: moment(item.created_at).tz(window.timezone).format(window.datetimeFormat),
-            updated_at: moment(item.updated_at).tz(window.timezone).format(window.datetimeFormat),
+            created_at: window.moment(item.created_at).tz(window.timezone).format(window.datetimeFormat),
+            updated_at: window.moment(item.updated_at).tz(window.timezone).format(window.datetimeFormat),
           }));
           this.pagination.total = response.data.meta.total;
           this.loading = false;

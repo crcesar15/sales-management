@@ -15,8 +15,9 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property string $name
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Product> $products
  * @property-read int|null $products_count
+ *
  * @method static \Database\Factories\CategoryFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category newQuery()
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 final class Category extends Model
@@ -40,13 +42,5 @@ final class Category extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class);
-    }
-
-    protected function casts(): array
-    {
-        return [
-            'created_at' => 'datetime:Y-m-d H:i',
-            'updated_at' => 'datetime:Y-m-d H:i',
-        ];
     }
 }

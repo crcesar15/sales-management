@@ -77,6 +77,7 @@
               <div class="flex justify-center">
                 <Tag
                   rounded
+                  severity="secondary"
                   :value="row.data.products_count"
                 />
               </div>
@@ -169,6 +170,7 @@ export default {
         first: 0,
         rows: 10,
         page: 1,
+        perPage: 10,
         sortField: "name",
         sortOrder: 1,
         filter: "",
@@ -193,24 +195,26 @@ export default {
     fetchCategories() {
       this.loading = true;
 
-      let url = `${route("api.categories")}?
-        &per_page=${this.pagination.rows}
-        &page=${this.pagination.page}
-        &order_by=${this.pagination.sortField}`;
+      const params = new URLSearchParams();
 
-      if (this.pagination.sortOrder === -1) {
-        url += "&order_direction=desc";
-      } else {
-        url += "&order_direction=asc";
-      }
+      params.append("per_page", this.pagination.perPage);
+      params.append("page", this.pagination.page);
+      params.append("order_by", this.pagination.sortField);
+      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
 
       if (this.pagination.filter) {
-        url += `&filter=${this.pagination.filter}`;
+        params.append("filter", this.pagination.filter);
       }
+
+      const url = `${route("api.categories")}?${params.toString()}`;
 
       axios.get(url)
         .then((response) => {
-          this.categories = response.data.data;
+          this.categories = response.data.data.map((item) => ({
+            ...item,
+            created_at: window.moment(item.created_at).tz(window.timezone).format(window.datetimeFormat),
+            updated_at: window.moment(item.updated_at).tz(window.timezone).format(window.datetimeFormat),
+          }));
           this.pagination.total = response.data.meta.total;
           this.loading = false;
         })
@@ -226,7 +230,7 @@ export default {
     },
     onPage(event) {
       this.pagination.page = event.page + 1;
-      this.pagination.per_page = event.rows;
+      this.pagination.perPage = event.rows;
       this.fetchCategories();
     },
     onSort(event) {

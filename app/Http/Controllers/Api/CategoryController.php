@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Categories\ListCategoryRequest;
 use App\Http\Resources\ApiCollection;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
@@ -13,33 +15,32 @@ use Illuminate\Http\Response;
 
 final class CategoryController extends Controller
 {
-    public function index(Request $request): ApiCollection
+    public function index(ListCategoryRequest $request): ApiCollection
     {
+        $request->validated();
+
         $query = Category::query();
 
-        $filter = $request->string('filter', '')->value();
-
-        if (! empty($filter)) {
-            $filter = '%' . $filter . '%';
-            $query->where(
-                function ($query) use ($filter): void {
-                    $query->where('name', 'like', $filter);
-                }
-            );
+        if ($request->has('filter')) {
+            $query->where('name', 'like', $request->string('filter')->value());
         }
 
         $query->withCount('products');
 
-        $response = $query->orderBy(
-            $request->string('order_by', 'name')->value(),
-            $request->string('order_direction', 'ASC')->value()
-        )->paginate($request->integer('per_page', 10));
+        $query->orderBy(
+            $request->string('order_by')->value(),
+            $request->string('order_direction')->value()
+        );
+
+        $response = $query->paginate($request->integer('per_page'));
 
         return new ApiCollection($response);
     }
 
     public function show(Category $category): JsonResponse
     {
+        $this->authorize(PermissionsEnum::CATEGORY_VIEW, auth()->user());
+
         return response()->json($category, 200);
     }
 
