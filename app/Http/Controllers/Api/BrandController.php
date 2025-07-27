@@ -70,9 +70,13 @@ final class BrandController extends Controller
 
     public function destroy(Brand $brand): Response
     {
-        $brand->products()->update(['brand_id' => null]);
+        $this->authorize(PermissionsEnum::BRANDS_DELETE->value, auth()->user());
 
-        $brand->delete();
+        DB::transaction(function () use ($brand) {
+            $brand->products()->update(['brand_id' => null]);
+
+            $brand->delete();
+        });
 
         return response()->noContent();
     }
