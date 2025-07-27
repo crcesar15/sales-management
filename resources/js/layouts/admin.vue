@@ -49,6 +49,7 @@ export default {
               label: "Categories",
               icon: "fa fa-layer-group",
               to: "categories",
+              can: "categories-view",
               route: route("categories"),
             },
             {
