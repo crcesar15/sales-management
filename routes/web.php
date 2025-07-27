@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductsController;
@@ -50,7 +51,7 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
 
-    Route::get('/brands', fn () => Inertia::render('brands/index'))->name('brands');
+    Route::get('/brands', [BrandController::class, 'index'])->name('brands');
 
     Route::get('/measure-units', fn () => Inertia::render('measure-units/index'))->name('measure-units');
 

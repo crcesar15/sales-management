@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Api\BrandsController;
+use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MeasureUnitsController;
 use App\Http\Controllers\Api\PermissionsController;
@@ -36,11 +36,11 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
     // Routes for Brands
-    Route::get('/brands', [BrandsController::class, 'index'])->name('brands');
-    Route::get('/brands/{brand}', [BrandsController::class, 'show'])->name('brands.show');
-    Route::post('/brands', [BrandsController::class, 'store'])->name('brands.store');
-    Route::put('/brands/{brand}', [BrandsController::class, 'update'])->name('brands.update');
-    Route::delete('/brands/{brand}', [BrandsController::class, 'destroy'])->name('brands.destroy');
+    Route::get('/brands', [BrandController::class, 'index'])->name('brands');
+    Route::get('/brands/{brand}', [BrandController::class, 'show'])->name('brands.show');
+    Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
+    Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
+    Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
 
     // Routes for Measure Units
     Route::get('/measure-units', [MeasureUnitsController::class, 'index'])->name('measure-units');
