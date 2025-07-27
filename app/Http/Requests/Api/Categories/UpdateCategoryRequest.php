@@ -6,15 +6,16 @@ namespace App\Http\Requests\Api\Categories;
 
 use App\Enums\PermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-final class StoreCategoryRequest extends FormRequest
+final class UpdateCategoryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionsEnum::CATEGORY_CREATE->value) ?? false;
+        return $this->user()?->can(PermissionsEnum::CATEGORY_EDIT->value) ?? false;
     }
 
     /**
@@ -25,7 +26,12 @@ final class StoreCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255', 'unique:categories,name'],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories', 'name')->ignore($this->route('category')),
+            ],
         ];
     }
 }

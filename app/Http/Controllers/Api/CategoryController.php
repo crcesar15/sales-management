@@ -8,10 +8,10 @@ use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Categories\ListCategoryRequest;
 use App\Http\Requests\Api\Categories\StoreCategoryRequest;
+use App\Http\Requests\Api\Categories\UpdateCategoryRequest;
 use App\Http\Resources\ApiCollection;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
@@ -58,12 +58,15 @@ final class CategoryController extends Controller
     }
 
     // Update a category
-    public function update(Request $request, Category $category): JsonResponse
+    public function update(UpdateCategoryRequest $request, Category $category): JsonResponse
     {
-        // @phpstan-ignore-next-line
-        $category->update($request->all());
+        $validated = $request->validated();
 
-        return new JsonResponse($category, 200);
+        $updatedCategory = DB::transaction(function () use ($validated, $category) {
+            return $category->update($validated);
+        });
+
+        return new JsonResponse($updatedCategory, 200);
     }
 
     public function destroy(Category $category): Response
