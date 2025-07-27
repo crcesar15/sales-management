@@ -7,11 +7,13 @@ namespace App\Http\Controllers\Api;
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Brands\ListBrandRequest;
+use App\Http\Requests\Api\Brands\StoreBrandRequest;
 use App\Http\Resources\ApiCollection;
 use App\Models\Brand;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 final class BrandController extends Controller
 {
@@ -44,10 +46,13 @@ final class BrandController extends Controller
         return response()->json($brand, 200);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreBrandRequest $request): JsonResponse
     {
-        // @phpstan-ignore-next-line
-        $brand = Brand::query()->create($request->all());
+        $validated = $request->validated();
+
+        $brand = DB::transaction(function () use ($validated) {
+            return Brand::query()->create($validated);
+        });
 
         return response()->json($brand, 201);
     }

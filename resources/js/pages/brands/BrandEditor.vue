@@ -2,12 +2,13 @@
   <div>
     <Dialog
       v-model:visible="visible"
-      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+      :breakpoints="{ '1100px': '60vw', '750px': '75vw', '500px': '90vw' }"
+      :style="{ width: '30vw' }"
       :header="$t('Brand')"
       modal
       @hide="clearSelection"
     >
-      <div class="flex flex-col w-[20rem]">
+      <div class="flex flex-col">
         <label for="name">{{ $t('Name') }}</label>
         <InputText
           id="name"
