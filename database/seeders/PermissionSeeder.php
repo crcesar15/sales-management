@@ -18,6 +18,12 @@ final class PermissionSeeder extends Seeder
     public function run(): void
     {
         $categories = [
+            'brands' => [
+                PermissionsEnum::BRANDS_VIEW->value,
+                PermissionsEnum::BRANDS_CREATE->value,
+                PermissionsEnum::BRANDS_EDIT->value,
+                PermissionsEnum::BRANDS_DELETE->value,
+            ],
             'categories' => [
                 PermissionsEnum::CATEGORIES_VIEW->value,
                 PermissionsEnum::CATEGORIES_CREATE->value,

@@ -6,6 +6,11 @@ namespace App\Enums;
 
 enum PermissionsEnum: string
 {
+    case BRANDS_VIEW = 'brands-view';
+    case BRANDS_CREATE = 'brands-create';
+    case BRANDS_EDIT = 'brands-edit';
+    case BRANDS_DELETE = 'brands-delete';
+
     case CATEGORIES_VIEW = 'categories-view';
     case CATEGORIES_CREATE = 'categories-create';
     case CATEGORIES_EDIT = 'categories-edit';
