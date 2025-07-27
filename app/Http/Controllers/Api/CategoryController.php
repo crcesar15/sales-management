@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-final class CategoriesController extends Controller
+final class CategoryController extends Controller
 {
     public function index(Request $request): ApiCollection
     {
