@@ -41,7 +41,7 @@ final class CategoryController extends Controller
 
     public function show(Category $category): JsonResponse
     {
-        $this->authorize(PermissionsEnum::CATEGORY_VIEW->value, auth()->user());
+        $this->authorize(PermissionsEnum::CATEGORIES_VIEW->value, auth()->user());
 
         return response()->json($category, 200);
     }
@@ -71,7 +71,7 @@ final class CategoryController extends Controller
 
     public function destroy(Category $category): Response
     {
-        $this->authorize(PermissionsEnum::CATEGORY_DELETE->value, auth()->user());
+        $this->authorize(PermissionsEnum::CATEGORIES_DELETE->value, auth()->user());
 
         DB::transaction(function () use ($category) {
             // remove the category from the intermediate table

@@ -14,7 +14,7 @@ final class ListCategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionsEnum::CATEGORY_VIEW->value) ?? false;
+        return $this->user()?->can(PermissionsEnum::CATEGORIES_VIEW->value) ?? false;
     }
 
     /**

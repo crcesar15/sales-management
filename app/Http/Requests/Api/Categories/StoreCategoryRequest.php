@@ -14,7 +14,7 @@ final class StoreCategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionsEnum::CATEGORY_CREATE->value) ?? false;
+        return $this->user()?->can(PermissionsEnum::CATEGORIES_CREATE->value) ?? false;
     }
 
     /**

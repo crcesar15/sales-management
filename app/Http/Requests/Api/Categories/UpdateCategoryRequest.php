@@ -15,7 +15,7 @@ final class UpdateCategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionsEnum::CATEGORY_EDIT->value) ?? false;
+        return $this->user()?->can(PermissionsEnum::CATEGORIES_EDIT->value) ?? false;
     }
 
     /**

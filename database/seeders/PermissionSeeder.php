@@ -19,10 +19,10 @@ final class PermissionSeeder extends Seeder
     {
         $categories = [
             'categories' => [
-                PermissionsEnum::CATEGORY_VIEW->value,
-                PermissionsEnum::CATEGORY_CREATE->value,
-                PermissionsEnum::CATEGORY_EDIT->value,
-                PermissionsEnum::CATEGORY_DELETE->value,
+                PermissionsEnum::CATEGORIES_VIEW->value,
+                PermissionsEnum::CATEGORIES_CREATE->value,
+                PermissionsEnum::CATEGORIES_EDIT->value,
+                PermissionsEnum::CATEGORIES_DELETE->value,
             ],
             'roles' => [
                 PermissionsEnum::ROLES_VIEW->value,

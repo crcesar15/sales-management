@@ -12,7 +12,7 @@ final class CategoryController extends Controller
 {
     public function index(): Response
     {
-        $this->authorize(PermissionsEnum::CATEGORY_VIEW->value, auth()->user());
+        $this->authorize(PermissionsEnum::CATEGORIES_VIEW->value, auth()->user());
 
         return Inertia::render('categories/index');
     }
