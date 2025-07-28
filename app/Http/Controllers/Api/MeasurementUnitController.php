@@ -8,10 +8,10 @@ use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\MeasurementUnits\ListMeasurementUnitRequest;
 use App\Http\Requests\Api\MeasurementUnits\StoreMeasurementUnitRequest;
+use App\Http\Requests\Api\MeasurementUnits\UpdateMeasurementUnitRequest;
 use App\Http\Resources\ApiCollection;
 use App\Models\MeasurementUnit;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
@@ -57,12 +57,15 @@ final class MeasurementUnitController extends Controller
         return response()->json($measurementUnit, 201);
     }
 
-    public function update(Request $request, MeasurementUnit $unit): JsonResponse
+    public function update(UpdateMeasurementUnitRequest $request, MeasurementUnit $measurementUnit): JsonResponse
     {
-        // @phpstan-ignore-next-line
-        $unit->update($request->all());
+        $validated = $request->validated();
 
-        return response()->json($unit, 200);
+        $updatedMeasurementUnit = DB::transaction(function () use ($measurementUnit, $validated) {
+            return $measurementUnit->update($validated);
+        });
+
+        return response()->json($updatedMeasurementUnit, 200);
     }
 
     public function destroy(MeasurementUnit $measureUnit): Response

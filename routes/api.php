@@ -44,11 +44,11 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
 
     // Routes for Measurement Units
     Route::get('/measurement-units', [MeasurementUnitController::class, 'index'])->name('measurement-units');
-    Route::get('/measurement-units/{unit}', [MeasurementUnitController::class, 'show'])->name('measurement-units.show');
+    Route::get('/measurement-units/{measurementUnit}', [MeasurementUnitController::class, 'show'])->name('measurement-units.show');
     Route::post('/measurement-units', [MeasurementUnitController::class, 'store'])->name('measurement-units.store');
-    Route::put('/measurement-units/{unit}', [MeasurementUnitController::class, 'update'])
+    Route::put('/measurement-units/{measurementUnit}', [MeasurementUnitController::class, 'update'])
         ->name('measurement-units.update');
-    Route::delete('/measurement-units/{unit}', [MeasurementUnitController::class, 'destroy'])
+    Route::delete('/measurement-units/{measurementUnit}', [MeasurementUnitController::class, 'destroy'])
         ->name('measurement-units.destroy');
 
     // Products Media
