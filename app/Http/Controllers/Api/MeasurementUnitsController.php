@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-final class MeasureUnitsController extends Controller
+final class MeasurementUnitsController extends Controller
 {
     public function index(Request $request): ApiCollection
     {
@@ -49,17 +49,17 @@ final class MeasureUnitsController extends Controller
         return response()->json($measureUnit, 201);
     }
 
-    public function update(Request $request, MeasurementUnit $measureUnit): JsonResponse
+    public function update(Request $request, MeasurementUnit $unit): JsonResponse
     {
         // @phpstan-ignore-next-line
-        $measureUnit->update($request->all());
+        $unit->update($request->all());
 
-        return response()->json($measureUnit, 200);
+        return response()->json($unit, 200);
     }
 
     public function destroy(MeasurementUnit $measureUnit): Response
     {
-        // remove the measure unit from all products
+        // remove the measurement unit from all products
         $measureUnit->products()->update(['measurement_unit_id' => null]);
 
         $measureUnit->delete();

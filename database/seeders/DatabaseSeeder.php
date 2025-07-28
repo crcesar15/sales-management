@@ -55,7 +55,7 @@ final class DatabaseSeeder extends Seeder
         // Create 10 Brands
         Brand::factory(10)->create();
 
-        // Create 10 Measure Units
+        // Create 10 Measurement Units
         MeasurementUnit::factory(10)->create();
 
         Category::factory(10)->create()->each(function ($category): void {

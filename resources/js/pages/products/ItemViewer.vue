@@ -109,7 +109,7 @@
           <div class="md:col-span-6 col-span-12 pt-0 pb-0">
             <p>
               <strong>
-                {{ $t('Measure Unit') }}:
+                {{ $t('Measurement Unit') }}:
               </strong>
               {{ product?.measure_unit?.name }}
             </p>

@@ -2,21 +2,21 @@
   <div>
     <div class="flex flex-row justify-between mb-3">
       <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ $t("Measure Units") }}
+        {{ $t("Measurement Units") }}
       </h2>
       <p-button
-        :label="$t('Add Measure Unit')"
+        :label="$t('Add Measurement Unit')"
         icon="fa fa-add"
         raised
         class="ml-2 uppercase"
-        @click="addMeasureUnit"
+        @click="addMeasurementUnit"
       />
     </div>
     <ConfirmDialog />
     <Card>
       <template #content>
         <DataTable
-          :value="measureUnits"
+          :value="measurementUnits"
           resizable-columns
           lazy
           :total-records="pagination.total"
@@ -30,7 +30,7 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ $t('No measure units found') }}
+            {{ $t('No measurement units found') }}
           </template>
           <template #header>
             <div class="grid grid-cols-12">
@@ -66,8 +66,8 @@
             sortable
           />
           <Column
-            field="description"
-            :header="$t('Description')"
+            field="abbreviation"
+            :header="$t('Abbreviation')"
             sortable
           />
           <Column
@@ -94,7 +94,7 @@
                   rounded
                   raised
                   size="sm"
-                  @click="editMeasureUnit(row.data)"
+                  @click="editMeasurementUnit(row.data)"
                 />
                 <p-button
                   v-tooltip.top="$t('Delete')"
@@ -103,7 +103,7 @@
                   rounded
                   raised
                   size="sm"
-                  @click="deleteMeasureUnit(row.data.id)"
+                  @click="deleteMeasurementUnit(row.data.id)"
                 />
               </div>
             </template>
@@ -112,10 +112,10 @@
       </template>
     </Card>
     <ItemEditor
-      :measure-unit="selectedMeasureUnit"
+      :measurement-unit="selectedMeasurementUnit"
       :show-dialog="editorToggle"
-      @clearSelection="selectedMeasureUnit = {}; editorToggle = false;"
-      @submitted="saveMeasureUnit"
+      @clearSelection="selectedMeasurementUnit = {}; editorToggle = false;"
+      @submitted="saveMeasurementUnit"
     />
   </div>
 </template>
@@ -147,18 +147,19 @@ export default {
   layout: AppLayout,
   data() {
     return {
-      measureUnits: [],
+      measurementUnits: [],
       pagination: {
         total: 0,
         first: 0,
         rows: 10,
         page: 1,
+        perPage: 10,
         sortField: "name",
         sortOrder: 1,
         filter: "",
       },
       loading: false,
-      selectedMeasureUnit: {},
+      selectedMeasurementUnit: {},
       editorToggle: false,
     };
   },
@@ -166,35 +167,37 @@ export default {
     "pagination.filter": {
       handler() {
         this.pagination.page = 1;
-        this.fetchMeasureUnits();
+        this.fetchMeasurementUnits();
       },
     },
   },
   mounted() {
-    this.fetchMeasureUnits();
+    this.fetchMeasurementUnits();
   },
   methods: {
-    fetchMeasureUnits() {
+    fetchMeasurementUnits() {
       this.loading = true;
 
-      let url = `${route("api.measure-units")}?
-        &per_page=${this.pagination.rows}
-        &page=${this.pagination.page}
-        &order_by=${this.pagination.sortField}`;
+      const params = new URLSearchParams();
 
-      if (this.pagination.sortOrder === -1) {
-        url += "&order_direction=desc";
-      } else {
-        url += "&order_direction=asc";
-      }
+      params.append("per_page", this.pagination.perPage);
+      params.append("page", this.pagination.page);
+      params.append("order_by", this.pagination.sortField);
+      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
 
       if (this.pagination.filter) {
-        url += `&filter=${this.pagination.filter}`;
+        params.append("filter", this.pagination.filter);
       }
+
+      const url = `${route("api.measurement-units")}?${params.toString()}`;
 
       axios.get(url)
         .then((response) => {
-          this.measureUnits = response.data.data;
+          this.measurementUnits = response.data.data.map((item) => ({
+            ...item,
+            created_at: window.moment(item.created_at).tz(window.timezone).format(window.datetimeFormat),
+            updated_at: window.moment(item.updated_at).tz(window.timezone).format(window.datetimeFormat),
+          }));
           this.pagination.total = response.data.meta.total;
           this.loading = false;
         })
@@ -210,40 +213,40 @@ export default {
     },
     onPage(event) {
       this.pagination.page = event.page + 1;
-      this.pagination.per_page = event.rows;
-      this.fetchMeasureUnits();
+      this.pagination.perPage = event.rows;
+      this.fetchMeasurementUnits();
     },
     onSort(event) {
       this.pagination.sortField = event.sortField;
       this.pagination.sortOrder = event.sortOrder;
-      this.fetchMeasureUnits();
+      this.fetchMeasurementUnits();
     },
-    addMeasureUnit() {
+    addMeasurementUnit() {
       this.editorToggle = true;
-      this.selectedMeasureUnit = {};
+      this.selectedMeasurementUnit = {};
     },
-    editMeasureUnit(measureUnit) {
+    editMeasurementUnit(measurementUnit) {
       this.editorToggle = true;
-      this.selectedMeasureUnit = measureUnit;
+      this.selectedMeasurementUnit = measurementUnit;
     },
-    deleteMeasureUnit(id) {
+    deleteMeasurementUnit(id) {
       this.$confirm.require({
-        message: this.$t("Are you sure you want to delete this measure unit?"),
+        message: this.$t("Are you sure you want to delete this measurement unit?"),
         header: this.$t("Confirm"),
         icon: "fas fa-exclamation-triangle",
         rejectLabel: this.$t("Cancel"),
         acceptLabel: this.$t("Delete"),
         rejectClass: "p-button-secondary",
         accept: () => {
-          axios.delete(`${route("api.measure-units.destroy", id)}`)
+          axios.delete(`${route("api.measurement-units.destroy", id)}`)
             .then(() => {
               this.$toast.add({
                 severity: "success",
                 summary: this.$t("Success"),
-                detail: this.$t("Measure Unit deleted successfully"),
+                detail: this.$t("Measurement Unit deleted successfully"),
                 life: 3000,
               });
-              this.fetchMeasureUnits();
+              this.fetchMeasurementUnits();
             })
             .catch((error) => {
               this.$toast.add({
@@ -256,23 +259,23 @@ export default {
         },
       });
     },
-    saveMeasureUnit(id, measureUnit) {
+    saveMeasurementUnit(id, measureUnit) {
       if (id) {
-        this.updateMeasureUnit(id, measureUnit);
+        this.updateMeasurementUnit(id, measureUnit);
       } else {
-        this.createMeasureUnit(measureUnit);
+        this.createMeasurementUnit(measureUnit);
       }
     },
-    createMeasureUnit(measureUnit) {
-      axios.post(route("api.measure-units.store"), measureUnit)
+    createMeasurementUnit(measureUnit) {
+      axios.post(route("api.measurement-units.store"), measureUnit)
         .then(() => {
           this.$toast.add({
             severity: "success",
             summary: this.$t("Success"),
-            detail: this.$t("Measure Unit created successfully"),
+            detail: this.$t("Measurement Unit created successfully"),
             life: 3000,
           });
-          this.fetchMeasureUnits();
+          this.fetchMeasurementUnits();
         })
         .catch((error) => {
           this.$toast.add({
@@ -283,16 +286,16 @@ export default {
           });
         });
     },
-    updateMeasureUnit(id, measureUnit) {
-      axios.put(`${route("api.measure-units.update", id)}`, measureUnit)
+    updateMeasurementUnit(id, measurementUnit) {
+      axios.put(`${route("api.measurement-units.update", id)}`, measurementUnit)
         .then(() => {
           this.$toast.add({
             severity: "success",
             summary: this.$t("Success"),
-            detail: this.$t("Measure Unit updated successfully"),
+            detail: this.$t("Measurement Unit updated successfully"),
             life: 3000,
           });
-          this.fetchMeasureUnits();
+          this.fetchMeasurementUnits();
         })
         .catch((error) => {
           this.$toast.add({

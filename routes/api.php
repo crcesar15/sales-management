@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\MeasureUnitsController;
+use App\Http\Controllers\Api\MeasurementUnitsController;
 use App\Http\Controllers\Api\PermissionsController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
@@ -42,12 +42,14 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
     Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
     Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
 
-    // Routes for Measure Units
-    Route::get('/measure-units', [MeasureUnitsController::class, 'index'])->name('measure-units');
-    Route::get('/measure-units/{id}', [MeasureUnitsController::class, 'show'])->name('measure-units.show');
-    Route::post('/measure-units', [MeasureUnitsController::class, 'store'])->name('measure-units.store');
-    Route::put('/measure-units/{id}', [MeasureUnitsController::class, 'update'])->name('measure-units.update');
-    Route::delete('/measure-units/{id}', [MeasureUnitsController::class, 'destroy'])->name('measure-units.destroy');
+    // Routes for Measurement Units
+    Route::get('/measurement-units', [MeasurementUnitsController::class, 'index'])->name('measurement-units');
+    Route::get('/measurement-units/{unit}', [MeasurementUnitsController::class, 'show'])->name('measurement-units.show');
+    Route::post('/measurement-units', [MeasurementUnitsController::class, 'store'])->name('measurement-units.store');
+    Route::put('/measurement-units/{unit}', [MeasurementUnitsController::class, 'update'])
+        ->name('measurement-units.update');
+    Route::delete('/measurement-units/{unit}', [MeasurementUnitsController::class, 'destroy'])
+        ->name('measurement-units.destroy');
 
     // Products Media
     Route::post('/products/media', [ProductsMediaController::class, 'draft'])

@@ -53,7 +53,7 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     Route::get('/brands', [BrandController::class, 'index'])->name('brands');
 
-    Route::get('/measure-units', fn () => Inertia::render('measure-units/index'))->name('measure-units');
+    Route::get('/measurement-units', fn () => Inertia::render('measurement-units/index'))->name('measurement-units');
 
     // Role routes
     Route::get('/roles', [RoleController::class, 'index'])->name('roles');

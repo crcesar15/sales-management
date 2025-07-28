@@ -342,7 +342,7 @@
               </small>
             </div>
             <div class="flex flex-col gap-2 mb-3">
-              <label for="measure_unit">{{ $t('Measure Unit') }}</label>
+              <label for="measure_unit">{{ $t('Measurement Unit') }}</label>
               <Select
                 id="measure_unit"
                 v-model="measureUnit"

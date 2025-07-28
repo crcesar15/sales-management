@@ -2,12 +2,13 @@
   <div>
     <Dialog
       v-model:visible="visible"
-      :header="$t('Measure Unit')"
-      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+      :header="$t('Measurement Unit')"
+      :breakpoints="{ '1100px': '60vw', '750px': '75vw', '500px': '90vw' }"
+      :style="{ width: '30vw' }"
       modal
       @hide="clearSelection"
     >
-      <div class="flex flex-col w-[20rem]">
+      <div class="flex flex-col">
         <label for="name">{{ $t('Name') }}</label>
         <InputText
           id="name"
@@ -19,15 +20,23 @@
         <small
           id="text-error"
           class="text-red-400 dark:text-red-300"
-        >{{ nameErrorMessage || '&nbsp;' }}</small>
-        <label for="description">{{ $t('Description') }}</label>
-        <Textarea
-          id="description"
-          v-model="description"
+        >
+          {{ nameErrorMessage || '&nbsp;' }}
+        </small>
+        <label for="abbreviation">{{ $t('Abbreviation') }}</label>
+        <InputText
+          id="abbreviation"
+          v-model="abbreviation"
           autocomplete="off"
-          rows="2"
           class="mt-2"
+          :class="{ 'p-invalid': abbreviationErrorMessage }"
         />
+        <small
+          id="text-error"
+          class="text-red-400 dark:text-red-300"
+        >
+          {{ abbreviationErrorMessage || '&nbsp;' }}
+        </small>
       </div>
       <template
         #footer
@@ -51,18 +60,16 @@
 <script>
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
 import PButton from "primevue/button";
 
 export default {
   components: {
     Dialog,
     InputText,
-    Textarea,
     PButton,
   },
   props: {
-    measureUnit: {
+    measurementUnit: {
       type: Object,
       default: () => ({}),
     },
@@ -74,7 +81,7 @@ export default {
   data() {
     return {
       name: "",
-      description: "",
+      abbreviation: "",
       visible: false,
       submitted: false,
     };
@@ -87,14 +94,25 @@ export default {
 
       return null;
     },
+    abbreviationErrorMessage() {
+      if (this.submitted && (this.abbreviation === undefined || this.abbreviation === "")) {
+        return "Abbreviation is required";
+      }
+
+      if (this.submitted && (this.abbreviation === undefined || this.abbreviation.length > 10)) {
+        return "Abbreviation must be less than 10 characters";
+      }
+
+      return null;
+    },
   },
   watch: {
     showDialog(val) {
       this.visible = val;
       this.submitted = false;
       if (val) {
-        this.name = this.measureUnit.name;
-        this.description = this.measureUnit.description;
+        this.name = this.measurementUnit.name;
+        this.abbreviation = this.measurementUnit.abbreviation;
       }
     },
   },
@@ -105,9 +123,9 @@ export default {
     submit() {
       this.submitted = true;
       if (this.validate()) {
-        this.$emit("submitted", this.measureUnit.id, {
+        this.$emit("submitted", this.measurementUnit.id, {
           name: this.name,
-          description: this.description,
+          abbreviation: this.abbreviation,
         });
         this.visible = false;
       }
@@ -117,6 +135,14 @@ export default {
     },
     validate() {
       if (this.name === undefined || this.name === "") {
+        return false;
+      }
+
+      if (this.abbreviation === undefined || this.abbreviation === "") {
+        return false;
+      }
+
+      if (this.abbreviation === undefined || this.abbreviation.length > 10) {
         return false;
       }
 

@@ -29,7 +29,7 @@ final class ProductsController extends Controller
         // List of Categories
         $categories = Category::all();
 
-        // List of Measure Units
+        // List of Measurement Units
         $measureUnits = MeasurementUnit::all();
 
         // List of Brands
@@ -53,7 +53,7 @@ final class ProductsController extends Controller
         // List of Categories
         $categories = Category::all();
 
-        // List of Measure Units
+        // List of Measurement Units
         $measureUnits = MeasurementUnit::all();
 
         // List of Brands

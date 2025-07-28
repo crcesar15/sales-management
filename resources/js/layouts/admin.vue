@@ -60,10 +60,10 @@ export default {
               route: route("brands"),
             },
             {
-              label: "Measure Units",
+              label: "Measurement Units",
               icon: "fa fa-weight-hanging",
-              to: "measure-units",
-              route: route("measure-units"),
+              to: "measurement-units",
+              route: route("measurement-units"),
             },
           ],
         },
