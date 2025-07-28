@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-final class MeasurementUnitsController extends Controller
+final class MeasurementUnitController extends Controller
 {
     public function index(Request $request): ApiCollection
     {

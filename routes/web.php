@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
@@ -53,7 +54,7 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     Route::get('/brands', [BrandController::class, 'index'])->name('brands');
 
-    Route::get('/measurement-units', fn () => Inertia::render('measurement-units/index'))->name('measurement-units');
+    Route::get('/measurement-units', [MeasurementUnitController::class, 'index'])->name('measurement-units');
 
     // Role routes
     Route::get('/roles', [RoleController::class, 'index'])->name('roles');
