@@ -30,6 +30,12 @@ final class PermissionSeeder extends Seeder
                 PermissionsEnum::CATEGORIES_EDIT->value,
                 PermissionsEnum::CATEGORIES_DELETE->value,
             ],
+            'measurement units' => [
+                PermissionsEnum::MEASUREMENT_UNITS_VIEW->value,
+                PermissionsEnum::MEASUREMENT_UNITS_CREATE->value,
+                PermissionsEnum::MEASUREMENT_UNITS_EDIT->value,
+                PermissionsEnum::MEASUREMENT_UNITS_DELETE->value,
+            ],
             'roles' => [
                 PermissionsEnum::ROLES_VIEW->value,
                 PermissionsEnum::ROLES_CREATE->value,
