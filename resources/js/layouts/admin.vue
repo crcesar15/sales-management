@@ -63,6 +63,7 @@ export default {
               label: "Measurement Units",
               icon: "fa fa-weight-hanging",
               to: "measurement-units",
+              can: "measurement-units-view",
               route: route("measurement-units"),
             },
           ],

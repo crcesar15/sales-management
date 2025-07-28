@@ -14,7 +14,7 @@ final class ListMeasurementUnitRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionsEnum::MEASUREMENT_UNITS_CREATE) ?? false;
+        return $this->user()?->can(PermissionsEnum::MEASUREMENT_UNITS_VIEW) ?? false;
     }
 
     /**
