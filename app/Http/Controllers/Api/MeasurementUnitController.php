@@ -41,7 +41,7 @@ final class MeasurementUnitController extends Controller
 
     public function show(MeasurementUnit $measureUnit): JsonResponse
     {
-        $this->authorize(PermissionsEnum::MEASUREMENT_UNITS_VIEW, auth()->user());
+        $this->authorize(PermissionsEnum::MEASUREMENT_UNITS_VIEW->value, auth()->user());
 
         return response()->json($measureUnit, 200);
     }
@@ -68,12 +68,16 @@ final class MeasurementUnitController extends Controller
         return response()->json($updatedMeasurementUnit, 200);
     }
 
-    public function destroy(MeasurementUnit $measureUnit): Response
+    public function destroy(MeasurementUnit $measurementUnit): Response
     {
-        // remove the measurement unit from all products
-        $measureUnit->products()->update(['measurement_unit_id' => null]);
+        $this->authorize(PermissionsEnum::MEASUREMENT_UNITS_DELETE->value, auth()->user());
 
-        $measureUnit->delete();
+        DB::transaction(function () use ($measurementUnit) {
+            // remove the measurement unit from all products
+            $measurementUnit->products()->update(['measurement_unit_id' => null]);
+
+            $measurementUnit->delete();
+        });
 
         return response()->noContent();
     }
