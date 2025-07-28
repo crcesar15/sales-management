@@ -15,7 +15,7 @@ final class UpdateBrandRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionsEnum::CATEGORIES_EDIT) ?? false;
+        return $this->user()?->can(PermissionsEnum::BRANDS_EDIT) ?? false;
     }
 
     /**

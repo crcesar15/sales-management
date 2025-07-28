@@ -41,7 +41,7 @@ final class BrandController extends Controller
 
     public function show(Brand $brand): JsonResponse
     {
-        $this->authorize(PermissionsEnum::CATEGORIES_VIEW, auth()->user());
+        $this->authorize(PermissionsEnum::BRANDS_VIEW, auth()->user());
 
         return response()->json($brand, 200);
     }

@@ -102,7 +102,7 @@ final class UserController extends Controller
 
     public function destroy(User $user): Response
     {
-        $this->authorize('users-delete', auth()->user());
+        $this->authorize(PermissionsEnum::USERS_DELETE, auth()->user());
 
         // Inactive user
         $user->update(['status' => 'archived']);
@@ -115,7 +115,7 @@ final class UserController extends Controller
 
     public function restore(User $user): Response
     {
-        $this->authorize('users-edit', auth()->user());
+        $this->authorize(PermissionsEnum::USERS_EDIT, auth()->user());
 
         $user->restore();
 

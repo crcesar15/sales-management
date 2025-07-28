@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionsEnum;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Inertia\Inertia;
@@ -17,7 +18,7 @@ final class UserController extends Controller
      */
     public function index(): InertiaResponse
     {
-        $this->authorize('users-view', auth()->user());
+        $this->authorize(PermissionsEnum::USERS_VIEW, auth()->user());
 
         return Inertia::render('users/index');
     }
@@ -27,7 +28,7 @@ final class UserController extends Controller
      */
     public function create(): InertiaResponse
     {
-        $this->authorize('users-create', auth()->user());
+        $this->authorize(PermissionsEnum::USERS_CREATE, auth()->user());
 
         // List of Roles
         $roles = Role::all();
@@ -42,7 +43,7 @@ final class UserController extends Controller
      */
     public function edit(User $user): InertiaResponse
     {
-        $this->authorize('users-edit', auth()->user());
+        $this->authorize(PermissionsEnum::USERS_EDIT, auth()->user());
 
         // Include the user role with only id and name without pivot
         $user->load(['roles' => function (MorphToMany $query) {
