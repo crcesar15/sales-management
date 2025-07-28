@@ -573,7 +573,7 @@ export default {
           description: this.description,
           status: this.status,
           brand_id: this.brand,
-          measure_unit_id: this.measureUnit,
+          measurement_unit_id: this.measureUnit,
           categories: this.category,
           options: this.options,
           media: this.files,

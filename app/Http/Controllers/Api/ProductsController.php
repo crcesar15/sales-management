@@ -64,7 +64,7 @@ final class ProductsController extends Controller
         // create product
         $product = Product::query()->create([
             'brand_id' => $request->string('brand_id')->value(),
-            'measure_unit_id' => $request->integer('measure_unit_id'),
+            'measurement_unit_id' => $request->integer('measurement_unit_id'),
             'name' => $request->string('name')->value(),
             'description' => $request->string('description')->value(),
             'options' => json_encode($request->string('options')->value()),
@@ -120,7 +120,7 @@ final class ProductsController extends Controller
 
         $product->update([
             'brand_id' => $request->integer('brand_id'),
-            'measure_unit_id' => $request->integer('measure_unit_id'),
+            'measurement_unit_id' => $request->integer('measurement_unit_id'),
             'name' => $request->string('name')->value(),
             'description' => $request->string('description')->value(),
             'options' => json_encode($request->string('options')->value()),

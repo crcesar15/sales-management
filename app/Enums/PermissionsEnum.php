@@ -16,6 +16,11 @@ enum PermissionsEnum: string
     case CATEGORIES_EDIT = 'categories-edit';
     case CATEGORIES_DELETE = 'categories-delete';
 
+    case MEASUREMENT_UNITS_VIEW = 'measurement_units-view';
+    case MEASUREMENT_UNITS_CREATE = 'measurement_units-create';
+    case MEASUREMENT_UNITS_EDIT = 'measurement_units-edit';
+    case MEASUREMENT_UNITS_DELETE = 'measurement_units-delete';
+
     case ROLES_VIEW = 'roles-view';
     case ROLES_CREATE = 'roles-create';
     case ROLES_EDIT = 'roles-edit';

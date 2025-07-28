@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\MeasureUnit;
+use App\Models\MeasurementUnit;
 use App\Models\Product;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -30,7 +30,7 @@ final class ProductsController extends Controller
         $categories = Category::all();
 
         // List of Measure Units
-        $measureUnits = MeasureUnit::all();
+        $measureUnits = MeasurementUnit::all();
 
         // List of Brands
         $brands = Brand::all();
@@ -54,7 +54,7 @@ final class ProductsController extends Controller
         $categories = Category::all();
 
         // List of Measure Units
-        $measureUnits = MeasureUnit::all();
+        $measureUnits = MeasurementUnit::all();
 
         // List of Brands
         $brands = Brand::all();

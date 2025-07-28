@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
-use App\Models\MeasureUnit;
+use App\Models\MeasurementUnit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,7 +15,7 @@ final class MeasureUnitsController extends Controller
 {
     public function index(Request $request): ApiCollection
     {
-        $query = MeasureUnit::query();
+        $query = MeasurementUnit::query();
 
         $filter = $request->string('filter', '')->value();
 
@@ -36,7 +36,7 @@ final class MeasureUnitsController extends Controller
         return new ApiCollection($response);
     }
 
-    public function show(MeasureUnit $measureUnit): JsonResponse
+    public function show(MeasurementUnit $measureUnit): JsonResponse
     {
         return response()->json($measureUnit, 200);
     }
@@ -44,12 +44,12 @@ final class MeasureUnitsController extends Controller
     public function store(Request $request): JsonResponse
     {
         // @phpstan-ignore-next-line
-        $measureUnit = MeasureUnit::query()->create($request->all());
+        $measureUnit = MeasurementUnit::query()->create($request->all());
 
         return response()->json($measureUnit, 201);
     }
 
-    public function update(Request $request, MeasureUnit $measureUnit): JsonResponse
+    public function update(Request $request, MeasurementUnit $measureUnit): JsonResponse
     {
         // @phpstan-ignore-next-line
         $measureUnit->update($request->all());
@@ -57,10 +57,10 @@ final class MeasureUnitsController extends Controller
         return response()->json($measureUnit, 200);
     }
 
-    public function destroy(MeasureUnit $measureUnit): Response
+    public function destroy(MeasurementUnit $measureUnit): Response
     {
         // remove the measure unit from all products
-        $measureUnit->products()->update(['measure_unit_id' => null]);
+        $measureUnit->products()->update(['measurement_unit_id' => null]);
 
         $measureUnit->delete();
 

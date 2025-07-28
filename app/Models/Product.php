@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @property int $id
  * @property int|null $brand_id
- * @property int|null $measure_unit_id
+ * @property int|null $measurement_unit_id
  * @property string $name
  * @property string|null $description
  * @property string|null $options
@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Models\Brand|null $brand
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Category> $categories
  * @property-read int|null $categories_count
- * @property-read \App\Models\MeasureUnit|null $measureUnit
+ * @property-read \App\Models\MeasurementUnit|null $measurementUnit
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductVariant> $variants
  * @property-read int|null $variants_count
  * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
@@ -40,7 +40,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereMeasureUnitId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereMeasurementUnitId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereOptions($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereStatus($value)
@@ -58,7 +58,7 @@ final class Product extends Model
 
     protected $fillable = [
         'brand_id',
-        'measure_unit_id',
+        'measurement_unit_id',
         'name',
         'description',
         'options',
@@ -77,10 +77,10 @@ final class Product extends Model
         return $this->belongsTo(Brand::class);
     }
 
-    /** @return BelongsTo<MeasureUnit, $this>*/
-    public function measureUnit(): BelongsTo
+    /** @return BelongsTo<MeasurementUnit, $this>*/
+    public function measurementUnit(): BelongsTo
     {
-        return $this->belongsTo(MeasureUnit::class);
+        return $this->belongsTo(MeasurementUnit::class);
     }
 
     /** @return HasMany<ProductVariant, $this>*/

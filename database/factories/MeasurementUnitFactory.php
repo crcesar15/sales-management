@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Models\MeasureUnit;
+use App\Models\MeasurementUnit;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<MeasureUnit>
+ * @extends Factory<MeasurementUnit>
  */
-final class MeasureUnitFactory extends Factory
+final class MeasurementUnitFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -19,9 +19,11 @@ final class MeasureUnitFactory extends Factory
      */
     public function definition(): array
     {
+        $word = fake()->unique()->word;
+
         return [
-            'name' => fake()->unique()->word,
-            'description' => fake()->sentence,
+            'name' => $word,
+            'abbreviation' => mb_strtoupper(mb_substr($word, 0, 2)),
         ];
     }
 }

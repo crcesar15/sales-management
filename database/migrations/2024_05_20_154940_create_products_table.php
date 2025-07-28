@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('brand_id')->nullable()->constrained();
-            $table->foreignId('measure_unit_id')->nullable()->constrained();
+            $table->foreignId('measurement_unit_id')->nullable()->constrained();
             $table->string('name');
             $table->string('description', 350)->nullable();
             $table->json('options')->nullable();

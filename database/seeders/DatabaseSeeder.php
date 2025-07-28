@@ -9,7 +9,7 @@ namespace Database\Seeders;
 use App\Models\Brand;
 use App\Models\Catalog;
 use App\Models\Category;
-use App\Models\MeasureUnit;
+use App\Models\MeasurementUnit;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
@@ -56,12 +56,12 @@ final class DatabaseSeeder extends Seeder
         Brand::factory(10)->create();
 
         // Create 10 Measure Units
-        MeasureUnit::factory(10)->create();
+        MeasurementUnit::factory(10)->create();
 
         Category::factory(10)->create()->each(function ($category): void {
             // create 5 products for each category
             Product::factory(5)->create([
-                'measure_unit_id' => MeasureUnit::all()->random()->id,
+                'measurement_unit_id' => MeasurementUnit::all()->random()->id,
                 'brand_id' => Brand::all()->random()->id,
             ])->each(function ($product) use ($category): void {
                 ProductVariant::factory(random_int(1, 3))->create([

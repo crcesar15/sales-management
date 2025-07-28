@@ -21,7 +21,7 @@ final class ProductFactory extends Factory
     {
         return [
             'brand_id' => random_int(1, 10),
-            'measure_unit_id' => random_int(1, 10),
+            'measurement_unit_id' => random_int(1, 10),
             'name' => fake()->text(20),
             'description' => fake()->sentence(10),
             'status' => fake()->randomElement(['active', 'inactive', 'archived']),

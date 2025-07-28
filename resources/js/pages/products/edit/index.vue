@@ -573,7 +573,7 @@ export default {
     this.stock = product.stock;
     this.brand = product.brand_id;
     this.category = product.categories.map((category) => category.id);
-    this.measureUnit = product.measure_unit_id;
+    this.measureUnit = product.measurement_unit_id;
     this.files = product.media;
     this.status = product.status;
     this.hasVariants = product.variants.length > 1;
@@ -610,7 +610,7 @@ export default {
           description: this.description,
           status: this.status,
           brand_id: this.brand,
-          measure_unit_id: this.measureUnit,
+          measurement_unit_id: this.measureUnit,
           categories: this.category,
           options: this.options,
           media: this.files,
