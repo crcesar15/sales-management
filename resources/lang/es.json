@@ -1,6 +1,6 @@
 {
   "Dashboard": "Panel",
-  "Products": "Productos",
+  "products": "productos",
   "Add Product": "Agregar Producto",
   "Edit Product": "Editar Producto",
   "Show variants": "Mostrar variantes",
@@ -187,6 +187,10 @@
   "measurement-units-create": "crear unidades de medidas",
   "measurement-units-edit": "editar unidades de medidas",
   "measurement-units-delete": "eliminar unidades de medidas",
+  "products-view": "ver productos",
+  "products-create": "crear productos",
+  "products-edit": "editar productos",
+  "products-delete": "eliminar productos",
   "roles-view": "ver roles",
   "roles-create": "crear roles",
   "roles-edit": "editar roles",

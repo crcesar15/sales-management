@@ -21,6 +21,11 @@ enum PermissionsEnum: string
     case MEASUREMENT_UNITS_EDIT = 'measurement-units-edit';
     case MEASUREMENT_UNITS_DELETE = 'measurement-units-delete';
 
+    case PRODUCTS_VIEW = 'products-view';
+    case PRODUCTS_CREATE = 'products-create';
+    case PRODUCTS_EDIT = 'products-edit';
+    case PRODUCTS_DELETE = 'products-delete';
+
     case ROLES_VIEW = 'roles-view';
     case ROLES_CREATE = 'roles-create';
     case ROLES_EDIT = 'roles-edit';

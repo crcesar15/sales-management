@@ -1,6 +1,6 @@
 {
   "Dashboard": "Dashboard",
-  "Products": "Products",
+  "products": "products",
   "Add Product": "Add Product",
   "Edit Product": "Edit Product",
   "Show variants": "Show variants",
@@ -187,6 +187,10 @@
   "measurement-units-create": "create measurement units",
   "measurement-units-edit": "edit measurement units",
   "measurement-units-delete": "delete measurement units",
+  "products-view": "view products",
+  "products-create": "create products",
+  "products-edit": "edit products",
+  "products-delete": "delete products",
   "roles-view": "view roles",
   "roles-create": "create roles",
   "roles-edit": "edit roles",
