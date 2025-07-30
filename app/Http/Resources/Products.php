@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
@@ -17,21 +16,55 @@ final class Products extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return [
-            'data' => $this->collection->map(fn (Product $product): array => [ // @phpstan-ignore-line
+        $data = [];
+
+        /** @var ResourceCollection $products */
+        $products = $this->collection;
+
+        foreach ($products as $product) {
+            $formattedProduct = [
                 'id' => $product->id,
-                'categories' => $product->categories,
-                'brand' => $product->brand,
-                'measure_unit' => $product->measureUnit,
                 'name' => $product->name,
-                'options' => $product->options,
                 'status' => $product->status,
-                'price' => $product->variants->min('price'),
-                'stock' => $product->variants->sum('stock'),
-                'media' => $product->media ?? [],
-                'description' => $product->description,
-                'variants' => $product->variants,
-            ]),
+                'created_at' => $product->created_at,
+                'updated_at' => $product->updated_at,
+                'options' => $product->options,
+            ];
+
+            if ($request->has('include') && in_array('brand', explode(',', $request->string('include')->value()))) {
+                $formattedProduct['brand'] = $product->brand;
+            }
+
+            if (
+                $request->has('include')
+                    && in_array('categories', explode(',', $request->string('include')->value()))
+            ) {
+                $formattedProduct['categories'] = $product->categories;
+            }
+
+            if (
+                $request->has('include')
+                    && in_array('measurementUnit', explode(',', $request->string('include')->value()))
+            ) {
+                $formattedProduct['measurement_unit'] = $product->measurementUnit;
+            }
+
+            if (
+                $request->has('include')
+                    && (
+                        in_array('variants', explode(',', $request->string('include')->value()))
+                            || in_array('variants.media', explode(',', $request->string('include')->value()))
+                    )
+            ) {
+                $formattedProduct['variants'] = $product->variants;
+                $formattedProduct['stock'] = $product->variants->sum('stock');
+            }
+
+            $data[] = $formattedProduct;
+        }
+
+        return [
+            'data' => $data,
             'links' => [
                 'self' => 'link-value',
             ],

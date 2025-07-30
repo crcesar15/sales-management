@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Products\ListProductRequest;
 use App\Http\Resources\Products as ApiCollection;
-use App\Models\Media;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,35 +14,28 @@ use Illuminate\Http\Response;
 
 final class ProductsController extends Controller
 {
-    public function index(Request $request): ApiCollection
+    public function index(ListProductRequest $request): ApiCollection
     {
+        $request->validated();
+
         $query = Product::query();
 
-        $filter = $request->string('filter', '')->value();
-
-        if (! empty($filter)) {
-            $filter_by = $request->string('filter_by', 'name')->value();
-
-            $filter = '%' . $filter . '%';
-            $query->where($filter_by, 'like', $filter);
+        if ($request->has('filter')) {
+            $query->where('name', 'like', $request->string('filter')->value());
         }
 
-        $status = $request->string('status', 'all')->value();
-
-        if ($status !== 'all') {
-            $query->where('status', $status);
+        if ($request->has('include')) {
+            /** @var array<string> $include */
+            $include = $request->array('include');
+            $query->with($include);
         }
 
-        $includes = $request->string('includes', '')->value();
+        $query->orderBy(
+            $request->string('order_by')->value(),
+            $request->string('order_direction')->value()
+        );
 
-        if (! empty($includes)) {
-            $query->with(explode(',', $includes));
-        }
-
-        $response = $query->orderBy(
-            $request->string('order_by', 'name')->value(),
-            $request->string('order_direction', 'ASC')->value()
-        )->paginate($request->integer('per_page', 10));
+        $response = $query->paginate($request->integer('per_page'));
 
         return new ApiCollection($response);
     }

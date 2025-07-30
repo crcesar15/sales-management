@@ -110,8 +110,8 @@
             <template #body="{ data }">
               <div class="flex justify-center">
                 <img
-                  v-if="data.media.length"
-                  :src="data.media[0].url"
+                  v-if="data.variants[0].media.length"
+                  :src="data.variants[0].media[0].url"
                   alt="Product Image"
                   class="
                     rounded-xl
@@ -173,27 +173,30 @@
             </template>
           </Column>
           <Column
-            field="price"
-            :header="$t('Price')"
+            :header="$t('Inventory')"
           >
             <template #body="{ data }">
-              <span>
-                Bs. {{ data.price }}
-              </span>
+              <div v-if="data.variants.length > 1">
+                {{ $t('variants stock', {stock: data.stock, counter: data.variants.length}) }}
+              </div>
+              <div v-else>
+                {{ $t('variant stock', {stock: data.stock}) }}
+              </div>
             </template>
           </Column>
           <Column
-            field="stock"
-            :header="$t('Stock')"
-          />
-          <Column
-            field="brand.name"
-            :header="$t('Brand')"
-          />
-          <Column
             field="category"
             :header="$t('Category')"
-          />
+          >
+            <template #body="{data}">
+              <Tag
+                v-for="category in data.categories"
+                :key="category.id"
+                severity="secondary"
+                :value="category.name"
+              />
+            </template>
+          </Column>
           <Column
             :header="$t('Actions')"
             :pt="{columnHeaderContent: 'justify-center'}"
@@ -326,14 +329,18 @@
                 >
                   <template #body="{ data }">
                     <span>
-                      Bs. {{ data.price }}
+                      {{ formattedPrice(data.price) }}
                     </span>
                   </template>
                 </Column>
                 <Column
                   field="stock"
                   :header="$t('Stock')"
-                />
+                >
+                  <template #body="{data}">
+                    {{ $t('variant stock', {stock: data.stock}) }}
+                  </template>
+                </Column>
               </DataTable>
             </div>
           </template>
@@ -391,6 +398,7 @@ export default {
         first: 0,
         rows: 10,
         page: 1,
+        perPage: 10,
         sortField: "name",
         sortOrder: 1,
         filter: "",
@@ -398,6 +406,14 @@ export default {
       loading: false,
       selectedProduct: {},
     };
+  },
+  computed: {
+    currency() {
+      return this.$page.props.settings.finance.currency;
+    },
+    decimalPrecision() {
+      return this.$page.props.settings.system.decimal_precision;
+    },
   },
   watch: {
     "pagination.filter": {
@@ -416,6 +432,9 @@ export default {
     this.fetchProducts();
   },
   methods: {
+    formattedPrice(price) {
+      return `${this.currency} ${parseFloat(price).toFixed(this.decimalPrecision)}`;
+    },
     onExpandRow(id) {
       // get product by id
       const product = this.products.find((item) => item.id === id);
@@ -431,23 +450,21 @@ export default {
     },
     fetchProducts() {
       this.loading = true;
-      let url = `${route("api.products")}?per_page=${this.pagination.rows}
-        &page=${this.pagination.page}
-        &order_by=${this.pagination.sortField}
-        &status=${this.status}
-      `;
 
-      url += "&includes=media,brand,categories,measureUnit";
+      const params = new URLSearchParams();
 
-      if (this.pagination.sortOrder === -1) {
-        url += "&order_direction=desc";
-      } else {
-        url += "&order_direction=asc";
-      }
+      params.append("per_page", this.pagination.perPage);
+      params.append("page", this.pagination.page);
+      params.append("order_by", this.pagination.sortField);
+      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
+      params.append("include", "brand,categories,measurementUnit,variants.media");
+      // params.append("include", "brand,categories,measurementUnit");
 
       if (this.pagination.filter) {
-        url += `&filter=${this.pagination.filter}`;
+        params.append("filter", this.pagination.filter);
       }
+
+      const url = `${route("api.products")}?${params.toString()}`;
 
       axios.get(url)
         .then((response) => {
@@ -468,7 +485,7 @@ export default {
     },
     onPage(event) {
       this.pagination.page = event.page + 1;
-      this.pagination.per_page = event.rows;
+      this.pagination.perPage = event.rows;
       this.fetchProducts();
     },
     onSort(event) {

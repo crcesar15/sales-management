@@ -36,6 +36,10 @@ final class Category extends Model
         'name',
     ];
 
+    protected $hidden = [
+        'pivot',
+    ];
+
     /** @return BelongsToMany<Product, $this, Pivot>*/
     public function products(): BelongsToMany
     {
