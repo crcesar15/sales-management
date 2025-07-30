@@ -19,37 +19,6 @@ if (token) {
   console.error("CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token");
 }
 
-const user = document.head.querySelector("meta[name=\"user\"]");
-
-if (user) {
-  window.user = JSON.parse(user.content);
-} else {
-  window.user = null;
-}
-
-const currencySymbol = document.head.querySelector("meta[name=\"currency-symbol\"]");
-
-if (currencySymbol) {
-  window.currencySymbol = currencySymbol.content;
-} else {
-  window.currencySymbol = "$";
-}
-
-const timezone = document.head.querySelector("meta[name=\"timezone\"]");
-
-if (timezone) {
-  window.timezone = timezone.content;
-} else {
-  window.timezone = "UTC";
-}
-const datetimeFormat = document.head.querySelector("meta[name=\"datetime-format\"]");
-
-if (datetimeFormat) {
-  window.datetimeFormat = datetimeFormat.content;
-} else {
-  window.datetimeFormat = "YYYY-MM-DD HH:mm";
-}
-
 window.moment = moment;
 
 window.axios.defaults.baseURL = `${window.location.protocol}//${window.location.hostname}/api/`;
