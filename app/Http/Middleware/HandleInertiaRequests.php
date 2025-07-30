@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Middleware;
@@ -43,7 +44,17 @@ final class HandleInertiaRequests extends Middleware
                 ->user()
                 ->getPermissionsViaRoles();
 
+            $settingGroups = Setting::all()->groupBy('group')->toArray();
+            $formattedSettings = [];
+
+            foreach ($settingGroups as $group => $settings) {
+                foreach ($settings as $setting) {
+                    $formattedSettings[$group][$setting['key']] = $setting['value'];
+                }
+            }
+
             $shared = [
+                'settings' => $formattedSettings,
                 'auth' => [
                     'user' => auth()->user(),
                     'permissions' => $permissions

@@ -61,7 +61,13 @@ export default {
   },
   methods: {
     getSettings() {
-      axios.get(route("api.settings")).then((response) => {
+      const params = new URLSearchParams();
+
+      params.append("per_page", 100);
+
+      const url = `${route("api.settings")}?${params.toString()}`;
+
+      axios.get(url).then((response) => {
         this.settings = response.data.data;
       });
     },
