@@ -14,7 +14,7 @@ final class CustomPathGeneratorService implements PathGenerator
      */
     public function getPath(Media $media): string
     {
-        return "{md5($media->id . config('app.key'))/";
+        return md5($media->id . config()->string('app.key')) . '/';
     }
 
     /*
@@ -22,7 +22,7 @@ final class CustomPathGeneratorService implements PathGenerator
      */
     public function getPathForConversions(Media $media): string
     {
-        return "{md5($media->id . config('app.key'))}/conversion/";
+        return md5($media->id . config()->string('app.key')) . '/conversion/';
     }
 
     /*
@@ -30,6 +30,6 @@ final class CustomPathGeneratorService implements PathGenerator
      */
     public function getPathForResponsiveImages(Media $media): string
     {
-        return "{md5($media->id . config('app.key'))}/responsive-images";
+        return md5($media->id . config()->string('app.key')) . '/responsive-images';
     }
 }

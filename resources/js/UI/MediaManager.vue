@@ -18,7 +18,7 @@
       <div v-if="files.length > 0">
         <div class="grid grid-cols-12">
           <div
-            v-for="(file, index) of files"
+            v-for="(file) of files"
             :key="file.id"
             class="p-2 flex flex-col items-center xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12"
           >
@@ -146,7 +146,8 @@ export default {
     saveCropped() {
       const formData = new FormData();
       this.$refs.cropper.getCroppedCanvas().toBlob((blob) => {
-        formData.append("file", blob);
+        const fileName = `${Date.now()}.webp`;
+        formData.append("file", blob, fileName);
         this.$emit("upload-file", formData);
         this.cropperToggle = false;
       });

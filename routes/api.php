@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MeasurementUnitController;
+use App\Http\Controllers\Api\PendingMediaController;
 use App\Http\Controllers\Api\PermissionsController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\ProductsMediaController;
@@ -52,13 +53,13 @@ Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void
         ->name('measurement-units.destroy');
 
     // Products Media
-    Route::post('/products/media', [ProductsMediaController::class, 'draft'])
-        ->name('products.media.draft');
+    Route::post('/media/draft', [PendingMediaController::class, 'store'])
+        ->name('media.draft.store');
+    Route::delete('/media/draft/{media}', [PendingMediaController::class, 'destroy'])
+        ->name('media.draft.destroy');
     Route::post('/products/{product}/media', [ProductsMediaController::class, 'store'])->name('products.media.store');
     Route::delete('/products/{product}/media/{media}', [ProductsMediaController::class, 'destroy'])
         ->name('products.media.destroy');
-    Route::delete('products/media/draft/{media}', [ProductsMediaController::class, 'destroyDraft'])
-        ->name('products.media.destroy-draft');
 
     // Routes for Roles
     Route::get('/roles', [RoleController::class, 'index'])->name('roles');

@@ -640,8 +640,10 @@ export default {
       this.options = options;
     },
     uploadFile(formData) {
+      const data = formData;
+
       axios
-        .post(route("api.products.media.draft"), formData, {
+        .post(route("api.media.draft.store"), data, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -655,8 +657,8 @@ export default {
           });
           this.files.push(
             {
-              id: response.data.data.id,
-              url: response.data.data.url,
+              id: response.data.id,
+              url: response.data.url,
             },
           );
         })
@@ -671,7 +673,7 @@ export default {
     },
     removeFile(id) {
       axios
-        .delete(route("api.products.media.destroy-draft", id))
+        .delete(route("api.media.draft.destroy", id))
         .then(() => {
           this.$toast.add({
             severity: "success",

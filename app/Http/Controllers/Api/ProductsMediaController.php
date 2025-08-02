@@ -23,34 +23,6 @@ final class ProductsMediaController extends Controller
         return response()->json(['message' => 'Media not found'], 404);
     }
 
-    public function destroyDraft(Media $media): Response
-    {
-        $media->delete();
-
-        return response()->noContent();
-    }
-
-    public function draft(): JsonResponse
-    {
-        $file = request()->file('file');
-
-        if ($file) {
-            // ! Review if $file->path works
-            $file->store('products', 'public');
-            $path = $file->path();
-
-            $media = Media::query()->create([
-                'model_id' => 0,
-                'model_type' => Product::class,
-                'filename' => explode('/', $path)[1],
-            ]);
-
-            return response()->json(['data' => $media], 201);
-        }
-
-        return response()->json(['message' => 'File not found'], 404);
-    }
-
     public function store(Product $product): JsonResponse
     {
         $file = request()->file('file');
