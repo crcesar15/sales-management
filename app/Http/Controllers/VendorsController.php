@@ -12,21 +12,21 @@ final class VendorsController extends Controller
 {
     public function index(): InertiaResponse
     {
-        return Inertia::render('vendors/index');
+        return Inertia::render('Vendors/Index');
     }
 
     public function create(): InertiaResponse
     {
-        return Inertia::render('vendors/create/index');
+        return Inertia::render('Vendors/Create/Index');
     }
 
     public function edit(Vendor $vendor): InertiaResponse
     {
-        return Inertia::render('vendors/edit/index', ['vendor' => $vendor]);
+        return Inertia::render('Vendors/Edit/Index', ['vendor' => $vendor]);
     }
 
     public function products(Vendor $vendor): InertiaResponse
     {
-        return Inertia::render('vendors/products/index', ['vendor' => $vendor]);
+        return Inertia::render('Vendors/Products/Index', ['vendor' => $vendor]);
     }
 }

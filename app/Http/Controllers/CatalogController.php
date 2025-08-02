@@ -17,7 +17,7 @@ final class CatalogController extends Controller
      */
     public function index(): InertiaResponse
     {
-        return Inertia::render('catalog/index');
+        return Inertia::render('Catalog/Index');
     }
 
     public function edit(ProductVariant $variant): InertiaResponse
@@ -36,7 +36,7 @@ final class CatalogController extends Controller
 
         $vendors = Vendor::query()->limit(10)->get();
 
-        return Inertia::render('catalog/edit/index', [
+        return Inertia::render('Catalog/Edit/Index', [
             'variant' => $variant,
             'savedCatalog' => $catalog,
             'savedVendors' => $vendors,

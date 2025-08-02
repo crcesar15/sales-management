@@ -14,6 +14,6 @@ final class CategoryController extends Controller
     {
         $this->authorize(PermissionsEnum::CATEGORIES_VIEW->value, auth()->user());
 
-        return Inertia::render('categories/index');
+        return Inertia::render('Categories/Index');
     }
 }

@@ -18,7 +18,7 @@ final class ProductsController extends Controller
      */
     public function index(): InertiaResponse
     {
-        return Inertia::render('products/index');
+        return Inertia::render('Products/Index');
     }
 
     /**
@@ -35,7 +35,7 @@ final class ProductsController extends Controller
         // List of Brands
         $brands = Brand::all();
 
-        return Inertia::render('products/create/index', [
+        return Inertia::render('Products/Create/Index', [
             'categories' => $categories,
             'measureUnits' => $measureUnits,
             'brands' => $brands,
@@ -59,7 +59,7 @@ final class ProductsController extends Controller
         // List of Brands
         $brands = Brand::all();
 
-        return Inertia::render('products/edit/index', [
+        return Inertia::render('Products/Edit/Index', [
             'product' => $product,
             'categories' => $categories,
             'measureUnits' => $measureUnits,

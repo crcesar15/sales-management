@@ -184,13 +184,13 @@ final class SettingsSeeder extends Seeder
                 ],
                 [
                     'key' => 'date_format',
-                    'value' => 'Y-m-d',
+                    'value' => 'YYYY-MM-DD',
                     'name' => 'Date Format',
                 ],
                 [
                     'key' => 'datetime_format',
-                    'value' => 'Y-m-d',
-                    'name' => 'Date Format',
+                    'value' => 'YYYY-MM-DD HH:mm ',
+                    'name' => 'Datetime Format',
                 ],
                 [
                     'key' => 'decimal_precision',

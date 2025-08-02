@@ -14,6 +14,6 @@ final class BrandController extends Controller
     {
         $this->authorize(PermissionsEnum::BRANDS_VIEW, auth()->user());
 
-        return Inertia::render('brands/index');
+        return Inertia::render('Brands/Index');
     }
 }

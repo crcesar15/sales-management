@@ -14,6 +14,6 @@ final class MeasurementUnitController extends Controller
     {
         $this->authorize(PermissionsEnum::MEASUREMENT_UNITS_VIEW, auth()->user());
 
-        return Inertia::render('measurement-units/index');
+        return Inertia::render('MeasurementUnits/Index');
     }
 }

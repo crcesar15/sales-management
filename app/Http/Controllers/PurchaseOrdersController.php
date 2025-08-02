@@ -13,7 +13,7 @@ final class PurchaseOrdersController extends Controller
     //
     public function index(): InertiaResponse
     {
-        return Inertia::render('purchase-orders/index');
+        return Inertia::render('PurchaseOrders/Index');
     }
 
     public function create(): InertiaResponse
@@ -24,7 +24,7 @@ final class PurchaseOrdersController extends Controller
         // current time
         $time = Carbon::now()->format('H:i:s');
 
-        return Inertia::render('purchase-orders/create/index', [
+        return Inertia::render('PurchaseOrders/Create/Index', [
             'date' => $date,
             'time' => $time,
         ]);

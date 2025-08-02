@@ -41,14 +41,14 @@ Auth::routes();
 
 Route::group(['middleware' => ['auth']], function (): void {
     // Home Routes
-    Route::get('/home', fn () => Inertia::render('dashboard/index'))->name('home');
+    Route::get('/home', fn () => Inertia::render('Dashboard/Index'))->name('home');
 
     // Products Routes
     Route::get('/products', [ProductsController::class, 'index'])->name('products');
     Route::get('/products/{product}/edit', [ProductsController::class, 'edit'])->name('products.edit');
     Route::get('/products/create', [ProductsController::class, 'create'])->name('products.create');
 
-    Route::get('/gallery', fn () => Inertia::render('gallery/index'))->name('gallery');
+    Route::get('/gallery', fn () => Inertia::render('Gallery/Index'))->name('gallery');
 
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
 
@@ -81,5 +81,5 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/purchase-orders/create', [PurchaseOrdersController::class, 'create'])->name('purchase-orders.create');
 
     // Settings
-    Route::get('/settings', fn () => Inertia::render('settings/index'))->name('settings');
+    Route::get('/settings', fn () => Inertia::render('Settings/Index'))->name('settings');
 });

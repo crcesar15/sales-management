@@ -15,14 +15,14 @@ final class RoleController extends Controller
     {
         $this->authorize(PermissionsEnum::ROLES_VIEW->value, auth()->user());
 
-        return Inertia::render('roles/index');
+        return Inertia::render('Roles/Index');
     }
 
     public function create(): InertiaResponse
     {
         $this->authorize(PermissionsEnum::ROLES_CREATE->value, auth()->user());
 
-        return Inertia::render('roles/create/index');
+        return Inertia::render('Roles/Create/Index');
     }
 
     public function edit(Role $role): InertiaResponse
@@ -31,7 +31,7 @@ final class RoleController extends Controller
 
         $permissions = $role->permissions()->get()->pluck('name')->toArray();
 
-        return Inertia::render('roles/edit/index', [
+        return Inertia::render('Roles/Edit/Index', [
             'role' => $role,
             'permissions' => $permissions,
         ]);

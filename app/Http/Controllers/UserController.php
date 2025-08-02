@@ -20,7 +20,7 @@ final class UserController extends Controller
     {
         $this->authorize(PermissionsEnum::USERS_VIEW, auth()->user());
 
-        return Inertia::render('users/index');
+        return Inertia::render('Users/Index');
     }
 
     /**
@@ -33,7 +33,7 @@ final class UserController extends Controller
         // List of Roles
         $roles = Role::all();
 
-        return Inertia::render('users/create/index', [
+        return Inertia::render('Users/Create/Index', [
             'availableRoles' => $roles,
         ]);
     }
@@ -56,7 +56,7 @@ final class UserController extends Controller
         // List of Roles
         $roles = Role::all();
 
-        return Inertia::render('users/edit/index', [
+        return Inertia::render('Users/Edit/Index', [
             'user' => $user,
             'availableRoles' => $roles,
         ]);

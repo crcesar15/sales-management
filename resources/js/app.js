@@ -20,7 +20,7 @@ import PButton from "primevue/button";
 import { InertiaProgress } from "@inertiajs/progress";
 import { ZiggyVue } from "ziggy-js";
 import Aura from "@primeuix/themes/aura";
-import Can from "./directives/can";
+import Can from "./Directives/can";
 
 import en from "../lang/en.json";
 import es from "../lang/es.json";
@@ -40,7 +40,7 @@ const i18n = createI18n({
 InertiaProgress.init();
 
 createInertiaApp({
-  resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, import.meta.glob("./pages/**/*.vue")),
+  resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob("./Pages/**/*.vue")),
   setup({
     el, App, props, plugin,
   }) {
