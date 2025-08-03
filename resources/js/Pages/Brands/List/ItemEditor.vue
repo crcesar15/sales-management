@@ -1,12 +1,11 @@
 <template>
   <div>
     <Dialog
-      v-model:visible="visible"
+      v-model:visible="showModal"
       :breakpoints="{ '1100px': '60vw', '750px': '75vw', '500px': '90vw' }"
       :style="{ width: '30vw' }"
       :header="$t('Brand')"
       modal
-      @hide="clearSelection"
     >
       <div class="flex flex-col">
         <label for="name">{{ $t('Name') }}</label>
@@ -26,12 +25,12 @@
         #footer
         class="flex flex-wrap justify-end"
       >
-        <PButton
+        <Button
           severity="secondary"
           :label="$t('Cancel')"
           @click="closeModal"
         />
-        <PButton
+        <Button
           severity="primary"
           :label="$t('Save')"
           @click="submit"
@@ -41,75 +40,62 @@
   </div>
 </template>
 
-<script>
-import Dialog from "primevue/dialog";
-import InputText from "primevue/inputtext";
-import PButton from "primevue/button";
+<script setup>
+import { Dialog, InputText, Button } from "primevue";
+import {
+  computed, watch, ref,
+} from "vue";
 
-export default {
-  components: {
-    Dialog,
-    InputText,
-    PButton,
-  },
-  props: {
-    brand: {
-      type: Object,
-      default: () => ({}),
-    },
-    showDialog: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  data() {
-    return {
-      name: "",
-      visible: false,
-      submitted: false,
-    };
-  },
-  computed: {
-    nameErrorMessage() {
-      if (this.submitted && (this.name === undefined || this.name === "")) {
-        return "Name is required";
-      }
+const emit = defineEmits(['submit']);
 
-      return null;
-    },
-  },
-  watch: {
-    showDialog(val) {
-      this.visible = val;
-      this.submitted = false;
-      if (val) {
-        this.name = this.brand.name;
-      }
-    },
-  },
-  methods: {
-    clearSelection() {
-      this.$emit("clearSelection");
-    },
-    submit() {
-      this.submitted = true;
-      if (this.validate()) {
-        this.$emit("submitted", this.brand.id, {
-          name: this.name,
-        });
-        this.visible = false;
-      }
-    },
-    closeModal() {
-      this.visible = false;
-    },
-    validate() {
-      if (this.name === undefined || this.name === "") {
-        return false;
-      }
+// Get values from the parent
+const showModal = defineModel('show-modal');
+const { brand } = defineProps(['brand']);
 
-      return true;
-    },
+watch(
+  showModal,
+  (val) => {
+    if (val) {
+      console.log(brand);
+      name.value = brand?.name ?? '';
+    }
   },
+);
+
+const name = ref("");
+let submitted = ref(false);
+
+//Submit feature
+const nameErrorMessage = computed(() => {
+  if (submitted.value && (name.value === undefined || name.value === "")) {
+    return "Name is required";
+  }
+
+  return null;
+});
+
+const validate = () => {
+  if (name.value === undefined || name.value === "") {
+    return false;
+  }
+
+  return true;
+};
+
+const submit = () => {
+  submitted.value = true;
+  if (validate()) {
+    showModal.value = false;
+    submitted.value = false;
+    if (brand === null) {
+      emit('submitted', {name: name.value})
+    } else {
+      emit('submitted', {...brand, name: name.value })
+    }
+  }
+};
+
+const closeModal = () => {
+  showModal.value = false;
 };
 </script>

@@ -2,11 +2,11 @@
   <div>
     <div class="flex flex-row justify-between mb-3">
       <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ $t("Brands") }}
+        {{ t("Brands") }}
       </h2>
-      <p-button
+      <Button
         v-can="'brands-create'"
-        :label="$t('Add Brand')"
+        :label="t('Add Brand')"
         style="text-transform: uppercase"
         icon="fa fa-add"
         raised
@@ -22,7 +22,7 @@
           resizable-columns
           lazy
           :total-records="pagination.total"
-          :rows="pagination.rows"
+          :rows="pagination.perPage"
           :first="pagination.first"
           :loading="loading"
           paginator
@@ -32,7 +32,7 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ $t('No brands found') }}
+            {{ t('No brands found') }}
           </template>
           <template #header>
             <div class="grid grid-cols-12">
@@ -55,7 +55,7 @@
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
-                    :placeholder="$t('Search')"
+                    :placeholder="t('Search')"
                     class="w-full"
                   />
                 </IconField>
@@ -64,12 +64,12 @@
           </template>
           <Column
             field="name"
-            :header="$t('Name')"
+            :header="t('Name')"
             sortable
           />
           <Column
             field="products_count"
-            :header="$t('Products')"
+            :header="t('Products')"
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template
@@ -86,24 +86,24 @@
           </Column>
           <Column
             field="created_at"
-            :header="$t('Created At')"
+            :header="t('Created At')"
             sortable
           />
           <Column
             field="updated_at"
-            :header="$t('Updated At')"
+            :header="t('Updated At')"
             sortable
           />
           <Column
             field="actions"
-            :header="$t('Actions')"
+            :header="t('Actions')"
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
               <div class="flex justify-center gap-2">
-                <p-button
+                <Button
                   v-can="'brands-edit'"
-                  v-tooltip.top="$t('Edit')"
+                  v-tooltip.top="t('Edit')"
                   icon="fa fa-edit"
                   text
                   rounded
@@ -111,9 +111,9 @@
                   size="sm"
                   @click="editBrand(row.data)"
                 />
-                <p-button
+                <Button
                   v-can="'brands-delete'"
-                  v-tooltip.top="$t('Delete')"
+                  v-tooltip.top="t('Delete')"
                   icon="fa fa-trash"
                   text
                   rounded
@@ -129,204 +129,203 @@
     </Card>
     <BrandEditor
       :brand="selectedBrand"
-      :show-dialog="editorToggle"
-      @clearSelection="selectedBrand = {}; editorToggle = false;"
+      v-model:show-modal="showModal"
       @submitted="saveBrand"
     />
   </div>
 </template>
 
-<script>
-import DataTable from "primevue/datatable";
-import Card from "primevue/card";
-import Column from "primevue/column";
-import ConfirmDialog from "primevue/confirmdialog";
-import PButton from "primevue/button";
-import InputText from "primevue/inputtext";
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
-import Tag from "primevue/tag";
+<script setup>
+import {
+  ref, watch,
+} from "vue";
+import {
+  useToast, useConfirm, DataTable, Card, Column, ConfirmDialog, Button, InputText, IconField, InputIcon, Tag,
+} from "primevue";
+import { useI18n } from "vue-i18n";
 import AppLayout from "../../Layouts/admin.vue";
 import BrandEditor from "./List/ItemEditor.vue";
 import useDatetimeFormatter from "../../Composables/useDatetimeFormatter";
 
-export default {
-  components: {
-    DataTable,
-    Column,
-    PButton,
-    BrandEditor,
-    InputText,
-    ConfirmDialog,
-    Card,
-    IconField,
-    InputIcon,
-    Tag,
-  },
+// Set composables
+const toast = useToast();
+const confirm = useConfirm();
+const { t } = useI18n();
+
+// Layout
+defineOptions({
   layout: AppLayout,
-  data() {
-    return {
-      brands: [],
-      pagination: {
-        total: 0,
-        first: 0,
-        rows: 10,
-        page: 1,
-        perPage: 10,
-        sortField: "name",
-        sortOrder: 1,
-        filter: "",
-      },
-      loading: false,
-      selectedBrand: {},
-      editorToggle: false,
-    };
-  },
-  watch: {
-    "pagination.filter": {
-      handler() {
-        this.pagination.page = 1;
-        this.fetchBrands();
-      },
-    },
-  },
-  mounted() {
-    this.fetchBrands();
-  },
-  methods: {
-    fetchBrands() {
-      this.loading = true;
+});
 
-      const params = new URLSearchParams();
+// List brands
+const pagination = ref({
+  total: 0,
+  first: 0,
+  page: 1,
+  perPage: 10,
+  sortField: "name",
+  sortOrder: 1,
+  filter: "",
+});
 
-      params.append("per_page", this.pagination.perPage);
-      params.append("page", this.pagination.page);
-      params.append("order_by", this.pagination.sortField);
-      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
+let brands = [];
+const loading = ref(false);
 
-      if (this.pagination.filter) {
-        params.append("filter", this.pagination.filter);
-      }
+function fetchBrands() {
+  loading.value = true;
 
-      const url = `${route("api.brands")}?${params.toString()}`;
+  const params = new URLSearchParams();
 
-      axios.get(url)
-        .then((response) => {
-          this.brands = response.data.data.map((item) => ({
-            ...item,
-            created_at: useDatetimeFormatter(item.created_at),
-            updated_at: useDatetimeFormatter(item.updated_at),
-          }));
-          this.pagination.total = response.data.meta.total;
-          this.loading = false;
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-          this.loading = false;
-        });
-    },
-    onPage(event) {
-      this.pagination.page = event.page + 1;
-      this.pagination.perPage = event.rows;
-      this.fetchBrands();
-    },
-    onSort(event) {
-      this.pagination.sortField = event.sortField;
-      this.pagination.sortOrder = event.sortOrder;
-      this.fetchBrands();
-    },
-    addBrand() {
-      this.editorToggle = true;
-      this.selectedBrand = {};
-    },
-    editBrand(brand) {
-      this.editorToggle = true;
-      this.selectedBrand = brand;
-    },
-    deleteBrand(id) {
-      this.$confirm.require({
-        message: this.$t("Are you sure you want to delete this brand?"),
-        header: this.$t("Confirm"),
-        icon: "fas fa-exclamation-triangle",
-        rejectLabel: this.$t("Cancel"),
-        acceptLabel: this.$t("Delete"),
-        rejectClass: "p-button-secondary",
-        accept: () => {
-          axios.delete(`${route("api.brands.destroy", id)}`)
-            .then(() => {
-              this.$toast.add({
-                severity: "success",
-                summary: this.$t("Success"),
-                detail: this.$t("Brand deleted successfully"),
-                life: 3000,
-              });
-              this.fetchBrands();
-            })
-            .catch((error) => {
-              this.$toast.add({
-                severity: "error",
-                summary: this.$t("Error"),
-                detail: error.response.data.message,
-                life: 3000,
-              });
-            });
-        },
+  params.append("per_page", pagination.value.perPage);
+  params.append("page", pagination.value.page);
+  params.append("order_by", pagination.value.sortField);
+  params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
+
+  if (pagination.value.filter) {
+    params.append("filter", pagination.value.filter);
+  }
+
+  const url = `${route("api.brands")}?${params.toString()}`;
+
+  axios.get(url)
+    .then((response) => {
+      brands = response.data.data.map((item) => ({
+        ...item,
+        created_at: useDatetimeFormatter(item.created_at),
+        updated_at: useDatetimeFormatter(item.updated_at),
+      }));
+      pagination.value.total = response.data.meta.total;
+      loading.value = false;
+    })
+    .catch((error) => {
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: error.response.data.message,
+        life: 3000,
       });
-    },
-    saveBrand(id, brand) {
-      if (id) {
-        this.updateBrand(id, brand);
-      } else {
-        this.createBrand(brand);
-      }
-    },
-    createBrand(brand) {
-      axios.post(route("api.brands.store"), brand)
-        .then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: this.$t("Success"),
-            detail: this.$t("Brand created successfully"),
-            life: 3000,
-          });
-          this.fetchBrands();
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        });
-    },
-    updateBrand(id, brand) {
-      axios.put(`${route("api.brands.update", id)}`, brand)
-        .then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: this.$t("Success"),
-            detail: this.$t("Brand updated successfully"),
-            life: 3000,
-          });
-          this.fetchBrands();
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        });
-    },
-  },
+      loading.value = false;
+    });
+}
+
+const onPage = (event) => {
+  pagination.value.page = event.page + 1;
+  pagination.value.perPage = event.rows;
+  fetchBrands();
 };
+const onSort = (event) => {
+  pagination.value.sortField = event.sortField;
+  pagination.value.sortOrder = event.sortOrder;
+  fetchBrands();
+};
+
+watch(
+  () => pagination.value.filter,
+  () => {
+    pagination.value.page = 1;
+    fetchBrands();
+  },
+  {
+    immediate: true,
+    deep: true,
+  },
+);
+
+// Add/Edit Brand
+const selectedBrand = ref(null);
+const showModal = ref(false);
+
+const addBrand = () => {
+  showModal.value = true;
+  selectedBrand.value = null;
+};
+const editBrand = (brand) => {
+  showModal.value = true;
+  selectedBrand.value = brand;
+};
+
+const createBrand = (brand) => {
+  axios.post(route("api.brands.store"), brand)
+    .then(() => {
+      toast.add({
+        severity: "success",
+        summary: t("Success"),
+        detail: t("Brand created successfully"),
+        life: 3000,
+      });
+      fetchBrands();
+    })
+    .catch((error) => {
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: error.response.data.message,
+        life: 3000,
+      });
+    });
+};
+
+const updateBrand = (brand) => {
+  axios.put(`${route("api.brands.update", brand.id)}`, brand)
+    .then(() => {
+      toast.add({
+        severity: "success",
+        summary: t("Success"),
+        detail: t("Brand updated successfully"),
+        life: 3000,
+      });
+      fetchBrands();
+    })
+    .catch((error) => {
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: error.response.data.message,
+        life: 3000,
+      });
+    });
+};
+
+const saveBrand = (brand) => {
+  console.log(brand);
+  if (brand?.id) {
+    updateBrand(brand);
+  } else {
+    createBrand(brand);
+  }
+};
+
+const deleteBrand = (id) => {
+  confirm.require({
+    message: t("Are you sure you want to delete this brand?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Delete"),
+    rejectClass: "p-button-secondary",
+    accept: () => {
+      axios.delete(`${route("api.brands.destroy", id)}`)
+        .then(() => {
+          toast.add({
+            severity: "success",
+            summary: t("Success"),
+            detail: t("Brand deleted successfully"),
+            life: 3000,
+          });
+          fetchBrands();
+        })
+        .catch((error) => {
+          toast.add({
+            severity: "error",
+            summary: t("Error"),
+            detail: error.response.data.message,
+            life: 3000,
+          });
+        });
+    },
+  });
+};
+
 </script>
 
 <style>
