@@ -9,6 +9,7 @@ module.exports = {
     _: true,
     axios: true,
     route: true,
+    defineOptions: "readonly",
   },
   extends: ["eslint:recommended", "plugin:vue/recommended", "airbnb-base"],
   parserOptions: {
