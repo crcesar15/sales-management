@@ -6,6 +6,7 @@
       :style="{ width: '30vw' }"
       :header="$t('Brand')"
       modal
+      @hide="submitted=false"
     >
       <div class="flex flex-col">
         <label for="name">{{ $t('Name') }}</label>
@@ -46,26 +47,30 @@ import {
   computed, watch, ref,
 } from "vue";
 
-const emit = defineEmits(['submit']);
+const emit = defineEmits(["submitted"]);
 
 // Get values from the parent
-const showModal = defineModel('show-modal');
-const { brand } = defineProps(['brand']);
+const showModal = defineModel("show-modal", { type: Boolean, required: true });
+const { brand } = defineProps({
+  brand: {
+    type: Object,
+    required: true,
+  },
+});
+
+const name = ref("");
+const submitted = ref(false);
 
 watch(
   showModal,
   (val) => {
     if (val) {
-      console.log(brand);
-      name.value = brand?.name ?? '';
+      name.value = brand?.name ?? "";
     }
   },
 );
 
-const name = ref("");
-let submitted = ref(false);
-
-//Submit feature
+// Submit feature
 const nameErrorMessage = computed(() => {
   if (submitted.value && (name.value === undefined || name.value === "")) {
     return "Name is required";
@@ -88,9 +93,9 @@ const submit = () => {
     showModal.value = false;
     submitted.value = false;
     if (brand === null) {
-      emit('submitted', {name: name.value})
+      emit("submitted", { name: name.value });
     } else {
-      emit('submitted', {...brand, name: name.value })
+      emit("submitted", { ...brand, name: name.value });
     }
   }
 };

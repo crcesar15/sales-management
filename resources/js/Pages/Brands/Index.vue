@@ -128,8 +128,8 @@
       </template>
     </Card>
     <BrandEditor
-      :brand="selectedBrand"
       v-model:show-modal="showModal"
+      :brand="selectedBrand"
       @submitted="saveBrand"
     />
   </div>
@@ -287,7 +287,6 @@ const updateBrand = (brand) => {
 };
 
 const saveBrand = (brand) => {
-  console.log(brand);
   if (brand?.id) {
     updateBrand(brand);
   } else {

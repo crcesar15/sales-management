@@ -29,6 +29,9 @@ module.exports = {
       code: 140,
       ignoreComments: true,
     }],
+    "vue/multi-word-component-names": ["error", {
+      ignores: ["Index"],
+    }],
   },
   overrides: [
     {
