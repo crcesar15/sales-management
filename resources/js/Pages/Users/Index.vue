@@ -2,15 +2,15 @@
   <div>
     <div class="flex justify-between mb-3">
       <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ $t("Users") }}
+        {{ t("Users") }}
       </h2>
-      <p-button
+      <Button
         v-can="'users-create'"
-        :label="$t('Add User')"
+        :label="t('Add User')"
         class="ml-2 uppercase"
         icon="fa fa-add"
         raised
-        @click="$inertia.visit(route('users.create'))"
+        @click="router.visit(route('users.create'))"
       />
     </div>
     <ConfirmDialog />
@@ -21,7 +21,7 @@
           resizable-columns
           lazy
           :total-records="pagination.total"
-          :rows="pagination.rows"
+          :rows="pagination.perPage"
           :first="pagination.first"
           :loading="loading"
           paginator
@@ -31,7 +31,7 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ $t('No users found') }}
+            {{ t('No users found') }}
           </template>
           <template #header>
             <div class="grid grid-cols-12">
@@ -48,16 +48,16 @@
                   v-model="status"
                   :allow-empty="false"
                   :options="[{
-                    label: $t('All'),
+                    label: t('All'),
                     value: 'all',
                   }, {
-                    label: $t('Active'),
+                    label: t('Active'),
                     value: 'active',
                   }, {
-                    label: $t('Inactive'),
+                    label: t('Inactive'),
                     value: 'inactive',
                   }, {
-                    label: $t('Archived'),
+                    label: t('Archived'),
                     value: 'archived',
                   }]"
                   option-label="label"
@@ -86,7 +86,7 @@
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
-                    :placeholder="$t('Search')"
+                    :placeholder="t('Search')"
                     class="w-full"
                   />
                 </IconField>
@@ -95,22 +95,22 @@
           </template>
           <Column
             field="first_name"
-            :header="$t('First Name')"
+            :header="t('First Name')"
             sortable
           />
           <Column
             field="last_name"
-            :header="$t('Last Name')"
+            :header="t('Last Name')"
             sortable
           />
           <Column
             field="username"
-            :header="$t('Username')"
+            :header="t('Username')"
             sortable
           />
           <Column
             field="role.name"
-            :header="$t('Roles')"
+            :header="t('Roles')"
           >
             <template #body="{ data }">
               <div
@@ -128,7 +128,7 @@
           </Column>
           <Column
             field="status"
-            :header="$t('Status')"
+            :header="t('Status')"
             sortable
           >
             <template #body="{ data }">
@@ -140,44 +140,44 @@
                   v-if="data.status === 'active'"
                   severity="success"
                 >
-                  {{ $t('Active') }}
+                  {{ t('Active') }}
                 </Tag>
                 <Tag
                   v-else-if="data.status === 'inactive'"
                   severity="warn"
                 >
-                  {{ $t('Inactive') }}
+                  {{ t('Inactive') }}
                 </Tag>
                 <Tag
                   v-else
                   severity="danger"
                 >
-                  {{ $t('Archived') }}
+                  {{ t('Archived') }}
                 </Tag>
               </div>
             </template>
           </Column>
           <Column
             field="created_at"
-            :header="$t('Created At')"
+            :header="t('Created At')"
             sortable
           />
           <Column
             field="updated_at"
-            :header="$t('Updated At')"
+            :header="t('Updated At')"
             sortable
           />
           <Column
             field="actions"
-            :header="$t('Actions')"
+            :header="t('Actions')"
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
               <div class="flex justify-center gap-2">
-                <p-button
+                <Button
                   v-show="row.data.status !== 'archived'"
                   v-can="'users-edit'"
-                  v-tooltip.top="$t('Edit')"
+                  v-tooltip.top="t('Edit')"
                   icon="fa fa-edit"
                   text
                   rounded
@@ -185,10 +185,10 @@
                   size="sm"
                   @click="editUser(row.data)"
                 />
-                <p-button
+                <Button
                   v-show="row.data.status === 'archived'"
                   v-can="'users-edit'"
-                  v-tooltip.top="$t('Restore')"
+                  v-tooltip.top="t('Restore')"
                   icon="fa fa-trash-arrow-up"
                   text
                   rounded
@@ -196,10 +196,10 @@
                   size="sm"
                   @click="restoreUser(row.data)"
                 />
-                <p-button
+                <Button
                   v-show="row.data.status !== 'archived'"
                   v-can="'users-delete'"
-                  v-tooltip.top="$t('Delete')"
+                  v-tooltip.top="t('Delete')"
                   :disabled="isCurrentUser(row.data.id)"
                   icon="fa fa-trash"
                   text
@@ -218,181 +218,180 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import {
-  DataTable, Card, Column, Button, InputText, IconField, InputIcon, ConfirmDialog, SelectButton, Tag,
+  DataTable, Card, Column, useToast, useConfirm, Button, InputText, IconField, InputIcon, ConfirmDialog, SelectButton, Tag,
 } from "primevue";
-import { usePage } from "@inertiajs/vue3";
+import { usePage, router } from "@inertiajs/vue3";
+import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import AppLayout from "../../Layouts/admin.vue";
 import useDatetimeFormatter from "../../Composables/useDatetimeFormatter";
 
-export default {
-  components: {
-    DataTable,
-    Column,
-    PButton: Button,
-    InputText,
-    ConfirmDialog,
-    Card,
-    IconField,
-    InputIcon,
-    SelectButton,
-    Tag,
-  },
+// Set composables
+const toast = useToast();
+const confirm = useConfirm();
+const { t } = useI18n();
+
+// Layout
+defineOptions({
   layout: AppLayout,
-  data() {
-    return {
-      currentUser: usePage().props.auth.user,
-      users: [],
-      pagination: {
-        total: 0,
-        first: 0,
-        rows: 10,
-        page: 1,
-        perPage: 10,
-        sortField: "first_name",
-        sortOrder: 1,
-        filter: "",
-      },
-      loading: false,
-      selectedUser: {},
-      editorToggle: false,
-      status: "all",
-    };
+});
+
+// List users
+const pagination = ref({
+  total: 0,
+  first: 0,
+  page: 1,
+  perPage: 10,
+  sortField: "first_name",
+  sortOrder: 1,
+  filter: "",
+});
+
+const currentUser = usePage().props.auth.user;
+const isCurrentUser = (id) => currentUser.id === id;
+
+let users = [];
+
+const loading = ref(false);
+const status = ref("all");
+
+const fetchUsers = () => {
+  loading.value = true;
+
+  const params = new URLSearchParams();
+
+  params.append("include", "roles");
+  params.append("per_page", pagination.value.perPage);
+  params.append("page", pagination.value.page);
+  params.append("order_by", pagination.value.sortField);
+  params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
+
+  if (status.value !== "all") {
+    params.append("status", status.value);
+  }
+  if (pagination.value.filter) {
+    params.append("filter", pagination.value.filter);
+  }
+  const url = `${route("api.users")}?${params.toString()}`;
+
+  axios.get(url)
+    .then((response) => {
+      users = response.data.data.map((item) => ({
+        ...item,
+        created_at: useDatetimeFormatter(item.created_at),
+        updated_at: useDatetimeFormatter(item.updated_at),
+        roles: item.roles.map((role) => role.name).join(", "),
+      }));
+      pagination.value.total = response.data.meta.total;
+      loading.value = false;
+    })
+    .catch((error) => {
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: error.response,
+        life: 3000,
+      });
+      loading.value = false;
+    });
+};
+
+watch(
+  () => pagination.value.filter,
+  () => {
+    pagination.value.page = 1;
+    fetchUsers();
   },
-  watch: {
-    "pagination.filter": {
-      handler() {
-        this.pagination.page = 1;
-        this.fetchUsers();
-      },
-    },
-    status() {
-      this.pagination.page = 1;
-      this.fetchUsers();
-    },
+  {
+    immediate: true,
   },
-  mounted() {
-    this.fetchUsers();
+);
+
+watch(
+  status,
+  () => {
+    pagination.value.page = 1;
+    fetchUsers();
   },
-  methods: {
-    isCurrentUser(id) {
-      return this.currentUser.id === id;
-    },
-    editUser(id) {
-      this.$inertia.visit(route("users.edit", id));
-    },
-    fetchUsers() {
-      this.loading = true;
+);
 
-      const params = new URLSearchParams();
+const onPage = (event) => {
+  pagination.value.page = event.page + 1;
+  pagination.value.perPage = event.rows;
+  fetchUsers();
+};
+const onSort = (event) => {
+  pagination.value.sortField = event.sortField;
+  pagination.value.sortOrder = event.sortOrder;
+  fetchUsers();
+};
 
-      params.append("include", "roles");
-      params.append("per_page", this.pagination.perPage);
-      params.append("page", this.pagination.page);
-      params.append("order_by", this.pagination.sortField);
-      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
+// Row actions
+const editUser = (id) => {
+  router.visit(route("users.edit", id));
+};
 
-      if (this.status !== "all") {
-        params.append("status", this.status);
-      }
-      if (this.pagination.filter) {
-        params.append("filter", this.pagination.filter);
-      }
-      const url = `${route("api.users")}?${params.toString()}`;
-
-      axios.get(url)
-        .then((response) => {
-          this.users = response.data.data.map((item) => ({
-            ...item,
-            created_at: useDatetimeFormatter(item.created_at),
-            updated_at: useDatetimeFormatter(item.updated_at),
-            roles: item.roles.map((role) => role.name).join(", "),
-          }));
-          this.pagination.total = response.data.meta.total;
-          this.loading = false;
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response,
+const restoreUser = (id) => {
+  confirm.require({
+    message: t("Are you sure you want to restore this user?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Restore"),
+    rejectClass: "p-button-secondary",
+    accept: () => {
+      axios.put(route("api.users.restore", id))
+        .then(() => {
+          toast.add({
+            severity: "success",
+            summary: t("Success"),
+            detail: t("User restored successfully"),
             life: 3000,
           });
-          this.loading = false;
+          fetchUsers();
+        })
+        .catch((error) => {
+          toast.add({
+            severity: "error",
+            summary: t("Error"),
+            detail: error.response.data.message,
+            life: 3000,
+          });
         });
     },
-    onPage(event) {
-      this.pagination.page = event.page + 1;
-      this.pagination.perPage = event.rows;
-      this.fetchUsers();
+  });
+};
+const deleteUser = (id) => {
+  confirm.require({
+    message: t("Are you sure you want to delete this user?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Delete"),
+    rejectClass: "p-button-secondary",
+    accept: () => {
+      axios.delete(route("api.users.destroy", id))
+        .then(() => {
+          toast.add({
+            severity: "success",
+            summary: "Success",
+            detail: t("User deleted successfully"),
+            life: 3000,
+          });
+          fetchUsers();
+        })
+        .catch((error) => {
+          toast.add({
+            severity: "error",
+            summary: t("Error"),
+            detail: error.response.data.message,
+            life: 3000,
+          });
+        });
     },
-    onSort(event) {
-      this.pagination.sortField = event.sortField;
-      this.pagination.sortOrder = event.sortOrder;
-      this.fetchUsers();
-    },
-    restoreUser(id) {
-      this.$confirm.require({
-        message: this.$t("Are you sure you want to restore this user?"),
-        header: this.$t("Confirm"),
-        icon: "fas fa-exclamation-triangle",
-        rejectLabel: this.$t("Cancel"),
-        acceptLabel: this.$t("Restore"),
-        rejectClass: "p-button-secondary",
-        accept: () => {
-          axios.put(route("api.users.restore", id))
-            .then(() => {
-              this.$toast.add({
-                severity: "success",
-                summary: this.$t("Success"),
-                detail: this.$t("User restored successfully"),
-                life: 3000,
-              });
-              this.fetchUsers();
-            })
-            .catch((error) => {
-              this.$toast.add({
-                severity: "error",
-                summary: this.$t("Error"),
-                detail: error.response.data.message,
-                life: 3000,
-              });
-            });
-        },
-      });
-    },
-    deleteUser(id) {
-      this.$confirm.require({
-        message: this.$t("Are you sure you want to delete this user?"),
-        header: this.$t("Confirm"),
-        icon: "fas fa-exclamation-triangle",
-        rejectLabel: this.$t("Cancel"),
-        acceptLabel: this.$t("Delete"),
-        rejectClass: "p-button-secondary",
-        accept: () => {
-          axios.delete(route("api.users.destroy", id))
-            .then(() => {
-              this.$toast.add({
-                severity: "success",
-                summary: "Success",
-                detail: this.$t("User deleted successfully"),
-                life: 3000,
-              });
-              this.fetchUsers();
-            })
-            .catch((error) => {
-              this.$toast.add({
-                severity: "error",
-                summary: this.$t("Error"),
-                detail: error.response.data.message,
-                life: 3000,
-              });
-            });
-        },
-      });
-    },
-  },
+  });
 };
 </script>
 
