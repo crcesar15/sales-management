@@ -4,9 +4,7 @@
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-import "./bootstrap";
-
-import { createApp, h } from "vue";
+import { createApp, DefineComponent, h } from "vue";
 import { createI18n } from "vue-i18n";
 import { createInertiaApp, Link } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
@@ -39,8 +37,11 @@ const i18n = createI18n({
 
 InertiaProgress.init();
 
+// pages
+const pages: Record<symbol, Promise<DefineComponent> | (() => Promise<DefineComponent>)> = import.meta.glob("./Pages/**/*.vue");
+
 createInertiaApp({
-  resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob("./Pages/**/*.vue")),
+  resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, pages),
   setup({
     el, App, props, plugin,
   }) {

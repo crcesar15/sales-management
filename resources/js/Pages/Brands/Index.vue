@@ -135,7 +135,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {
   ref, watch,
 } from "vue";
@@ -143,8 +143,8 @@ import {
   useToast, useConfirm, DataTable, Card, Column, ConfirmDialog, Button, InputText, IconField, InputIcon, Tag,
 } from "primevue";
 import { useI18n } from "vue-i18n";
-import AppLayout from "../../Layouts/admin.vue";
-import BrandEditor from "./List/ItemEditor.vue";
+import AppLayout from "../../Layouts/admin";
+import BrandEditor from "./List/ItemEditor";
 import useDatetimeFormatter from "../../Composables/useDatetimeFormatter";
 
 // Set composables

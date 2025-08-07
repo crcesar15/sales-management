@@ -1,5 +1,3 @@
-import "../bootstrap";
-
 import { createApp } from "vue";
 import { definePreset } from "@primeuix/themes";
 import PrimeVue from "primevue/config";

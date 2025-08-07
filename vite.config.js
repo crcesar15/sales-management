@@ -20,7 +20,7 @@ export default defineConfig({
   plugins: [
     laravel({
       input: [
-        "resources/js/app.js",
+        "resources/js/app.ts",
         "resources/js/login/index.js",
         "resources/sass/app.scss",
       ],

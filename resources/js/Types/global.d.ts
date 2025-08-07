@@ -1,16 +1,5 @@
-import { PageProps as InertiaPageProps } from '@inertiajs/core';
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-}
-
-export interface Permission {
-  key: string;
-  name: string;
-  value: string | number | boolean | null;
-}
+import { SettingGrouped } from './setting-types';
+import { User } from './user-types';
 
 // Extend the Inertia PageProps interface
 declare module '@inertiajs/core' {
@@ -19,7 +8,6 @@ declare module '@inertiajs/core' {
       user: User;
       permissions: string[]
     };
-    settings: Setting[]
-    // Add any other global props here
+    settings: SettingGrouped
   }
 }
