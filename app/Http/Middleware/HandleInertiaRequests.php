@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\Setting;
+use Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Middleware;
@@ -44,7 +45,9 @@ final class HandleInertiaRequests extends Middleware
                 ->user()
                 ->getPermissionsViaRoles();
 
-            $settingGroups = Setting::all()->groupBy('group')->toArray();
+            $settingGroups = Cache::rememberForever('settings', function () {
+                return Setting::all()->groupBy('group')->toArray();
+            });
             $formattedSettings = [];
 
             foreach ($settingGroups as $group => $settings) {
