@@ -11,7 +11,7 @@ module.exports = {
     route: true,
     defineOptions: "readonly",
   },
-  extends: ["eslint:recommended", "plugin:vue/recommended", "airbnb-base"],
+  extends: ["eslint:recommended", "plugin:vue/recommended", "airbnb-base", "plugin:@typescript-eslint/recommended"],
   parserOptions: {
     parser: "@babel/eslint-parser",
     sourceType: "module",
@@ -22,6 +22,7 @@ module.exports = {
   },
   plugins: [
     "vue",
+    "@typescript-eslint",
   ],
   rules: {
     quotes: ["error", "double"],

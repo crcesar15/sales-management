@@ -8,6 +8,9 @@ import PButton from "primevue/button";
 import ToastService from "primevue/toastservice";
 import Toast from "primevue/toast";
 import Aura from "@primeuix/themes/aura";
+import { useApi } from "../Composables/useApi";
+
+const { apiClient } = useApi();
 
 const app = createApp({
   components: {
@@ -33,7 +36,7 @@ const app = createApp({
   },
   methods: {
     login() {
-      axios
+      apiClient
         .post(`${window.location.origin}/login`, {
           username: this.username,
           password: this.password,
@@ -52,7 +55,7 @@ const app = createApp({
     },
     sentResetLink() {
       this.btnLoading = true;
-      axios
+      apiClient
         .post(`${window.location.origin}/password/email`, {
           email: this.email,
         })
@@ -76,7 +79,7 @@ const app = createApp({
         });
     },
     register() {
-      axios.post(`${window.location.origin}/register`, {
+      apiClient.post(`${window.location.origin}/register`, {
         name: this.name,
         email: this.email,
         password: this.password,
@@ -95,7 +98,7 @@ const app = createApp({
     },
     resetPassword() {
       this.btnLoading = true;
-      axios
+      apiClient
         .post(`${window.location.origin}/password/reset`, {
           token: this.token,
           email: this.email,

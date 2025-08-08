@@ -5,15 +5,22 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
-    "jsx": "preserve",
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "lib": ["ESNext", "DOM"],
     "types": ["vite/client"],
-    "baseUrl": "./"
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["resources/js/*"],
+      "@components/*": ["resources/js/Components/*"],
+      "@pages/*": ["resources/js/Pages/*"],
+      "@composables/*": ["resources/js/Composables/*"],
+      "@app-types/*": ["resources/js/Types/*"],
+      "@layouts/*": ["resources/js/Layouts/*"],
+      "@directives/*": ["resources/js/Directives/*"]
+    }
   },
-  // "extends": "@vue/tsconfig/tsconfig.web.json",
   "include": [
     "resources/js/**/*",
     "resources/js/**/*.d.ts",

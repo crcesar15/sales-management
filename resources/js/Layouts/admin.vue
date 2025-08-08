@@ -1,10 +1,10 @@
-w<template>
+<template>
   <app-layout>
     <slot />
     <Toast />
   </app-layout>
 </template>
-<script>
+<script lang="ts">
 import axios from "axios";
 import Toast from "primevue/toast";
 import AppLayout from "./components/AppLayout.vue";

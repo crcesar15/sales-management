@@ -136,16 +136,34 @@
 </template>
 
 <script setup lang="ts">
+import AppLayout from '@layouts/admin.vue';
+import BrandEditor from "@pages/Brands/List/ItemEditor.vue";
+import useDatetimeFormatter from "@composables/useDatetimeFormatter";
+
 import {
-  ref, watch,
+  Ref,
+  ref,
+  watch,
 } from "vue";
+
 import {
-  useToast, useConfirm, DataTable, Card, Column, ConfirmDialog, Button, InputText, IconField, InputIcon, Tag,
+  useToast,
+  useConfirm,
+  DataTable,
+  Card,
+  Column,
+  ConfirmDialog,
+  Button,
+  InputText,
+  IconField,
+  InputIcon,
+  Tag,
+  DataTablePageEvent,
 } from "primevue";
+
 import { useI18n } from "vue-i18n";
-import AppLayout from "../../Layouts/admin";
-import BrandEditor from "./List/ItemEditor";
-import useDatetimeFormatter from "../../Composables/useDatetimeFormatter";
+import { useBrandsAPI } from "@composables/useBrandsApi";
+import { Brand } from '@app-types/brand-types';
 
 // Set composables
 const toast = useToast();
@@ -168,16 +186,15 @@ const pagination = ref({
   filter: "",
 });
 
-let brands = [];
-const loading = ref(false);
+const { loading, fetchBrandsAPI } = useBrandsAPI();
 
-function fetchBrands() {
-  loading.value = true;
+let brands = ref<Brand[]>();
 
+const fetchBrands = async () => {
   const params = new URLSearchParams();
 
-  params.append("per_page", pagination.value.perPage);
-  params.append("page", pagination.value.page);
+  params.append("per_page", pagination.value.perPage.toString());
+  params.append("page", pagination.value.page.toString());
   params.append("order_by", pagination.value.sortField);
   params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
 
@@ -185,37 +202,33 @@ function fetchBrands() {
     params.append("filter", pagination.value.filter);
   }
 
-  const url = `${route("api.brands")}?${params.toString()}`;
+  try {
+    const response = await fetchBrandsAPI(params.toString());
 
-  axios.get(url)
-    .then((response) => {
-      brands = response.data.data.map((item) => ({
-        ...item,
-        created_at: useDatetimeFormatter(item.created_at),
-        updated_at: useDatetimeFormatter(item.updated_at),
-      }));
-      pagination.value.total = response.data.meta.total;
-      loading.value = false;
-    })
-    .catch((error) => {
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: error.response.data.message,
-        life: 3000,
-      });
-      loading.value = false;
+    brands.value = response.data.data.map((item:Brand) => ({
+      ...item,
+      created_at: useDatetimeFormatter(item.created_at),
+      updated_at: useDatetimeFormatter(item.updated_at),
+    }));
+    pagination.value.total = response.data.meta.total;
+  } catch (error:any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: error.response.data.message,
+      life: 3000,
     });
-}
+  }
+};
 
-const onPage = (event) => {
+const onPage = (event:DataTablePageEvent ) => {
   pagination.value.page = event.page + 1;
   pagination.value.perPage = event.rows;
   fetchBrands();
 };
-const onSort = (event) => {
-  pagination.value.sortField = event.sortField;
-  pagination.value.sortOrder = event.sortOrder;
+const onSort = (event:DataTablePageEvent) => {
+  pagination.value.sortField = typeof event.sortField === 'string' ? event.sortField : 'name';
+  pagination.value.sortOrder = event.sortOrder ?? 0;
   fetchBrands();
 };
 
@@ -232,69 +245,74 @@ watch(
 );
 
 // Add/Edit Brand
-const selectedBrand = ref(null);
+const selectedBrand = ref<Brand | null>(null);
 const showModal = ref(false);
 
 const addBrand = () => {
   showModal.value = true;
   selectedBrand.value = null;
 };
-const editBrand = (brand) => {
+const editBrand = (brand: Brand) => {
   showModal.value = true;
   selectedBrand.value = brand;
 };
 
-const createBrand = (brand) => {
-  axios.post(route("api.brands.store"), brand)
-    .then(() => {
-      toast.add({
-        severity: "success",
-        summary: t("Success"),
-        detail: t("Brand created successfully"),
-        life: 3000,
-      });
-      fetchBrands();
-    })
-    .catch((error) => {
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: error.response.data.message,
-        life: 3000,
-      });
+
+const createBrand = async (brand:Pick<Brand, 'name'>) => {
+  const {storeBrandAPI} = useBrandsAPI();
+
+  try {
+    await storeBrandAPI(brand);
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: t("Brand created successfully"),
+      life: 3000,
     });
+    fetchBrands();
+  } catch (error:any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: error.response.data.message,
+      life: 3000,
+    });
+  }
 };
 
-const updateBrand = (brand) => {
-  axios.put(`${route("api.brands.update", brand.id)}`, brand)
-    .then(() => {
-      toast.add({
-        severity: "success",
-        summary: t("Success"),
-        detail: t("Brand updated successfully"),
-        life: 3000,
-      });
-      fetchBrands();
-    })
-    .catch((error) => {
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: error.response.data.message,
-        life: 3000,
-      });
+const updateBrand = async (brand: Brand) => {
+  const {updateBrandAPI} = useBrandsAPI();
+
+  try {
+    await updateBrandAPI(brand.id, brand);
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: t("Brand updated successfully"),
+      life: 3000,
     });
+    fetchBrands();
+  } catch (error:any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: error?.response?.data?.message ?? error,
+      life: 3000,
+    });
+  }
 };
 
-const saveBrand = (brand) => {
-  if (brand?.id) {
-    updateBrand(brand);
+const saveBrand = (brand:Brand | Pick<Brand, 'id' | 'name' >) => {
+  if (brand?.id !== undefined) {
+    updateBrand(brand as Brand);
   } else {
     createBrand(brand);
   }
 };
 
-const deleteBrand = (id) => {
+const deleteBrand = (id:number) => {
+  const {destroyBrandAPI} = useBrandsAPI();
+
   confirm.require({
     message: t("Are you sure you want to delete this brand?"),
     header: t("Confirm"),
@@ -302,25 +320,24 @@ const deleteBrand = (id) => {
     rejectLabel: t("Cancel"),
     acceptLabel: t("Delete"),
     rejectClass: "p-button-secondary",
-    accept: () => {
-      axios.delete(`${route("api.brands.destroy", id)}`)
-        .then(() => {
-          toast.add({
-            severity: "success",
-            summary: t("Success"),
-            detail: t("Brand deleted successfully"),
-            life: 3000,
-          });
-          fetchBrands();
-        })
-        .catch((error) => {
-          toast.add({
-            severity: "error",
-            summary: t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
+    accept: async () => {
+      try {
+        await destroyBrandAPI(id);
+        toast.add({
+          severity: "success",
+          summary: t("Success"),
+          detail: t("Brand deleted successfully"),
+          life: 3000,
         });
+        fetchBrands();
+      } catch (error: any) {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: error.response.data.message,
+          life: 3000,
+        });
+      }
     },
   });
 };

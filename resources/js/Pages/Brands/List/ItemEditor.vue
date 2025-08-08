@@ -24,7 +24,6 @@
       </div>
       <template
         #footer
-        class="flex flex-wrap justify-end"
       >
         <Button
           severity="secondary"
@@ -41,7 +40,8 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { Brand } from "@/Types/brand-types";
 import { Dialog, InputText, Button } from "primevue";
 import {
   computed, watch, ref,
@@ -51,12 +51,9 @@ const emit = defineEmits(["submitted"]);
 
 // Get values from the parent
 const showModal = defineModel("show-modal", { type: Boolean, required: true });
-const { brand } = defineProps({
-  brand: {
-    type: Object,
-    required: true,
-  },
-});
+
+const props = defineProps<{brand: Brand | Pick<Brand, 'name'> | null}>();
+
 
 const name = ref("");
 const submitted = ref(false);
@@ -65,7 +62,7 @@ watch(
   showModal,
   (val) => {
     if (val) {
-      name.value = brand?.name ?? "";
+      name.value = props.brand?.name ?? "";
     }
   },
 );
@@ -92,10 +89,10 @@ const submit = () => {
   if (validate()) {
     showModal.value = false;
     submitted.value = false;
-    if (brand === null) {
+    if (props.brand === null) {
       emit("submitted", { name: name.value });
     } else {
-      emit("submitted", { ...brand, name: name.value });
+      emit("submitted", { ...props.brand, name: name.value });
     }
   }
 };
