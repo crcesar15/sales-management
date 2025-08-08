@@ -3,10 +3,10 @@ import { useApi } from "./useApi";
 import { route } from "ziggy-js";
 import { AxiosResponse } from "axios";
 
-export function useBrandsAPI() {
+export function useBrandsClient() {
     const { apiClient, loading }  = useApi();
 
-    const fetchBrandsAPI = async <T = any>(queryParameters?: string):Promise<AxiosResponse<T>>  => {
+    const fetchBrandsApi = async <T = any>(queryParameters?: string):Promise<AxiosResponse<T>>  => {
         let url:string = route('api.brands');
 
         if (queryParameters) {
@@ -16,28 +16,28 @@ export function useBrandsAPI() {
         return await apiClient.get(url)
     }
 
-    const showBrandAPI = async (id: number) => {
+    const showBrandApi = async (id: number) => {
         return await apiClient.get(route('api.brands.show', id));
     }
 
-    const storeBrandAPI = async (brand:Pick<Brand, 'name'>) => {
+    const storeBrandApi = async (brand:Pick<Brand, 'name'>) => {
         return await apiClient.post(route('api.brands.store'), brand);
     }
 
-    const updateBrandAPI = async (id:number, brand:Brand) => {
+    const updateBrandApi = async (id:number, brand:Brand) => {
         return await apiClient.put(route('api.brands.update', id), brand);
     }
 
-    const destroyBrandAPI = async (id:number) => {
+    const destroyBrandApi = async (id:number) => {
         return await apiClient.delete(route('api.brands.destroy', id));
     }
 
     return {
         loading,
-        fetchBrandsAPI,
-        showBrandAPI,
-        storeBrandAPI,
-        updateBrandAPI,
-        destroyBrandAPI,
+        fetchBrandsApi,
+        showBrandApi,
+        storeBrandApi,
+        updateBrandApi,
+        destroyBrandApi,
     }
 }

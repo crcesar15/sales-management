@@ -162,7 +162,7 @@ import {
 } from "primevue";
 
 import { useI18n } from "vue-i18n";
-import { useBrandsAPI } from "@composables/useBrandsApi";
+import { useBrandsClient } from "@/Composables/useBrandClient";
 import { Brand } from '@app-types/brand-types';
 
 // Set composables
@@ -186,7 +186,7 @@ const pagination = ref({
   filter: "",
 });
 
-const { loading, fetchBrandsAPI } = useBrandsAPI();
+const { loading, fetchBrandsApi } = useBrandsClient();
 
 let brands = ref<Brand[]>();
 
@@ -203,7 +203,7 @@ const fetchBrands = async () => {
   }
 
   try {
-    const response = await fetchBrandsAPI(params.toString());
+    const response = await fetchBrandsApi(params.toString());
 
     brands.value = response.data.data.map((item:Brand) => ({
       ...item,
@@ -259,10 +259,10 @@ const editBrand = (brand: Brand) => {
 
 
 const createBrand = async (brand:Pick<Brand, 'name'>) => {
-  const {storeBrandAPI} = useBrandsAPI();
+  const {storeBrandApi} = useBrandsClient();
 
   try {
-    await storeBrandAPI(brand);
+    await storeBrandApi(brand);
     toast.add({
       severity: "success",
       summary: t("Success"),
@@ -281,10 +281,10 @@ const createBrand = async (brand:Pick<Brand, 'name'>) => {
 };
 
 const updateBrand = async (brand: Brand) => {
-  const {updateBrandAPI} = useBrandsAPI();
+  const {updateBrandApi} = useBrandsClient();
 
   try {
-    await updateBrandAPI(brand.id, brand);
+    await updateBrandApi(brand.id, brand);
     toast.add({
       severity: "success",
       summary: t("Success"),
@@ -311,7 +311,7 @@ const saveBrand = (brand:Brand | Pick<Brand, 'id' | 'name' >) => {
 };
 
 const deleteBrand = (id:number) => {
-  const {destroyBrandAPI} = useBrandsAPI();
+  const {destroyBrandApi} = useBrandsClient();
 
   confirm.require({
     message: t("Are you sure you want to delete this brand?"),
@@ -322,7 +322,7 @@ const deleteBrand = (id:number) => {
     rejectClass: "p-button-secondary",
     accept: async () => {
       try {
-        await destroyBrandAPI(id);
+        await destroyBrandApi(id);
         toast.add({
           severity: "success",
           summary: t("Success"),
