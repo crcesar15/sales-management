@@ -162,7 +162,7 @@ import {
 } from "primevue";
 
 import { useI18n } from "vue-i18n";
-import { useBrandsClient } from "@/Composables/useBrandClient";
+import { useBrandClient } from "@/Composables/useBrandClient";
 import { Brand } from '@app-types/brand-types';
 
 // Set composables
@@ -186,7 +186,7 @@ const pagination = ref({
   filter: "",
 });
 
-const { loading, fetchBrandsApi } = useBrandsClient();
+const { loading, fetchBrandsApi } = useBrandClient();
 
 let brands = ref<Brand[]>();
 
@@ -311,7 +311,7 @@ const saveBrand = (brand:Brand | Pick<Brand, 'id' | 'name' >) => {
 };
 
 const deleteBrand = (id:number) => {
-  const {destroyBrandApi} = useBrandsClient();
+  const {destroyBrandApi} = useBrandClient();
 
   confirm.require({
     message: t("Are you sure you want to delete this brand?"),
