@@ -10,7 +10,7 @@
           @click="router.visit(route('roles'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0 capitalize">
-          {{ t('add role') }}
+          {{ t('edit role') }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
@@ -110,15 +110,15 @@ import {
 
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
-import { usePermissionClient} from '@composables/usePermissionClient';
 import { required, createI18nMessage } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
-import { computed, onMounted, ref } from "vue";
-import { Permission, PermissionGroupedAccordion } from "@/Types/permission-types";
 import { Role } from "@/Types/role-types";
+import { Permission, PermissionGroupedAccordion } from "@/Types/permission-types";
+import { computed, onMounted, ref } from "vue";
+import { usePermissionClient } from "@/Composables/usePermissionClient";
 import { useRoleClient } from "@/Composables/useRoleClient";
-import { route } from "ziggy-js";
 import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 
 // Set composables
 const toast = useToast();
@@ -131,6 +131,12 @@ const withI18nMessage = createI18nMessage({t});
 defineOptions({
   layout: AppLayout
 });
+
+//Get props
+const props = defineProps<{
+  role: Role,
+  permissions: string[]
+}>();
 
 // Rules
 const rules = computed(() => ({
@@ -157,14 +163,15 @@ const groupPermissions = (permissions: Permission[]) => {
 
   permissions.forEach((item) => {
     const indexFound = formattedPermissions.findIndex((i) => i.category === item.category);
+    const enabled = props.permissions.includes(item.name);
 
     if (indexFound >= 0) {
-      formattedPermissions[indexFound].permissions.push({ id: item.id, name: item.name, enabled: false });
+      formattedPermissions[indexFound].permissions.push({ id: item.id, name: item.name, enabled });
     } else {
       formattedPermissions.push({
         value: value.toString(),
         category: item.category,
-        permissions: [{ id: item.id, name: item.name, enabled: false }],
+        permissions: [{ id: item.id, name: item.name, enabled }],
       });
       value += 1;
     }
@@ -197,10 +204,11 @@ const fetchPermissions = async () => {
 }
 
 onMounted(() => {
+  name.value = props.role.name;
   fetchPermissions();
-})
+});
 
-const getEnabledPermissions = (permissionsGroups:PermissionGroupedAccordion[]) => {
+const getEnabledPermissions = (permissionsGroups:PermissionGroupedAccordion[]):string[] => {
   const enabledPermissions:string[] = [];
 
   permissionsGroups.forEach((group) => {
@@ -218,15 +226,16 @@ const submit = async () => {
   v$.value.$touch();
 
   if (!v$.value.$invalid) {
-    const body = {
+    const body:Role = {
+      id: props.role.id,
       name: name.value,
       permissions: getEnabledPermissions(availablePermissions.value),
     };
 
-    const {storeRoleApi} = useRoleClient();
+    const {updateRoleApi} = useRoleClient();
 
     try {
-      await storeRoleApi(body);
+      await updateRoleApi(props.role.id, body);
 
       toast.add({
         severity: "success",
