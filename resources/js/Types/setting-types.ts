@@ -16,13 +16,3 @@ interface SingleSettings {
 export interface SettingGrouped {
   [key: string]: SingleSettings;
 }
-
-let a = {
-  settings: {
-    'users':
-      {
-        'name': 'app',
-        'env': 'test'
-      }
-  }
-}

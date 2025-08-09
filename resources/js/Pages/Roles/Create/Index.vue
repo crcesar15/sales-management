@@ -7,16 +7,16 @@
           text
           severity="secondary"
           class="hover:shadow-md mr-2"
-          @click="$inertia.visit(route('roles'))"
+          @click="router.visit(route('roles'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0 capitalize">
-          {{ $t('add role') }}
+          {{ t('add role') }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
         <PButton
           icon="fa fa-save"
-          :label="$t('Save')"
+          :label="t('Save')"
           class="uppercase"
           raised
           @click="submit()"
@@ -30,7 +30,7 @@
             <div class="grid grid-cols-12 gap-4">
               <div class="col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
-                  <label for="name">{{ $t('Name') }}</label>
+                  <label for="name">{{ t('Name') }}</label>
                   <InputText
                     id="name"
                     v-model="name"
@@ -66,7 +66,7 @@
                   :pt="{root: {class: '!bg-surface-100 dark:!bg-surface-800 !rounded-md !mb-2'}}"
                 >
                   <div class="w-full">
-                    <span class="uppercase font-extrabold">{{ $t(item.category) }}</span>
+                    <span class="uppercase font-extrabold">{{ t(item.category) }}</span>
                   </div>
                 </AccordionHeader>
                 <AccordionContent>
@@ -83,7 +83,7 @@
                       <label
                         :for="`tg-${permission.name}`"
                         class="first-letter:uppercase"
-                      >{{ $t(permission.name) }}</label>
+                      >{{ t(permission.name) }}</label>
                     </div>
                   </div>
                 </AccordionContent>
@@ -96,7 +96,7 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import {
   Card,
   InputText,
@@ -105,135 +105,146 @@ import {
   AccordionPanel,
   AccordionHeader,
   AccordionContent,
+  useToast,
 } from "primevue";
+
+import AppLayout from "@layouts/admin.vue";
+import { useI18n } from "vue-i18n";
+import { usePermissionClient} from '@composables/usePermissionClient';
 import { required, createI18nMessage } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
+import { computed, onMounted, ref } from "vue";
+import { Permission, PermissionGroupedAccordion } from "@/Types/permission-types";
+import { Role } from "@/Types/role-types";
+import { useRoleClient } from "@/Composables/useRoleClient";
+import { route } from "ziggy-js";
+import { router } from "@inertiajs/vue3";
 
-import AppLayout from "../../../Layouts/admin.vue";
-import i18n from "../../../app";
+// Set composables
+const toast = useToast();
+const { t } = useI18n();
 
-export default {
-  components: {
-    Card,
-    InputText,
-    ToggleSwitch,
-    Accordion,
-    AccordionPanel,
-    AccordionHeader,
-    AccordionContent,
-  },
-  layout: AppLayout,
-  setup() {
-    return {
-      v$: useVuelidate(),
-    };
-  },
-  data() {
-    return {
-      name: "",
-      availablePermissions: [],
-    };
-  },
-  mounted() {
-    this.fetchPermissions();
-  },
-  methods: {
-    fetchPermissions() {
-      const params = {
-        select: "id,name,category",
-        per_page: 200,
-        order_by: "category",
-        order_direction: "asc",
-      };
+//get from .json file
+const withI18nMessage = createI18nMessage({t});
+// Layout
+defineOptions({
+  layout: AppLayout
+});
 
-      window.axios.get(route("api.permissions", params)).then((res) => {
-        const permissions = res.data.data.map((item) => ({ ...item, enabled: false }));
+// Rules
+const rules = computed(() => ({
+  name: {
+    required: withI18nMessage(required),
+  },
+}));
 
-        this.availablePermissions = this.groupPermissions(permissions);
+// From variables
+const name = ref("");
+const availablePermissions = ref<PermissionGroupedAccordion[]>([]);
+
+// Validator
+const v$ = useVuelidate(
+  rules,
+  {
+    name
+  }
+);
+
+const groupPermissions = (permissions: Permission[]) => {
+  const formattedPermissions:PermissionGroupedAccordion[] = [];
+  let value = 0; // used for accordion
+
+  permissions.forEach((item) => {
+    const indexFound = formattedPermissions.findIndex((i) => i.category === item.category);
+
+    if (indexFound >= 0) {
+      formattedPermissions[indexFound].permissions.push({ id: item.id, name: item.name, enabled: false });
+    } else {
+      formattedPermissions.push({
+        value: value.toString(),
+        category: item.category,
+        permissions: [{ id: item.id, name: item.name, enabled: false }],
       });
-    },
-    groupPermissions(permissions) {
-      const formattedPermissions = [];
-      let value = 0; // used for accordion
+      value += 1;
+    }
+  });
 
-      permissions.forEach((item) => {
-        const indexFound = formattedPermissions.findIndex((i) => i.category === item.category);
-
-        if (indexFound >= 0) {
-          formattedPermissions[indexFound].permissions.push({ id: item.id, name: item.name, enabled: item.enabled });
-        } else {
-          formattedPermissions.push({
-            value: value.toString(),
-            category: item.category,
-            permissions: [{ id: item.id, name: item.name, enabled: false }],
-          });
-          value += 1;
-        }
-      });
-
-      return formattedPermissions;
-    },
-    getEnabledPermissions(permissionsGroups) {
-      const enabledPermissions = [];
-
-      permissionsGroups.forEach((group) => {
-        group.permissions.forEach((permission) => {
-          if (permission.enabled) {
-            enabledPermissions.push(permission.name);
-          }
-        });
-      });
-
-      return enabledPermissions;
-    },
-    submit() {
-      this.v$.$touch();
-
-      if (!this.v$.$invalid) {
-        const body = {
-          name: this.name,
-          permissions: this.getEnabledPermissions(this.availablePermissions),
-        };
-
-        axios.post(route("api.roles.store"), body)
-          .then(() => {
-            this.$toast.add({
-              severity: "success",
-              summary: this.$t("Success"),
-              detail: this.$t("Role created successfully"),
-            });
-            this.$inertia.visit(route("roles"));
-          })
-          .catch((error) => {
-            this.$toast.add({
-              severity: "error",
-              summary: this.$t("Error"),
-              detail: this.$t(error.response.data.message),
-            });
-          });
-      }
-    },
-  },
-  validations() {
-    const { t } = i18n.global;
-
-    const withI18nMessage = createI18nMessage({
-      t,
-      messagesPath: "validations",
-    });
-
-    return {
-      name: {
-        required: withI18nMessage(required),
-      },
-    };
-  },
+  return formattedPermissions;
 };
 
-</script>
+const fetchPermissions = async () => {
+  try {
+    const params = {
+      select: "id,name,category",
+      per_page: 200,
+      order_by: "category",
+      order_direction: "asc",
+    };
 
-<style scoped>
-/* accordionheader {
-  background-color: var(--p-slate-100);
-} */
-</style>
+    const {fetchPermissionsApi} = usePermissionClient();
+
+    const response = await fetchPermissionsApi(params.toString());
+
+    const permissions = response.data.data.map((item: Permission) => ({ ...item, enabled: false }));
+
+    availablePermissions.value = groupPermissions(permissions);
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t(error.response.data.message),
+    });
+  }
+}
+
+onMounted(() => {
+  fetchPermissions();
+})
+
+const getEnabledPermissions = (permissionsGroups:PermissionGroupedAccordion[]) => {
+  const enabledPermissions:string[] = [];
+
+  permissionsGroups.forEach((group) => {
+    group.permissions.forEach((permission) => {
+      if (permission.enabled) {
+        enabledPermissions.push(permission.name);
+      }
+    });
+  });
+
+  return enabledPermissions;
+}
+
+const submit = async () => {
+  v$.value.$touch();
+
+  if (!v$.value.$invalid) {
+    const body = {
+      name: name.value,
+      permissions: getEnabledPermissions(availablePermissions.value),
+    };
+
+    const {storeRoleApi} = useRoleClient();
+
+    try {
+      await storeRoleApi(body);
+
+      toast.add({
+        severity: "success",
+        summary: t("Success"),
+        detail: t("Role created successfully"),
+        life: 3000,
+      });
+
+      router.visit(route('roles'));
+    } catch (error:any) {
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: t(error.response.data.message),
+        life: 3000,
+      });
+    }
+  }
+}
+</script>

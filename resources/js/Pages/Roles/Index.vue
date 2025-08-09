@@ -2,15 +2,15 @@
   <div>
     <div class="flex justify-between mb-3">
       <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ $t("Roles") }}
+        {{ t("Roles") }}
       </h2>
-      <p-button
+      <Button
         v-can="'roles-create'"
-        :label="$t('add role')"
+        :label="t('add role')"
         icon="fa fa-add"
         raised
         class="ml-2 uppercase"
-        @click="$inertia.visit(route('roles.create'))"
+        @click="router.visit(route('roles.create'))"
       />
     </div>
     <ConfirmDialog />
@@ -21,7 +21,7 @@
           resizable-columns
           lazy
           :total-records="pagination.total"
-          :rows="pagination.rows"
+          :rows="pagination.total"
           :first="pagination.first"
           :loading="loading"
           paginator
@@ -31,7 +31,7 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ $t('No roles found') }}
+            {{ t('No roles found') }}
           </template>
           <template #header>
             <div class="grid grid-cols-12">
@@ -54,7 +54,7 @@
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
-                    :placeholder="$t('Search')"
+                    :placeholder="t('Search')"
                     class="w-full"
                   />
                 </IconField>
@@ -63,38 +63,38 @@
           </template>
           <Column
             field="name"
-            :header="$t('Name')"
+            :header="t('Name')"
             sortable
           />
           <Column
             field="created_at"
-            :header="$t('Created At')"
+            :header="t('Created At')"
             sortable
           />
           <Column
             field="updated_at"
-            :header="$t('Updated At')"
+            :header="t('Updated At')"
             sortable
           />
           <Column
             field="actions"
-            :header="$t('Actions')"
+            :header="t('Actions')"
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="row">
               <div class="flex justify-center gap-2">
-                <p-button
-                  v-tooltip.top="$t('Edit')"
+                <Button
+                  v-tooltip.top="t('Edit')"
                   v-can="'roles-edit'"
                   icon="fa fa-edit"
                   text
                   rounded
                   raised
                   size="sm"
-                  @click="$inertia.visit(route('roles.edit', row.data.id))"
+                  @click="router.visit(route('roles.edit', row.data.id))"
                 />
-                <p-button
-                  v-tooltip.top="$t('Delete')"
+                <Button
+                  v-tooltip.top="t('Delete')"
                   v-can="'roles-delete'"
                   icon="fa fa-trash"
                   text
@@ -112,138 +112,141 @@
   </div>
 </template>
 
-<script>
-import DataTable from "primevue/datatable";
-import Card from "primevue/card";
-import Column from "primevue/column";
-import PButton from "primevue/button";
-import InputText from "primevue/inputtext";
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
-import ConfirmDialog from "primevue/confirmdialog";
-import AppLayout from "../../Layouts/admin.vue";
-import useDatetimeFormatter from "../../Composables/useDatetimeFormatter";
+<script setup lang="ts">
+import {
+  DataTable,
+  Card,
+  Column,
+  Button,
+  InputText,
+  IconField,
+  InputIcon,
+  ConfirmDialog,
+  useToast,
+  useConfirm,
+  DataTablePageEvent,
+  DataTableSortEvent,
+} from "primevue";
 
-export default {
-  components: {
-    DataTable,
-    Column,
-    PButton,
-    InputText,
-    ConfirmDialog,
-    Card,
-    IconField,
-    InputIcon,
-  },
+import AppLayout from "@layouts/admin.vue";
+import useDatetimeFormatter from "@composables/useDatetimeFormatter";
+import { useI18n } from "vue-i18n";
+import { useRoleClient } from "@/Composables/useRoleClient";
+import { Role } from "@/Types/role-types";
+import { ref, watch } from "vue";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+
+// Set composables
+const toast = useToast();
+const confirm = useConfirm();
+const { t } = useI18n();
+
+// Layout
+defineOptions({
   layout: AppLayout,
-  data() {
-    return {
-      roles: [],
-      pagination: {
-        total: 0,
-        first: 0,
-        rows: 10,
-        page: 1,
-        perPage: 10,
-        sortField: "name",
-        sortOrder: 1,
-        filter: "",
-      },
-      loading: false,
-      selectedRole: {},
-      editorToggle: false,
-    };
+});
+
+// List roles
+const pagination = ref({
+  total: 0,
+  first: 0,
+  page: 1,
+  perPage: 10,
+  sortField: "name",
+  sortOrder: 1,
+  filter: "",
+});
+
+const {loading, fetchRolesApi} = useRoleClient();
+
+let roles = ref<Role[]>();
+
+const fetchRoles = async () => {
+  const params = new URLSearchParams();
+
+  params.append("per_page", pagination.value.perPage.toString());
+  params.append("page", pagination.value.page.toString());
+  params.append("order_by", pagination.value.sortField);
+  params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
+
+  if (pagination.value.filter) {
+    params.append("filter", pagination.value.filter);
+  }
+
+  try {
+    const response = await fetchRolesApi(params.toString());
+    roles.value = response.data.data.map((item:Role) => ({
+      ...item,
+      created_at: useDatetimeFormatter(item.created_at),
+      updated_at: useDatetimeFormatter(item.updated_at),
+    }));
+    pagination.value.total = response.data.meta.total;
+  } catch (error:any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: error.response.data.message,
+      life: 3000,
+    });
+  }
+}
+
+const onPage = (event: DataTablePageEvent) => {
+  pagination.value.page = event.page + 1;
+  pagination.value.perPage = event.rows;
+  fetchRoles();
+}
+const onSort = (event: DataTableSortEvent) => {
+  pagination.value.sortField = typeof event.sortField === 'string' ? event.sortField : 'name' ;
+  pagination.value.sortOrder = event.sortOrder ?? 0;
+  fetchRoles();
+}
+
+watch(
+  () => pagination.value.filter,
+  () => {
+    pagination.value.page = 1;
+    fetchRoles();
   },
-  watch: {
-    "pagination.filter": {
-      handler() {
-        this.pagination.page = 1;
-        this.fetchRoles();
-      },
-    },
-  },
-  mounted() {
-    this.fetchRoles();
-  },
-  methods: {
-    fetchRoles() {
-      this.loading = true;
+  {
+    immediate: true,
+    deep: true,
+  }
+)
 
-      const params = new URLSearchParams();
+// Delete Role
+const deleteRole = (id:number) => {
+  const {destroyRoleApi} = useRoleClient();
 
-      params.append("per_page", this.pagination.perPage);
-      params.append("page", this.pagination.page);
-      params.append("order_by", this.pagination.sortField);
-      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
-
-      if (this.pagination.filter) {
-        params.append("filter", this.pagination.filter);
-      }
-
-      const url = `${route("api.roles")}?${params.toString()}`;
-
-      axios.get(url)
-        .then((response) => {
-          this.roles = response.data.data.map((item) => ({
-            ...item,
-            created_at: useDatetimeFormatter(item.created_at),
-            updated_at: useDatetimeFormatter(item.updated_at),
-          }));
-          this.pagination.total = response.data.meta.total;
-          this.loading = false;
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-          this.loading = false;
+  confirm.require({
+    message: t("Are you sure you want to delete this role?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Delete"),
+    rejectClass: "p-button-secondary",
+    accept: async () => {
+      try {
+        await destroyRoleApi(id);
+        toast.add({
+          severity: "success",
+          summary: t("Success"),
+          detail: t("Role deleted successfully"),
+          life: 3000,
         });
+        fetchRoles();
+      } catch (error: any) {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: error.response.data.message,
+          life: 3000,
+        });
+      }
     },
-    onPage(event) {
-      this.pagination.page = event.page + 1;
-      this.pagination.perPage = event.rows;
-      this.fetchRoles();
-    },
-    onSort(event) {
-      this.pagination.sortField = event.sortField;
-      this.pagination.sortOrder = event.sortOrder;
-      this.fetchRoles();
-    },
-    deleteRole(id) {
-      this.$confirm.require({
-        message: this.$t("Are you sure you want to delete this role?"),
-        header: this.$t("Confirm"),
-        icon: "fas fa-exclamation-triangle",
-        rejectLabel: this.$t("Cancel"),
-        acceptLabel: this.$t("Delete"),
-        rejectClass: "p-button-secondary",
-        accept: () => {
-          axios.delete(`${route("api.roles.destroy", id)}`)
-            .then(() => {
-              this.$toast.add({
-                severity: "success",
-                summary: this.$t("Success"),
-                detail: this.$t("Role deleted successfully"),
-                life: 3000,
-              });
-              this.fetchRoles();
-            })
-            .catch((error) => {
-              this.$toast.add({
-                severity: "error",
-                summary: this.$t("Error"),
-                detail: error.response.data.message,
-                life: 3000,
-              });
-            });
-        },
-      });
-    },
-  },
-};
+  });
+}
 </script>
 
 <style>

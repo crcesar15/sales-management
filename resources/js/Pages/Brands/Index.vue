@@ -159,6 +159,7 @@ import {
   InputIcon,
   Tag,
   DataTablePageEvent,
+  DataTableSortEvent,
 } from "primevue";
 
 import { useI18n } from "vue-i18n";
@@ -226,7 +227,7 @@ const onPage = (event:DataTablePageEvent ) => {
   pagination.value.perPage = event.rows;
   fetchBrands();
 };
-const onSort = (event:DataTablePageEvent) => {
+const onSort = (event:DataTableSortEvent) => {
   pagination.value.sortField = typeof event.sortField === 'string' ? event.sortField : 'name';
   pagination.value.sortOrder = event.sortOrder ?? 0;
   fetchBrands();
@@ -259,7 +260,7 @@ const editBrand = (brand: Brand) => {
 
 
 const createBrand = async (brand:Pick<Brand, 'name'>) => {
-  const {storeBrandApi} = useBrandsClient();
+  const {storeBrandApi} = useBrandClient();
 
   try {
     await storeBrandApi(brand);
@@ -281,7 +282,7 @@ const createBrand = async (brand:Pick<Brand, 'name'>) => {
 };
 
 const updateBrand = async (brand: Brand) => {
-  const {updateBrandApi} = useBrandsClient();
+  const {updateBrandApi} = useBrandClient();
 
   try {
     await updateBrandApi(brand.id, brand);
