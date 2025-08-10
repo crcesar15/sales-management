@@ -220,13 +220,29 @@
 
 <script setup lang="ts">
 import {
-  DataTable, Card, Column, useToast, useConfirm, Button, InputText, IconField, InputIcon, ConfirmDialog, SelectButton, Tag,
+  DataTable,
+  Card,
+  Column,
+  useToast,
+  useConfirm,
+  Button,
+  InputText,
+  IconField,
+  InputIcon,
+  ConfirmDialog,
+  SelectButton,
+  Tag,
+  DataTablePageEvent,
+  DataTableSortEvent,
 } from "primevue";
 import { usePage, router } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import AppLayout from "../../Layouts/admin.vue";
 import useDatetimeFormatter from "../../Composables/useDatetimeFormatter";
+import { User } from "@/Types/user-types";
+import { useUserClient } from "@/Composables/useUserClient";
+import { route } from "ziggy-js";
 
 // Set composables
 const toast = useToast();
@@ -250,21 +266,18 @@ const pagination = ref({
 });
 
 const currentUser = usePage().props.auth.user;
-const isCurrentUser = (id) => currentUser.id === id;
+const isCurrentUser = (id:number) => currentUser.id === id;
 
-let users = [];
-
-const loading = ref(false);
+const { fetchUsersApi, loading } = useUserClient();
 const status = ref("all");
+let users = ref<User[]>([]);
 
-const fetchUsers = () => {
-  loading.value = true;
-
+const fetchUsers = async () => {
   const params = new URLSearchParams();
 
   params.append("include", "roles");
-  params.append("per_page", pagination.value.perPage);
-  params.append("page", pagination.value.page);
+  params.append("per_page", pagination.value.perPage.toString());
+  params.append("page", pagination.value.page.toString());
   params.append("order_by", pagination.value.sortField);
   params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
 
@@ -274,33 +287,31 @@ const fetchUsers = () => {
   if (pagination.value.filter) {
     params.append("filter", pagination.value.filter);
   }
-  const url = `${route("api.users")}?${params.toString()}`;
 
-  axios.get(url)
-    .then((response) => {
-      users = response.data.data.map((item) => ({
-        ...item,
-        created_at: useDatetimeFormatter(item.created_at),
-        updated_at: useDatetimeFormatter(item.updated_at),
-        roles: item.roles.map((role) => role.name).join(", "),
-      }));
-      pagination.value.total = response.data.meta.total;
-      loading.value = false;
-    })
-    .catch((error) => {
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: error.response,
-        life: 3000,
-      });
-      loading.value = false;
+  try {
+    const response = await fetchUsersApi(params.toString());
+
+    users.value = response.data.data.map((item: User) => ({
+      ...item,
+      created_at: useDatetimeFormatter(item.created_at),
+      updated_at: useDatetimeFormatter(item.updated_at),
+      roles: item.roles.map((role) => role.name).join(", "),
+    }));
+    pagination.value.total = response.data.meta.total;
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: error?.response?.data?.message ?? error,
+      life: 3000,
     });
+  }
 };
 
 watch(
   () => pagination.value.filter,
   () => {
+    pagination.value.first = 0;
     pagination.value.page = 1;
     fetchUsers();
   },
@@ -312,28 +323,31 @@ watch(
 watch(
   status,
   () => {
+    pagination.value.first = 0;
     pagination.value.page = 1;
     fetchUsers();
   },
 );
 
-const onPage = (event) => {
+const onPage = (event: DataTablePageEvent) => {
   pagination.value.page = event.page + 1;
   pagination.value.perPage = event.rows;
   fetchUsers();
 };
-const onSort = (event) => {
-  pagination.value.sortField = event.sortField;
-  pagination.value.sortOrder = event.sortOrder;
+const onSort = (event: DataTableSortEvent) => {
+  pagination.value.first = 0;
+  // pagination.value.page = 1;
+  pagination.value.sortField = typeof event.sortField === "string" ? event.sortField : "first_name";
+  pagination.value.sortOrder = event.sortOrder ?? 0;
   fetchUsers();
 };
 
 // Row actions
-const editUser = (id) => {
+const editUser = (id: number) => {
   router.visit(route("users.edit", id));
 };
 
-const restoreUser = (id) => {
+const restoreUser = (id: number) => {
   confirm.require({
     message: t("Are you sure you want to restore this user?"),
     header: t("Confirm"),
@@ -341,29 +355,29 @@ const restoreUser = (id) => {
     rejectLabel: t("Cancel"),
     acceptLabel: t("Restore"),
     rejectClass: "p-button-secondary",
-    accept: () => {
-      axios.put(route("api.users.restore", id))
-        .then(() => {
-          toast.add({
-            severity: "success",
-            summary: t("Success"),
-            detail: t("User restored successfully"),
-            life: 3000,
-          });
-          fetchUsers();
-        })
-        .catch((error) => {
-          toast.add({
-            severity: "error",
-            summary: t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
+    accept: async () => {
+      const { restoreUserApi } = useUserClient();
+      try {
+        await restoreUserApi(id);
+        toast.add({
+          severity: "success",
+          summary: t("Success"),
+          detail: t("User restored successfully"),
+          life: 3000,
         });
+        fetchUsers();
+      } catch (error: any) {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: error.response.data.message,
+          life: 3000,
+        });
+      }
     },
   });
 };
-const deleteUser = (id) => {
+const deleteUser = (id: number) => {
   confirm.require({
     message: t("Are you sure you want to delete this user?"),
     header: t("Confirm"),
@@ -371,25 +385,25 @@ const deleteUser = (id) => {
     rejectLabel: t("Cancel"),
     acceptLabel: t("Delete"),
     rejectClass: "p-button-secondary",
-    accept: () => {
-      axios.delete(route("api.users.destroy", id))
-        .then(() => {
-          toast.add({
-            severity: "success",
-            summary: "Success",
-            detail: t("User deleted successfully"),
-            life: 3000,
-          });
-          fetchUsers();
-        })
-        .catch((error) => {
-          toast.add({
-            severity: "error",
-            summary: t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
+    accept: async () => {
+      const { destroyUserApi } = useUserClient();
+      try {
+        await destroyUserApi(id);
+        toast.add({
+          severity: "success",
+          summary: "Success",
+          detail: t("User deleted successfully"),
+          life: 3000,
         });
+        fetchUsers();
+      } catch (error: any) {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: error.response.data.message,
+          life: 3000,
+        });
+      }
     },
   });
 };

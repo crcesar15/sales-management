@@ -134,7 +134,7 @@
                 id="roles"
                 v-model="roles"
                 display="chip"
-                :options="availableRoles"
+                :options="props.availableRoles"
                 option-label="name"
                 option-value="id"
                 :class="{'p-invalid': v$.roles.$invalid && v$.roles.$dirty}"
@@ -218,7 +218,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useVuelidate } from "@vuelidate/core";
 import {
   required,
@@ -244,14 +244,16 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 
 import AppLayout from "../../../Layouts/admin.vue";
+import { useUserClient } from "@/Composables/useUserClient";
+import { DraftUser, User } from "@/Types/user-types";
+import { route } from "ziggy-js";
+import useDatetimeFormatter from "@/Composables/useDatetimeFormatter";
+import { Role } from "@/Types/role-types";
 
 // Set composables
 const toast = useToast();
 const { t } = useI18n();
-const withI18nMessage = createI18nMessage({
-  t,
-  messagesPath: "validations",
-});
+const withI18nMessage = createI18nMessage({t});
 
 // Layout
 defineOptions({
@@ -259,7 +261,9 @@ defineOptions({
 });
 
 // Get Roles
-const { availableRoles } = defineProps({ availableRoles: { type: Object, required: true } });
+const props = defineProps<{
+  availableRoles: Role[];
+}>();
 
 // Set variables
 const firstName = ref("");
@@ -268,14 +272,14 @@ const email = ref("");
 const status = ref("active");
 const roles = ref([]);
 const phone = ref("");
-const dateOfBirth = ref("");
+const dateOfBirth = ref<Date | null>(null);
 const username = ref("");
 const password = ref("");
 const passwordConfirmation = ref("");
 
 // Set rules
 // Custom rule: must allow only letters, numbers, dashes, underscores and dots
-const validateUsername = (value) => {
+const validateUsername = (value:string) => {
   if (!value) return true;
 
   return /^[a-zA-Z0-9_.-]*$/.test(value);
@@ -328,40 +332,42 @@ const v$ = useVuelidate(
 );
 
 // Submit
-const submit = () => {
+const submit = async () => {
   v$.value.$touch();
 
   if (!v$.value.$invalid) {
-    const user = {
+    const user: DraftUser = {
       first_name: firstName.value,
       last_name: lastName.value,
       email: email.value,
       status: status.value,
       roles: roles.value,
       phone: phone.value,
-      date_of_birth: window.moment(dateOfBirth.value).format("YYYY-MM-DD"),
+      date_of_birth: useDatetimeFormatter(dateOfBirth.value?.toString() ?? '', "YYYY-MM-DD"),
       username: username.value,
       password: password.value,
       password_confirmation: passwordConfirmation.value,
     };
 
-    axios.post(route("api.users.store"), user).then(() => {
+    const { createUserApi } = useUserClient();
+
+    try {
+      await createUserApi(user);
       toast.add({
         severity: "success",
         summary: t("Success"),
         detail: t("User has been created successfully"),
         life: 3000,
       });
-
       router.visit(route("users"));
-    }).catch((error) => {
+    } catch (error: any) {
       toast.add({
         severity: "error",
         summary: t("Error"),
-        detail: t(error.response.data.message),
+        detail: t(error?.response?.data?.message ?? error) ,
         life: 3000,
       });
-    });
+    }
   } else {
     toast.add({
       severity: "error",

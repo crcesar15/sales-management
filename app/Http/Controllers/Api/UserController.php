@@ -24,7 +24,11 @@ final class UserController extends Controller
         $query = User::query();
 
         if ($request->has('filter')) {
-            $query->where('name', 'like', $request->string('filter')->value());
+            $query->where(function ($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->string('filter')->value() . '%')
+                    ->orWhere('last_name', 'like', '%' . $request->string('filter')->value() . '%')
+                    ->orWhere('email', 'like', '%' . $request->string('filter')->value() . '%');
+            });
         }
 
         if ($request->has('status')) {

@@ -10,30 +10,39 @@ export interface User {
   username: string
   phone: string | null
   status: string
-  date_of_birth: string | null
-  additional_properties: Record<string, unknown> | null
-  email_verified_at: string | null
+  date_of_birth: Date | null
+  additional_properties?: Record<string, unknown> | null
+  email_verified_at?: string | null
   password?: string
+  password_confirmation?: string
   remember_token?: string | null
-  deleted_at: string | null
-  created_at: string | null
-  updated_at: string | null
+  deleted_at?: string | null
+  created_at?: string | null
+  updated_at?: string | null
   // mutators
-  full_name: string
+  full_name?: string
   // relations
-  purchase_orders: PurchaseOrder[]
-  roles: Role[]
+  purchase_orders?: PurchaseOrder[]
+  roles?: Role[]
   // permissions: Permission[]
   // counts
-  purchase_orders_count: number
-  tokens_count: number
-  roles_count: number
-  permissions_count: number
-  notifications_count: number
+  purchase_orders_count?: number
+  tokens_count?: number
+  roles_count?: number
+  permissions_count?: number
+  notifications_count?: number
   // exists
-  purchase_orders_exists: boolean
-  tokens_exists: boolean
-  roles_exists: boolean
-  permissions_exists: boolean
-  notifications_exists: boolean
+  purchase_orders_exists?: boolean
+  tokens_exists?: boolean
+  roles_exists?: boolean
+  permissions_exists?: boolean
+  notifications_exists?: boolean
+}
+
+export interface DraftUser extends Omit<User, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'full_name'> {
+  id?: number,
+  date_of_birth?: string,
+  created_at?: string,
+  updated_at?: string,
+  roles: number[],
 }

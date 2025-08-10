@@ -134,7 +134,7 @@
                 id="roles"
                 v-model="roles"
                 display="chip"
-                :options="availableRoles"
+                :options="props.availableRoles"
                 option-label="name"
                 option-value="id"
                 :class="{'p-invalid': v$.roles.$invalid && v$.roles.$dirty}"
@@ -218,7 +218,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useVuelidate } from "@vuelidate/core";
 import {
   required,
@@ -245,14 +245,16 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 
 import AppLayout from "../../../Layouts/admin.vue";
+import { Role } from "@/Types/role-types";
+import { DraftUser, User } from "@/Types/user-types";
+import { useUserClient } from "@/Composables/useUserClient";
+import { route } from "ziggy-js";
+import useDatetimeFormatter from "@/Composables/useDatetimeFormatter";
 
 // Set composables
 const toast = useToast();
 const { t } = useI18n();
-const withI18nMessage = createI18nMessage({
-  t,
-  messagesPath: "validations",
-});
+const withI18nMessage = createI18nMessage({t});
 
 // Layout
 defineOptions({
@@ -260,28 +262,26 @@ defineOptions({
 });
 
 // Get Roles and user
-const { availableRoles, user } = defineProps(
-  {
-    availableRoles: { type: Object, required: true },
-    user: { type: Object, required: true },
-  },
-);
+const props = defineProps<{
+  availableRoles: Role[];
+  user: User;
+}>();
 
 // Set variables
 const firstName = ref("");
 const lastName = ref("");
 const email = ref("");
 const status = ref("active");
-const roles = ref([]);
+const roles = ref<number[]>([]);
 const phone = ref("");
-const dateOfBirth = ref("");
+const dateOfBirth = ref<Date | null>(null);
 const username = ref("");
 const password = ref("");
 const passwordConfirmation = ref("");
 
 // Set rules
 // Custom rule: must allow only letters, numbers, dashes, underscores and dots
-const validateUsername = (value) => {
+const validateUsername = (value: string) => {
   if (!value) return true;
 
   return /^[a-zA-Z0-9_.-]*$/.test(value);
@@ -333,18 +333,18 @@ const v$ = useVuelidate(
 );
 
 watch(
-  user.value,
+  props.user,
   () => {
-    firstName.value = user.first_name;
-    lastName.value = user.last_name;
-    email.value = user.email;
-    status.value = user.status;
-    phone.value = user.phone;
-    dateOfBirth.value = user.date_of_birth;
-    username.value = user.username;
+    firstName.value = props.user.first_name;
+    lastName.value = props.user.last_name;
+    email.value = props.user.email;
+    status.value = props.user.status;
+    phone.value = props.user.phone ?? '';
+    dateOfBirth.value = props.user.date_of_birth ?? null;
+    username.value = props.user.username;
 
-    if (typeof (user.roles) === "object" && user.roles.length > 0) {
-      roles.value = user.roles.map((role) => role.id);
+    if (typeof (props.user.roles) === "object" && props.user.roles.length > 0) {
+      roles.value = props.user.roles.map((role:Role) => role.id);
     } else {
       roles.value = [];
     }
@@ -355,20 +355,19 @@ watch(
 );
 
 // Submit
-const submit = () => {
+const submit = async () => {
   v$.value.$touch();
 
   if (!v$.value.$invalid) {
-    const validatedUser = {
+    const validatedUser:DraftUser = {
+      id: props.user.id,
       first_name: firstName.value,
       last_name: lastName.value,
       email: email.value,
       status: status.value,
       roles: roles.value,
       phone: phone.value,
-      date_of_birth: dateOfBirth.value
-        ? window.moment(dateOfBirth.value).format("YYYY-MM-DD")
-        : null,
+      date_of_birth: useDatetimeFormatter(dateOfBirth.value?.toString() ?? '', "YYYY-MM-DD"),
       username: username.value,
     };
 
@@ -377,23 +376,26 @@ const submit = () => {
       validatedUser.password_confirmation = passwordConfirmation.value;
     }
 
-    axios.put(route("api.users.update", user.id), validatedUser).then(() => {
+    const { updateUserApi } = useUserClient();
+
+    try {
+      await updateUserApi(props.user.id, validatedUser);
       toast.add({
-        severity: "success",
+        severity: 'success',
         summary: t("Success"),
         detail: t("User has been updated successfully"),
         life: 3000,
       });
 
       router.visit(route("users"));
-    }).catch((error) => {
+    } catch (error: any) {
       toast.add({
-        severity: "error",
+        severity: 'error',
         summary: t("Error"),
-        detail: t(error.response.data.message),
+        detail: t(error?.response?.data?.message ?? error),
         life: 3000,
       });
-    });
+    }
   } else {
     toast.add({
       severity: "error",
