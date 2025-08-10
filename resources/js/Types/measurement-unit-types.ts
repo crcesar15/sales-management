@@ -8,9 +8,9 @@ export interface MeasurementUnit {
   created_at: string | null
   updated_at: string | null
   // relations
-  products: Product[]
+  products?: Product[]
   // counts
-  products_count: number
+  products_count?: number
   // exists
-  products_exists: boolean
+  products_exists?: boolean
 }

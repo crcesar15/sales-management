@@ -20,12 +20,12 @@ export function useMeasurementUnitClient() {
         return await apiClient.get(route('api.measurement-units.show', id));
     }
 
-    const storeMeasurementUnitApi = async (brand:Pick<MeasurementUnit, 'name' | 'abbreviation'>) => {
-        return await apiClient.post(route('api.measurement-units.store'), brand);
+    const storeMeasurementUnitApi = async (measurementUnit:Pick<MeasurementUnit, 'name' | 'abbreviation'>) => {
+        return await apiClient.post(route('api.measurement-units.store'), measurementUnit);
     }
 
-    const updateMeasurementUnitApi = async (id:number, brand:MeasurementUnit) => {
-        return await apiClient.put(route('api.measurement-units.update', id), brand);
+    const updateMeasurementUnitApi = async (id:number, measurementUnit:MeasurementUnit) => {
+        return await apiClient.put(route('api.measurement-units.update', id), measurementUnit);
     }
 
     const destroyMeasurementUnitApi = async (id:number) => {

@@ -1,12 +1,12 @@
 <template>
   <div>
     <Dialog
-      v-model:visible="visible"
+      v-model:visible="showModal"
       :header="$t('Measurement Unit')"
       :breakpoints="{ '1100px': '60vw', '750px': '75vw', '500px': '90vw' }"
       :style="{ width: '30vw' }"
       modal
-      @hide="clearSelection"
+      @hide="closeModal"
     >
       <div class="flex flex-col">
         <label for="name">{{ $t('Name') }}</label>
@@ -42,12 +42,12 @@
         #footer
         class="flex flex-wrap justify-end"
       >
-        <PButton
+        <Button
           severity="secondary"
           :label="$t('Cancel')"
           @click="closeModal"
         />
-        <PButton
+        <Button
           severity="primary"
           :label="$t('Save')"
           @click="submit"
@@ -57,97 +57,95 @@
   </div>
 </template>
 
-<script>
-import Dialog from "primevue/dialog";
-import InputText from "primevue/inputtext";
-import PButton from "primevue/button";
+<script setup lang="ts">
 
-export default {
-  components: {
-    Dialog,
-    InputText,
-    PButton,
+import { MeasurementUnit } from "@app-types/measurement-unit-types";
+import {
+  Dialog,
+  InputText,
+  Button,
+} from "primevue"
+import { computed, ref, watch } from "vue";
+
+// Define v-model:show-modal
+const showModal = defineModel("show-modal", {type: Boolean, required: true});
+
+// Define props
+const props = defineProps<{
+  measurementUnit: MeasurementUnit | Pick<MeasurementUnit, 'id' | 'name' | 'abbreviation'> | null;
+}>();
+
+// Define emits
+const emit = defineEmits(["submitted"]);
+
+// Open modal
+let name = ref("");
+let abbreviation = ref("");
+let submitted = ref(false);
+
+watch(
+  showModal,
+  (val) => {
+    if (val) {
+      name.value = props?.measurementUnit?.name || "";
+      abbreviation.value = props?.measurementUnit?.abbreviation || "";
+    }
   },
-  props: {
-    measurementUnit: {
-      type: Object,
-      default: () => ({}),
-    },
-    showDialog: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  data() {
-    return {
-      name: "",
-      abbreviation: "",
-      visible: false,
-      submitted: false,
-    };
-  },
-  computed: {
-    nameErrorMessage() {
-      if (this.submitted && (this.name === undefined || this.name === "")) {
-        return "Name is required";
-      }
+);
 
-      return null;
-    },
-    abbreviationErrorMessage() {
-      if (this.submitted && (this.abbreviation === undefined || this.abbreviation === "")) {
-        return "Abbreviation is required";
-      }
+// Submit validations
+const nameErrorMessage = computed(() => {
+  if (submitted.value && (name.value === undefined || name.value === "")) {
+    return "Name is required";
+  }
+  return null;
+});
 
-      if (this.submitted && (this.abbreviation === undefined || this.abbreviation.length > 10)) {
-        return "Abbreviation must be less than 10 characters";
-      }
+const abbreviationErrorMessage = computed(() => {
+  if (submitted.value && (abbreviation.value === undefined || abbreviation.value === "")) {
+    return "Abbreviation is required";
+  }
+  if (submitted.value && (abbreviation.value === undefined || abbreviation.value.length > 10)) {
+    return "Abbreviation must be less than 10 characters";
+  }
+  return null;
+});
 
-      return null;
-    },
-  },
-  watch: {
-    showDialog(val) {
-      this.visible = val;
-      this.submitted = false;
-      if (val) {
-        this.name = this.measurementUnit.name;
-        this.abbreviation = this.measurementUnit.abbreviation;
-      }
-    },
-  },
-  methods: {
-    clearSelection() {
-      this.$emit("clearSelection");
-    },
-    submit() {
-      this.submitted = true;
-      if (this.validate()) {
-        this.$emit("submitted", this.measurementUnit.id, {
-          name: this.name,
-          abbreviation: this.abbreviation,
-        });
-        this.visible = false;
-      }
-    },
-    closeModal() {
-      this.visible = false;
-    },
-    validate() {
-      if (this.name === undefined || this.name === "") {
-        return false;
-      }
+const validate = () => {
+  if (name.value === undefined || name.value === "") {
+    return false;
+  }
 
-      if (this.abbreviation === undefined || this.abbreviation === "") {
-        return false;
-      }
+  if (abbreviation.value === undefined || abbreviation.value === "") {
+    return false;
+  }
 
-      if (this.abbreviation === undefined || this.abbreviation.length > 10) {
-        return false;
-      }
+  if (abbreviation.value === undefined || abbreviation.value.length > 10) {
+    return false;
+  }
 
-      return true;
-    },
-  },
+  return true;
+};
+
+// Submit
+const submit = () => {
+  submitted.value = true;
+  if (validate()) {
+    showModal.value = false;
+    submitted.value = false;
+    if(props.measurementUnit === null) {
+      emit("submitted", { name: name.value, abbreviation: abbreviation.value });
+    } else {
+      emit("submitted", {
+        ...props.measurementUnit,
+        name: name.value,
+        abbreviation: abbreviation.value,
+      });
+    }
+  }
+};
+
+const closeModal = () => {
+  showModal.value = false;
 };
 </script>
