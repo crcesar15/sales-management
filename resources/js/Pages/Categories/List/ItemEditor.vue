@@ -1,12 +1,12 @@
 <template>
   <div>
     <Dialog
-      v-model:visible="visible"
+      v-model:visible="showModal"
       :header="$t('Category')"
       :breakpoints="{ '1100px': '60vw', '750px': '75vw', '500px': '90vw' }"
       :style="{ width: '30vw' }"
       modal
-      @hide="clearSelection"
+      @hide="closeModal"
     >
       <div class="flex flex-col">
         <label for="name">{{ $t('Name') }}</label>
@@ -26,12 +26,12 @@
         #footer
         class="flex flex-wrap justify-end"
       >
-        <PButton
+        <Button
           severity="secondary"
           :label="$t('Cancel')"
           @click="closeModal"
         />
-        <PButton
+        <Button
           severity="primary"
           :label="$t('Save')"
           @click="submit"
@@ -41,75 +41,72 @@
   </div>
 </template>
 
-<script>
-import Dialog from "primevue/dialog";
-import InputText from "primevue/inputtext";
-import PButton from "primevue/button";
+<script setup lang="ts">
 
-export default {
-  components: {
-    Dialog,
-    InputText,
-    PButton,
-  },
-  props: {
-    category: {
-      type: Object,
-      default: () => ({}),
-    },
-    showDialog: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  data() {
-    return {
-      name: "",
-      visible: false,
-      submitted: false,
-    };
-  },
-  computed: {
-    nameErrorMessage() {
-      if (this.submitted && (this.name === undefined || this.name === "")) {
-        return "Name is required";
-      }
+import {
+  Dialog,
+  InputText,
+  Button
+} from "primevue"
+import { computed, ref, watch } from "vue";
 
-      return null;
-    },
-  },
-  watch: {
-    showDialog(val) {
-      this.visible = val;
-      this.submitted = false;
-      if (val) {
-        this.name = this.category.name;
-      }
-    },
-  },
-  methods: {
-    clearSelection() {
-      this.$emit("clearSelection");
-    },
-    submit() {
-      this.submitted = true;
-      if (this.validate()) {
-        this.$emit("submitted", this.category.id, {
-          name: this.name,
-        });
-        this.visible = false;
-      }
-    },
-    closeModal() {
-      this.visible = false;
-    },
-    validate() {
-      if (this.name === undefined || this.name === "") {
-        return false;
-      }
+// Define v-model:show-dialog
+const showModal = defineModel("show-modal", { type: Boolean, required: true });
 
-      return true;
-    },
+// Define props
+const props = defineProps({
+  category: {
+    type: Object,
+    default: () => ({})
   },
+})
+
+// Define emits
+const emit = defineEmits(["submitted"]);
+
+// Open modal
+let name = ref("");
+let submitted = ref(false);
+
+watch(
+  showModal,
+  (val) => {
+    if (val) {
+      name.value = props.category?.name ?? "";
+    }
+  },
+);
+
+// Submit Validations
+const nameErrorMessage = computed(() => {
+  if (submitted.value && (name.value === undefined || name.value === "")) {
+    return "Name is required";
+  }
+  return null;
+});
+
+const validate = () => {
+  if (name.value === undefined || name.value === "") {
+    return false;
+  }
+  return true;
 };
+
+// Submit
+const submit = () => {
+  submitted.value = true;
+  if (validate()) {
+    showModal.value = false;
+    submitted.value = false;
+    if (props.category === null) {
+      emit("submitted", { name: name.value });
+    } else {
+      emit("submitted", { ...props.category, name: name.value });
+    }
+  }
+};
+
+const closeModal = () => {
+  showModal.value = false;
+}
 </script>

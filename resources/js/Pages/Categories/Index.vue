@@ -4,7 +4,7 @@
       <h2 class="text-2xl font-bold flex items-end m-0">
         {{ $t("Categories") }}
       </h2>
-      <p-button
+      <Button
         v-can="'categories-create'"
         :label="$t('Add Category')"
         icon="fa fa-add"
@@ -22,7 +22,7 @@
           resizable-columns
           lazy
           :total-records="pagination.total"
-          :rows="pagination.rows"
+          :rows="pagination.perPage"
           :first="pagination.first"
           :loading="loading"
           paginator
@@ -101,7 +101,7 @@
           >
             <template #body="row">
               <div class="flex justify-center gap-2">
-                <p-button
+                <Button
                   v-can="'categories-edit'"
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
@@ -111,7 +111,7 @@
                   size="sm"
                   @click="editCategory(row.data)"
                 />
-                <p-button
+                <Button
                   v-can="'categories-delete'"
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
@@ -128,209 +128,223 @@
       </template>
     </Card>
     <CategoryEditor
+      v-model:show-modal="showModal"
       :category="selectedCategory"
-      :show-dialog="editorToggle"
-      @clearSelection="selectedCategory = {}; editorToggle = false;"
       @submitted="saveCategory"
     />
   </div>
 </template>
 
-<script>
-import DataTable from "primevue/datatable";
-import Card from "primevue/card";
-import Column from "primevue/column";
-import Toast from "primevue/toast";
-import PButton from "primevue/button";
-import InputText from "primevue/inputtext";
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
-import ConfirmDialog from "primevue/confirmdialog";
-import Tag from "primevue/tag";
-import AppLayout from "../../Layouts/admin.vue";
-import CategoryEditor from "./List/ItemEditor.vue";
-import useDatetimeFormatter from "../../Composables/useDatetimeFormatter";
+<script setup lang="ts">
 
-export default {
-  components: {
-    DataTable,
-    Column,
-    PButton,
-    CategoryEditor,
-    InputText,
-    Toast,
-    ConfirmDialog,
-    Card,
-    IconField,
-    InputIcon,
-    Tag,
-  },
-  layout: AppLayout,
-  data() {
-    return {
-      categories: [],
-      pagination: {
-        total: 0,
-        first: 0,
-        rows: 10,
-        page: 1,
-        perPage: 10,
-        sortField: "name",
-        sortOrder: 1,
-        filter: "",
-      },
-      loading: false,
-      selectedCategory: {},
-      editorToggle: false,
-    };
-  },
-  watch: {
-    "pagination.filter": {
-      handler() {
-        this.pagination.page = 1;
-        this.fetchCategories();
-      },
-    },
-  },
-  mounted() {
-    this.fetchCategories();
-  },
-  methods: {
-    fetchCategories() {
-      this.loading = true;
+import {
+  DataTable,
+  Card,
+  Column,
+  Toast,
+  Button,
+  InputText,
+  IconField,
+  InputIcon,
+  ConfirmDialog,
+  Tag,
+  useToast,
+  useConfirm,
+  DataTablePageEvent,
+  DataTableSortEvent
+} from "primevue"
 
-      const params = new URLSearchParams();
+import AppLayout from "@layouts/admin.vue";
+import CategoryEditor from "@pages/Categories/List/ItemEditor.vue";
+import useDatetimeFormatter from "@composables/useDatetimeFormatter";
+import { ref, watch } from "vue";
+import { Category } from "@app-types/category-types";
+import { useCategoryClient } from "@/Composables/useCategoryClient";
+import { useI18n } from "vue-i18n";
 
-      params.append("per_page", this.pagination.perPage);
-      params.append("page", this.pagination.page);
-      params.append("order_by", this.pagination.sortField);
-      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
+// Set composables
+const toast = useToast();
+const confirm = useConfirm();
+const { t } = useI18n();
 
-      if (this.pagination.filter) {
-        params.append("filter", this.pagination.filter);
+// Set Layout
+defineOptions({
+  layout: AppLayout
+});
+
+// List Categories
+const categories = ref<Category[]>([]);
+const pagination = ref({
+  total: 0,
+  first: 0,
+  page: 1,
+  perPage: 10,
+  sortField: "name",
+  sortOrder: 1,
+  filter: "",
+});
+
+const {loading, fetchCategoriesApi} = useCategoryClient();
+
+const fetchCategories = async () => {
+  const params = new URLSearchParams();
+
+  params.append("per_page", pagination.value.perPage.toString());
+  params.append("page", pagination.value.page.toString());
+  params.append("order_by", pagination.value.sortField);
+  params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
+
+  if (pagination.value.filter) {
+    params.append("filter", pagination.value.filter);
+  }
+
+  try {
+    const response = await fetchCategoriesApi(params.toString());
+    categories.value = response.data.data.map((item: Category) => ({
+      ...item,
+      created_at: useDatetimeFormatter(item.created_at),
+      updated_at: useDatetimeFormatter(item.updated_at),
+    }));
+    pagination.value.total = response.data.meta.total;
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t(error?.response?.data?.message ?? error),
+      life: 3000,
+    });
+  }
+};
+
+const onPage = (event: DataTablePageEvent) => {
+  pagination.value.page = event.page + 1;
+  pagination.value.perPage = event.rows;
+  fetchCategories();
+}
+
+const onSort = (event: DataTableSortEvent) => {
+  pagination.value.sortField = typeof event.sortField === "string" ? event.sortField : "name";
+  pagination.value.sortOrder = event.sortOrder ?? 0;
+  fetchCategories();
+}
+
+watch(
+  () => pagination.value.filter,
+  () => {
+    pagination.value.page = 1;
+    fetchCategories();
+  },
+  {
+    immediate: true,
+    deep: true,
+  },
+);
+
+// Create/Edit Categories
+let showModal = ref(false);
+let selectedCategory = ref<Category | null>(null);
+
+const addCategory = () => {
+  selectedCategory.value = null;
+  showModal.value = true;
+};
+
+const editCategory = (category: Category) => {
+  selectedCategory.value = category;
+  showModal.value = true;
+};
+
+const createCategory = async (category: Category) => {
+  const { storeCategoryApi } = useCategoryClient();
+
+  try {
+    await storeCategoryApi(category);
+
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: t("Category created successfully"),
+      life: 3000,
+    });
+
+    fetchCategories();
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t(error?.response?.data?.message ?? error),
+      life: 3000,
+    });
+  }
+};
+
+const updateCategory = async (id: number, category: Category) => {
+  const { updateCategoryApi } = useCategoryClient();
+
+  try {
+    await updateCategoryApi(id, category);
+
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: t("Category updated successfully"),
+      life: 3000,
+    });
+
+    fetchCategories();
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t(error?.response?.data?.message ?? error),
+      life: 3000,
+    });
+  }
+};
+
+const saveCategory = (category: Category) => {
+  if (selectedCategory.value === null) {
+    createCategory(category);
+  } else {
+    updateCategory(selectedCategory.value.id, category);
+  }
+};
+
+// Delete Categories
+const deleteCategory = async (id: number) => {
+  const { destroyCategoryApi } = useCategoryClient();
+
+  confirm.require({
+    message: t("Are you sure you want to delete this category?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Delete"),
+    rejectClass: "p-button-secondary",
+    accept: async () => {
+      try {
+        await destroyCategoryApi(id);
+
+        toast.add({
+          severity: "success",
+          summary: t("Success"),
+          detail: t("Category deleted successfully"),
+          life: 3000,
+        });
+
+        fetchCategories();
+      } catch (error: any) {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: t(error?.response?.data?.message ?? error),
+          life: 3000,
+        });
       }
-
-      const url = `${route("api.categories")}?${params.toString()}`;
-
-      axios.get(url)
-        .then((response) => {
-          this.categories = response.data.data.map((item) => ({
-            ...item,
-            created_at: useDatetimeFormatter(item.created_at),
-            updated_at: useDatetimeFormatter(item.updated_at),
-          }));
-          this.pagination.total = response.data.meta.total;
-          this.loading = false;
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-          this.loading = false;
-        });
     },
-    onPage(event) {
-      this.pagination.page = event.page + 1;
-      this.pagination.perPage = event.rows;
-      this.fetchCategories();
-    },
-    onSort(event) {
-      this.pagination.sortField = event.sortField;
-      this.pagination.sortOrder = event.sortOrder;
-      this.fetchCategories();
-    },
-    addCategory() {
-      this.editorToggle = true;
-      this.selectedCategory = {};
-    },
-    editCategory(category) {
-      this.editorToggle = true;
-      this.selectedCategory = category;
-    },
-    deleteCategory(category) {
-      this.$confirm.require({
-        message: this.$t("Are you sure you want to delete this category?"),
-        header: this.$t("Confirm"),
-        icon: "fas fa-exclamation-triangle",
-        rejectLabel: this.$t("Cancel"),
-        acceptLabel: this.$t("Delete"),
-        rejectClass: "p-button-secondary",
-        accept: () => {
-          axios.delete(`${route("api.categories.destroy", category)}`)
-            .then(() => {
-              this.$toast.add({
-                severity: "success",
-                summary: this.$t("Success"),
-                detail: this.$t("Category deleted successfully"),
-                life: 3000,
-              });
-              this.fetchCategories();
-            })
-            .catch((error) => {
-              this.$toast.add({
-                severity: "error",
-                summary: this.$t("Error"),
-                detail: error.response.data.message,
-                life: 3000,
-              });
-            });
-        },
-      });
-    },
-    saveCategory(id, category) {
-      if (id) {
-        this.updateCategory(id, category);
-      } else {
-        this.createCategory(category);
-      }
-    },
-    createCategory(category) {
-      axios.post(route("api.categories.store"), category)
-        .then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: this.$t("Success"),
-            detail: this.$t("Category created successfully"),
-            life: 3000,
-          });
-          this.fetchCategories();
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        });
-    },
-    updateCategory(id, category) {
-      axios.put(`${route("api.categories.update", id)}`, category)
-        .then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: this.$t("Success"),
-            detail: this.$t("Category updated successfully"),
-            life: 3000,
-          });
-          this.fetchCategories();
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        });
-    },
-  },
+  });
 };
 </script>
-
 <style>
 .sortable-column [data-pc-section="sort"] {
   padding-left: 0.2rem;
