@@ -2,7 +2,7 @@
   <div>
     <div v-show="options.length === 0">
       <div class="flex">
-        <PButton
+        <Button
           icon="fa fa-plus"
           text
           :label="$t('Add options like size or color')"
@@ -71,7 +71,7 @@
         </div>
       </div>
       <div class="flex">
-        <PButton
+        <Button
           icon="fa fa-plus"
           text
           :label="$t('Add another option')"
@@ -82,71 +82,58 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import {
+  Button,
+  InputText,
+  AutoComplete,
+} from "primevue";
 
-import Button from "primevue/button";
-import InputText from "primevue/inputtext";
-import AutoComplete from "primevue/autocomplete";
+import { computed, ref } from "vue";
 
-export default {
-  components: {
-    Button,
-    AutoComplete,
-    InputText,
+// Define props
+const props = defineProps<{
+  modelValue: Array<{ name: string; values: string[]; saved: boolean }>;
+}>();
 
-  },
-  props: {
-    modelValue: {
-      type: Array,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      options: this.modelValue,
-    };
-  },
-  computed: {
-    checkAvailability() {
-      if (this.options.length === 0) {
-        return true;
-      }
-      // check if some of the option names is duplicated
-      const names = this.options.map((option) => option.name);
-      return names.some((name, index) => names.indexOf(name) !== index);
-    },
-  },
-  watch: {
-    modelValue: {
-      handler(value) {
-        this.options = value;
-      },
-      deep: true,
-    },
-    options: {
-      handler(value) {
-        this.$emit("update:modelValue", value);
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    addOption() {
-      this.options.push({
-        name: "",
-        values: [],
-        saved: false,
-      });
-    },
-    saveOption(index) {
-      const originalOptions = this.modelValue;
-      originalOptions[index] = this.options[index];
-      this.options[index].saved = true;
-    },
-    deleteOption(index) {
-      this.$emit("option-deleted", this.options[index]);
-      this.options.splice(index, 1);
-    },
-  },
+// Define emits
+const emit = defineEmits<{
+  (e: "update:modelValue", value: Array<{ name: string; values: string[]; saved: boolean }>): void;
+  (e: "option-deleted", option: { name: string; values: string[]; saved: boolean }): void;
+}>();
+
+const options = ref(props.modelValue);
+
+// Add option
+const addOption = () => {
+  options.value.push({
+    name: "",
+    values: [],
+    saved: false,
+  });
 };
+
+// Save option
+const saveOption = (index: number) => {
+  const originalOptions = props.modelValue;
+  originalOptions[index] = options.value[index];
+  options.value[index].saved = true;
+  emit("update:modelValue", options.value);
+};
+
+// Delete option
+const deleteOption = (index: number) => {
+  // Emit event to parent component
+  emit("option-deleted", options.value[index]);
+  options.value.splice(index, 1);
+};
+
+const checkAvailability = computed(() => {
+  if (options.value.length === 0) {
+    return true;
+  }
+  // check if some of the option names is duplicated
+  const names = options.value.map((option) => option.name);
+  return names.some((name, index) => names.indexOf(name) !== index);
+});
 </script>

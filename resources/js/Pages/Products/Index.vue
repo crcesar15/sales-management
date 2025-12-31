@@ -2,14 +2,15 @@
   <div>
     <div class="flex flex-row justify-between mb-3">
       <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ $t("Products") }}
+        {{ t("Products") }}
       </h2>
-      <p-button
-        :label="$t('Add Product')"
+      <Button
+        :label="t('Add Product')"
+        v-can="'products-create'"
         icon="fa fa-add"
         raised
         class="ml-2 uppercase"
-        @click="$inertia.visit(route('products.create'))"
+        @click="router.visit(route('products.create'))"
       />
     </div>
     <ConfirmDialog />
@@ -22,7 +23,7 @@
           lazy
           :page-link-size="3"
           :total-records="pagination.total"
-          :rows="pagination.rows"
+          :rows="pagination.perPage"
           :first="pagination.first"
           :loading="loading"
           paginator
@@ -32,7 +33,7 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ $t('No products registered yet') }}
+            {{ t('No products registered yet') }}
           </template>
           <template #header>
             <div class="grid grid-cols-12">
@@ -41,17 +42,17 @@
                   v-model="status"
                   :allow-empty="false"
                   :options="[{
-                    label: $t('All'),
-                    value: 'all',
-                  }, {
-                    label: $t('Active'),
+                    label: t('Active'),
                     value: 'active',
                   }, {
-                    label: $t('Inactive'),
+                    label: t('Inactive'),
                     value: 'inactive',
                   }, {
-                    label: $t('Archived'),
+                    label: t('Archived'),
                     value: 'archived',
+                  }, {
+                    label: t('All'),
+                    value: 'all',
                   }]"
                   option-label="label"
                   option-value="value"
@@ -79,7 +80,7 @@
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="pagination.filter"
-                    :placeholder="$t('Search')"
+                    :placeholder="t('Search')"
                     class="w-full"
                   />
                 </IconField>
@@ -88,7 +89,7 @@
           </template>
           <Column
             field="name"
-            :header="$t('Product')"
+            :header="t('Product')"
             sortable
           >
             <template #body="{ data }">
@@ -103,7 +104,7 @@
           </Column>
           <Column
             field="media"
-            :header="$t('Image')"
+            :header="t('Image')"
             style="padding: 4px 12px; margin: 0px;"
             :pt="{columnHeaderContent: 'justify-center'}"
           >
@@ -145,7 +146,7 @@
           </Column>
           <Column
             field="status"
-            :header="$t('Status')"
+            :header="t('Status')"
             header-class="flex justify-center"
             class="flex justify-center"
           >
@@ -157,36 +158,36 @@
                 <Tag
                   v-if="data.status === 'active'"
                   severity="success"
-                  :value="$t('Active')"
+                  :value="t('Active')"
                 />
                 <Tag
                   v-else-if="data.status === 'inactive'"
                   severity="warn"
-                  :value="$t('Inactive')"
+                  :value="t('Inactive')"
                 />
                 <Tag
                   v-else
                   severity="danger"
-                  :value="$t('Archived')"
+                  :value="t('Archived')"
                 />
               </div>
             </template>
           </Column>
           <Column
-            :header="$t('Inventory')"
+            :header="t('Inventory')"
           >
             <template #body="{ data }">
               <div v-if="data.variants.length > 1">
-                {{ $t('variants stock', {stock: data.stock, counter: data.variants.length}) }}
+                {{ t('variants stock', {stock: data.stock, counter: data.variants.length}) }}
               </div>
               <div v-else>
-                {{ $t('variant stock', {stock: data.stock}) }}
+                {{ t('variant stock', {stock: data.stock}) }}
               </div>
             </template>
           </Column>
           <Column
             field="category"
-            :header="$t('Category')"
+            :header="t('Category')"
           >
             <template #body="{data}">
               <Tag
@@ -198,13 +199,22 @@
             </template>
           </Column>
           <Column
-            :header="$t('Actions')"
+            field="created_at"
+            :header="t('Created At')"
+          />
+          <Column
+            field="updated_at"
+            :header="t('Updated At')"
+          />
+          <Column
+            :header="t('Actions')"
             :pt="{columnHeaderContent: 'justify-center'}"
           >
             <template #body="{ data }">
               <span class="flex justify-center gap-2">
-                <p-button
-                  v-tooltip.top="$t('Edit')"
+                <Button
+                  v-tooltip.top="t('Edit')"
+                  v-can="'products-edit'"
                   icon="fa fa-edit"
                   text
                   rounded
@@ -212,8 +222,10 @@
                   size="sm"
                   @click="editProduct(data.id)"
                 />
-                <p-button
-                  v-tooltip.top="$t('Delete')"
+                <Button
+                  v-if="data.status !== 'archived'"
+                  v-can="'products-delete'"
+                  v-tooltip.top="t('Delete')"
                   icon="fa fa-trash"
                   text
                   rounded
@@ -231,7 +243,7 @@
             <template #body="slotProps">
               <i
                 v-if="slotProps.data.variants.length > 1"
-                v-tooltip.top="!expandedRows.includes(slotProps.data) ? $t('Show variants') : $t('Hide variants')"
+                v-tooltip.top="!expandedRows.includes(slotProps.data) ? t('Show variants') : t('Hide variants')"
                 class="fa fa-fw fa-chevron-circle-down"
                 :class="{
                   'fa-chevron-down': !expandedRows.includes(slotProps.data),
@@ -250,11 +262,11 @@
               >
                 <Column
                   field="name"
-                  :header="$t('Variant')"
+                  :header="t('Variant')"
                 />
                 <Column
                   field="media"
-                  :header="$t('Image')"
+                  :header="t('Image')"
                   style="padding: 4px 12px; margin: 0px;"
                   :pt="{columnHeaderContent: 'justify-center'}"
                 >
@@ -296,7 +308,7 @@
                 </Column>
                 <Column
                   field="status"
-                  :header="$t('Status')"
+                  :header="t('Status')"
                   header-class="flex justify-center"
                   class="flex justify-center"
                 >
@@ -308,28 +320,28 @@
                       <Tag
                         v-if="data.status === 'active'"
                         severity="success"
-                        :value="$t('Active')"
+                        :value="t('Active')"
                       />
                       <Tag
                         v-else-if="data.status === 'inactive'"
                         severity="warn"
-                        :value="$t('Inactive')"
+                        :value="t('Inactive')"
                       />
                       <Tag
                         v-else
                         severity="danger"
-                        :value="$t('Archived')"
+                        :value="t('Archived')"
                       />
                     </div>
                   </template>
                 </Column>
                 <Column
                   field="price"
-                  :header="$t('Price')"
+                  :header="t('Price')"
                 >
                   <template #body="{ data }">
                     <span>
-                      {{ formattedPrice(data.price) }}
+                      {{ formatCurrency(data.price) }}
                     </span>
                   </template>
                 </Column>
@@ -338,7 +350,7 @@
                   :header="$t('Stock')"
                 >
                   <template #body="{data}">
-                    {{ $t('variant stock', {stock: data.stock}) }}
+                    {{ t('variant stock', {stock: data.stock}) }}
                   </template>
                 </Column>
               </DataTable>
@@ -348,212 +360,209 @@
       </template>
     </Card>
     <item-viewer
+      v-model:show-dialog="viewerToggle"
       :product="selectedProduct"
-      :show-dialog="viewerToggle"
-      @clearSelection="selectedProduct = {}; viewerToggle = false;"
     />
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 
-import DataTable from "primevue/datatable";
-import Card from "primevue/card";
-import Column from "primevue/column";
-import PButton from "primevue/button";
-import InputText from "primevue/inputtext";
-import ConfirmDialog from "primevue/confirmdialog";
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
-import SelectButton from "primevue/selectbutton";
-import Tag from "primevue/tag";
-import i18n from "../../app";
-import AppLayout from "../../Layouts/admin.vue";
-import ItemViewer from "./List/ItemViewer.vue";
+import {
+  DataTable,
+  Card,
+  Column,
+  Button,
+  InputText,
+  ConfirmDialog,
+  IconField,
+  InputIcon,
+  SelectButton,
+  Tag,
+  useToast,
+  useConfirm,
+  DataTablePageEvent,
+  DataTableSortEvent
+} from "primevue"
 
-export default {
-  components: {
-    DataTable,
-    Column,
-    PButton,
-    InputText,
-    IconField,
-    InputIcon,
-    ConfirmDialog,
-    ItemViewer,
-    Card,
-    SelectButton,
-    Tag,
-  },
+import AppLayout from "@layouts/admin.vue";
+import ItemViewer from "@pages/Products/List/ItemViewer.vue";
+
+import { useProductClient } from "@composables/useProductClient";
+import { useI18n } from "vue-i18n";
+import { Product } from "@app-types/product-types";
+import { ref, watch } from "vue";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import useDatetimeFormatter from "@composables/useDatetimeFormatter";
+import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
+
+// Set composables
+const toast = useToast();
+const confirm = useConfirm();
+const { t } = useI18n();
+
+// Layout
+defineOptions({
   layout: AppLayout,
-  data() {
-    return {
-      status: "all",
-      expandedRows: [],
-      viewerToggle: false,
-      editorToggle: false,
-      products: [],
-      pagination: {
-        total: 0,
-        first: 0,
-        rows: 10,
-        page: 1,
-        perPage: 10,
-        sortField: "name",
-        sortOrder: 1,
-        filter: "",
-      },
-      loading: false,
-      selectedProduct: {},
-    };
-  },
-  computed: {
-    currency() {
-      return this.$page.props.settings.finance.currency;
-    },
-    decimalPrecision() {
-      return this.$page.props.settings.system.decimal_precision;
-    },
-  },
-  watch: {
-    "pagination.filter": {
-      handler() {
-        this.pagination.page = 1;
-        this.fetchProducts();
-      },
-    },
-    status() {
-      this.expandedRows = [];
-      this.pagination.page = 1;
-      this.fetchProducts();
-    },
-  },
-  mounted() {
-    this.fetchProducts();
-  },
-  methods: {
-    formattedPrice(price) {
-      return `${this.currency} ${parseFloat(price).toFixed(this.decimalPrecision)}`;
-    },
-    onExpandRow(id) {
-      // get product by id
-      const product = this.products.find((item) => item.id === id);
+});
 
-      // check if the product is already expanded
-      if (this.expandedRows.includes(product)) {
-        // remove the product from the expanded rows
-        this.expandedRows = this.expandedRows.filter((row) => row !== product);
-      } else {
-        // add the product to the expanded rows
-        this.expandedRows.push(product);
-      }
-    },
-    fetchProducts() {
-      this.loading = true;
+// List Products
+const pagination = ref({
+  total: 0,
+  first: 0,
+  page: 1,
+  perPage: 10,
+  sortField: "name",
+  sortOrder: 1,
+  filter: "",
+});
 
-      const params = new URLSearchParams();
+const products = ref<Product[]>([]);
+const expandedRows = ref<Product[]>([]);
+const status = ref("active");
 
-      params.append("per_page", this.pagination.perPage);
-      params.append("page", this.pagination.page);
-      params.append("order_by", this.pagination.sortField);
-      params.append("order_direction", this.pagination.sortOrder === -1 ? "desc" : "asc");
-      params.append("include", "brand,categories,measurementUnit,variants.media");
-      // params.append("include", "brand,categories,measurementUnit");
+const {loading, fetchProductsApi} = useProductClient();
+const { formatCurrency } = useCurrencyFormatter();
 
-      if (this.pagination.filter) {
-        params.append("filter", this.pagination.filter);
-      }
+const fetchProducts = async () => {
+  const params = new URLSearchParams();
 
-      const url = `${route("api.products")}?${params.toString()}`;
+  params.append("per_page", pagination.value.perPage.toString());
+  params.append("page", pagination.value.page.toString());
+  params.append("order_by", pagination.value.sortField);
+  params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
+  params.append("include", "brand,categories,measurementUnit,variants.media");
 
-      axios.get(url)
-        .then((response) => {
-          this.products = response.data.data.map((product) => {
-            const categories = product.categories ?? [];
-            const categoryString = categories.map((category) => category.name).join(", ");
-            return {
-              ...product,
-              category: categoryString,
-            };
-          });
-          this.pagination.total = response.data.meta.total;
-          this.loading = false;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    },
-    onPage(event) {
-      this.pagination.page = event.page + 1;
-      this.pagination.perPage = event.rows;
-      this.fetchProducts();
-    },
-    onSort(event) {
-      this.pagination.sortField = event.sortField;
-      this.pagination.sortOrder = event.sortOrder;
-      this.fetchProducts();
-    },
-    viewProduct(product) {
-      this.viewerToggle = true;
-      this.selectedProduct = product;
-    },
-    editProduct(productId) {
-      // inertia visit
-      this.$inertia.visit(route("products.edit", { id: productId }));
-    },
-    updateProduct(id, product) {
-      axios.put(`${route("api.products.store")}/${id}`, product)
-        .then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: i18n.global.t("Success"),
-            detail: i18n.global.t("Product updated successfully"),
-            life: 3000,
-          });
-          this.fetchProducts();
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: i18n.global.t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        });
-    },
-    deleteProduct(id) {
-      this.$confirm.require({
-        message: i18n.global.t("Are you sure you want to delete this product?"),
-        header: i18n.global.t("Confirm"),
-        icon: "fas fa-exclamation-triangle",
-        rejectLabel: i18n.global.t("Cancel"),
-        acceptLabel: i18n.global.t("Delete"),
-        rejectClass: "p-button-secondary",
-        accept: () => {
-          axios.delete(route("api.products.destroy", { id }))
-            .then(() => {
-              this.fetchProducts();
-              this.$toast.add({
-                severity: "success",
-                summary: i18n.global.t("Success"),
-                detail: i18n.global.t("Product deleted successfully"),
-                life: 3000,
-              });
-            })
-            .catch((error) => {
-              this.$toast.add({
-                severity: "error",
-                summary: i18n.global.t("Error"),
-                detail: error.response.data.message,
-                life: 3000,
-              });
-            });
-        },
-      });
-    },
-  },
+  if (pagination.value.filter) {
+    params.append("filter", pagination.value.filter);
+  }
+
+  if (status.value !== "all") {
+    params.append("status", status.value);
+  }
+
+  try {
+    const response = await fetchProductsApi(params.toString());
+    products.value = response.data.data.map((product: Product) => {
+      return {
+        ...product,
+        created_at: useDatetimeFormatter(product.created_at),
+        updated_at: useDatetimeFormatter(product.updated_at),
+      };
+    });
+    pagination.value.total = response.data.meta.total;
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t(error?.response?.data?.message || error),
+      life: 3000,
+    });
+  }
 };
 
+// Pagination
+const onPage = (event: DataTablePageEvent) => {
+  pagination.value.page = event.page + 1;
+  pagination.value.perPage = event.rows;
+  fetchProducts();
+}
+
+const onSort = (event: DataTableSortEvent) => {
+  pagination.value.sortField = typeof event.sortField === "string" ? event.sortField : "name";
+  pagination.value.sortOrder = event.sortOrder ?? 0;
+  fetchProducts();
+}
+
+watch(
+  () => pagination.value.filter,
+  () => {
+    pagination.value.page = 1;
+    fetchProducts();
+  },
+  {
+    immediate: true,
+  }
+);
+
+watch(status, () => {
+  expandedRows.value = [];
+  pagination.value.page = 1;
+  fetchProducts();
+});
+
+//Viewer
+const viewerToggle = ref(false);
+const selectedProduct = ref<Product>({
+  id: 0,
+  name: '',
+  description: '',
+  created_at: '',
+  updated_at: '',
+  status: 'active',
+});
+
+const onExpandRow = (id: number) => {
+  // get product by id
+  const product: Product | undefined = products.value.find((item: Product) => item.id === id);
+
+  if (typeof product !== "undefined") {
+    // check if the product is already expanded
+    if (expandedRows.value.includes(product)) {
+      // remove the product from the expanded rows
+      expandedRows.value = expandedRows.value.filter((row) => row !== product);
+    } else {
+      // add the product to the expanded rows
+      expandedRows.value.push(product);
+    }
+  }
+}
+
+const viewProduct = (product: Product) => {
+  viewerToggle.value = true;
+  selectedProduct.value = product;
+};
+
+// Edit Product
+const editProduct = (id: number) => {
+  router.visit(route("products.edit", { id }));
+};
+
+// Delete Product
+const deleteProduct = (id: number) => {
+  const { destroyProductApi } = useProductClient();
+
+  confirm.require({
+    message: t("Are you sure you want to delete this product?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Delete"),
+    rejectClass: "p-button-secondary",
+    accept: async () => {
+      try {
+        await destroyProductApi(id);
+
+        fetchProducts();
+
+        toast.add({
+          severity: "success",
+          summary: t("Success"),
+          detail: t("Product deleted successfully"),
+          life: 3000,
+        });
+      } catch (error: any) {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: error?.response?.data?.message ?? error,
+          life: 3000,
+        });
+      }
+    },
+  });
+}
 </script>
 
 <style>

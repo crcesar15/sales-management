@@ -30,6 +30,10 @@ final class ProductsController extends Controller
             $query->with($include);
         }
 
+        if ($request->has('status')) {
+            $query->where('status', $request->string('status')->value());
+        }
+
         $query->orderBy(
             $request->string('order_by')->value(),
             $request->string('order_direction')->value()

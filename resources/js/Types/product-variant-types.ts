@@ -1,20 +1,23 @@
-import { Product } from "./product-types"
+import { ProductResponse } from "./product-types"
 import { Vendor } from "./vendor-types"
 import { Media } from "./media-types"
 
-export interface ProductVariant {
-  // columns
-  id: number
-  product_id: number
-  identifier: string | null
+interface ProductVariantBase {
+  identifier?: string | null
   name: string
-  price: number
-  stock: number
-  status: string
-  created_at: string | null
-  updated_at: string | null
+  price?: number
+}
+
+export interface ProductVariantResponse extends ProductVariantBase {
+  // columns
+  id?: number
+  product_id: number
+  stock?: number
+  status: string,
+  created_at?: string | null
+  updated_at?: string | null
   // relations
-  product: Product
+  product: ProductResponse
   vendors: Vendor[]
   media: Media[]
   // counts
@@ -24,4 +27,10 @@ export interface ProductVariant {
   product_exists: boolean
   vendors_exists: boolean
   media_exists: boolean
+}
+
+export interface ProductVariantPayload extends ProductVariantBase {
+  status: string,
+  vendors_ids?: number[]
+  media?: {id: number}[]
 }

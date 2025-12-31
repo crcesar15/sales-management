@@ -1,31 +1,38 @@
 import { Category } from "./category-types"
 import { Brand } from "./brand-types"
-import { ProductVariant } from "./product-variant-types"
+import { ProductVariantResponse } from "./product-variant-types"
+import { ProductVariantPayload } from "./product-variant-types"
 import { MeasurementUnit } from "./measurement-unit-types"
 
-export interface Product {
+interface ProductBase {
+  brand_id?: number | null
+  measurement_unit_id?: number | null
+  name: string
+  description?: string | null
+  options?: Array<{name: string; values: string[]; saved: boolean}> | null
+  status: string,
+  categories: Category[]
+}
+
+export interface ProductResponse extends ProductBase {
   // columns
   id: number
-  brand_id: number | null
-  measurement_unit_id: number | null
-  name: string
-  description: string | null
-  options: Record<string, unknown> | null
-  status: string
-  deleted_at: string | null
-  created_at: string | null
-  updated_at: string | null
   // relations
-  categories: Category[]
   brand: Brand
   measurement_unit: MeasurementUnit
-  variants: ProductVariant[]
+  variants: ProductVariantResponse[]
   // counts
-  categories_count: number
-  variants_count: number
+  categories_count?: number
+  variants_count?: number
   // exists
-  categories_exists: boolean
-  brand_exists: boolean
-  measurement_unit_exists: boolean
-  variants_exists: boolean
+  categories_exists?: boolean
+  brand_exists?: boolean
+  measurement_unit_exists?: boolean
+  variants_exists?: boolean
+}
+
+export interface ProductPayload extends ProductBase {
+  categories_ids?: number[]
+  media?: {id: number}[]
+  variants?: ProductVariantPayload[]
 }

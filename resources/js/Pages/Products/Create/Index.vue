@@ -2,19 +2,19 @@
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex">
-        <PButton
+        <Button
           icon="fa fa-arrow-left"
           text
           severity="secondary"
           class="hover:shadow-md mr-2"
-          @click="$inertia.visit(route('products'))"
+          @click="router.visit(route('products'))"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">
           {{ $t('Add Product') }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
-        <PButton
+        <Button
           icon="fa fa-save"
           :label="$t('Save')"
           class="uppercase"
@@ -127,7 +127,7 @@
                 </label>
                 <InputSwitch
                   v-model="hasVariants"
-                  @change="price = null; identifier = null;"
+                  @change="clearProductSettings(hasVariants)"
                 />
               </div>
             </div>
@@ -150,13 +150,13 @@
                 {{ $t('Variants') }}
               </div>
               <div>
-                <PButton
+                <Button
                   :label="$t('Add Variant')"
                   class="mr-2 uppercase"
                   raised
                   @click="addVariant()"
                 />
-                <PButton
+                <Button
                   outlined
                   raised
                   class="uppercase"
@@ -265,7 +265,7 @@
                 :header="$t('Actions')"
               >
                 <template #body="slotProps">
-                  <PButton
+                  <Button
                     icon="fa fa-trash"
                     severity="primary"
                     rounded
@@ -308,7 +308,7 @@
                 v-model="category"
                 display="chip"
                 filter
-                :options="categories"
+                :options="props.categories"
                 option-label="name"
                 option-value="id"
                 :class="{'p-invalid': v$.category.$invalid && v$.category.$dirty}"
@@ -327,7 +327,7 @@
                 id="brand"
                 v-model="brand"
                 filter
-                :options="brands"
+                :options="props.brands"
                 option-label="name"
                 option-value="id"
                 :class="{'p-invalid': v$.brand.$invalid && v$.brand.$dirty}"
@@ -345,7 +345,7 @@
               <Select
                 id="measure_unit"
                 v-model="measureUnit"
-                :options="measureUnits"
+                :options="props.measureUnits"
                 option-label="name"
                 option-value="id"
               />
@@ -372,13 +372,13 @@
           />
         </div>
         <template #footer>
-          <PButton
+          <Button
             :label="$t('Cancel')"
             outlined
             severity="primary"
             @click="toggleVariantEditor"
           />
-          <PButton
+          <Button
             :label="$t('Save')"
             severity="primary"
             @click="saveVariant"
@@ -422,13 +422,13 @@
           </div>
         </div>
         <template #footer>
-          <PButton
+          <Button
             :label="$t('Cancel')"
             outlined
             severity="primary"
             @click="toggleVariantImages"
           />
-          <PButton
+          <Button
             :label="$t('Save')"
             severity="primary"
             @click="saveSelectedVariantImages"
@@ -439,298 +439,283 @@
   </div>
 </template>
 
-<script>
-import Card from "primevue/card";
-import PButton from "primevue/button";
-import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
-import Select from "primevue/select";
-import DataTable from "primevue/datatable";
-import Column from "primevue/column";
-import MultiSelect from "primevue/multiselect";
-import InputNumber from "primevue/inputnumber";
-import InputSwitch from "primevue/inputswitch";
-import Checkbox from "primevue/checkbox";
-import Dialog from "primevue/dialog";
-import { useVuelidate } from "@vuelidate/core";
+<script setup lang="ts">
+import{
+  Card,
+  Button,
+  InputText,
+  Textarea,
+  Select,
+  DataTable,
+  Column,
+  MultiSelect,
+  InputNumber,
+  InputSwitch,
+  Checkbox,
+  Dialog,
+  useToast,
+} from "primevue";
+
 import {
-  helpers, required, minLength, minValue, requiredIf,
+  helpers,
+  required,
+  minLength,
+  minValue,
+  requiredIf,
   createI18nMessage,
 } from "@vuelidate/validators";
-import AppLayout from "../../../Layouts/admin.vue";
-import MediaManager from "../../../Components/MediaManager.vue";
-import OptionsEditor from "../../../Components/OptionsEditor.vue";
-import i18n from "../../../app";
 
-export default {
-  components: {
-    PButton,
-    Card,
-    InputText,
-    InputNumber,
-    Textarea,
-    Select,
-    MediaManager,
-    MultiSelect,
-    OptionsEditor,
-    DataTable,
-    Column,
-    InputSwitch,
-    Dialog,
-    Checkbox,
-  },
+import { useVuelidate } from "@vuelidate/core";
+import AppLayout from "@layouts/admin.vue";
+import MediaManager from "@components/MediaManager.vue";
+import OptionsEditor from "@components/OptionsEditor.vue";
+import { useI18n } from "vue-i18n";
+import { computed, ref } from "vue";
+import { MeasurementUnit } from "@app-types/measurement-unit-types";
+import { Brand } from "@app-types/brand-types";
+import { Category } from "@app-types/category-types";
+import { ProductPayload } from "@app-types/product-types";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import { useProductClient } from "@composables/useProductClient";
+import { useMediaClient } from "@composables/useMediaClient";
+
+// Set composables
+const toast = useToast();
+const { t } = useI18n();
+
+// Set translations for validations
+const withI18nMessage = createI18nMessage({ t });
+
+// Layout
+defineOptions({
   layout: AppLayout,
-  props: {
-    measureUnits: {
-      type: Array,
-      default: () => [],
-    },
-    brands: {
-      type: Array,
-      default: () => [],
-    },
-    categories: {
-      type: Array,
-      default: () => [],
-    },
-  },
-  setup() {
-    return {
-      v$: useVuelidate(),
-    };
-  },
-  data() {
-    return {
-      name: "",
-      description: "",
-      price: 0,
-      identifier: "",
-      status: "active",
-      brand: "",
-      measureUnit: "",
-      files: [],
-      category: [],
-      options: [],
-      variants: [],
-      hasVariants: false,
-      showVariantImages: false,
-      selectedVariantImages: [],
-      selectedVariantId: null,
-      showVariantEditor: false,
-      selectedOptions: [],
-    };
-  },
-  validations() {
-    const { t } = i18n.global;
+});
 
-    const withI18nMessage = createI18nMessage({
-      t,
-      messagesPath: "validations",
-    });
+// Define props
+const props = defineProps<{
+  measureUnits: MeasurementUnit[],
+  brands: Brand[],
+  categories: Category[],
+}>();
 
-    return {
-      name: {
-        required: withI18nMessage(required),
-        minLength: withI18nMessage(minLength(10)),
-      },
-      // category: { required: withI18nMessage(required) },
-      // brand: { required: withI18nMessage(required) },
-      category: { },
-      brand: { },
+// Form fields
+const name = ref("");
+const description = ref("");
+const price = ref(0);
+const identifier = ref("");
+const status = ref("active");
+const brand = ref("");
+const measureUnit = ref("");
+const files = ref<Array<{ id: number; url: string }>>([]);
+const category = ref([]);
+const options = ref<Array<{ name: string; values: string[]; saved: boolean }>>([]);
+const variants = ref<Array<{hash: string, name: string, options: string[], price: number, identifier: string | null, media: any[]}>>([]);
+const hasVariants = ref(false);
+const showVariantImages = ref(false);
+const selectedVariantImages = ref<Array<number>>([]);
+const selectedVariantId = ref<number | null>(null);
+const showVariantEditor = ref(false);
+const selectedOptions = ref<Array<string>>([]);
+
+// Rules
+const rules = computed(() => {
+  let formattedRules = {
+    name: {
+      required: withI18nMessage(required),
+      minLength: withI18nMessage(minLength(10)),
+    },
+    category: { required: withI18nMessage(required) },
+    brand: { required: withI18nMessage(required) },
+    identifier: {
+      minLength: withI18nMessage(minLength(5)),
+    },
+    price: {},
+    variants: {
+      required: withI18nMessage(requiredIf(() => hasVariants.value)),
+      $each: helpers.forEach({
+        identifier: {
+          required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+          minLength: withI18nMessage(minLength(5), { messagePath: () => ("validations.minLength") }),
+        },
+        price: {
+          required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+          minValue: withI18nMessage(minValue(0.5), { messagePath: () => ("validations.minValue") }),
+        },
+      }),
+    }
+  };
+
+  if (!hasVariants.value) {
+    formattedRules = {
+      ...formattedRules,
       price: {
-        required: withI18nMessage(requiredIf(() => !this.hasVariants)),
+        required: withI18nMessage(required),
         minValue: withI18nMessage(minValue(0.5)),
       },
-      identifier: {
-        minLength: withI18nMessage(minLength(5)),
-      },
-      variants: {
-        required: withI18nMessage(requiredIf(() => this.hasVariants)),
-        $each: helpers.forEach({
-          identifier: {
-            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
-            minLength: withI18nMessage(minLength(5), { messagePath: () => ("validations.minLength") }),
-          },
-          price: {
-            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
-            minValue: withI18nMessage(minValue(0.5), { messagePath: () => ("validations.minValue") }),
-          },
-        }),
-      },
     };
-  },
-  methods: {
-    validateRow(rowIndex) {
-      this.$v.variants[rowIndex].$touch();
-    },
-    submit() {
-      this.v$.$touch();
+  }
 
-      if (!this.v$.$invalid) {
-        const body = {
-          name: this.name,
-          description: this.description,
-          status: this.status,
-          brand_id: this.brand,
-          measurement_unit_id: this.measureUnit,
-          categories: this.category,
-          options: this.options,
-          media: this.files,
-        };
+  return formattedRules;
+});
 
-        if (this.hasVariants) {
-          body.variants = this.variants.map((variant) => ({
-            name: variant.name,
-            identifier: variant.identifier,
-            price: variant.price,
-            status: this.status,
-            media: variant.media.map((file) => ({ id: file.id })),
-          }));
-        } else {
-          body.variants = [{
-            name: this.name,
-            identifier: this.identifier,
-            price: this.price,
-            status: this.status,
-            media: this.files.map((file) => ({ id: file.id })),
-          }];
-        }
+// Validator
+const v$ = useVuelidate(
+  rules,
+  {
+    name,
+    description,
+    price,
+    identifier,
+    status,
+    brand,
+    measureUnit,
+    category,
+    options,
+    variants,
+    showVariantImages,
+    selectedVariantImages,
+    selectedVariantId,
+    showVariantEditor,
+    selectedOptions,
+  }
+);
 
-        axios
-          .post(route("api.products.store"), body)
-          .then(() => {
-            this.$toast.add({
-              severity: "success",
-              summary: i18n.global.t("Success"),
-              detail: i18n.global.t("Product created successfully"),
-              life: 3000,
-            });
-            this.$inertia.visit(route("products"));
-          })
-          .catch((error) => {
-            this.$toast.add({
-              severity: "error",
-              summary: i18n.global.t("Error"),
-              detail: error,
-              life: 3000,
-            });
-          });
-      } else {
-        let message = "";
+const validateRow = (rowIndex:number) => {
+  v$.value.variants[rowIndex].$touch();
+}
 
-        if (typeof this.v$.$errors[0].$message === "object") {
-          message = `${i18n.global.t(this.capitalize(this.v$.$errors[0].$property))}: ${this.v$.$errors[0].$message[0]}`;
-        } else {
-          message = `${i18n.global.t(this.capitalize(this.v$.$errors[0].$property))}: ${this.v$.$errors[0].$message}`;
-        }
+// Upload temp images from media manager
+const { uploadDraftFile, loading } = useMediaClient();
 
-        this.$toast.add({
-          severity: "error",
-          summary: i18n.global.t("Please review the errors in the form"),
-          detail: message,
-          life: 3000,
+const uploadFile = async (formData: FormData) => {
+  toast.add({ severity: "info", summary: t("Uploading..."), life: 3000 });
+  const data = formData;
+
+  try {
+    const response = await uploadDraftFile(data);
+
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: t("File uploaded"),
+      life: 3000,
+    });
+    files.value.push(
+      {
+        id: response.data.id,
+        url: response.data.url,
+      },
+    );
+  } catch (error:any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t(error?.response?.data?.message || error),
+      life: 3000,
+    });
+  }
+}
+
+const removeFile = async (id:number) => {
+  const {destroyDraftFile} = useMediaClient();
+
+  try {
+    await destroyDraftFile(id);
+
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: t("File removed"),
+      life: 3000,
+    });
+
+    files.value = files.value.filter((f) => f.id !== id);
+
+    // variants.forEach((variant, index) => {
+    //   variants[index].media = variant.media.filter((media) => media.id !== id);
+    // });
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t(error?.response?.data?.message || error),
+      life: 3000,
+    });
+  }
+}
+
+// Options and variants methods
+const clearProductSettings = (hasVariants: boolean) => {
+  if (hasVariants) {
+    price.value = 0;
+    identifier.value = '';
+  } else {
+    options.value = [];
+    variants.value = [];
+  }
+}
+
+const generateVariants = (allowedOptions: string[] | false = false) => {
+  console.log('test');
+  const formattedOptions:Array<{ name: string; options: string[] }> = [];
+
+  // merge all the option values
+  const savedOptions:Array<{ name: string; values: string[]; saved: boolean }> =
+    options.value.filter((option) => option.saved === true);
+
+  if (savedOptions.length === 0) {
+    variants.value = [];
+  }
+
+  const values = savedOptions.map((option) => option.values);
+
+  if (savedOptions.length === 1) {
+    values[0].forEach((value) => {
+      formattedOptions.push({ name: `${value}`, options: [value] });
+    });
+  } else if (savedOptions.length === 2) {
+    values[0].forEach((value) => {
+      values[1].forEach((v) => {
+        formattedOptions.push({ name: `${value} / ${v}`, options: [value, v] });
+      });
+    });
+  } else if (savedOptions.length === 3) {
+    values[0].forEach((value) => {
+      values[1].forEach((v) => {
+        values[2].forEach((val) => {
+          formattedOptions.push({ name: `${value} / ${v} / ${val}`, options: [value, v, val] });
         });
-      }
-    },
-    removeVariant(hash) {
-      this.variants = this.variants.filter((variant) => variant.hash !== hash);
-    },
-    updateOptions(options) {
-      this.options = options;
-    },
-    uploadFile(formData) {
-      const data = formData;
+      });
+    });
+  }
 
-      axios
-        .post(route("api.media.draft.store"), data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
-        .then((response) => {
-          this.$toast.add({
-            severity: "success",
-            summary: i18n.global.t("Success"),
-            detail: i18n.global.t("File uploaded"),
-            life: 3000,
-          });
-          this.files.push(
-            {
-              id: response.data.id,
-              url: response.data.url,
-            },
-          );
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: i18n.global.t("Error"),
-            detail: error,
-            life: 3000,
-          });
-        });
-    },
-    removeFile(id) {
-      axios
-        .delete(route("api.media.draft.destroy", id))
-        .then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: i18n.global.t("Success"),
-            detail: i18n.global.t("File removed"),
-            life: 3000,
-          });
-          this.files = this.files.filter((f) => f.id !== id);
-          this.variants.forEach((variant, index) => {
-            this.variants[index].media = variant.media.filter((media) => media.id !== id);
-          });
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: i18n.global.t("Error"),
-            detail: error,
-            life: 3000,
-          });
-        });
-    },
-    generateVariants(allowedOptions = false) {
-      const formattedOptions = [];
-      // merge all the option values
-      const options = this.options.filter((option) => option.saved === true);
+  const formattedVariants:Array<{hash: string, name: string, options: string[], price: number, identifier: string | null, media: any[]}> = [];
 
-      if (options.length === 0) {
-        this.variants = [];
-      }
+  formattedOptions.forEach((variant) => {
+    let formattedVariant;
+    // hash the variant name, get all only the letters and numbers then sort them
+    if (allowedOptions === false) {
+      const hash = variant.name
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toLowerCase()
+        .split("")
+        .sort()
+        .join("");
 
-      const values = this.options.map((option) => option.values);
+      formattedVariant = {
+        hash,
+        name: variant.name,
+        options: variant.options,
+        price: 0,
+        identifier: null,
+        media: [],
+      };
 
-      if (options.length === 1) {
-        values[0].forEach((value) => {
-          formattedOptions.push({ name: `${value}`, options: [value] });
-        });
-      } else if (options.length === 2) {
-        values[0].forEach((value) => {
-          values[1].forEach((v) => {
-            formattedOptions.push({ name: `${value} / ${v}`, options: [value, v] });
-          });
-        });
-      } else if (options.length === 3) {
-        values[0].forEach((value) => {
-          values[1].forEach((v) => {
-            values[2].forEach((val) => {
-              formattedOptions.push({ name: `${value} / ${v} / ${val}`, options: [value, v, val] });
-            });
-          });
-        });
-      }
-
-      const variants = [];
-
-      formattedOptions.forEach((variant) => {
-        let formattedVariant;
-        // hash the variant name, get all only the letters and numbers then sort them
-        if (allowedOptions === false) {
+      formattedVariants.push(formattedVariant);
+    } else {
+      allowedOptions.forEach((option) => {
+        if (variant.options.includes(option)) {
           const hash = variant.name
             .replace(/[^a-zA-Z0-9]/g, "")
             .toLowerCase()
@@ -746,146 +731,192 @@ export default {
             identifier: null,
             media: [],
           };
-
-          variants.push(formattedVariant);
-        } else {
-          allowedOptions.forEach((option) => {
-            if (variant.options.includes(option)) {
-              const hash = variant.name
-                .replace(/[^a-zA-Z0-9]/g, "")
-                .toLowerCase()
-                .split("")
-                .sort()
-                .join("");
-
-              formattedVariant = {
-                hash,
-                name: variant.name,
-                options: variant.options,
-                price: 0,
-                identifier: null,
-                media: [],
-              };
-              variants.push(formattedVariant);
-            }
-          });
+          formattedVariants.push(formattedVariant);
         }
       });
+    }
+  });
 
-      this.variants = variants;
-    },
-    removeItemVariantByOption(option) {
-      let allowedOptions = [];
+  variants.value = formattedVariants;
+}
 
-      this.variants.forEach((variant) => {
-        option.values.forEach((value) => {
-          // remove value from the variant options
-          const index = variant.options.indexOf(value);
+const removeItemVariantByOption = (option: { name: string; values: string[]; saved: boolean }) => {
+  let allowedOptions: string[] = [];
 
-          if (index > -1) {
-            variant.options.splice(index, 1);
-            // merge the allowed options
-            allowedOptions = allowedOptions.concat(variant.options);
-          }
-        });
-      });
+  variants.value.forEach((variant) => {
+    option.values.forEach((value) => {
+      // remove value from the variant options
+      const index = variant.options.indexOf(value);
 
-      // remove duplicates
-      allowedOptions = [...new Set(allowedOptions)];
-
-      this.$nextTick(() => {
-        this.generateVariants(allowedOptions);
-      });
-    },
-    addImagesToVariant(index, media) {
-      this.selectedVariantImages = media.map((file) => file.id);
-      this.selectedVariantId = index;
-      this.toggleVariantImages();
-    },
-    toggleVariantImages() {
-      this.showVariantImages = !this.showVariantImages;
-    },
-    saveSelectedVariantImages() {
-      const variant = this.variants[this.selectedVariantId];
-      const media = this.selectedVariantImages.map((id) => this.files.find((file) => file.id === id));
-
-      variant.media = media;
-      this.variants[this.selectedVariantId] = variant;
-      this.selectedVariantId = null;
-      this.selectedVariantImages = [];
-      this.toggleVariantImages();
-    },
-    toggleVariantEditor() {
-      this.showVariantEditor = !this.showVariantEditor;
-    },
-    addVariant() {
-      this.toggleVariantEditor();
-      this.selectedOptions = [];
-    },
-    saveVariant() {
-      switch (this.selectedOptions.length) {
-        case 1:
-          this.variants.push({
-            hash: this.selectedOptions[0]
-              .replace(/[^a-zA-Z0-9]/g, "")
-              .toLowerCase()
-              .split("")
-              .sort()
-              .join(""),
-            name: this.selectedOptions[0],
-            options: [this.selectedOptions[0]],
-            price: 0,
-            identifier: null,
-            media: [],
-          });
-          break;
-        case 2:
-          this.variants.push({
-            hash: this.selectedOptions.join(" / ")
-              .replace(/[^a-zA-Z0-9]/g, "")
-              .toLowerCase()
-              .split("")
-              .sort()
-              .join(""),
-            name: this.selectedOptions.join(" / "),
-            options: this.selectedOptions,
-            price: 0,
-            identifier: null,
-            media: [],
-          });
-          break;
-        case 3:
-          this.variants.push({
-            hash: this.selectedOptions.join(" / ")
-              .replace(/[^a-zA-Z0-9]/g, "")
-              .toLowerCase()
-              .split("")
-              .sort()
-              .join(""),
-            name: this.selectedOptions.join(" / "),
-            options: this.selectedOptions,
-            price: 0,
-            identifier: null,
-            media: [],
-          });
-          break;
-        default:
-          break;
+      if (index > -1) {
+        variant.options.splice(index, 1);
+        // merge the allowed options
+        allowedOptions = allowedOptions.concat(variant.options);
       }
+    });
+  });
 
-      this.selectedOptions = [];
-      this.toggleVariantEditor();
-    },
-    capitalize(words) {
-      // separate words by capitalized letter
-      let formatted = words.replace(/([A-Z])/g, " $1")
-        // capitalize the first letter
-        .replace(/^./, (str) => str.toUpperCase());
-      // capitalize the first letter of each word
-      formatted = formatted.replace(/\b\w/g, (l) => l.toUpperCase());
+  // remove duplicates
+  allowedOptions = [...new Set(allowedOptions)];
 
-      return formatted;
-    },
-  },
-};
+  generateVariants(allowedOptions);
+}
+
+const addVariant = () => {
+  toggleVariantEditor();
+
+  selectedOptions.value = [];
+}
+
+const toggleVariantEditor = () => {
+  showVariantEditor.value = !showVariantEditor.value;
+}
+
+const saveVariant = () => {
+  switch (selectedOptions.value.length) {
+    case 1:
+      variants.value.push({
+        hash: selectedOptions.value[0]
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toLowerCase()
+          .split("")
+          .sort()
+          .join(""),
+        name: selectedOptions.value[0],
+        options: [selectedOptions.value[0]],
+        price: 0,
+        identifier: null,
+        media: [],
+      });
+      break;
+    case 2:
+      variants.value.push({
+        hash: selectedOptions.value.join(" / ")
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toLowerCase()
+          .split("")
+          .sort()
+          .join(""),
+        name: selectedOptions.value.join(" / "),
+        options: selectedOptions.value,
+        price: 0,
+        identifier: null,
+        media: [],
+      });
+      break;
+    case 3:
+      variants.value.push({
+        hash: selectedOptions.value.join(" / ")
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toLowerCase()
+          .split("")
+          .sort()
+          .join(""),
+        name: selectedOptions.value.join(" / "),
+        options: selectedOptions.value,
+        price: 0,
+        identifier: null,
+        media: [],
+      });
+      break;
+    default:
+      break;
+  }
+
+  selectedOptions.value = [];
+  toggleVariantEditor();
+}
+
+const removeVariant = (hash: string) => {
+  variants.value = variants.value.filter((variant) => variant.hash !== hash);
+}
+
+const toggleVariantImages = () => {
+  showVariantImages.value = !showVariantImages.value;
+}
+
+const addImagesToVariant = (index: number, media: {id: number}[]) => {
+  selectedVariantImages.value = media.map((file) => file.id);
+  selectedVariantId.value = index;
+  toggleVariantImages();
+}
+
+const saveSelectedVariantImages = () => {
+  if (selectedVariantId.value === null) {
+    return;
+  }
+
+  const formattedVariant = variants.value[selectedVariantId.value];
+  const formattedMedia = selectedVariantImages.value.map((id) => files.value.find((file) => file.id === id));
+
+  formattedVariant.media = formattedMedia;
+  variants.value[selectedVariantId.value] = formattedVariant;
+  selectedVariantId.value = null;
+  selectedVariantImages.value = [];
+  toggleVariantImages();
+}
+
+const submit = async () => {
+  v$.value.$touch();
+
+  if (!v$.value.$invalid) {
+    const body: ProductPayload = {
+      name: name.value,
+      description: description.value,
+      status: status.value,
+      brand_id: parseInt(brand.value),
+      measurement_unit_id: parseInt(measureUnit.value),
+      categories: category.value,
+      options: options.value,
+      media: files.value,
+    };
+
+    if (hasVariants) {
+      body.variants = variants.value.map((variant) => ({
+        name: variant.name,
+        identifier: variant.identifier,
+        price: variant.price,
+        status: status.value,
+        media: variant.media.map((file) => ({ id: file.id })),
+      }));
+    } else {
+      body.variants = [{
+        name: name.value,
+        identifier: identifier.value,
+        price: price.value,
+        status: status.value,
+        media: files.value.map((file) => ({ id: file.id })),
+      }];
+    }
+
+    const {storeProductApi} = useProductClient();
+
+    try {
+      await storeProductApi(body);
+      toast.add({
+        severity: "success",
+        summary: t("Success"),
+        detail: t("Product created successfully"),
+        life: 3000,
+      });
+      router.visit(route("products"));
+    } catch (error: any) {
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: t(error?.response?.data?.message || error),
+        life: 3000,
+      });
+    }
+  } else {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t("Please review the errors in the form"),
+      life: 3000,
+    });
+  }
+}
+
+
 </script>

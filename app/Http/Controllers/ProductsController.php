@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionsEnum;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\MeasurementUnit;
@@ -18,6 +19,8 @@ final class ProductsController extends Controller
      */
     public function index(): InertiaResponse
     {
+        $this->authorize(PermissionsEnum::PRODUCTS_VIEW->value, auth()->user());
+
         return Inertia::render('Products/Index');
     }
 
@@ -26,6 +29,8 @@ final class ProductsController extends Controller
      */
     public function create(): InertiaResponse
     {
+        $this->authorize(PermissionsEnum::PRODUCTS_CREATE->value, auth()->user());
+
         // List of Categories
         $categories = Category::all();
 
@@ -47,6 +52,8 @@ final class ProductsController extends Controller
      */
     public function edit(Product $product): InertiaResponse
     {
+        $this->authorize(PermissionsEnum::PRODUCTS_EDIT->value, auth()->user());
+
         // Include the product variants with media
         $product->load(['media', 'variants', 'categories', 'brand', 'measureUnit']);
 

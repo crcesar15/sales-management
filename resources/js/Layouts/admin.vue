@@ -43,6 +43,7 @@ export default {
               label: "Products",
               icon: "fa fa-list",
               to: "products",
+              can: "products-view",
               route: route("products"),
             },
             {

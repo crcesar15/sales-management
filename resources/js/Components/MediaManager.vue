@@ -4,12 +4,13 @@
       v-if="files.length === 0"
       class="flex justify-center mt-4"
     >
-      <PButton
-        :label="$t('Upload Image')"
+      <SplitButton
+        :label="t('Upload Image')"
         icon="fa fa-add"
         class="uppercase"
+        :model=uploadImageOptions
         raised
-        @click="openFileUpload"
+        @click="openFileUpload(false)"
       />
     </div>
     <div
@@ -30,7 +31,7 @@
                 height="200"
                 class="mb-3 rounded-lg border-2 border-slate-300 dark:border-slate-700"
               >
-              <PButton
+              <Button
                 v-tooltip.bottom="'Remove image'"
                 icon="fa fa-trash"
                 rounded
@@ -46,13 +47,14 @@
       </div>
     </div>
     <div class="flex justify-center mt-4">
-      <PButton
-        v-show="files.length > 0"
+      <SplitButton
+        v-show="props.files.length > 0"
         icon="fa fa-add"
-        :label="$t('Upload Image')"
+        :label="t('Upload Image')"
         class="uppercase"
+        :model=uploadImageOptions
         raised
-        @click="openFileUpload"
+        @click="openFileUpload(false)"
       />
       <FileUpload
         v-show="false"
@@ -64,6 +66,7 @@
         :max-file-size="10000000"
         :multiple="false"
         :custom-upload="true"
+        :pt="fileUploadPassThrough"
         @uploader="uploader"
       />
     </div>
@@ -76,24 +79,90 @@
     >
       <template #footer>
         <div class="flex items-center justify-center gap-2 mt-2">
-          <PButton
+          <Button
             icon="fas fa-check"
-            :label="$t('Save')"
+            :label="t('Save')"
             @click="saveCropped"
           />
-          <PButton
+          <Button
             icon="fas fa-times"
-            :label="$t('Cancel')"
-            outlined=""
+            :label="t('Cancel')"
+            outlined
             @click="cropperToggle = false"
           />
         </div>
       </template>
       <div class="cropper-area">
-        <div class="img-cropper">
-          <VueCropper
+        <div class="relative">
+          <div class="absolute bottom-0 left-0 right-0 z-10">
+            <div class="flex">
+              <ButtonGroup
+                class="
+                  w-full
+                  p-2
+                  bg-white/10
+                  dark:bg-gray-800/10
+                "
+              >
+                <Button
+                  class="
+                    block
+                    !w-full
+                    hover:!bg-white/20
+                    dark:hover:!bg-gray-800/20
+                  "
+                  variant="text"
+                  severity="secondary"
+                  icon="fa-solid fa-up-down"
+                  @click="flip(0,1)"
+                />
+                <Button
+                  class="
+                    block
+                    !w-full
+                    hover:!bg-white/20
+                    dark:hover:!bg-gray-800/20
+                  "
+                  variant="text"
+                  severity="secondary"
+                  icon="fa-solid fa-left-right"
+                  @click="flip(1,0)"
+                />
+                <Button
+                  class="
+                    block
+                    !w-full
+                    hover:!bg-white/20
+                    dark:hover:!bg-gray-800/20
+                  "
+                  variant="text"
+                  severity="secondary"
+                  icon="fa-solid fa-rotate-left"
+                  @click="rotate(-90)"
+                />
+                <Button
+                  class="
+                    block
+                    !w-full
+                    hover:!bg-white/20
+                    dark:hover:!bg-gray-800/20
+                  "
+                  variant="text"
+                  severity="secondary"
+                  icon="fa-solid fa-rotate-right"
+                  @click="rotate(90)"
+                />
+              </ButtonGroup>
+            </div>
+          </div>
+          <Cropper
+            class="w-100"
             ref="cropper"
-            :aspect-ratio="1"
+            :stencil-props="{
+              movable: true,
+              resizable: true,
+              aspectRatio: 1,
+            }"
             :src="imageAddress"
           />
         </div>
@@ -102,62 +171,108 @@
   </div>
 </template>
 
-<script>
-import Dialog from "primevue/dialog";
-import PButton from "primevue/button";
-import FileUpload from "primevue/fileupload";
+<script setup lang="ts">
+
+import {
+  Dialog,
+  Button,
+  FileUpload,
+  ButtonGroup,
+  SplitButton,
+} from "primevue"
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 
 // cropper component
-import VueCropper from "vue-cropperjs";
-import "cropperjs/dist/cropper.css";
+import 'vue-advanced-cropper/dist/style.css';
+import { Cropper } from 'vue-advanced-cropper'
 
-export default {
-  components: {
-    Dialog,
-    VueCropper,
-    PButton,
-    FileUpload,
+// Set composables
+const { t } = useI18n();
+
+// Define Emits
+const emit = defineEmits(['upload-file', 'remove-file']);
+
+// Set up the props
+const props = defineProps<{
+  files: Array<{ id: number; url: string }>;
+}>();
+
+// Open dialog
+
+const fileUploadPassThrough = ref();
+
+const uploadImageOptions = [
+  {
+    label: 'Upload Image',
+    icon: 'fa fa-upload',
+    command: () => {
+      openFileUpload()
+    }
   },
-  props: {
-    files: {
-      type: Array,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      cropperToggle: false,
-      imageAddress: "",
+  {
+    label: 'Use Camera',
+    icon: 'fa fa-camera',
+    command: () => {
+      openFileUpload(true)
+    }
+  }
+];
+
+const openFileUpload = (fromCamera = false) => {
+  if (fromCamera) {
+    fileUploadPassThrough.value = {
+      input: {
+        capture: 'environment'
+      }
     };
-  },
-  methods: {
-    uploader(event) {
-      const { files } = event;
-      const file = files[0];
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
+  } else {
+    fileUploadPassThrough.value = {};
+  }
 
-      reader.onload = () => {
-        this.imageAddress = String(reader.result);
-        this.$refs.cropper.replace(reader.result);
-      };
-      this.cropperToggle = true;
-    },
-    saveCropped() {
-      const formData = new FormData();
-      this.$refs.cropper.getCroppedCanvas().toBlob((blob) => {
-        const fileName = `${Date.now()}.webp`;
-        formData.append("file", blob, fileName);
-        this.$emit("upload-file", formData);
-        this.cropperToggle = false;
-      });
-    },
-    openFileUpload() {
-      this.$refs.fileUpload.choose();
-    },
-    removeFile(fileId) {
-      this.$emit("remove-file", fileId);
-    },
-  },
+  cropperToggle.value = false;
+  imageAddress.value = "";
+  fileUpload.value?.choose();
 };
+
+// Cropper instance
+const cropperToggle = ref(false);
+const imageAddress = ref("");
+const fileUpload = ref();
+const cropper = ref();
+
+const uploader = (event: any) => {
+  const { files } = event;
+  const file = files[0];
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+
+  reader.onload = () => {
+    imageAddress.value = String(reader.result);
+    cropperToggle.value = true;
+  };
+};
+
+const flip = (x:number,y:number) => {
+  cropper.value.flip(x,y);
+}
+
+const rotate = (angle:number) => {
+  cropper.value.rotate(angle);
+}
+
+const saveCropped = () => {
+  const { canvas } = cropper.value.getResult();
+  const formData = new FormData();
+  canvas.toBlob((blob: Blob) => {
+    formData.append("file", blob, `${Date.now()}.webp`);
+    emit("upload-file", formData);
+    cropperToggle.value = false;
+  });
+};
+
+const removeFile = (fileId: string) => {
+  emit("remove-file", fileId);
+};
+
 </script>
