@@ -19,7 +19,6 @@ return new class extends Migration
             $table->foreignId('measurement_unit_id')->nullable()->constrained();
             $table->string('name');
             $table->string('description', 350)->nullable();
-            $table->json('options')->nullable();
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->softDeletes();
             $table->timestamps();
