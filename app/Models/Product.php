@@ -30,7 +30,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read MeasurementUnit|null $measurementUnit
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariant> $variants
  * @property-read int|null $variants_count
- *
  * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product newQuery()
@@ -48,7 +47,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product withoutTrashed()
- *
+ * @property-read int|null $options_count
  * @mixin \Eloquent
  */
 final class Product extends Model
@@ -88,5 +87,11 @@ final class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    /** @return HasMany<ProductOption, $this>*/
+    public function options(): HasMany
+    {
+        return $this->hasMany(ProductOption::class);
     }
 }
