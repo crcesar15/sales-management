@@ -89,6 +89,7 @@ final class ProductVariant extends Model implements HasMedia
             ->sharpen(10);
     }
 
+    /** @return BelongsToMany<ProductOptionValue, $this>*/
     public function values(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -99,14 +100,15 @@ final class ProductVariant extends Model implements HasMedia
         );
     }
 
+    /** @return Attribute<string, never> */
     protected function name(): Attribute
     {
-        $values = $this?->values ?? [];
+        $values = $this->values;
 
         $formatted = [];
 
         foreach ($values as $value) {
-            $formatted[] = $value->option->name . ': ' . $value->value;
+            $formatted[] = $value->option?->name . ': ' . $value->value;
         }
 
         return Attribute::make(
