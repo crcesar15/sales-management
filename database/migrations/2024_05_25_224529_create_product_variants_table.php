@@ -17,7 +17,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->string('identifier', 50)->unique()->nullable();
-            $table->string('name', 150);
             $table->decimal('price', 10, 2);
             $table->integer('stock');
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
