@@ -29,7 +29,6 @@ final class Products extends ResourceCollection
                 'status' => $product->status,
                 'created_at' => $product->created_at,
                 'updated_at' => $product->updated_at,
-                'options' => $product->options,
             ];
 
             if ($request->has('include') && in_array('brand', explode(',', $request->string('include')->value()))) {
