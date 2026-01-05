@@ -30,7 +30,11 @@ final class ListProductRequest extends FormRequest
             'order_by' => ['sometimes', 'string', 'in:name,created_at,updated_at'],
             'order_direction' => ['sometimes', 'string', 'in:asc,desc'],
             'filter' => ['sometimes', 'string', 'max:255'],
-            'include' => ['sometimes', 'array', 'in:brand,categories,measurementUnit,media,variants,variants.media'],
+            'include' => [
+                'sometimes',
+                'array',
+                'in:brand,categories,measurementUnit,media,options,options.values,variants,variants.media,variants.values,variants.values.option',
+            ],
             'status' => ['sometimes', 'string', 'in:active,inactive,archived'],
         ];
     }
