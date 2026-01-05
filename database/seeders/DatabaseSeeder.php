@@ -11,6 +11,8 @@ use App\Models\Catalog;
 use App\Models\Category;
 use App\Models\MeasurementUnit;
 use App\Models\Product;
+use App\Models\ProductOption;
+use App\Models\ProductOptionValue;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\User;
@@ -37,7 +39,7 @@ final class DatabaseSeeder extends Seeder
                 'phone' => '123456789',
                 'status' => 'ACTIVE',
                 'date_of_birth' => '1990-01-01',
-                'password' => bcrypt('123456'),
+                'password' => bcrypt('admin'),
             ]
         );
 
@@ -58,19 +60,69 @@ final class DatabaseSeeder extends Seeder
         // Create 10 Measurement Units
         MeasurementUnit::factory(10)->create();
 
-        Category::factory(10)->create()->each(function ($category): void {
-            // create 5 products for each category
-            Product::factory(5)->create([
-                'measurement_unit_id' => MeasurementUnit::all()->random()->id,
-                'brand_id' => Brand::all()->random()->id,
-            ])->each(function ($product) use ($category): void {
-                ProductVariant::factory(random_int(1, 3))->create([
+        // Create 10 Categories, each with 5 products
+        Category::factory(10)->create();
+
+        // create 50 products
+        $products = [];
+
+        for ($i = 0; $i < 50; $i++) {
+            $products[] = Product::factory()
+                ->create([
+                    'measurement_unit_id' => MeasurementUnit::all()->random()->id,
+                    'brand_id' => Brand::all()->random()->id,
+                ]);
+        }
+
+        foreach ($products as $product) {
+            // attach categories to products
+            $product->categories()->attach(
+                Category::all()->random()->id
+            );
+
+            // create 1 to 3 variants for each product
+            $numberOfVariants = random_int(1, 3);
+
+            if ($numberOfVariants === 1) {
+                // create a single variant without options
+                $product->variants()->create([
+                    'identifier' => 'SKU-'
+                            . mb_strtoupper(mb_substr($product->name, 0, 3))
+                            . '-'
+                            . random_int(1000, 9999),
+                    'price' => random_int(100, 1000),
+                    'stock' => random_int(10, 100),
+                ]);
+
+                continue;
+            }
+
+            // create 1 options for each product
+            $options = ProductOption::factory(1)
+                ->create([
                     'product_id' => $product->id,
                 ]);
-                // Add category to product
-                $product->categories()->attach($category->id);
-            });
-        });
+
+            foreach ($options as $option) {
+                // create values for each option
+                ProductOptionValue::factory($numberOfVariants)
+                    ->create([
+                        'product_option_id' => $option->id,
+                    ])->each(function ($value) use ($product): void {
+                        // create product variants for each option value
+                        $product->variants()->create([
+                            'identifier' => 'SKU-'
+                                    . mb_strtoupper(mb_substr($product->name, 0, 3))
+                                    . '-'
+                                    . mb_strtoupper(mb_substr($value->value, 0, 3))
+                                    . '-'
+                                    . random_int(1000, 9999),
+                            'price' => random_int(100, 1000),
+                            'stock' => random_int(10, 100),
+                        ])->values()->attach($value->id);
+                    });
+            }
+        }
 
         // Create 10 vendors
         Vendor::factory(10)->create();
@@ -79,7 +131,7 @@ final class DatabaseSeeder extends Seeder
         Catalog::factory(10)->create(
             [
                 'vendor_id' => Vendor::all()->random()->id,
-                'product_variant_id' => Product::all()->random()->id,
+                'product_variant_id' => ProductVariant::all()->random()->id,
             ]
         );
 
