@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\ProductVariantFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,9 +27,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read \App\Models\Product $product
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Vendor> $vendors
+ * @property-read Product $product
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Vendor> $vendors
  * @property-read int|null $vendors_count
+ *
  * @method static \Database\Factories\ProductVariantFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant newQuery()
@@ -42,6 +44,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant whereStock($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 final class ProductVariant extends Model implements HasMedia
@@ -54,11 +57,13 @@ final class ProductVariant extends Model implements HasMedia
     protected $fillable = [
         'product_id',
         'identifier',
-        'name',
-        'description',
         'price',
         'stock',
         'status',
+    ];
+
+    protected $appends = [
+        'name',
     ];
 
     /**
@@ -82,5 +87,30 @@ final class ProductVariant extends Model implements HasMedia
             ->width(368)
             ->height(232)
             ->sharpen(10);
+    }
+
+    public function values(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ProductOptionValue::class,
+            'product_variant_option_values',
+            'product_variant_id',
+            'product_option_value_id'
+        );
+    }
+
+    protected function name(): Attribute
+    {
+        $values = $this?->values ?? [];
+
+        $formatted = [];
+
+        foreach ($values as $value) {
+            $formatted[] = $value->option->name . ': ' . $value->value;
+        }
+
+        return Attribute::make(
+            get: fn () => implode(' / ', $formatted)
+        );
     }
 }
