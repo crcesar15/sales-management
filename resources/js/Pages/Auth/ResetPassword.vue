@@ -1,24 +1,20 @@
 <template>
-  <div class="grid">
-    <div class="col-12 md:col-8 md:col-offset-2">
-      <div class="surface-card p-4 shadow-2 border-round w-full">
-        <div class="logo-container">
-          <img
-            src="images/logo.png"
-            alt="logo"
-          />
-        </div>
-
+  <div
+    class="grid grid-cols-12"
+    style="height: calc(100vh - 40px)"
+  >
+    <div class="col-span-12 lg:col-span-4 lg:col-start-5 md:col-span-6 md:col-start-4 mx-4 md:mx-0 flex flex-col justify-center">
+      <div class="bg-surface-0 pt-20 pb-8 px-6 shadow-lg rounded-border w-full">
         <form
           method="POST"
           @submit.prevent="resetPassword"
         >
-          <input
-            id="token"
-            type="text"
-            value=""
-            style="display: none;"
-          />
+          <div class="logo-container">
+            <img
+              src="/images/logo.png"
+              alt="logo"
+            />
+          </div>
           <div class="grid">
             <label
               for="email"
@@ -36,7 +32,7 @@
             </div>
           </div>
 
-          <div class="grid">
+          <div class="grid mt-4">
             <label
               for="password"
               class="col-12 md:col-4 flex flex-wrap align-content-center justify-content-start md:justify-content-end"
@@ -54,7 +50,7 @@
             </div>
           </div>
 
-          <div class="grid">
+          <div class="grid mt-4">
             <label
               for="password-confirm"
               class="col-12 md:col-4 flex flex-wrap align-content-center justify-content-start md:justify-content-end"
@@ -72,7 +68,7 @@
             </div>
           </div>
 
-          <div class="flex flex-wrap justify-center">
+          <div class="flex flex-wrap justify-center mt-4">
             <Button
               type="submit"
               :loading="btnLoading"
@@ -106,8 +102,14 @@ const { t } = useI18n();
 const { resetPasswordApi } = useAuthClient();
 const toast = useToast();
 
+// Define props
+const props = defineProps<{
+  token: string;
+  email: string;
+}>();
+
 // Form variables
-const email = ref("");
+const email = ref(props.email);
 const password = ref("");
 const passwordConfirmation = ref("");
 const btnLoading = ref(false);
@@ -120,7 +122,7 @@ const resetPassword = async () => {
       email: email.value,
       password: password.value,
       password_confirmation: passwordConfirmation.value,
-      token: (new URLSearchParams(window.location.search)).get("token") || "",
+      token: props.token,
     });
     toast.add({
       severity: "success",

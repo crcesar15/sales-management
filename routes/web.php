@@ -14,6 +14,7 @@ use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendorsController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -55,7 +56,12 @@ Route::group(['middleware' => ['guest']], function (): void {
     })->name('login');
     Route::post('login', [LoginController::class, 'login'])->name('login.post');
     Route::get('password/reset', fn () => Inertia::render('Auth/EmailRequest'))->name('password.reset.request');
-    Route::get('password/reset/{token}', fn () => Inertia::render('Auth/ResetPassword'))->name('password.reset');
+    Route::get('password/reset/{token}', function (Request $request) {
+        $token = $request->route()->parameter('token');
+        $email = $request->query('email', '');
+
+        return Inertia::render('Auth/ResetPassword', ['token' => $token, 'email' => $email]);
+    })->name('password.reset');
     Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.reset.update');
     Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 });
