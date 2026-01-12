@@ -15,7 +15,7 @@ export function useAuthClient() {
     }
 
     const requestResetPasswordApi = async (payload: { email: string }) => {
-        return await apiClient.post(route('password.request'), payload);
+        return await apiClient.post(route('password.email'), payload);
     }
 
     interface resetPasswordPayload {
@@ -26,7 +26,7 @@ export function useAuthClient() {
     }
 
     const resetPasswordApi = async (payload: resetPasswordPayload) => {
-        return await apiClient.post(route('password.update'), payload);
+        return await apiClient.post(route('password.reset.update'), payload);
     }
 
     return {

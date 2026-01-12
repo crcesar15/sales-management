@@ -47,7 +47,7 @@
         >
           <a
             class="text-primary cursor-pointer"
-            @click="router.visit(route('auth.login'))"
+            @click="router.visit(route('login'))"
           >
             {{ t("Go Back") }}
           </a>
@@ -94,10 +94,11 @@ const sentResetLink = async () => {
     });
     email.value = "";
   } catch (error: any) {
+    console.log(error);
     toast.add({
       severity: "error",
       summary: t("Error"),
-      detail: error.response.data.message || t("An error occurred while sending the password reset link."),
+      detail: error.response?.data?.message || t("An error occurred while sending the password reset link."),
       life: 5000,
     });
   } finally {

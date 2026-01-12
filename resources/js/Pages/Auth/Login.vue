@@ -65,7 +65,7 @@
             <a
               v-if="showResetPassword"
               class="text-primary cursor-pointer"
-              @click="router.visit(route('auth.password.reset.request'))"
+              @click="router.visit(route('password.reset.request'))"
             >
               {{ t("Forgot Your Password?") }}
             </a>

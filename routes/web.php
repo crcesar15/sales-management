@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\BrandController;
@@ -41,7 +42,7 @@ Route::get('/', function () {
 
 // Auth::routes();
 // Auth routes
-Route::group(['middleware' => ['guest'], 'as' => 'auth.'], function (): void {
+Route::group(['middleware' => ['guest']], function (): void {
     Route::get('/login', function () {
         // check if user is logged in
         if (Auth::check()) {
@@ -56,6 +57,7 @@ Route::group(['middleware' => ['guest'], 'as' => 'auth.'], function (): void {
     Route::get('password/reset', fn () => Inertia::render('Auth/EmailRequest'))->name('password.reset.request');
     Route::get('password/reset/{token}', fn () => Inertia::render('Auth/ResetPassword'))->name('password.reset');
     Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.reset.update');
+    Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 });
 
 Route::group(['middleware' => ['auth']], function (): void {
