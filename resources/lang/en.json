@@ -1,4 +1,8 @@
 {
+  "Remember Me": "Remember Me",
+  "Forgot Your Password?": "Forgot Your Password?",
+  "Login": "Login",
+  "Register": "Register",
   "Dashboard": "Dashboard",
   "products": "products",
   "Products": "Products",
@@ -104,6 +108,9 @@
   "Error": "Error",
   "Restore": "Restore",
   "Email": "Email",
+  "Email Address": "Email Address",
+  "Go Back": "Go Back",
+  "Send Password Reset Link": "Send Password Reset Link",
   "Credentials": "Credentials",
   "Username": "Username",
   "Password": "Password",

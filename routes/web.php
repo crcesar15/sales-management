@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
@@ -34,10 +36,27 @@ Route::get('/', function () {
     }
 
     // user is not logged in
-    return redirect('/login');
+    return Inertia::render('Auth/Login');
 });
 
-Auth::routes();
+// Auth::routes();
+// Auth routes
+Route::group(['middleware' => ['guest'], 'as' => 'auth.'], function (): void {
+    Route::get('/login', function () {
+        // check if user is logged in
+        if (Auth::check()) {
+            // user is logged in
+            return redirect('/home');
+        }
+
+        // user is not logged in
+        return Inertia::render('Auth/Login');
+    })->name('login');
+    Route::post('login', [LoginController::class, 'login'])->name('login.post');
+    Route::get('password/reset', fn () => Inertia::render('Auth/EmailRequest'))->name('password.reset.request');
+    Route::get('password/reset/{token}', fn () => Inertia::render('Auth/ResetPassword'))->name('password.reset');
+    Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.reset.update');
+});
 
 Route::group(['middleware' => ['auth']], function (): void {
     // Home Routes

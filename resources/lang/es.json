@@ -1,4 +1,8 @@
 {
+  "Remember Me": "Recuérdame",
+  "Forgot Your Password?": "¿Olvidaste tu contraseña?",
+  "Login": "Iniciar Sesión",
+  "Register": "Registrarse",
   "Dashboard": "Panel",
   "products": "productos",
   "Products": "Productos",
@@ -105,6 +109,9 @@
   "Error": "Error",
   "Restore": "Restaurar",
   "Email": "Correo Electrónico",
+  "Email Address": "Correo Electrónico",
+  "Go Back": "Regresar",
+  "Send Password Reset Link": "Enviar enlace para restablecer la contraseña",
   "Credentials": "Credenciales",
   "Username": "Nombre de Usuario",
   "Password": "Contraseña",
