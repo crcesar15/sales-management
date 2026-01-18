@@ -6,33 +6,43 @@ namespace App\Enums;
 
 enum PermissionsEnum: string
 {
-    case BRANDS_VIEW = 'brands-view';
-    case BRANDS_CREATE = 'brands-create';
-    case BRANDS_EDIT = 'brands-edit';
-    case BRANDS_DELETE = 'brands-delete';
+    case BRANDS_VIEW = 'brand.view';
+    case BRANDS_CREATE = 'brand.create';
+    case BRANDS_EDIT = 'brand.edit';
+    case BRANDS_DELETE = 'brand.delete';
 
-    case CATEGORIES_VIEW = 'categories-view';
-    case CATEGORIES_CREATE = 'categories-create';
-    case CATEGORIES_EDIT = 'categories-edit';
-    case CATEGORIES_DELETE = 'categories-delete';
+    case CATEGORIES_VIEW = 'category.view';
+    case CATEGORIES_CREATE = 'category.create';
+    case CATEGORIES_EDIT = 'category.edit';
+    case CATEGORIES_DELETE = 'category.delete';
 
-    case MEASUREMENT_UNITS_VIEW = 'measurement-units-view';
-    case MEASUREMENT_UNITS_CREATE = 'measurement-units-create';
-    case MEASUREMENT_UNITS_EDIT = 'measurement-units-edit';
-    case MEASUREMENT_UNITS_DELETE = 'measurement-units-delete';
+    case MEASUREMENT_UNITS_VIEW = 'measurement.unit.view';
+    case MEASUREMENT_UNITS_CREATE = 'measurement.unit.create';
+    case MEASUREMENT_UNITS_EDIT = 'measurement.unit.edit';
+    case MEASUREMENT_UNITS_DELETE = 'measurement.unit.delete';
 
-    case PRODUCTS_VIEW = 'products-view';
-    case PRODUCTS_CREATE = 'products-create';
-    case PRODUCTS_EDIT = 'products-edit';
-    case PRODUCTS_DELETE = 'products-delete';
+    case PRODUCTS_VIEW = 'product.view';
+    case PRODUCTS_CREATE = 'product.create';
+    case PRODUCTS_EDIT = 'product.edit';
+    case PRODUCTS_DELETE = 'product.delete';
 
-    case ROLES_VIEW = 'roles-view';
-    case ROLES_CREATE = 'roles-create';
-    case ROLES_EDIT = 'roles-edit';
-    case ROLES_DELETE = 'roles-delete';
+    case ROLES_VIEW = 'role.view';
+    case ROLES_CREATE = 'role.create';
+    case ROLES_EDIT = 'role.edit';
+    case ROLES_DELETE = 'role.delete';
 
-    case USERS_VIEW = 'users-view';
-    case USERS_CREATE = 'users-create';
-    case USERS_EDIT = 'users-edit';
-    case USERS_DELETE = 'users-delete';
+    case USERS_VIEW = 'user.view';
+    case USERS_CREATE = 'user.create';
+    case USERS_EDIT = 'user.edit';
+    case USERS_DELETE = 'user.delete';
+
+    case STORE_VIEW = 'store.view';
+    case STORE_CREATE = 'store.create';
+    case STORE_EDIT = 'store.edit';
+    case STORE_DELETE = 'store.delete';
+
+    case SETTINGS_VIEW = 'setting.view';
+    case SETTINGS_CREATE = 'setting.create';
+    case SETTINGS_EDIT = 'setting.edit';
+    case SETTINGS_DELETE = 'setting.delete';
 }
