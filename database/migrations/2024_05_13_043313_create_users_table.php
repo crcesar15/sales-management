@@ -17,10 +17,10 @@ return new class() extends Migration
             $table->id();
             $table->string('first_name', 50);
             $table->string('last_name', 50);
-            $table->string('email', 100)->unique();
-            $table->string('username', 50)->unique();
+            $table->string('email', 100)->unique()->index();
+            $table->string('username', 50)->unique()->index();
             $table->string('phone', 20)->nullable();
-            $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
+            $table->enum('status', ['active', 'inactive', 'archived'])->default('active')->index();
             $table->date('date_of_birth')->nullable();
             $table->json('additional_properties')->nullable();
             $table->timestamp('email_verified_at')->nullable();
