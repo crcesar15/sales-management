@@ -5,7 +5,7 @@
         {{ t("Roles") }}
       </h2>
       <Button
-        v-can="'roles.create'"
+        v-can="'role.create'"
         :label="t('add role')"
         icon="fa fa-add"
         raised
@@ -18,15 +18,15 @@
       <template #content>
         <DataTable
           :value="roles"
-          resizable-columns
+          resizableColumns
           lazy
-          :total-records="pagination.total"
+          :totalRecords="pagination.total"
           :rows="pagination.total"
           :first="pagination.first"
           :loading="loading"
           paginator
-          sort-field="name"
-          :sort-order="1"
+          sortField="name"
+          :sortOrder="1"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -48,7 +48,7 @@
                 "
               >
                 <IconField
-                  icon-position="left"
+                  iconPosition="left"
                   class="w-full"
                 >
                   <InputIcon class="fa fa-search" />
@@ -85,7 +85,7 @@
               <div class="flex justify-center gap-2">
                 <Button
                   v-tooltip.top="t('Edit')"
-                  v-can="'roles.edit'"
+                  v-can="'role.edit'"
                   icon="fa fa-edit"
                   text
                   rounded
@@ -95,7 +95,7 @@
                 />
                 <Button
                   v-tooltip.top="t('Delete')"
-                  v-can="'roles.delete'"
+                  v-can="'role.delete'"
                   icon="fa fa-trash"
                   text
                   rounded
@@ -131,11 +131,11 @@ import {
 import AppLayout from "@layouts/admin.vue";
 import useDatetimeFormatter from "@composables/useDatetimeFormatter";
 import { useI18n } from "vue-i18n";
-import { useRoleClient } from "@/Composables/useRoleClient";
-import { Role } from "@/Types/role-types";
 import { ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
+import { RolePayload, RoleResponse } from "@/Types/role-types";
+import { useRoleClient } from "@/Composables/useRoleClient";
 
 // Set composables
 const toast = useToast();
@@ -158,9 +158,9 @@ const pagination = ref({
   filter: "",
 });
 
-const {loading, fetchRolesApi} = useRoleClient();
+const { loading, fetchRolesApi } = useRoleClient();
 
-let roles = ref<Role[]>();
+const roles = ref<RoleResponse[]>();
 
 const fetchRoles = async () => {
   const params = new URLSearchParams();
@@ -176,7 +176,7 @@ const fetchRoles = async () => {
 
   try {
     const response = await fetchRolesApi(params.toString());
-    roles.value = response.data.data.map((item:Role) => ({
+    roles.value = response.data.data.map((item:RoleResponse) => ({
       ...item,
       created_at: useDatetimeFormatter(item.created_at),
       updated_at: useDatetimeFormatter(item.updated_at),
@@ -190,18 +190,18 @@ const fetchRoles = async () => {
       life: 3000,
     });
   }
-}
+};
 
 const onPage = (event: DataTablePageEvent) => {
   pagination.value.page = event.page + 1;
   pagination.value.perPage = event.rows;
   fetchRoles();
-}
+};
 const onSort = (event: DataTableSortEvent) => {
-  pagination.value.sortField = typeof event.sortField === 'string' ? event.sortField : 'name' ;
+  pagination.value.sortField = typeof event.sortField === "string" ? event.sortField : "name";
   pagination.value.sortOrder = event.sortOrder ?? 0;
   fetchRoles();
-}
+};
 
 watch(
   () => pagination.value.filter,
@@ -212,12 +212,12 @@ watch(
   {
     immediate: true,
     deep: true,
-  }
-)
+  },
+);
 
 // Delete Role
 const deleteRole = (id:number) => {
-  const {destroyRoleApi} = useRoleClient();
+  const { destroyRoleApi } = useRoleClient();
 
   confirm.require({
     message: t("Are you sure you want to delete this role?"),
@@ -246,7 +246,7 @@ const deleteRole = (id:number) => {
       }
     },
   });
-}
+};
 </script>
 
 <style>

@@ -15,10 +15,9 @@ module.exports = {
   },
   extends: [
     "eslint:recommended",
-    "plugin:vue/vue3-recommended",
+    "plugin:vue/recommended",
     "airbnb-base",
     "plugin:@typescript-eslint/recommended",
-    "prettier",
   ],
   parser: "vue-eslint-parser", // ✅ Handles <template>
   parserOptions: {
@@ -55,7 +54,9 @@ module.exports = {
     ],
     "max-len": [
       "error",
-      { code: 140, ignoreComments: true, ignoreStrings: true, ignoreTemplateLiterals: true },
+      {
+        code: 140, ignoreComments: true, ignoreStrings: true, ignoreTemplateLiterals: true,
+      },
     ],
   },
   overrides: [

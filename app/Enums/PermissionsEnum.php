@@ -16,10 +16,10 @@ enum PermissionsEnum: string
     case CATEGORIES_EDIT = 'category.edit';
     case CATEGORIES_DELETE = 'category.delete';
 
-    case MEASUREMENT_UNITS_VIEW = 'measurement.unit.view';
-    case MEASUREMENT_UNITS_CREATE = 'measurement.unit.create';
-    case MEASUREMENT_UNITS_EDIT = 'measurement.unit.edit';
-    case MEASUREMENT_UNITS_DELETE = 'measurement.unit.delete';
+    case MEASUREMENT_UNITS_VIEW = 'measurement_unit.view';
+    case MEASUREMENT_UNITS_CREATE = 'measurement_unit.create';
+    case MEASUREMENT_UNITS_EDIT = 'measurement_unit.edit';
+    case MEASUREMENT_UNITS_DELETE = 'measurement_unit.delete';
 
     case PRODUCTS_VIEW = 'product.view';
     case PRODUCTS_CREATE = 'product.create';

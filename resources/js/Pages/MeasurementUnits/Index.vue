@@ -5,7 +5,7 @@
         {{ $t("Measurement Units") }}
       </h2>
       <p-button
-        v-can="'measurement-units.create'"
+        v-can="'measurement_unit.create'"
         :label="$t('Add Measurement Unit')"
         icon="fa fa-add"
         raised
@@ -89,7 +89,7 @@
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
-                  v-can="'measurement-units.edit'"
+                  v-can="'measurement_unit.edit'"
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
@@ -99,7 +99,7 @@
                   @click="editMeasurementUnit(row.data)"
                 />
                 <Button
-                  v-can="'measurement-units.delete'"
+                  v-can="'measurement_unit.delete'"
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text

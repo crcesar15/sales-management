@@ -5,7 +5,7 @@
         {{ t("Brands") }}
       </h2>
       <Button
-        v-can="'brands.create'"
+        v-can="'brand.create'"
         :label="t('Add Brand')"
         style="text-transform: uppercase"
         icon="fa fa-add"
@@ -102,7 +102,7 @@
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
-                  v-can="'brands.edit'"
+                  v-can="'brand.edit'"
                   v-tooltip.top="t('Edit')"
                   icon="fa fa-edit"
                   text
@@ -112,7 +112,7 @@
                   @click="editBrand(row.data)"
                 />
                 <Button
-                  v-can="'brands.delete'"
+                  v-can="'brand.delete'"
                   v-tooltip.top="t('Delete')"
                   icon="fa fa-trash"
                   text
