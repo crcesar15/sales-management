@@ -6,11 +6,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Products\ListProductRequest;
+use App\Http\Requests\Api\Products\StoreProductRequest;
 use App\Http\Resources\Products as ApiCollection;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 final class ProductsController extends Controller
 {
@@ -56,17 +58,50 @@ final class ProductsController extends Controller
     }
 
     // Create a new product
-    public function store(Request $request): JsonResponse
+    public function store(StoreProductRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         // create product
-        $product = Product::query()->create([
-            'brand_id' => $request->string('brand_id')->value(),
-            'measurement_unit_id' => $request->integer('measurement_unit_id'),
-            'name' => $request->string('name')->value(),
-            'description' => $request->string('description')->value(),
-            'options' => json_encode($request->string('options')->value()),
-            'status' => $request->string('status')->value(),
-        ]);
+        $product = DB::transaction(function () use ($validated): Product {
+            $product = Product::query()->create([
+                'brand_id' => $validated['brand_id'],
+                'measurement_unit_id' => $validated['measurement_unit_id'],
+                'name' => $validated['name'],
+                'description' => $validated['description'],
+                'status' => $validated['status'],
+            ]);
+
+            // save categories
+            $categories = $validated['categories'] ?? [];
+
+            if (count($categories) > 0) {
+                $product->categories()->attach($categories);
+            }
+
+            // save variants
+            /**
+             * @var array<array<string,int>> $variants
+             */
+            $variants = $validated['variants'] ?? [];
+
+            if (count($variants) > 0) {
+                foreach ($variants as $variant) {
+                    $item = [
+                        'identifier' => $variant['identifier'],
+                        'name' => $variant['name'],
+                        'price' => $variant['price'],
+                        'stock' => $variant['stock'] ?? 0,
+                        'status' => $variant['status'],
+                        'media' => json_encode($variant['media'] ?? []),
+                    ];
+
+                    $product->variants()->create($item);
+                }
+            }
+
+            return $product;
+        });
 
         // Associate media
         // if ($request->has('media') && count($request->array('media')) > 0) {
@@ -80,34 +115,6 @@ final class ProductsController extends Controller
         //         ]);
         //     }
         // }
-
-        // save categories
-        $categories = $request->array('categories');
-
-        if (count($categories) > 0) {
-            $product->categories()->attach($categories);
-        }
-
-        // save variants
-        /**
-         * @var array<array<string,int>> $variants
-         */
-        $variants = $request->array('variants');
-
-        if (count($variants) > 0) {
-            foreach ($variants as $variant) {
-                $item = [
-                    'identifier' => $variant['identifier'],
-                    'name' => $variant['name'],
-                    'price' => $variant['price'],
-                    'stock' => $variant['stock'] ?? 0,
-                    'status' => $variant['status'],
-                    'media' => json_encode($variant['media'] ?? []),
-                ];
-
-                $product->variants()->create($item);
-            }
-        }
 
         return response()->json($product, 201);
     }
