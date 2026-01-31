@@ -5,7 +5,7 @@
         {{ $t("Categories") }}
       </h2>
       <Button
-        v-can="'categories-create'"
+        v-can="'categories.create'"
         :label="$t('Add Category')"
         icon="fa fa-add"
         raised
@@ -102,7 +102,7 @@
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
-                  v-can="'categories-edit'"
+                  v-can="'categories.edit'"
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
                   text
@@ -112,7 +112,7 @@
                   @click="editCategory(row.data)"
                 />
                 <Button
-                  v-can="'categories-delete'"
+                  v-can="'categories.delete'"
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
                   text

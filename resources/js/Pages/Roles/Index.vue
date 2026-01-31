@@ -5,7 +5,7 @@
         {{ t("Roles") }}
       </h2>
       <Button
-        v-can="'roles-create'"
+        v-can="'roles.create'"
         :label="t('add role')"
         icon="fa fa-add"
         raised
@@ -85,7 +85,7 @@
               <div class="flex justify-center gap-2">
                 <Button
                   v-tooltip.top="t('Edit')"
-                  v-can="'roles-edit'"
+                  v-can="'roles.edit'"
                   icon="fa fa-edit"
                   text
                   rounded
@@ -95,7 +95,7 @@
                 />
                 <Button
                   v-tooltip.top="t('Delete')"
-                  v-can="'roles-delete'"
+                  v-can="'roles.delete'"
                   icon="fa fa-trash"
                   text
                   rounded

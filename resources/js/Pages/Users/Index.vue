@@ -5,7 +5,7 @@
         {{ t("Users") }}
       </h2>
       <Button
-        v-can="'users-create'"
+        v-can="'users.create'"
         :label="t('Add User')"
         class="ml-2 uppercase"
         icon="fa fa-add"
@@ -176,7 +176,7 @@
               <div class="flex justify-center gap-2">
                 <Button
                   v-show="row.data.status !== 'archived'"
-                  v-can="'users-edit'"
+                  v-can="'users.edit'"
                   v-tooltip.top="t('Edit')"
                   icon="fa fa-edit"
                   text
@@ -187,7 +187,7 @@
                 />
                 <Button
                   v-show="row.data.status === 'archived'"
-                  v-can="'users-edit'"
+                  v-can="'users.edit'"
                   v-tooltip.top="t('Restore')"
                   icon="fa fa-trash-arrow-up"
                   text
@@ -198,7 +198,7 @@
                 />
                 <Button
                   v-show="row.data.status !== 'archived'"
-                  v-can="'users-delete'"
+                  v-can="'users.delete'"
                   v-tooltip.top="t('Delete')"
                   :disabled="isCurrentUser(row.data.id)"
                   icon="fa fa-trash"

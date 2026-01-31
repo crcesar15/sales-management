@@ -46,6 +46,8 @@ export default defineConfig({
       "@app-types": path.resolve(__dirname, "resources/js/Types"),
       "@layouts": path.resolve(__dirname, "resources/js/Layouts"),
       "@directives": path.resolve(__dirname, "resources/js/Directives"),
+      "@stores": path.resolve(__dirname, "resources/js/Stores"),
+      "@plugins": path.resolve(__dirname, "resources/js/Plugins"),
     },
   },
 });

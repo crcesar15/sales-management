@@ -6,7 +6,7 @@
       </h2>
       <Button
         :label="t('Add Product')"
-        v-can="'products-create'"
+        v-can="'products.create'"
         icon="fa fa-add"
         raised
         class="ml-2 uppercase"
@@ -214,7 +214,7 @@
               <span class="flex justify-center gap-2">
                 <Button
                   v-tooltip.top="t('Edit')"
-                  v-can="'products-edit'"
+                  v-can="'products.edit'"
                   icon="fa fa-edit"
                   text
                   rounded
@@ -224,7 +224,7 @@
                 />
                 <Button
                   v-if="data.status !== 'archived'"
-                  v-can="'products-delete'"
+                  v-can="'products.delete'"
                   v-tooltip.top="t('Delete')"
                   icon="fa fa-trash"
                   text

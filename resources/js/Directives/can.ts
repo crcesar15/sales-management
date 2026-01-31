@@ -1,22 +1,92 @@
-import { usePage } from "@inertiajs/vue3";
+import type { Directive, DirectiveBinding } from "vue";
+import { watch } from "vue";
+import { useAuthStore } from "@stores/auth";
 
-interface Binding {
-  value: string[] | string | true // [edit-roles, update-roles] or 'edit-roles'
+type PermissionValue = string | string[] | true;
+
+interface CanDirectiveElement extends HTMLElement {
+  __canCleanup?: () => void;
+  __canOriginalDisplay?: string;
 }
 
-export default {
-  mounted(el:HTMLElement, binding: Binding) {
-    const permissions = usePage().props.auth?.permissions || [];
-    const { value } = binding;
+const canDirective: Directive<CanDirectiveElement, PermissionValue> = {
+  mounted(el: CanDirectiveElement, binding: DirectiveBinding<PermissionValue>) {
+    const authStore = useAuthStore();
 
-    if (value !== true) {
+    const checkPermission = () => {
+      const { value } = binding;
+
+      // `v-can="true"` always shows the element
+      if (value === true) {
+        return;
+      }
+
       const hasPermission = Array.isArray(value)
-        ? value.some((permission) => permissions.includes(permission))
-        : permissions.includes(value);
+        ? authStore.canAny(value)
+        : authStore.can(value);
 
       if (!hasPermission) {
-        el.remove(); // or el.style.display = 'none'
+        // Store original display value for potential restoration
+        if (el.__canOriginalDisplay === undefined) {
+          el.__canOriginalDisplay = el.style.display;
+        }
+        el.style.display = "none";
+      } else {
+        // Restore display if permission granted
+        if (el.__canOriginalDisplay !== undefined) {
+          el.style.display = el.__canOriginalDisplay;
+        }
       }
+    };
+
+    // Initial check
+    checkPermission();
+
+    // Watch for permission changes (provides reactivity)
+    const unwatch = watch(
+      () => authStore.permissions,
+      () => {
+        checkPermission();
+      },
+      { deep: true }
+    );
+
+    // Store cleanup function for unmount
+    el.__canCleanup = unwatch;
+  },
+
+  updated(el: CanDirectiveElement, binding: DirectiveBinding<PermissionValue>) {
+    // Re-check if binding value changes
+    const authStore = useAuthStore();
+    const { value } = binding;
+
+    if (value === true) {
+      if (el.__canOriginalDisplay !== undefined) {
+        el.style.display = el.__canOriginalDisplay;
+      }
+      return;
+    }
+
+    const hasPermission = Array.isArray(value)
+      ? authStore.canAny(value)
+      : authStore.can(value);
+
+    if (!hasPermission) {
+      if (el.__canOriginalDisplay === undefined) {
+        el.__canOriginalDisplay = el.style.display;
+      }
+      el.style.display = "none";
+    } else if (el.__canOriginalDisplay !== undefined) {
+      el.style.display = el.__canOriginalDisplay;
+    }
+  },
+
+  unmounted(el: CanDirectiveElement) {
+    // Cleanup the watcher
+    if (el.__canCleanup) {
+      el.__canCleanup();
     }
   },
 };
+
+export default canDirective;

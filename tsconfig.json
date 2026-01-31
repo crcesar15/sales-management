@@ -18,7 +18,9 @@
       "@composables/*": ["resources/js/Composables/*"],
       "@app-types/*": ["resources/js/Types/*"],
       "@layouts/*": ["resources/js/Layouts/*"],
-      "@directives/*": ["resources/js/Directives/*"]
+      "@directives/*": ["resources/js/Directives/*"],
+      "@stores/*": ["resources/js/Stores/*"],
+      "@plugins/*": ["resources/js/Plugins/*"]
     }
   },
   "include": [
