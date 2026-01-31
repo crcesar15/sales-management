@@ -65,7 +65,7 @@ export default {
 
       params.append("per_page", 100);
 
-      const url = `${route("api.settings")}?${params.toString()}`;
+      const url = `${route("api.v1.settings")}?${params.toString()}`;
 
       axios.get(url).then((response) => {
         this.settings = response.data.data;
@@ -81,7 +81,7 @@ export default {
         rejectClass: "p-button-secondary",
         accept: () => {
           axios
-            .put(route("api.settings.update"), { settings: this.settings })
+            .put(route("api.v1.settings.update"), { settings: this.settings })
             .then(() => {
               this.$toast.add({
                 severity: "success",
