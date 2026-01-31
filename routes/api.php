@@ -20,8 +20,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $request->user());
 
-// Routes for Products
-Route::group(['middleware' => 'auth:sanctum', 'as' => 'api.'], function (): void {
+// API v1 Routes
+Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.'], function (): void {
     // Routes for Products
     Route::get('/products', [ProductsController::class, 'index'])->name('products');
     Route::get('/products/{product}', [ProductsController::class, 'show'])->name('products.show');

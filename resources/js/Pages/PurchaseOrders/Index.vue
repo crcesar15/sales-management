@@ -241,7 +241,7 @@ export default {
       }
 
       axios
-        .get(route("api.purchase-orders"), { params })
+        .get(route("api.v1.purchase-orders"), { params })
         .then((response) => {
           this.purchaseOrders = response.data.data;
           this.pagination.total = response.data.total;

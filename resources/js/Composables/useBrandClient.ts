@@ -7,7 +7,7 @@ export function useBrandClient() {
     const { apiClient, loading }  = useApi();
 
     const fetchBrandsApi = async <T = any>(queryParameters?: string):Promise<AxiosResponse<T>>  => {
-        let url:string = route('api.brands');
+        let url:string = route('api.v1.brands');
 
         if (queryParameters) {
             url += `?${queryParameters}`
@@ -17,19 +17,19 @@ export function useBrandClient() {
     }
 
     const showBrandApi = async (id: number) => {
-        return await apiClient.get(route('api.brands.show', id));
+        return await apiClient.get(route('api.v1.brands.show', id));
     }
 
     const storeBrandApi = async (brand:Pick<Brand, 'name'>) => {
-        return await apiClient.post(route('api.brands.store'), brand);
+        return await apiClient.post(route('api.v1.brands.store'), brand);
     }
 
     const updateBrandApi = async (id:number, brand:Brand) => {
-        return await apiClient.put(route('api.brands.update', id), brand);
+        return await apiClient.put(route('api.v1.brands.update', id), brand);
     }
 
     const destroyBrandApi = async (id:number) => {
-        return await apiClient.delete(route('api.brands.destroy', id));
+        return await apiClient.delete(route('api.v1.brands.destroy', id));
     }
 
     return {

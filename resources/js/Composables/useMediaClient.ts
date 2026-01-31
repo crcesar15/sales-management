@@ -7,7 +7,7 @@ export const useMediaClient = () => {
   const {apiClient, loading} = useApi();
 
   const uploadDraftFile = async (file: FormData): Promise<AxiosResponse> => {
-    return await apiClient.post(route("api.media.draft.store"), file, {
+    return await apiClient.post(route("api.v1.media.draft.store"), file, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -15,7 +15,7 @@ export const useMediaClient = () => {
   };
 
   const destroyDraftFile = async (id: number): Promise<AxiosResponse> => {
-    return await apiClient.delete(route("api.media.draft.destroy", id));
+    return await apiClient.delete(route("api.v1.media.draft.destroy", id));
   };
 
   return {

@@ -7,7 +7,7 @@ export function useMeasurementUnitClient() {
     const { apiClient, loading }  = useApi();
 
     const fetchMeasurementUnitsApi = async <T = any>(queryParameters?: string):Promise<AxiosResponse<T>>  => {
-        let url:string = route('api.measurement-units');
+        let url:string = route('api.v1.measurement-units');
 
         if (queryParameters) {
             url += `?${queryParameters}`
@@ -17,19 +17,19 @@ export function useMeasurementUnitClient() {
     }
 
     const showMeasurementUnitApi = async (id: number) => {
-        return await apiClient.get(route('api.measurement-units.show', id));
+        return await apiClient.get(route('api.v1.measurement-units.show', id));
     }
 
     const storeMeasurementUnitApi = async (measurementUnit:Pick<MeasurementUnit, 'name' | 'abbreviation'>) => {
-        return await apiClient.post(route('api.measurement-units.store'), measurementUnit);
+        return await apiClient.post(route('api.v1.measurement-units.store'), measurementUnit);
     }
 
     const updateMeasurementUnitApi = async (id:number, measurementUnit:MeasurementUnit) => {
-        return await apiClient.put(route('api.measurement-units.update', id), measurementUnit);
+        return await apiClient.put(route('api.v1.measurement-units.update', id), measurementUnit);
     }
 
     const destroyMeasurementUnitApi = async (id:number) => {
-        return await apiClient.delete(route('api.measurement-units.destroy', id));
+        return await apiClient.delete(route('api.v1.measurement-units.destroy', id));
     }
 
     return {

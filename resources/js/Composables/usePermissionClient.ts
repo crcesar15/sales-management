@@ -6,7 +6,7 @@ export function usePermissionClient() {
     const { apiClient, loading }  = useApi();
 
     const fetchPermissionsApi = async <T = any>(queryParameters?: string):Promise<AxiosResponse<T>>  => {
-        let url:string = route('api.permissions');
+        let url:string = route('api.v1.permissions');
 
         if (queryParameters) {
             url += `?${queryParameters}`

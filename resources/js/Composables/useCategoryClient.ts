@@ -7,7 +7,7 @@ export function useCategoryClient() {
     const { apiClient, loading }  = useApi();
 
     const fetchCategoriesApi = async <T = any>(queryParameters?: string):Promise<AxiosResponse<T>>  => {
-        let url:string = route('api.categories');
+        let url:string = route('api.v1.categories');
 
         if (queryParameters) {
             url += `?${queryParameters}`
@@ -17,19 +17,19 @@ export function useCategoryClient() {
     }
 
     const showCategoryApi = async (id: number) => {
-        return await apiClient.get(route('api.categories.show', id));
+        return await apiClient.get(route('api.v1.categories.show', id));
     }
 
     const storeCategoryApi = async (brand:Pick<Category, 'name'>) => {
-        return await apiClient.post(route('api.categories.store'), brand);
+        return await apiClient.post(route('api.v1.categories.store'), brand);
     }
 
     const updateCategoryApi = async (id:number, brand:Category) => {
-        return await apiClient.put(route('api.categories.update', id), brand);
+        return await apiClient.put(route('api.v1.categories.update', id), brand);
     }
 
     const destroyCategoryApi = async (id:number) => {
-        return await apiClient.delete(route('api.categories.destroy', id));
+        return await apiClient.delete(route('api.v1.categories.destroy', id));
     }
 
     return {

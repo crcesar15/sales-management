@@ -17,13 +17,13 @@
               :src="product.media[0].url"
               :alt="product.name"
               class="w-full p-1"
-            >
+            />
             <div
               v-else
               style="height: 20em;"
               class="flex flex-wrap justify-center items-center "
             >
-              <p><i class="fa fa-image" /> No images yet</p>
+              <p><i class="fa fa-image"></i> No images yet</p>
             </div>
           </template>
           <template #title>

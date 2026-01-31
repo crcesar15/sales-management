@@ -636,7 +636,7 @@ export default {
         }
 
         axios
-          .put(`${route("api.products.store")}/${this.product.id}`, body)
+          .put(`${route("api.v1.products.store")}/${this.product.id}`, body)
           .then(() => {
             this.$toast.add({
               severity: "success",
@@ -679,7 +679,7 @@ export default {
     },
     uploadFile(formData) {
       axios
-        .post(route("api.products.media.draft"), formData, {
+        .post(route("api.v1.media.draft.store"), formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -709,7 +709,7 @@ export default {
     },
     removeFile(id) {
       axios
-        .delete(route("api.products.media.destroy-draft", id))
+        .delete(route("api.v1.media.draft.destroy", id))
         .then(() => {
           this.$toast.add({
             severity: "success",
