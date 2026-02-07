@@ -1,6 +1,24 @@
 import { computed, reactive, readonly } from "vue";
 
-const layoutConfig = reactive({
+interface LayoutConfig {
+  preset: string;
+  primary: string;
+  surface: string | null;
+  darkTheme: boolean;
+  menuMode: "static" | "overlay";
+}
+
+interface LayoutState {
+  staticMenuDesktopInactive: boolean;
+  overlayMenuActive: boolean;
+  profileSidebarVisible: boolean;
+  configSidebarVisible: boolean;
+  staticMenuMobileActive: boolean;
+  menuHoverActive: boolean;
+  activeMenuItem: string | null;
+}
+
+const layoutConfig = reactive<LayoutConfig>({
   preset: "Aura",
   primary: "emerald",
   surface: null,
@@ -8,7 +26,7 @@ const layoutConfig = reactive({
   menuMode: "static",
 });
 
-const layoutState = reactive({
+const layoutState = reactive<LayoutState>({
   staticMenuDesktopInactive: false,
   overlayMenuActive: false,
   profileSidebarVisible: false,
@@ -19,37 +37,37 @@ const layoutState = reactive({
 });
 
 export function useLayout() {
-  const setPrimary = (value) => {
+  const setPrimary = (value: string): void => {
     layoutConfig.primary = value;
   };
 
-  const setSurface = (value) => {
+  const setSurface = (value: string | null): void => {
     layoutConfig.surface = value;
   };
 
-  const setPreset = (value) => {
+  const setPreset = (value: string): void => {
     layoutConfig.preset = value;
   };
 
-  const setActiveMenuItem = (item) => {
-    layoutState.activeMenuItem = item.value || item;
+  const setActiveMenuItem = (item: { value?: string } | string): void => {
+    layoutState.activeMenuItem = typeof item === "string" ? item : (item.value || null);
   };
 
-  const setMenuMode = (mode) => {
+  const setMenuMode = (mode: "static" | "overlay"): void => {
     layoutConfig.menuMode = mode;
   };
 
-  const toggleDarkMode = () => {
+  const toggleDarkMode = (): void => {
     if (!document.startViewTransition) {
       executeDarkModeToggle();
 
       return;
     }
 
-    document.startViewTransition(() => executeDarkModeToggle(event));
+    document.startViewTransition(() => executeDarkModeToggle());
   };
 
-  const executeDarkModeToggle = () => {
+  const executeDarkModeToggle = (): void => {
     layoutConfig.darkTheme = !layoutConfig.darkTheme;
     document.documentElement.classList.toggle("app-dark");
   };
