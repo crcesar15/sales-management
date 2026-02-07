@@ -1,27 +1,83 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
-import Select from "primevue/select";
+import { ref, watch, computed } from "vue";
+import Menu from "primevue/menu";
+import Dialog from "primevue/dialog";
+import type { MenuItem } from "primevue/menuitem";
 import { useI18n } from "vue-i18n";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 import { useLayout } from "./Composables/layout";
 import AppConfigurator from "./AppConfigurator.vue";
 
-interface Language {
-  name: string;
-  code: string;
-}
-
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 const selectedLanguage = ref<string>("en");
-const languages = ref<Language[]>([
-  { name: "EN", code: "en" },
-  { name: "ES", code: "es" },
-]);
+const showThemeDialog = ref<boolean>(false);
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 watch(selectedLanguage, (newVal: string) => {
   locale.value = newVal;
 });
+
+const userMenu = ref();
+
+const userMenuItems = computed<MenuItem[]>(() => [
+  {
+    label: t("Theme Settings"),
+    items: [
+      {
+        label: isDarkTheme.value ? t("Light Mode") : t("Dark Mode"),
+        icon: isDarkTheme.value ? "fa fa-sun" : "fa fa-moon",
+        command: () => {
+          toggleDarkMode();
+        },
+      },
+      {
+        label: t("Colors"),
+        icon: "fa fa-palette",
+        command: () => {
+          showThemeDialog.value = true;
+        },
+      },
+    ]
+  },
+  {
+    separator: true,
+  },
+  {
+    label: t("Language"),
+    items: [
+      {
+        label: t("English"),
+        icon: "fa fa-language",
+        command: () => {
+          selectedLanguage.value = "en";
+        },
+      },
+      {
+        label: t("Español"),
+        icon: "fa fa-language",
+        command: () => {
+          selectedLanguage.value = "es";
+        },
+      },
+    ],
+  },
+  {
+    separator: true,
+  },
+  {
+    label: t("Logout"),
+    icon: "fa fa-sign-out-alt",
+    command: () => {
+      router.post(route("logout"));
+    },
+  },
+]);
+
+function toggleUserMenu(event: Event): void {
+  userMenu.value.toggle(event);
+}
 </script>
 
 <template>
@@ -42,66 +98,27 @@ watch(selectedLanguage, (newVal: string) => {
     </div>
 
     <div class="layout-topbar-actions">
-      <div class="layout-config-menu">
-        <button
-          type="button"
-          class="layout-topbar-action"
-          @click="toggleDarkMode"
-        >
-          <i :class="['fa', { 'fa-moon': isDarkTheme, 'fa-sun': !isDarkTheme }]" />
-        </button>
-        <div class="relative">
-          <button
-            v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }"
-            type="button"
-            class="layout-topbar-action layout-topbar-action-highlight"
-          >
-            <i class="fa fa-palette" />
-          </button>
-          <AppConfigurator />
-        </div>
-      </div>
-
       <button
-        v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }"
-        class="layout-topbar-menu-button layout-topbar-action"
+        type="button"
+        class="layout-topbar-action"
+        @click="toggleUserMenu"
       >
-        <i class="fa fa-ellipsis-v" />
+        <i class="fa fa-user-circle" />
       </button>
-      <div class="layout-topbar-menu hidden lg:block">
-        <div class="layout-topbar-menu-content">
-          <button
-            type="button"
-            class="layout-topbar-action"
-          >
-            <i class="fa fa-calendar" />
-            <span>Calendar</span>
-          </button>
-          <button
-            type="button"
-            class="layout-topbar-action"
-          >
-            <i class="fa fa-inbox" />
-            <span>Messages</span>
-          </button>
-          <button
-            type="button"
-            class="layout-topbar-action"
-          >
-            <i class="fa fa-user" />
-            <span>Profile</span>
-          </button>
-          <Select
-            id="topbarLanguage"
-            v-model="selectedLanguage"
-            :options="languages"
-            option-label="name"
-            option-value="code"
-            placeholder="Language"
-            class="w-full md:w-auto"
-          />
-        </div>
-      </div>
+      <Menu
+        ref="userMenu"
+        :model="userMenuItems"
+        :popup="true"
+      />
     </div>
+
+    <Dialog
+      v-model:visible="showThemeDialog"
+      :header="$t('Theme Settings')"
+      :modal="true"
+      :style="{ width: '320px' }"
+    >
+      <AppConfigurator />
+    </Dialog>
   </div>
 </template>

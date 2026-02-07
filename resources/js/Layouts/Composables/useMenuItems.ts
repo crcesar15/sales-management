@@ -2,49 +2,52 @@ import { computed } from "vue";
 import type { MenuItemType, UserAction } from "../Types/menu";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
+import { useI18n } from "vue-i18n";
 
 export function useMenuItems() {
+  const { t } = useI18n();
+
   const menuItems = computed<MenuItemType[]>(() => [
     {
-      label: "Dashboard",
+      label: t("Dashboard"),
       icon: "fa fa-gauge",
       type: "single",
       items: [
         {
-          label: "Dashboard",
+          label: t("Dashboard"),
           icon: "fa fa-chart-line",
           to: "home",
         },
       ],
     },
     {
-      label: "Products",
+      label: t("Products"),
       icon: "fa fa-cubes",
       type: "multiple",
       items: [
         {
-          label: "Products",
+          label: t("Products"),
           icon: "fa fa-list",
           to: "products",
           can: "product.view",
           route: route("products"),
         },
         {
-          label: "Categories",
+          label: t("Categories"),
           icon: "fa fa-layer-group",
           to: "categories",
           can: "category.view",
           route: route("categories"),
         },
         {
-          label: "Brands",
+          label: t("Brands"),
           icon: "fa fa-copyright",
           to: "brands",
           can: "brand.view",
           route: route("brands"),
         },
         {
-          label: "Measurement Units",
+          label: t("Measurement Units"),
           icon: "fa fa-weight-hanging",
           to: "measurement-units",
           can: "measurement_unit.view",
@@ -53,46 +56,46 @@ export function useMenuItems() {
       ],
     },
     {
-      label: "Sales",
+      label: t("Sales"),
       icon: "fa fa-dollar-sign",
       type: "multiple",
       items: [
         {
-          label: "Point of Sale",
+          label: t("Point of Sale"),
           icon: "fa fa-cash-register",
           to: "home",
         },
         {
-          label: "Orders",
+          label: t("Orders"),
           icon: "fa fa-file-lines",
           to: "home",
         },
         {
-          label: "Customers",
+          label: t("Customers"),
           icon: "fa fa-users",
           to: "home",
         },
       ],
     },
     {
-      label: "Purchases",
+      label: t("Purchases"),
       icon: "fas fa-coins",
       type: "multiple",
       items: [
         {
-          label: "Orders",
+          label: t("Orders"),
           icon: "fa fa-file-lines",
           to: "purchase-orders",
           route: route("purchase-orders"),
         },
         {
-          label: "Product Catalog",
+          label: t("Product Catalog"),
           icon: "fa fa-tags",
           to: "catalog",
           route: route("catalog"),
         },
         {
-          label: "Vendors",
+          label: t("Vendors"),
           icon: "fa fa-truck-field",
           to: "vendors",
           route: route("vendors"),
@@ -100,59 +103,59 @@ export function useMenuItems() {
       ],
     },
     {
-      label: "Inventory",
+      label: t("Inventory"),
       icon: "fa fa-box-open",
       type: "multiple",
       items: [
         {
-          label: "Inventory",
+          label: t("Inventory"),
           icon: "fa fa-boxes-stacked",
           to: "home",
         },
         {
-          label: "Stores",
+          label: t("Stores"),
           icon: "fa fa-warehouse",
           to: "home",
         },
         {
-          label: "Stocks",
+          label: t("Stocks"),
           icon: "fa fa-cubes-stacked",
           to: "home",
         },
       ],
     },
     {
-      label: "Reports",
+      label: t("Reports"),
       icon: "fa fa-chart-line",
       type: "single",
       to: "home",
     },
     {
-      label: "Admin",
+      label: t("Admin"),
       icon: "fa fa-cogs",
       type: "multiple",
       items: [
         {
-          label: "Users",
+          label: t("Users"),
           icon: "fa fa-user",
           to: "users",
           can: "user.view",
           route: route("users"),
         },
         {
-          label: "Roles",
+          label: t("Roles"),
           icon: "fa fa-user-tag",
           to: "roles",
           can: "role.view",
           route: route("roles"),
         },
         {
-          label: "Permissions",
+          label: t("Permissions"),
           icon: "fa fa-user-lock",
           to: "home",
         },
         {
-          label: "Settings",
+          label: t("Settings"),
           icon: "fa fa-cog",
           to: "settings",
           route: route("settings"),
@@ -163,14 +166,14 @@ export function useMenuItems() {
 
   const userActions = computed<UserAction[]>(() => [
     {
-      label: "Profile",
+      label: t("Profile"),
       icon: "fa fa-user",
       command: () => {
         router.visit(route("profile"));
       },
     },
     {
-      label: "Logout",
+      label: t("Logout"),
       icon: "fa fa-sign-out-alt",
       command: () => {
         router.post(route("logout"));
