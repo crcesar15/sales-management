@@ -1,10 +1,10 @@
 import { computed } from "vue";
-import type { MenuGroup, UserAction } from "@app-types/menu";
+import type { MenuItemType, UserAction } from "../Types/menu";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 
 export function useMenuItems() {
-  const menuItems = computed<MenuGroup[]>(() => [
+  const menuItems = computed<MenuItemType[]>(() => [
     {
       label: "Dashboard",
       icon: "fa fa-gauge",

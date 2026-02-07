@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { provide } from "vue";
-import AppLayout from "./components/AppLayout.vue";
-import { useMenuItems } from "@composables/useMenuItems";
+import AppLayout from "./Components/AppLayout.vue";
+import { useMenuItems } from "./Composables/useMenuItems";
 
 const { menuItems, userActions } = useMenuItems();
 

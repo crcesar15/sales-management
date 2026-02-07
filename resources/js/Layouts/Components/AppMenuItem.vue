@@ -1,61 +1,69 @@
-<script setup>
+<script setup lang="ts">
 import {
-  onBeforeMount, ref, watch, onMounted,
+  onBeforeMount, ref, watch, computed,
 } from "vue";
-import { Link } from "@inertiajs/vue3";
-import { useLayout } from "./composables/layout";
+import { Link, usePage } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import type { AppMenuItemProps } from "../Types/menu";
+import { useLayout } from "./Composables/layout";
 
 const { layoutState, setActiveMenuItem, onMenuToggle } = useLayout();
 
-const props = defineProps({
-  item: {
-    type: Object,
-    default: () => ({}),
-  },
-  index: {
-    type: Number,
-    default: 0,
-  },
-  root: {
-    type: Boolean,
-    default: true,
-  },
-  parentItemKey: {
-    type: String,
-    default: null,
-  },
+const props = withDefaults(defineProps<AppMenuItemProps>(), {
+  root: true,
+  parentItemKey: null,
 });
 
-const isActiveMenu = ref(false);
-const itemKey = ref(null);
-const isVisible = ref(false);
+const page = usePage();
+const isActiveMenu = ref<boolean>(false);
+const itemKey = ref<string>("");
+const isVisible = ref<boolean>(true);
+
+// Compute visibility based on permissions
+const hasPermission = computed<boolean>(() => {
+  if (!props.item.can) {
+    return true;
+  }
+  const userPermissions = (page.props.auth?.permissions || []) as string[];
+  return userPermissions.includes(props.item.can);
+});
 
 onBeforeMount(() => {
   itemKey.value = props.parentItemKey ? `${props.parentItemKey}-${props.index}` : String(props.index);
 
   const activeItem = layoutState.activeMenuItem;
 
-  isActiveMenu.value = activeItem === itemKey.value || activeItem ? activeItem.startsWith(`${itemKey.value}-`) : false;
+  isActiveMenu.value = activeItem === itemKey.value || (activeItem ? activeItem.startsWith(`${itemKey.value}-`) : false);
 
-  if (["Roles", "Users", "Categories", "Brands", "Measurement Units", "Products"].includes(props.item.label)) {
-    isVisible.value = props.item.can ?? false;
-  } else {
-    isVisible.value = true;
+  // Set visibility based on permission
+  isVisible.value = hasPermission.value;
+
+  // Check if current route matches this menu item
+  if (props.item.to && page.url) {
+    isActiveMenu.value = page.url.includes(props.item.to);
   }
-});
-
-onMounted(() => {
-  isActiveMenu.value = window.location.href.includes(props.item.to);
 });
 
 watch(
   () => layoutState.activeMenuItem,
   (newVal) => {
-    isActiveMenu.value = newVal === itemKey.value || newVal.startsWith(`${itemKey.value}-`);
+    if (newVal) {
+      isActiveMenu.value = newVal === itemKey.value || newVal.startsWith(`${itemKey.value}-`);
+    }
   },
 );
 
-function itemClick(event, item) {
+// Watch for route changes
+watch(
+  () => page.url,
+  (newUrl) => {
+    if (props.item.to && newUrl) {
+      isActiveMenu.value = newUrl.includes(props.item.to);
+    }
+  },
+);
+
+function itemClick(event: Event, item: AppMenuItemProps["item"]): void {
   if (item.disabled) {
     event.preventDefault();
     return;
@@ -71,7 +79,7 @@ function itemClick(event, item) {
 
   if (item.items) {
     if (isActiveMenu.value) {
-      setActiveMenuItem(props.parentItemKey);
+      setActiveMenuItem(props.parentItemKey || "");
     } else {
       setActiveMenuItem(itemKey.value);
     }
@@ -82,7 +90,10 @@ function itemClick(event, item) {
 </script>
 
 <template>
-  <li :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu }">
+  <li
+    v-if="isVisible"
+    :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu }"
+  >
     <div
       v-if="root && item.visible !== false"
       class="layout-menuitem-root-text"
@@ -108,8 +119,7 @@ function itemClick(event, item) {
       />
     </a>
     <Link
-      v-if="item.to && !item.items && item.visible !== false"
-      v-can="isVisible"
+      v-if="item.to && !item.items && item.visible !== false && isVisible"
       :class="[item.class, { 'active-route': isActiveMenu }]"
       tabindex="0"
       :href="route(item.to)"
@@ -135,7 +145,7 @@ function itemClick(event, item) {
       >
         <app-menu-item
           v-for="(child, i) in item.items"
-          :key="child"
+          :key="child.label"
           :index="i"
           :item="child"
           :parent-item-key="itemKey"

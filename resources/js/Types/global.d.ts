@@ -9,7 +9,10 @@ declare module '@inertiajs/core' {
       user: User;
       permissions: string[]
     };
-    settings: SettingGrouped
+    settings: SettingGrouped;
+    appConfig?: {
+      name?: string;
+    };
   }
 }
 

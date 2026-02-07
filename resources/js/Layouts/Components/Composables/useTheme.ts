@@ -1,29 +1,45 @@
-<script setup>
 import { updatePreset, updateSurfacePalette, $t as $theme } from "@primeuix/themes";
-import SelectButton from "primevue/selectbutton";
 import Aura from "@primeuix/themes/aura";
 import Lara from "@primeuix/themes/lara";
 import { ref } from "vue";
-import { useLayout } from "./composables/layout";
+import { useLayout } from "./layout";
 
-const {
-  layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode,
-} = useLayout();
+export interface ColorPalette {
+  50?: string;
+  100?: string;
+  200?: string;
+  300?: string;
+  400?: string;
+  500?: string;
+  600?: string;
+  700?: string;
+  800?: string;
+  900?: string;
+  950?: string;
+  0?: string;
+}
+
+export interface ThemeColor {
+  name: string;
+  palette: ColorPalette;
+}
+
+export interface PresetOption {
+  label: string;
+  value: string;
+}
+
+export interface MenuModeOption {
+  label: string;
+  value: "static" | "overlay";
+}
 
 const presets = {
   Aura,
   Lara,
 };
-const preset = ref(layoutConfig.preset);
-const presetOptions = ref(Object.keys(presets));
 
-const menuMode = ref(layoutConfig.menuMode);
-const menuModeOptions = ref([
-  { label: "Static", value: "static" },
-  { label: "Overlay", value: "overlay" },
-]);
-
-const primaryColors = ref([
+const primaryColors: ThemeColor[] = [
   { name: "noir", palette: {} },
   {
     name: "emerald",
@@ -121,9 +137,9 @@ const primaryColors = ref([
       50: "#fff1f2", 100: "#ffe4e6", 200: "#fecdd3", 300: "#fda4af", 400: "#fb7185", 500: "#f43f5e", 600: "#e11d48", 700: "#be123c", 800: "#9f1239", 900: "#881337", 950: "#4c0519",
     },
   },
-]);
+];
 
-const surfaces = ref([
+const surfaces: ThemeColor[] = [
   {
     name: "slate",
     palette: {
@@ -172,201 +188,157 @@ const surfaces = ref([
       0: "#ffffff", 50: "#fbfcfc", 100: "#F7F9F8", 200: "#EFF3F2", 300: "#DADEDD", 400: "#B1B7B6", 500: "#828787", 600: "#5F7274", 700: "#415B61", 800: "#29444E", 900: "#183240", 950: "#0c1920",
     },
   },
-]);
+];
 
-function getPresetExt() {
-  const color = primaryColors.value.find((c) => c.name === layoutConfig.primary);
+export function useTheme() {
+  const {
+    layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode,
+  } = useLayout();
 
-  if (color.name === "noir") {
+  const preset = ref<string>(layoutConfig.preset);
+  const presetOptions = ref<string[]>(Object.keys(presets));
+
+  const menuMode = ref<"static" | "overlay">(layoutConfig.menuMode);
+  const menuModeOptions = ref<MenuModeOption[]>([
+    { label: "Static", value: "static" },
+    { label: "Overlay", value: "overlay" },
+  ]);
+
+  function getPresetExt() {
+    const color = primaryColors.find((c) => c.name === layoutConfig.primary);
+
+    if (!color) {
+      return {};
+    }
+
+    if (color.name === "noir") {
+      return {
+        semantic: {
+          primary: {
+            50: "{surface.50}",
+            100: "{surface.100}",
+            200: "{surface.200}",
+            300: "{surface.300}",
+            400: "{surface.400}",
+            500: "{surface.500}",
+            600: "{surface.600}",
+            700: "{surface.700}",
+            800: "{surface.800}",
+            900: "{surface.900}",
+            950: "{surface.950}",
+          },
+          colorScheme: {
+            light: {
+              primary: {
+                color: "{primary.950}",
+                contrastColor: "#ffffff",
+                hoverColor: "{primary.800}",
+                activeColor: "{primary.700}",
+              },
+              highlight: {
+                background: "{primary.950}",
+                focusBackground: "{primary.700}",
+                color: "#ffffff",
+                focusColor: "#ffffff",
+              },
+            },
+            dark: {
+              primary: {
+                color: "{primary.50}",
+                contrastColor: "{primary.950}",
+                hoverColor: "{primary.200}",
+                activeColor: "{primary.300}",
+              },
+              highlight: {
+                background: "{primary.50}",
+                focusBackground: "{primary.300}",
+                color: "{primary.950}",
+                focusColor: "{primary.950}",
+              },
+            },
+          },
+        },
+      };
+    }
     return {
       semantic: {
-        primary: {
-          50: "{surface.50}",
-          100: "{surface.100}",
-          200: "{surface.200}",
-          300: "{surface.300}",
-          400: "{surface.400}",
-          500: "{surface.500}",
-          600: "{surface.600}",
-          700: "{surface.700}",
-          800: "{surface.800}",
-          900: "{surface.900}",
-          950: "{surface.950}",
-        },
+        primary: color.palette,
         colorScheme: {
           light: {
             primary: {
-              color: "{primary.950}",
+              color: "{primary.500}",
               contrastColor: "#ffffff",
-              hoverColor: "{primary.800}",
+              hoverColor: "{primary.600}",
               activeColor: "{primary.700}",
             },
             highlight: {
-              background: "{primary.950}",
-              focusBackground: "{primary.700}",
-              color: "#ffffff",
-              focusColor: "#ffffff",
+              background: "{primary.50}",
+              focusBackground: "{primary.100}",
+              color: "{primary.700}",
+              focusColor: "{primary.800}",
             },
           },
           dark: {
             primary: {
-              color: "{primary.50}",
-              contrastColor: "{primary.950}",
-              hoverColor: "{primary.200}",
-              activeColor: "{primary.300}",
+              color: "{primary.400}",
+              contrastColor: "{surface.900}",
+              hoverColor: "{primary.300}",
+              activeColor: "{primary.200}",
             },
             highlight: {
-              background: "{primary.50}",
-              focusBackground: "{primary.300}",
-              color: "{primary.950}",
-              focusColor: "{primary.950}",
+              background: "color-mix(in srgb, {primary.400}, transparent 84%)",
+              focusBackground: "color-mix(in srgb, {primary.400}, transparent 76%)",
+              color: "rgba(255,255,255,.87)",
+              focusColor: "rgba(255,255,255,.87)",
             },
           },
         },
       },
     };
   }
+
+  function updateColors(type: "primary" | "surface", color: ThemeColor): void {
+    if (type === "primary") {
+      setPrimary(color.name);
+    } else if (type === "surface") {
+      setSurface(color.name);
+    }
+
+    applyTheme(type, color);
+  }
+
+  function applyTheme(type: "primary" | "surface", color: ThemeColor): void {
+    if (type === "primary") {
+      updatePreset(getPresetExt());
+    } else if (type === "surface") {
+      updateSurfacePalette(color.palette);
+    }
+  }
+
+  function onPresetChange(): void {
+    setPreset(preset.value);
+    const presetValue = presets[preset.value as keyof typeof presets];
+    const surfacePalette = surfaces.find((s) => s.name === layoutConfig.surface)?.palette;
+
+    $theme().preset(presetValue).preset(getPresetExt()).surfacePalette(surfacePalette)
+      .use({ useDefaultOptions: true });
+  }
+
+  function onMenuModeChange(): void {
+    setMenuMode(menuMode.value);
+  }
+
   return {
-    semantic: {
-      primary: color.palette,
-      colorScheme: {
-        light: {
-          primary: {
-            color: "{primary.500}",
-            contrastColor: "#ffffff",
-            hoverColor: "{primary.600}",
-            activeColor: "{primary.700}",
-          },
-          highlight: {
-            background: "{primary.50}",
-            focusBackground: "{primary.100}",
-            color: "{primary.700}",
-            focusColor: "{primary.800}",
-          },
-        },
-        dark: {
-          primary: {
-            color: "{primary.400}",
-            contrastColor: "{surface.900}",
-            hoverColor: "{primary.300}",
-            activeColor: "{primary.200}",
-          },
-          highlight: {
-            background: "color-mix(in srgb, {primary.400}, transparent 84%)",
-            focusBackground: "color-mix(in srgb, {primary.400}, transparent 76%)",
-            color: "rgba(255,255,255,.87)",
-            focusColor: "rgba(255,255,255,.87)",
-          },
-        },
-      },
-    },
+    preset,
+    presetOptions,
+    menuMode,
+    menuModeOptions,
+    primaryColors,
+    surfaces,
+    layoutConfig,
+    isDarkTheme,
+    updateColors,
+    onPresetChange,
+    onMenuModeChange,
   };
 }
-
-function updateColors(type, color) {
-  if (type === "primary") {
-    setPrimary(color.name);
-  } else if (type === "surface") {
-    setSurface(color.name);
-  }
-
-  applyTheme(type, color);
-}
-
-function applyTheme(type, color) {
-  if (type === "primary") {
-    updatePreset(getPresetExt());
-  } else if (type === "surface") {
-    updateSurfacePalette(color.palette);
-  }
-}
-
-function onPresetChange() {
-  setPreset(preset.value);
-  const presetValue = presets[preset.value];
-  const surfacePalette = surfaces.value.find((s) => s.name === layoutConfig.surface)?.palette;
-
-  $theme().preset(presetValue).preset(getPresetExt()).surfacePalette(surfacePalette)
-    .use({ useDefaultOptions: true });
-}
-
-function onMenuModeChange() {
-  setMenuMode(menuMode.value);
-}
-</script>
-<template>
-  <div
-    class="
-    config-panel
-    hidden
-    absolute
-    top-[3.25rem]
-    right-0
-    w-64
-    p-4
-    border
-    border-surface
-    rounded-border
-    origin-top
-    shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]
-    bg-surface-0
-    dark:bg-surface-900"
-  >
-    <div class="flex flex-col gap-4">
-      <div>
-        <span class="text-sm text-muted-color font-semibold">Primary</span>
-        <div class="pt-2 flex gap-2 flex-wrap justify-between">
-          <button
-            v-for="primaryColor of primaryColors"
-            :key="primaryColor.name"
-            type="button"
-            :title="primaryColor.name"
-            :class="[
-              'border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1',
-              { 'outline-primary': layoutConfig.primary === primaryColor.name }
-            ]"
-            :style="{ backgroundColor: `${primaryColor.name === 'noir' ? 'var(--text-color)' : primaryColor.palette['500']}` }"
-            @click="updateColors('primary', primaryColor)"
-          />
-        </div>
-      </div>
-      <div>
-        <span class="text-sm text-muted-color font-semibold">Surface</span>
-        <div class="pt-2 flex gap-2 flex-wrap justify-between">
-          <button
-            v-for="surface of surfaces"
-            :key="surface.name"
-            type="button"
-            :title="surface.name"
-            :class="[
-              'border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1',
-              { 'outline-primary': layoutConfig.surface ? layoutConfig.surface === surface.name : isDarkTheme ? surface.name === 'zinc' : surface.name === 'slate' }
-            ]"
-            :style="{ backgroundColor: `${surface.palette['500']}` }"
-            @click="updateColors('surface', surface)"
-          />
-        </div>
-      </div>
-      <div class="flex flex-col gap-2">
-        <span class="text-sm text-muted-color font-semibold">Presets</span>
-        <SelectButton
-          v-model="preset"
-          :options="presetOptions"
-          :allow-empty="false"
-          @change="onPresetChange"
-        />
-      </div>
-      <div class="flex flex-col gap-2">
-        <span class="text-sm text-muted-color font-semibold">Menu Mode</span>
-        <SelectButton
-          v-model="menuMode"
-          :options="menuModeOptions"
-          :allow-empty="false"
-          option-label="label"
-          option-value="value"
-          @change="onMenuModeChange"
-        />
-      </div>
-    </div>
-  </div>
-</template>

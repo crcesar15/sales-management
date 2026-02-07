@@ -1,23 +1,27 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from "vue";
 import Select from "primevue/select";
 import { useI18n } from "vue-i18n";
-import { useLayout } from "./composables/layout";
+import { useLayout } from "./Composables/layout";
 import AppConfigurator from "./AppConfigurator.vue";
 
+interface Language {
+  name: string;
+  code: string;
+}
+
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
-const selectedLanguage = ref("en");
-const languages = ref([
+const selectedLanguage = ref<string>("en");
+const languages = ref<Language[]>([
   { name: "EN", code: "en" },
   { name: "ES", code: "es" },
 ]);
 
-const t = useI18n();
+const { locale } = useI18n();
 
-watch(selectedLanguage, (newVal) => {
-  t.locale.value = newVal;
+watch(selectedLanguage, (newVal: string) => {
+  locale.value = newVal;
 });
-
 </script>
 
 <template>
