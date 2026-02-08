@@ -17,6 +17,7 @@
     "laravel/ui": "^4.3",
     "spatie/image": "^3.8",
     "spatie/image-optimizer": "^1.8",
+    "spatie/laravel-activitylog": "^4.11",
     "spatie/laravel-medialibrary": "^11.13",
     "spatie/laravel-permission": "^6.20",
     "tightenco/ziggy": "^2.2"
