@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import { provide } from "vue";
 import AppLayout from "./Components/AppLayout.vue";
-import { useMenuItems } from "./Composables/useMenuItems";
-
-const { menuItems, userActions } = useMenuItems();
-
-// Provide menu items to child components (for backward compatibility with existing components)
-provide("menuitems", menuItems.value);
-provide("userActions", userActions.value);
 </script>
 
 <template>
