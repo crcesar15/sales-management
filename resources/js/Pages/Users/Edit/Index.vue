@@ -340,7 +340,7 @@ watch(
     email.value = props.user.email;
     status.value = props.user.status;
     phone.value = props.user.phone ?? '';
-    dateOfBirth.value = props.user.date_of_birth ?? null;
+    dateOfBirth.value = props.user.date_of_birth ? new Date(props.user.date_of_birth) : null;
     username.value = props.user.username;
 
     if (typeof (props.user.roles) === "object" && props.user.roles.length > 0) {
