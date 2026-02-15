@@ -232,5 +232,19 @@
   "Primary": "Primario",
   "Surface": "Superficie",
   "Presets": "Predefinidos",
-  "Menu Mode": "Modo de Menú"
+  "Menu Mode": "Modo de Menú",
+  "Activity Log": "Registro de Actividad",
+  "No activity found": "No se encontró actividad",
+  "Event": "Evento",
+  "Caused By": "Realizado Por",
+  "Changes": "Cambios",
+  "Date": "Fecha",
+  "System": "Sistema",
+  "Created": "Creado",
+  "Updated": "Actualizado",
+  "Deleted": "Eliminado",
+  "Restored": "Restaurado",
+  "Subject": "Sujeto",
+  "All Events": "Todos los Eventos",
+  "Date Of Birth": "Fecha de Nacimiento"
 }

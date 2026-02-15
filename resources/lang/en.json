@@ -230,5 +230,19 @@
   "Primary": "Primary",
   "Surface": "Surface",
   "Presets": "Presets",
-  "Menu Mode": "Menu Mode"
+  "Menu Mode": "Menu Mode",
+  "Activity Log": "Activity Log",
+  "No activity found": "No activity found",
+  "Event": "Event",
+  "Caused By": "Caused By",
+  "Changes": "Changes",
+  "Date": "Date",
+  "System": "System",
+  "Created": "Created",
+  "Updated": "Updated",
+  "Deleted": "Deleted",
+  "Restored": "Restored",
+  "Subject": "Subject",
+  "All Events": "All Events",
+  "Date Of Birth": "Date Of Birth"
 }
