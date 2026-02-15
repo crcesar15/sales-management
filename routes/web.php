@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -109,4 +110,7 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // Settings
     Route::get('/settings', fn () => Inertia::render('Settings/Index'))->name('settings');
+
+    // Activity Logs
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs');
 });
