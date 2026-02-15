@@ -45,4 +45,6 @@ enum PermissionsEnum: string
     case SETTINGS_CREATE = 'setting.create';
     case SETTINGS_EDIT = 'setting.edit';
     case SETTINGS_DELETE = 'setting.delete';
+
+    case ACTIVITY_LOGS_VIEW = 'activity_log.view';
 }

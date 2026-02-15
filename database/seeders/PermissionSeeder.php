@@ -54,6 +54,9 @@ final class PermissionSeeder extends Seeder
                 PermissionsEnum::USERS_EDIT->value,
                 PermissionsEnum::USERS_DELETE->value,
             ],
+            'activity logs' => [
+                PermissionsEnum::ACTIVITY_LOGS_VIEW->value,
+            ],
         ];
 
         $role = Role::query()->where('name', RolesEnum::ADMIN->value)->firstOrFail();
