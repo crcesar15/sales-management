@@ -12,17 +12,20 @@
 ## 2. Backend Implementation (Laravel)
 ### Authentication & Security
 - Install/Configure `laravel/sanctum` for API authentication (or use default session auth with Inertia).
-- verify `config/cors.php` and `config/sanctum.php`.
+- Verify `config/cors.php` and `config/sanctum.php`.
 - Setup `Spatie\Permission\Traits\HasRoles` on `User` model.
+- **Audit Logs**: Install `owen-it/laravel-auditing` to track changes on critical models (User, Role, Product, Order).
 
 ### API & Controllers
 - **AuthController**: Login, Logout, User Profile.
 - **UserController**: CRUD for users. Assign roles.
-- **RoleController**: CRUD for roles. Assign permissions.
-- **SettingController**: Read/Update global settings (e.g., App Name, Currency Symbol).
+- **RoleController**: Full CRUD for roles. Allow creating custom roles with specific permissions.
+- **SettingController**: Read/Update global settings.
+    - **Keys**: `app_name`, `currency_symbol`, `tax_rate`, `allow_negative_stock`, `company_address`, `company_phone`.
 
 ### Seeds
 - `RolesAndPermissionsSeeder`: Create default roles (Admin, Manager, Cashier) and Permissions.
+  - *Note*: System should allow creating *new* roles beyond these defaults.
 - `AdminUserSeeder`: Create the initial Super Admin user.
 
 ## 3. Frontend Implementation (Vue 3 + PrimeVue)
