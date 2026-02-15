@@ -43,6 +43,6 @@ export function useUserClient() {
     createUserApi,
     updateUserApi,
     destroyUserApi,
-    restoreUserApi
+    restoreUserApi,
   };
 }
