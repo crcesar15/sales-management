@@ -171,6 +171,14 @@ export function useMenuItems() {
           to: "settings",
           routeUrl: route("settings"),
         },
+        {
+          key: "admin-activity-logs",
+          label: t("Activity Log"),
+          icon: "fa fa-clock-rotate-left",
+          to: "activity-logs",
+          can: "activity_log.view",
+          routeUrl: route("activity-logs"),
+        },
       ],
     },
   ]);
