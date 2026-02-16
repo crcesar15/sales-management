@@ -20,10 +20,10 @@ final class Variants extends ResourceCollection
         return [
             'data' => $this->collection->map(fn (ProductVariant $variant): array => [ // @phpstan-ignore-line
                 'id' => $variant->id,
-                'categories' => $variant->product->categories->pluck('name')->join(', '),
-                'brand' => $variant->product->brand?->name,
-                'name' => $variant->product->name,
-                'variant' => ($variant->product->name === $variant->name)
+                'categories' => $variant->product?->categories->pluck('name')->join(', '),
+                'brand' => $variant->product->brand->name ?? null,
+                'name' => $variant->product->name ?? null,
+                'variant' => (($variant->product->name ?? null) === ($variant->name ?? null))
                     ? null
                     : $variant->name,
                 'status' => $variant->status,

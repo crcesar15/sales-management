@@ -32,10 +32,16 @@ final class UserCollection extends ResourceCollection
                 ];
 
                 if (in_array('roles', explode(',', $request->string('include', '')->value()))) {
-                    $collect['roles'] = $user->roles->map(fn ($role): array => [
-                        'id' => $role->id,
-                        'name' => $role->name,
-                    ]);
+                    if (isset($user->roles) && $user->roles->isNotEmpty()) {
+                        foreach ($user->roles as $role) {
+                            $collect['roles'][] = [
+                                'id' => $role->id ?? null,
+                                'name' => $role->name ?? null,
+                            ];
+                        }
+                    } else {
+                        $collect['roles'] = [];
+                    }
                 }
 
                 return $collect;

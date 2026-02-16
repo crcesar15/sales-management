@@ -58,7 +58,7 @@ Route::group(['middleware' => ['guest']], function (): void {
     Route::post('login', [LoginController::class, 'login'])->name('login.post');
     Route::get('password/reset', fn () => Inertia::render('Auth/EmailRequest'))->name('password.reset.request');
     Route::get('password/reset/{token}', function (Request $request) {
-        $token = $request->route()->parameter('token');
+        $token = $request->route()?->parameter('token') ?? '';
         $email = $request->query('email', '');
 
         return Inertia::render('Auth/ResetPassword', ['token' => $token, 'email' => $email]);

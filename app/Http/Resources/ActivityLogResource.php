@@ -16,22 +16,42 @@ final class ActivityLogResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        if (isset($this->subject_type)) {
+            $subjectType = class_basename($this->subject_type);
+        } else {
+            $subjectType = null;
+        }
+
+        if (isset($this->causer)) {
+            $causerId = $this->causer->id;
+            $causerFullName = $this->causer->full_name;
+        } else {
+            $causerId = null;
+            $causerFullName = null;
+        }
+
+        if (isset($this->created_at)) {
+            $createdAt = $this->created_at->format('Y-m-d H:i');
+        } else {
+            $createdAt = null;
+        }
+
         return [
-            'id' => $this->id,
-            'log_name' => $this->log_name,
-            'description' => $this->description,
-            'event' => $this->event,
-            'subject_type' => $this->subject_type ? class_basename($this->subject_type) : null,
-            'subject_id' => $this->subject_id,
+            'id' => $this->id ?? null,
+            'log_name' => $this->log_name ?? null,
+            'description' => $this->description ?? null,
+            'event' => $this->event ?? null,
+            'subject_type' => $subjectType,
+            'subject_id' => $this->subject_id ?? null,
             'properties' => [
                 'old' => $this->properties['old'] ?? null,
                 'attributes' => $this->properties['attributes'] ?? null,
             ],
             'causer' => $this->whenLoaded('causer', fn () => [
-                'id' => $this->causer->id,
-                'full_name' => $this->causer->full_name,
+                'id' => $causerId,
+                'full_name' => $causerFullName,
             ]),
-            'created_at' => $this->created_at?->format('Y-m-d H:i'),
+            'created_at' => $createdAt,
         ];
     }
 }

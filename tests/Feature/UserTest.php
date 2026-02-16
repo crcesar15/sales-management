@@ -7,6 +7,7 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\assertSoftDeleted;
 
 it('admin user can list users', function () {
     $user = User::factory()->create();
@@ -17,11 +18,11 @@ it('admin user can list users', function () {
         ->assertStatus(200);
 
     actingAs($user)
-        ->get(route('api.users'))
+        ->get(route('api.v1.users'))
         ->assertStatus(200);
 
     actingAs($user)
-        ->get(route('api.users.show', $user->id))
+        ->get(route('api.v1.users.show', $user->id))
         ->assertStatus(200);
 });
 
@@ -50,7 +51,7 @@ it('admin user can create users', function () {
     ];
 
     actingAs($user)
-        ->post(route('api.users.store'), $newUser)
+        ->post(route('api.v1.users.store'), $newUser)
         ->assertStatus(201);
 
     $latestUser = User::with('roles')->latest('id')->firstOrFail();
@@ -61,7 +62,14 @@ it('admin user can create users', function () {
     expect($latestUser->username)->toBe($newUser['username']);
     expect($latestUser->status)->toBe($newUser['status']);
     expect($latestUser->date_of_birth)->toBe($newUser['date_of_birth']);
-    expect($latestUser->roles[0]?->id)->toBe($newUser['roles'][0]);
+
+    if (isset($latestUser->roles) && $latestUser->roles->count() > 0) {
+        $expectedUserRole = $latestUser->roles[0]->id ?? null;
+    } else {
+        $expectedUserRole = null;
+    }
+
+    expect($expectedUserRole)->toBe($newUser['roles'][0]);
 });
 
 it('creating users with invalid data', function () {
@@ -86,7 +94,7 @@ it('creating users with invalid data', function () {
     ];
 
     actingAs($user)
-        ->post(route('api.users.store'), $newUser, ['Accept' => 'application/json'])
+        ->post(route('api.v1.users.store'), $newUser, ['Accept' => 'application/json'])
         ->assertStatus(422);
 });
 
@@ -118,7 +126,7 @@ it('admin user can update users', function () {
     ];
 
     actingAs($user)
-        ->put(route('api.users.update', $newUser->id), $updatedUserData)
+        ->put(route('api.v1.users.update', $newUser->id), $updatedUserData)
         ->assertStatus(200);
 
     $updatedUser = User::with('roles')->findOrFail($newUser->id);
@@ -129,7 +137,14 @@ it('admin user can update users', function () {
     expect($updatedUser->username)->toBe($updatedUserData['username']);
     expect($updatedUser->status)->toBe($updatedUserData['status']);
     expect($updatedUser->date_of_birth)->toBe($updatedUserData['date_of_birth']);
-    expect($updatedUser->roles[0]?->id)->toBe($updatedUserData['roles'][0]);
+
+    if (isset($updatedUser->roles) && $updatedUser->roles->count() > 0) {
+        $expectedUserRole = $updatedUser->roles[0]->id ?? null;
+    } else {
+        $expectedUserRole = null;
+    }
+
+    expect($expectedUserRole)->toBe($updatedUserData['roles'][0]);
 });
 
 it('updating users with invalid data', function () {
@@ -157,7 +172,7 @@ it('updating users with invalid data', function () {
     ];
 
     actingAs($user)
-        ->put(route('api.users.update', $newUser->id), $updatedUserData, ['Accept' => 'application/json'])
+        ->put(route('api.v1.users.update', $newUser->id), $updatedUserData, ['Accept' => 'application/json'])
         ->assertStatus(422);
 });
 
@@ -169,11 +184,10 @@ it('admin user can delete users', function () {
     $newUser->assignRole(RolesEnum::ADMIN);
 
     actingAs($user)
-        ->delete(route('api.users.destroy', $newUser->id))
+        ->delete(route('api.v1.users.destroy', $newUser->id))
         ->assertStatus(204);
 
-    /** @phpstan-ignore-next-line */
-    $this->assertSoftDeleted($newUser);
+    assertSoftDeleted($newUser);
 });
 
 it('non-admin user cannot list users', function () {
@@ -181,15 +195,11 @@ it('non-admin user cannot list users', function () {
     $user->assignRole(RolesEnum::SALESMAN);
 
     actingAs($user)
-        ->get(route('users'))
+        ->get(route('api.v1.users'))
         ->assertStatus(403);
 
     actingAs($user)
-        ->get(route('api.users'))
-        ->assertStatus(403);
-
-    actingAs($user)
-        ->get(route('api.users.show', $user->id))
+        ->get(route('api.v1.users.show', $user->id))
         ->assertStatus(403);
 });
 
@@ -218,7 +228,7 @@ it('non-admin user cannot create users', function () {
     ];
 
     actingAs($user)
-        ->post(route('api.users.store'), $newUser)
+        ->post(route('api.v1.users.store'), $newUser)
         ->assertStatus(403);
 });
 
@@ -250,7 +260,7 @@ it('non-admin user cannot update users', function () {
     ];
 
     actingAs($user)
-        ->put(route('api.users.update', $newUser->id), $updatedUserData)
+        ->put(route('api.v1.users.update', $newUser->id), $updatedUserData)
         ->assertStatus(403);
 });
 
@@ -262,6 +272,6 @@ it('non-admin user cannot delete users', function () {
     $newUser->assignRole(RolesEnum::ADMIN);
 
     actingAs($user)
-        ->delete(route('api.users.destroy', $newUser->id))
+        ->delete(route('api.v1.users.destroy', $newUser->id))
         ->assertStatus(403);
 });

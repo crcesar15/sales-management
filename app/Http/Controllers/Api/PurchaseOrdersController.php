@@ -54,7 +54,6 @@ final class PurchaseOrdersController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        // @phpstan-ignore-next-line
         $order = PurchaseOrder::query()->create($request->all());
 
         return response()->json($order, 201);
@@ -62,7 +61,6 @@ final class PurchaseOrdersController extends Controller
 
     public function update(Request $request, PurchaseOrder $order): JsonResponse
     {
-        // @phpstan-ignore-next-line
         $order->update($request->all());
 
         return response()->json($order, 200);

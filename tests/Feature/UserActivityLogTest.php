@@ -18,8 +18,8 @@ it('creates activity log when user is created', function () {
         ->first();
 
     expect($activity)->not->toBeNull();
-    expect($activity->log_name)->toBe('user');
-    expect($activity->properties['attributes'])->toHaveKeys(['first_name', 'last_name', 'email', 'username']);
+    expect($activity?->log_name)->toBe('user');
+    expect($activity?->properties['attributes'] ?? [])->toHaveKeys(['first_name', 'last_name', 'email', 'username']);
 });
 
 it('creates activity log when user is updated', function () {
@@ -39,8 +39,31 @@ it('creates activity log when user is updated', function () {
         ->first();
 
     expect($activity)->not->toBeNull();
-    expect($activity->properties['attributes']['first_name'])->toBe('UpdatedName');
-    expect($activity->properties['old']['first_name'])->toBe($originalName);
+
+    $activityProperties = $activity?->properties;
+
+    if (
+        isset($activityProperties['attributes'])
+            && is_array($activityProperties['attributes'])
+            && isset($activityProperties['attributes']['first_name'])
+    ) {
+        $currentFirstName = $activityProperties['attributes']['first_name'];
+    } else {
+        $currentFirstName = null;
+    }
+
+    if (
+        isset($activityProperties['old'])
+            && is_array($activityProperties['old'])
+            && isset($activityProperties['old']['first_name'])
+    ) {
+        $oldFirstName = $activityProperties['old']['first_name'];
+    } else {
+        $oldFirstName = null;
+    }
+
+    expect($currentFirstName)->toBe('UpdatedName');
+    expect($oldFirstName)->toBe($originalName);
 });
 
 it('does not log password in activity properties', function () {
@@ -54,8 +77,8 @@ it('does not log password in activity properties', function () {
         ->get();
 
     $activities->each(function (Activity $activity) {
-        $attributes = $activity->properties['attributes'] ?? [];
-        $old = $activity->properties['old'] ?? [];
+        $attributes = $activity?->properties['attributes'] ?? [];
+        $old = $activity?->properties['old'] ?? [];
 
         expect($attributes)->not->toHaveKey('password');
         expect($old)->not->toHaveKey('password');
@@ -74,7 +97,7 @@ it('creates activity log when user is soft deleted', function () {
         ->first();
 
     expect($activity)->not->toBeNull();
-    expect($activity->log_name)->toBe('user');
+    expect($activity?->log_name)->toBe('user');
 });
 
 it('creates activity log when user is restored', function () {
@@ -90,7 +113,7 @@ it('creates activity log when user is restored', function () {
         ->first();
 
     expect($activity)->not->toBeNull();
-    expect($activity->log_name)->toBe('user');
+    expect($activity?->log_name)->toBe('user');
 });
 
 it('authorized user can list all activity logs via API', function () {

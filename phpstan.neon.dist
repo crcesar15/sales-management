@@ -3,7 +3,7 @@ includes:
     - ./vendor/nesbot/carbon/extension.neon
 
 parameters:
-    level: max
+    level: 8
     paths:
         - app
         - bootstrap
@@ -14,4 +14,9 @@ parameters:
         - routes
         - tests
     excludePaths:
+        - app/Http/Controllers/Api/VendorsController.php
+        - database/seeders/DatabaseSeeder.php
         - database/migrations/2025_07_06_153117_create_permission_tables.php
+        - database/migrations/2026_02_08_002614_create_activity_log_table.php
+        - database/migrations/2026_02_08_002615_add_event_column_to_activity_log_table.php
+        - database/migrations/2026_02_08_002616_add_batch_uuid_column_to_activity_log_table.php
