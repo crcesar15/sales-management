@@ -11,39 +11,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
-/**
- * @property int $id
- * @property string $fullname
- * @property string|null $email
- * @property string|null $phone
- * @property string|null $address
- * @property string|null $details
- * @property string $status
- * @property array<array-key, mixed>|null $additional_contacts
- * @property string|null $meta
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PurchaseOrder> $purchaseOrders
- * @property-read int|null $purchase_orders_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductVariant> $variants
- * @property-read int|null $variants_count
- * @method static \Database\Factories\VendorFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereAdditionalContacts($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereDetails($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereFullname($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereMeta($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereUpdatedAt($value)
- * @mixin \Eloquent
- */
 final class Vendor extends Model
 {
     /** @use HasFactory<VendorFactory> */
