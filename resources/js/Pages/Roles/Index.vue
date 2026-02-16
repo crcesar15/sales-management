@@ -134,7 +134,7 @@ import { useI18n } from "vue-i18n";
 import { ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { RolePayload, RoleResponse } from "@/Types/role-types";
+import { RoleResponse } from "@/Types/role-types";
 import { useRoleClient } from "@/Composables/useRoleClient";
 
 // Set composables

@@ -12,5 +12,5 @@ export interface RoleResponse extends RoleBase {
 }
 
 export interface RolePayload extends RoleBase {
-    permissions_ids: number[]
+    permissions: string[]
 }

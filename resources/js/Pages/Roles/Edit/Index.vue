@@ -2,7 +2,7 @@
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex">
-        <PButton
+        <Button
           icon="fa fa-arrow-left"
           text
           severity="secondary"
@@ -14,7 +14,7 @@
         </h4>
       </div>
       <div class="flex flex-col justify-center">
-        <PButton
+        <Button
           icon="fa fa-save"
           :label="t('Save')"
           class="uppercase"
@@ -106,13 +106,14 @@ import {
   AccordionHeader,
   AccordionContent,
   useToast,
+  Button
 } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { required, createI18nMessage } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
-import { Role } from "@/Types/role-types";
+import { RolePayload, RoleResponse } from "@/Types/role-types";
 import { Permission, PermissionGroupedAccordion } from "@/Types/permission-types";
 import { computed, onMounted, ref } from "vue";
 import { usePermissionClient } from "@/Composables/usePermissionClient";
@@ -134,7 +135,7 @@ defineOptions({
 
 //Get props
 const props = defineProps<{
-  role: Role,
+  role: RoleResponse,
   permissions: string[]
 }>();
 
@@ -226,8 +227,7 @@ const submit = async () => {
   v$.value.$touch();
 
   if (!v$.value.$invalid) {
-    const body:Role = {
-      id: props.role.id,
+    const body:RolePayload = {
       name: name.value,
       permissions: getEnabledPermissions(availablePermissions.value),
     };

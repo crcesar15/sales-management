@@ -2,7 +2,7 @@
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex">
-        <PButton
+        <Button
           icon="fa fa-arrow-left"
           text
           severity="secondary"
@@ -14,7 +14,7 @@
         </h4>
       </div>
       <div class="flex flex-col justify-center">
-        <PButton
+        <Button
           icon="fa fa-save"
           :label="t('Save')"
           class="uppercase"
@@ -106,19 +106,20 @@ import {
   AccordionHeader,
   AccordionContent,
   useToast,
+  Button
 } from "primevue";
 
-import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { usePermissionClient} from '@composables/usePermissionClient';
 import { required, createI18nMessage } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
 import { computed, onMounted, ref } from "vue";
 import { Permission, PermissionGroupedAccordion } from "@/Types/permission-types";
-import { Role } from "@/Types/role-types";
 import { useRoleClient } from "@/Composables/useRoleClient";
 import { route } from "ziggy-js";
 import { router } from "@inertiajs/vue3";
+
+import AppLayout from "@layouts/admin.vue";
 
 // Set composables
 const toast = useToast();
