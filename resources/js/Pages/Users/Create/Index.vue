@@ -104,6 +104,7 @@
                   <label for="date-of-birth">{{ t('Date of Birth') }}</label>
                   <DatePicker
                     id="date-of-birth"
+                    :pt:pcInputText="{ root: 'w-full' }"
                     v-model="dateOfBirth"
                   />
                 </div>
@@ -242,13 +243,13 @@ import {
 import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
+import { useUserClient } from "@/Composables/useUserClient";
+import { UserPayload } from "@/Types/user-types";
+import { route } from "ziggy-js";
+import { RoleResponse } from "@/Types/role-types";
 
 import AppLayout from "../../../Layouts/admin.vue";
-import { useUserClient } from "@/Composables/useUserClient";
-import { DraftUser, User } from "@/Types/user-types";
-import { route } from "ziggy-js";
 import useDatetimeFormatter from "@/Composables/useDatetimeFormatter";
-import { Role } from "@/Types/role-types";
 
 // Set composables
 const toast = useToast();
@@ -262,7 +263,7 @@ defineOptions({
 
 // Get Roles
 const props = defineProps<{
-  availableRoles: Role[];
+  availableRoles: RoleResponse[];
 }>();
 
 // Set variables
@@ -336,7 +337,7 @@ const submit = async () => {
   v$.value.$touch();
 
   if (!v$.value.$invalid) {
-    const user: DraftUser = {
+    const user: UserPayload = {
       first_name: firstName.value,
       last_name: lastName.value,
       email: email.value,

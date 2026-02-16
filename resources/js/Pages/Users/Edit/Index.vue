@@ -104,6 +104,7 @@
                   <label for="date-of-birth">{{ $t('Date of Birth') }}</label>
                   <DatePicker
                     id="date-of-birth"
+                    :pt:pcInputText="{ root: 'w-full' }"
                     v-model="dateOfBirth"
                   />
                 </div>
@@ -243,12 +244,12 @@ import {
 import { ref, computed, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
-
-import AppLayout from "../../../Layouts/admin.vue";
-import { Role } from "@/Types/role-types";
-import { DraftUser, User } from "@/Types/user-types";
+import { RolePayload, RoleResponse } from "@/Types/role-types";
+import { UserPayload, UserResponse } from "@/Types/user-types";
 import { useUserClient } from "@/Composables/useUserClient";
 import { route } from "ziggy-js";
+
+import AppLayout from "../../../Layouts/admin.vue";
 import useDatetimeFormatter from "@/Composables/useDatetimeFormatter";
 
 // Set composables
@@ -263,8 +264,8 @@ defineOptions({
 
 // Get Roles and user
 const props = defineProps<{
-  availableRoles: Role[];
-  user: User;
+  availableRoles: RoleResponse[];
+  user: UserResponse;
 }>();
 
 // Set variables
@@ -344,7 +345,7 @@ watch(
     username.value = props.user.username;
 
     if (typeof (props.user.roles) === "object" && props.user.roles.length > 0) {
-      roles.value = props.user.roles.map((role:Role) => role.id);
+      roles.value = props.user.roles.map((role:RoleResponse) => role.id);
     } else {
       roles.value = [];
     }
@@ -359,8 +360,7 @@ const submit = async () => {
   v$.value.$touch();
 
   if (!v$.value.$invalid) {
-    const validatedUser:DraftUser = {
-      id: props.user.id,
+    const validatedUser:UserPayload = {
       first_name: firstName.value,
       last_name: lastName.value,
       email: email.value,

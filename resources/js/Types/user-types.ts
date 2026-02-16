@@ -9,12 +9,14 @@ interface User {
   username: string
   phone: string | null
   status: string
-  date_of_birth: Date | null
+  date_of_birth: string | null
   additional_properties?: Record<string, unknown> | null
+  password?: string
+  password_confirmation?: string
 }
 
 interface UserPayload extends User {
-  roles: RolePayload[]
+  roles: number[]
 }
 
 interface UserResponse extends User {
@@ -24,8 +26,6 @@ interface UserResponse extends User {
   created_at: string
   updated_at: string
   email_verified_at?: string | null
-  password?: string
-  password_confirmation?: string
   remember_token?: string | null
 
   // counts
