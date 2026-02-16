@@ -1,9 +1,8 @@
 import { PurchaseOrder } from "./purchase-order-types"
-import { Role } from './role-types'
+import { RolePayload, RoleResponse } from './role-types'
 
-export interface User {
+interface User {
   // columns
-  id: number
   first_name: string
   last_name: string
   email: string
@@ -12,19 +11,23 @@ export interface User {
   status: string
   date_of_birth: Date | null
   additional_properties?: Record<string, unknown> | null
+}
+
+interface UserPayload extends User {
+  roles: RolePayload[]
+}
+
+interface UserResponse extends User {
+  id: number
+  full_name: string
+  deleted_at: string
+  created_at: string
+  updated_at: string
   email_verified_at?: string | null
   password?: string
   password_confirmation?: string
   remember_token?: string | null
-  deleted_at?: string | null
-  created_at?: string | null
-  updated_at?: string | null
-  // mutators
-  full_name?: string
-  // relations
-  purchase_orders?: PurchaseOrder[]
-  roles?: Role[]
-  // permissions: Permission[]
+
   // counts
   purchase_orders_count?: number
   tokens_count?: number
@@ -37,12 +40,9 @@ export interface User {
   roles_exists?: boolean
   permissions_exists?: boolean
   notifications_exists?: boolean
+
+  roles: RoleResponse[]
+  purchase_orders?: PurchaseOrder[]
 }
 
-export interface DraftUser extends Omit<User, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'full_name'> {
-  id?: number,
-  date_of_birth?: string,
-  created_at?: string,
-  updated_at?: string,
-  roles: number[],
-}
+export { User, UserPayload, UserResponse }

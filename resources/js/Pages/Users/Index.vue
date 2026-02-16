@@ -240,7 +240,8 @@ import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import AppLayout from "../../Layouts/admin.vue";
 import useDatetimeFormatter from "../../Composables/useDatetimeFormatter";
-import { User } from "@/Types/user-types";
+import { UserResponse } from "@/Types/user-types";
+import { RoleResponse } from "@/Types/role-types";
 import { useUserClient } from "@/Composables/useUserClient";
 import { route } from "ziggy-js";
 
@@ -265,12 +266,12 @@ const pagination = ref({
   filter: "",
 });
 
-const currentUser = usePage().props.auth.user;
+const currentUser = usePage().props.auth.user as UserResponse;
 const isCurrentUser = (id:number) => currentUser.id === id;
 
 const { fetchUsersApi, loading } = useUserClient();
 const status = ref("all");
-let users = ref<User[]>([]);
+let users = ref<UserResponse[]>([]);
 
 const fetchUsers = async () => {
   const params = new URLSearchParams();
@@ -291,11 +292,13 @@ const fetchUsers = async () => {
   try {
     const response = await fetchUsersApi(params.toString());
 
-    users.value = response.data.data.map((item: User) => ({
+    console.log(response.data.data);
+
+    users.value = response.data.data.map((item: UserResponse) => ({
       ...item,
       created_at: useDatetimeFormatter(item.created_at),
-      updated_at: useDatetimeFormatter(item.updated_at),
-      roles: item.roles.map((role) => role.name).join(", "),
+      // updated_at: useDatetimeFormatter(item.updated_at),
+      roles: item.roles.map((role: RoleResponse) => role.name).join(", "),
     }));
     pagination.value.total = response.data.meta.total;
   } catch (error: any) {

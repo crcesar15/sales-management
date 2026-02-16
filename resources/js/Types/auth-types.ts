@@ -1,14 +1,14 @@
-import type { User } from "./user-types";
-import type { SettingBase } from "./setting-types";
+import type { UserResponse } from "./user-types";
+import type { SettingGrouped } from "./setting-types";
 
 export interface AuthState {
-  user: User | null;
+  user: UserResponse | null;
   permissions: string[];
-  settings: SettingBase[];
+  settings: SettingGrouped;
 }
 
 export interface AuthData {
-  user: User | null;
+  user: UserResponse | null;
   permissions: string[];
-  settings: SettingBase[];
+  settings: SettingGrouped;
 }

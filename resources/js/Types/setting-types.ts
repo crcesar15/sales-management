@@ -15,5 +15,5 @@ export interface SettingResponse extends SettingBase {
 export interface SettingPayload extends SettingBase {};
 
 export interface SettingGrouped {
-  [group: string]: Record<string, SettingBase>;
+  [group: string]: Record<string, string>;
 }
