@@ -57,13 +57,13 @@ final class HandleInertiaRequests extends Middleware
             }
 
             $shared = [
-                'settings' => $formattedSettings,
                 'auth' => [
                     'user' => auth()->user(),
                     'permissions' => $permissions
                         ->filter(fn (Permission $permission): bool => auth()->user()->can($permission->name))
                         ->map(fn (Permission $permission) => $permission->name)
                         ->all(),
+                    'settings' => $formattedSettings,
                 ],
             ];
         }

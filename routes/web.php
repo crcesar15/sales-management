@@ -68,6 +68,9 @@ Route::group(['middleware' => ['guest']], function (): void {
 });
 
 Route::group(['middleware' => ['auth']], function (): void {
+    // Logout Route
+    Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+
     // Home Routes
     Route::get('/home', fn () => Inertia::render('Dashboard/Index'))->name('home');
 
