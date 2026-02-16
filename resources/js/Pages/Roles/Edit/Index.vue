@@ -240,7 +240,7 @@ const submit = async () => {
       toast.add({
         severity: "success",
         summary: t("Success"),
-        detail: t("Role created successfully"),
+        detail: t("Role updated successfully"),
         life: 3000,
       });
 
