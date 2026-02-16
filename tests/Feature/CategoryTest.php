@@ -19,11 +19,11 @@ it('admin user can list categories', function () {
         ->assertStatus(200);
 
     actingAs($user)
-        ->get(route('api.categories'))
+        ->get(route('api.v1.categories'))
         ->assertStatus(200);
 
     actingAs($user)
-        ->get(route('api.categories.show', $newCategory->id))
+        ->get(route('api.v1.categories.show', $newCategory->id))
         ->assertStatus(200);
 });
 
@@ -36,7 +36,7 @@ it('admin user can create categories', function () {
     ];
 
     actingAs($user)
-        ->post(route('api.categories.store'), $newCategory)
+        ->post(route('api.v1.categories.store'), $newCategory)
         ->assertStatus(201);
 
     $latestCategory = Category::latest('id')->firstOrFail();
@@ -49,7 +49,7 @@ it('creating categories with invalid data', function () {
     $user->assignRole(RolesEnum::ADMIN);
 
     actingAs($user)
-        ->post(route('api.categories.store'), [], ['Accept' => 'application/json'])
+        ->post(route('api.v1.categories.store'), [], ['Accept' => 'application/json'])
         ->assertStatus(422);
 });
 
@@ -64,7 +64,7 @@ it('admin user can update categories', function () {
     ];
 
     actingAs($user)
-        ->put(route('api.categories.update', $category->id), $updatedCategoryData)
+        ->put(route('api.v1.categories.update', $category->id), $updatedCategoryData)
         ->assertStatus(200);
 
     $updatedCategory = Category::findOrFail($category->id);
@@ -79,7 +79,7 @@ it('updating categories with invalid data', function () {
     $category = Category::factory()->create();
 
     actingAs($user)
-        ->put(route('api.categories.update', $category->id), [], ['Accept' => 'application/json'])
+        ->put(route('api.v1.categories.update', $category->id), [], ['Accept' => 'application/json'])
         ->assertStatus(422);
 });
 
@@ -90,7 +90,7 @@ it('admin user can delete categories', function () {
     $newCategory = Category::factory()->create();
 
     actingAs($user)
-        ->delete(route('api.categories.destroy', $newCategory->id))
+        ->delete(route('api.v1.categories.destroy', $newCategory->id))
         ->assertStatus(204);
 });
 
@@ -105,11 +105,11 @@ it('non-admin user cannot list categories', function () {
         ->assertStatus(403);
 
     actingAs($user)
-        ->get(route('api.categories'))
+        ->get(route('api.v1.categories'))
         ->assertStatus(403);
 
     actingAs($user)
-        ->get(route('api.categories.show', $newCategory->id))
+        ->get(route('api.v1.categories.show', $newCategory->id))
         ->assertStatus(403);
 });
 
@@ -122,7 +122,7 @@ it('non-admin user cannot create categories', function () {
     ];
 
     actingAs($user)
-        ->post(route('api.categories.store'), $newCategory)
+        ->post(route('api.v1.categories.store'), $newCategory)
         ->assertStatus(403);
 });
 
@@ -137,7 +137,7 @@ it('non-admin user cannot update categories', function () {
     ];
 
     actingAs($user)
-        ->put(route('api.categories.update', $category->id), $updatedCategoryData)
+        ->put(route('api.v1.categories.update', $category->id), $updatedCategoryData)
         ->assertStatus(403);
 });
 
@@ -148,6 +148,6 @@ it('non-admin user cannot delete categories', function () {
     $newCategory = Category::factory()->create();
 
     actingAs($user)
-        ->delete(route('api.categories.destroy', $newCategory->id))
+        ->delete(route('api.v1.categories.destroy', $newCategory->id))
         ->assertStatus(403);
 });

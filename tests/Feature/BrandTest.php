@@ -19,11 +19,11 @@ it('admin user can list brands', function () {
         ->assertStatus(200);
 
     actingAs($user)
-        ->get(route('api.brands'))
+        ->get(route('api.v1.brands'))
         ->assertStatus(200);
 
     actingAs($user)
-        ->get(route('api.brands.show', $newBrand->id))
+        ->get(route('api.v1.brands.show', $newBrand->id))
         ->assertStatus(200);
 });
 
@@ -36,7 +36,7 @@ it('admin user can create brands', function () {
     ];
 
     actingAs($user)
-        ->post(route('api.brands.store'), $newBrand)
+        ->post(route('api.v1.brands.store'), $newBrand)
         ->assertStatus(201);
 
     $latestBrand = Brand::latest('id')->firstOrFail();
@@ -49,7 +49,7 @@ it('creating brands with invalid data', function () {
     $user->assignRole(RolesEnum::ADMIN);
 
     actingAs($user)
-        ->post(route('api.brands.store'), [], ['Accept' => 'application/json'])
+        ->post(route('api.v1.brands.store'), [], ['Accept' => 'application/json'])
         ->assertStatus(422);
 });
 
@@ -64,7 +64,7 @@ it('admin user can update brands', function () {
     ];
 
     actingAs($user)
-        ->put(route('api.brands.update', $newBrand->id), $updatedDataBrand)
+        ->put(route('api.v1.brands.update', $newBrand->id), $updatedDataBrand)
         ->assertStatus(200);
 
     $updatedBrand = Brand::findOrFail($newBrand->id);
@@ -79,7 +79,7 @@ it('updating brands with invalid data', function () {
     $newBrand = Brand::factory()->create();
 
     actingAs($user)
-        ->put(route('api.brands.update', $newBrand->id), [], ['Accept' => 'application/json'])
+        ->put(route('api.v1.brands.update', $newBrand->id), [], ['Accept' => 'application/json'])
         ->assertStatus(422);
 });
 
@@ -90,7 +90,7 @@ it('admin user can delete brands', function () {
     $newBrand = Brand::factory()->create();
 
     actingAs($user)
-        ->delete(route('api.brands.destroy', $newBrand->id))
+        ->delete(route('api.v1.brands.destroy', $newBrand->id))
         ->assertStatus(204);
 });
 
@@ -105,11 +105,11 @@ it('non-admin user cannot list brands', function () {
         ->assertStatus(403);
 
     actingAs($user)
-        ->get(route('api.brands'))
+        ->get(route('api.v1.brands'))
         ->assertStatus(403);
 
     actingAs($user)
-        ->get(route('api.brands.show', $newBrand->id))
+        ->get(route('api.v1.brands.show', $newBrand->id))
         ->assertStatus(403);
 });
 
@@ -122,7 +122,7 @@ it('non-admin user cannot create brands', function () {
     ];
 
     actingAs($user)
-        ->post(route('api.brands.store'), $newBrand)
+        ->post(route('api.v1.brands.store'), $newBrand)
         ->assertStatus(403);
 });
 
@@ -137,7 +137,7 @@ it('non-admin user cannot update brands', function () {
     ];
 
     actingAs($user)
-        ->put(route('api.brands.update', $newBrand->id), $updatedDataBrand)
+        ->put(route('api.v1.brands.update', $newBrand->id), $updatedDataBrand)
         ->assertStatus(403);
 });
 
@@ -148,6 +148,6 @@ it('non-admin user cannot delete brands', function () {
     $newBrand = Brand::factory()->create();
 
     actingAs($user)
-        ->delete(route('api.brands.destroy', $newBrand->id))
+        ->delete(route('api.v1.brands.destroy', $newBrand->id))
         ->assertStatus(403);
 });

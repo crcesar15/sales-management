@@ -20,11 +20,11 @@ it('admin user can list roles', function () {
         ->assertStatus(200);
 
     actingAs($user)
-        ->get(route('api.roles'))
+        ->get(route('api.v1.roles'))
         ->assertStatus(200);
 
     actingAs($user)
-        ->get(route('api.roles.show', $role->id))
+        ->get(route('api.v1.roles.show', $role->id))
         ->assertStatus(200);
 });
 
@@ -41,7 +41,7 @@ it('admin user can create roles', function () {
     ];
 
     actingAs($user)
-        ->post(route('api.roles.store'), $newRole)
+        ->post(route('api.v1.roles.store'), $newRole)
         ->assertStatus(201);
 
     $latestRole = Role::latest('id')->firstOrFail();
@@ -61,7 +61,7 @@ it('admin user can update roles', function () {
         ->assertStatus(200);
 
     actingAs($user)
-        ->put(route('api.roles.update', $role->id), [
+        ->put(route('api.v1.roles.update', $role->id), [
             'name' => 'testing',
         ])
         ->assertStatus(200);
@@ -79,7 +79,7 @@ it('admin user can delete roles', function () {
     $role->save();
 
     actingAs($user)
-        ->delete(route('api.roles.destroy', $role->id))
+        ->delete(route('api.v1.roles.destroy', $role->id))
         ->assertStatus(204);
 
     $deletedRole = Role::find($role->id);
@@ -99,11 +99,11 @@ it('non-admin user cannot list roles', function () {
         ->assertStatus(403);
 
     actingAs($user)
-        ->get(route('api.roles'))
+        ->get(route('api.v1.roles'))
         ->assertStatus(403);
 
     actingAs($user)
-        ->get(route('api.roles.show', $role->id))
+        ->get(route('api.v1.roles.show', $role->id))
         ->assertStatus(403);
 });
 
@@ -128,7 +128,7 @@ it('non-admin user cannot update roles', function () {
         ->assertStatus(403);
 
     actingAs($user)
-        ->put(route('api.roles.update', $role->id), [
+        ->put(route('api.v1.roles.update', $role->id), [
             'name' => 'testing',
         ])
         ->assertStatus(403);
@@ -142,7 +142,7 @@ it('non-admin user cannot delete roles', function () {
     $role->save();
 
     actingAs($user)
-        ->delete(route('api.roles.destroy', $role->id))
+        ->delete(route('api.v1.roles.destroy', $role->id))
         ->assertStatus(403);
 });
 
@@ -152,7 +152,7 @@ it('creating role fails with invalid data', function () {
 
     actingAs($user)
         ->post(
-            route('api.roles.store'),
+            route('api.v1.roles.store'),
             [],
             ['Accept' => 'application/json']
         )
