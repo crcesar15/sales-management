@@ -1,18 +1,19 @@
-export interface Setting {
+export interface SettingBase {
   // columns
-  id: number
   key: string
   value: string
   name: string
   group: string
-  created_at: string | null
-  updated_at: string | null
 }
 
-interface SingleSettings {
-  [key: string]: string;
+export interface SettingResponse extends SettingBase {
+  id: number
+  created_at: string
+  updated_at: string
 }
+
+export interface SettingPayload extends SettingBase {};
 
 export interface SettingGrouped {
-  [key: string]: SingleSettings;
+  [group: string]: Record<string, SettingBase>;
 }

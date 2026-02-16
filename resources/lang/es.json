@@ -246,5 +246,7 @@
   "Restored": "Restaurado",
   "Subject": "Sujeto",
   "All Events": "Todos los Eventos",
-  "Date Of Birth": "Fecha de Nacimiento"
+  "Date Of Birth": "Fecha de Nacimiento",
+  "Are you sure you want to save these settings?": "¿Estás seguro de que deseas guardar estas configuraciones?",
+  "Settings updated successfully": "Configuraciones guardadas exitosamente"
 }

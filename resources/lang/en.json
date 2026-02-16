@@ -244,5 +244,7 @@
   "Restored": "Restored",
   "Subject": "Subject",
   "All Events": "All Events",
-  "Date Of Birth": "Date Of Birth"
+  "Date Of Birth": "Date Of Birth",
+  "Are you sure you want to save these settings?": "Are you sure you want to save these settings?",
+  "Settings updated successfully": "Settings updated successfully"
 }
