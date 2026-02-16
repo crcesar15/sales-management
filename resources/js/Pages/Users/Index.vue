@@ -292,12 +292,10 @@ const fetchUsers = async () => {
   try {
     const response = await fetchUsersApi(params.toString());
 
-    console.log(response.data.data);
-
     users.value = response.data.data.map((item: UserResponse) => ({
       ...item,
       created_at: useDatetimeFormatter(item.created_at),
-      // updated_at: useDatetimeFormatter(item.updated_at),
+      updated_at: useDatetimeFormatter(item.updated_at),
       roles: item.roles.map((role: RoleResponse) => role.name).join(", "),
     }));
     pagination.value.total = response.data.meta.total;
