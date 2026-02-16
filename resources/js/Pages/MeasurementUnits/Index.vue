@@ -4,7 +4,7 @@
       <h2 class="text-2xl font-bold flex items-end m-0">
         {{ $t("Measurement Units") }}
       </h2>
-      <p-button
+      <Button
         v-can="'measurement_unit.create'"
         :label="$t('Add Measurement Unit')"
         icon="fa fa-add"
