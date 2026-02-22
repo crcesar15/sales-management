@@ -19,3 +19,7 @@ yarn-error.log
 /.idea
 /.vscode
 /.tinkerun
+/.agent
+/.agents
+/.claude
+/.windsurf
