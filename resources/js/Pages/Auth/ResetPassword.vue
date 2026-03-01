@@ -1,96 +1,164 @@
 <template>
-  <div
-    class="grid grid-cols-12"
-    style="height: calc(100vh - 40px)"
-  >
-    <div class="col-span-12 lg:col-span-4 lg:col-start-5 md:col-span-6 md:col-start-4 mx-4 md:mx-0 flex flex-col justify-center">
-      <div class="bg-surface-0 pt-20 pb-8 px-6 shadow-lg rounded-border w-full">
-        <form
-          method="POST"
-          @submit.prevent="resetPassword"
-        >
-          <div class="logo-container">
-            <img
-              src="/images/logo.png"
-              alt="logo"
-            />
-          </div>
-          <div class="grid">
+  <div class="flex min-h-screen">
+    <!-- Left Panel: Branding (hidden on mobile) -->
+    <div
+      class="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 relative overflow-hidden"
+      style="background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)"
+    >
+      <!-- Grid dot pattern overlay -->
+      <div class="absolute inset-0 opacity-20">
+        <svg width="100%" height="100%">
+          <pattern id="grid-reset" width="40" height="40" patternUnits="userSpaceOnUse">
+            <circle cx="20" cy="20" r="1.5" fill="white" />
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#grid-reset)" />
+        </svg>
+      </div>
+
+      <!-- Top: Logo -->
+      <div class="relative z-10">
+        <img
+          src="/images/logo.png"
+          alt="logo"
+          class="h-40"
+        />
+      </div>
+
+      <!-- Center: Value proposition -->
+      <div class="relative z-10">
+        <h1 class="text-4xl font-bold leading-tight mb-4 text-white w-2/3">
+          {{ t("Sales & Inventory Management") }}
+        </h1>
+        <p class="text-lg text-white/80 leading-relaxed w-2/3">
+          {{ t("Streamline your operations, track inventory in real time, and make data-driven decisions.") }}
+        </p>
+      </div>
+
+      <!-- Bottom: Subtle footer -->
+      <div class="relative z-10 flex justify-end">
+        <p class="text-sm text-white/60">
+          &copy; {{ new Date().getFullYear() }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Panel: Reset Password Form -->
+    <div class="w-full lg:w-7/12 flex items-center justify-center bg-surface-0 px-6 py-12">
+      <div class="w-full max-w-md">
+        <!-- Mobile logo (visible only on small screens) -->
+        <div class="flex justify-center mb-8 lg:hidden">
+          <img
+            src="/images/logo.png"
+            alt="logo"
+            class="h-60"
+          />
+        </div>
+
+        <!-- Heading -->
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold text-surface-900">
+            {{ t("Reset Password") }}
+          </h2>
+          <p class="mt-2 text-surface-500">
+            {{ t("Enter your new password below") }}
+          </p>
+        </div>
+
+        <form @submit.prevent="resetPassword">
+          <!-- Email -->
+          <div class="flex flex-col gap-2">
             <label
               for="email"
-              class="col-12 md:col-4 flex flex-wrap align-content-center justify-content-start md:justify-content-end"
-            >Email Address</label>
-            <div class="md:col-6 col-12">
+              class="text-surface-700 font-medium text-sm"
+            >{{ t("Email Address") }}</label>
+            <IconField>
+              <InputIcon class="fa fa-envelope" />
               <InputText
+                id="email"
                 v-model="email"
                 type="email"
                 class="w-full"
-                required
                 autocomplete="email"
-                autofocus
+                :required="true"
+                :placeholder="t('Enter your email address')"
               />
-            </div>
+            </IconField>
           </div>
 
-          <div class="grid mt-4">
+          <!-- Password -->
+          <div class="flex flex-col gap-2 mt-5">
             <label
               for="password"
-              class="col-12 md:col-4 flex flex-wrap align-content-center justify-content-start md:justify-content-end"
-            >Password</label>
-            <div class="md:col-6 col-12">
-              <Password
-                v-model="password"
-                class="w-full"
-                inputClass="w-full"
-                :feedback="false"
-                required
-                autocomplete="new-password"
-                toggleMask
-              />
-            </div>
+              class="text-surface-700 font-medium text-sm"
+            >{{ t("New Password") }}</label>
+            <Password
+              v-model="password"
+              class="w-full"
+              inputClass="w-full"
+              toggleMask
+              inputId="password"
+              :required="true"
+              :feedback="false"
+              :placeholder="t('Enter your new password')"
+            />
           </div>
 
-          <div class="grid mt-4">
+          <!-- Confirm Password -->
+          <div class="flex flex-col gap-2 mt-5">
             <label
               for="password-confirm"
-              class="col-12 md:col-4 flex flex-wrap align-content-center justify-content-start md:justify-content-end"
-            >Confirm Password</label>
-            <div class="md:col-6 col-12">
-              <Password
-                v-model="passwordConfirmation"
-                class="w-full"
-                inputClass="w-full"
-                :feedback="false"
-                required
-                autocomplete="new-password"
-                toggleMask
-              />
-            </div>
+              class="text-surface-700 font-medium text-sm"
+            >{{ t("Confirm Password") }}</label>
+            <Password
+              v-model="passwordConfirmation"
+              class="w-full"
+              inputClass="w-full"
+              toggleMask
+              inputId="password-confirm"
+              :required="true"
+              :feedback="false"
+              :placeholder="t('Confirm your new password')"
+            />
           </div>
 
-          <div class="flex flex-wrap justify-center mt-4">
+          <!-- Submit Button (protagonist) -->
+          <div class="mt-6">
             <Button
               type="submit"
+              class="w-full"
+              :label="t('Reset Password')"
               :loading="btnLoading"
+              raised
+            />
+          </div>
+
+          <!-- Back to Login -->
+          <div class="flex justify-center mt-4">
+            <a
+              class="text-primary text-sm cursor-pointer hover:underline"
+              @click="router.visit(route('login'))"
             >
-              Reset Password
-            </Button>
-            <Toast />
+              {{ t("Back to Login") }}
+            </a>
           </div>
         </form>
       </div>
     </div>
+
+    <Toast />
   </div>
 </template>
+
 <script setup lang="ts">
 import {
   InputText,
   Password,
   Button,
+  IconField,
+  InputIcon,
   Toast,
   useToast,
 } from "primevue";
-
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { router } from "@inertiajs/vue3";
@@ -135,7 +203,7 @@ const resetPassword = async () => {
     toast.add({
       severity: "error",
       summary: t("Error"),
-      detail: error.response.data.message || t("An error occurred while resetting your password."),
+      detail: error.response?.data?.message || t("An error occurred while resetting your password."),
       life: 5000,
     });
   } finally {
@@ -143,19 +211,3 @@ const resetPassword = async () => {
   }
 };
 </script>
-<style scoped>
-  .register-container {
-      margin-top: 20%;
-      border-radius: 15px !important;
-  }
-
-  .logo-container {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-  }
-
-  .logo-container img {
-      height: 100px;
-  }
-</style>

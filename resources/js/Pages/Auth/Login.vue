@@ -1,70 +1,138 @@
 <template>
-  <div
-    class="grid grid-cols-12"
-    style="height: calc(100vh - 40px)"
-  >
+  <div class="flex min-h-screen">
+    <!-- Left Panel: Branding (hidden on mobile) -->
     <div
-      class="col-span-12 lg:col-span-4 lg:col-start-5 md:col-span-6 md:col-start-4 mx-4 md:mx-0 flex flex-col justify-center"
+      class="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 relative overflow-hidden"
+      style="background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)"
     >
-      <div class="bg-surface-0 pt-20 pb-8 px-6 shadow-lg rounded-border w-full">
-        <form
-          method="POST"
-          @submit.prevent="login"
-        >
-          <!--Add logo from public storage-->
-          <div class="logo-container">
-            <img
-              src="/images/logo.png"
-              alt="logo"
-            />
+      <!-- Grid dot pattern overlay -->
+      <div class="absolute inset-0 opacity-20">
+        <svg width="100%" height="100%">
+          <pattern id="grid-login" width="40" height="40" patternUnits="userSpaceOnUse">
+            <circle cx="20" cy="20" r="1.5" fill="white" />
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#grid-login)" />
+        </svg>
+      </div>
+
+      <!-- Top: Logo -->
+      <div class="relative z-10 invert brightness-0">
+        <img
+          src="/images/logo.png"
+          alt="logo"
+          class="h-40"
+        />
+      </div>
+
+      <!-- Center: Value proposition -->
+      <div class="relative z-10">
+        <h1 class="text-4xl font-bold leading-tight mb-4 text-white w-2/3">
+          {{ t("Sales & Inventory Management") }}
+        </h1>
+        <p class="text-lg text-white/80 leading-relaxed w-2/3">
+          {{ t("Streamline your operations, track inventory in real time, and make data-driven decisions.") }}
+        </p>
+      </div>
+
+      <!-- Bottom: Subtle footer -->
+      <div class="relative z-10 flex justify-end">
+        <p class="text-sm text-white/60">
+          &copy; {{ new Date().getFullYear() }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Panel: Login Form -->
+    <div class="w-full lg:w-7/12 flex items-center justify-center bg-surface-0 px-6 py-12">
+      <div class="w-full max-w-md">
+        <!-- Mobile logo (visible only on small screens) -->
+        <div class="flex justify-center mb-8 lg:hidden">
+          <img
+            src="/images/logo.png"
+            alt="logo"
+            class="h-60"
+          />
+        </div>
+
+        <!-- Heading -->
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold text-surface-900">
+            {{ t("Welcome Back") }}
+          </h2>
+          <p class="mt-2 text-surface-500">
+            {{ t("Sign in to your account") }}
+          </p>
+        </div>
+
+        <form @submit.prevent="login">
+          <!-- Username -->
+          <div class="flex flex-col gap-2">
+            <label
+              for="username"
+              class="text-surface-700 font-medium text-sm"
+            >{{ t("Username") }}</label>
+            <IconField>
+              <InputIcon class="fa fa-user" />
+              <InputText
+                id="username"
+                v-model="username"
+                class="w-full"
+                autocomplete="username"
+                :required="true"
+                :placeholder="t('Enter your username')"
+              />
+            </IconField>
           </div>
-          <div class="flex flex-col gap-2 mt-4">
-            <label for="username">{{ t("Username") }}</label>
-            <InputText
-              v-model="username"
-              class="w-full"
-              autocomplete="username"
-              inputId="username"
-              :required="true"
-            />
+
+          <!-- Password -->
+          <div class="flex flex-col gap-2 mt-5">
+            <label
+              for="password"
+              class="text-surface-700 font-medium text-sm"
+            >{{ t("Password") }}</label>
+            <IconField>
+              <InputIcon class="fa fa-lock" />
+              <Password
+                v-model="password"
+                class="w-full"
+                inputClass="w-full"
+                toggleMask
+                inputId="password"
+                :required="true"
+                :feedback="false"
+                :placeholder="t('Enter your password')"
+              />
+            </IconField>
           </div>
-          <div class="flex flex-col gap-2 mt-4">
-            <label for="password">{{ t("Password") }}</label>
-            <Password
-              v-model="password"
-              class="w-full"
-              inputClass="w-full"
-              toggleMask
-              inputId="password"
-              :required="true"
-              :feedback="false"
-            />
-          </div>
-          <div class="flex mt-4">
+
+          <!-- Remember Me -->
+          <div class="flex items-center mt-5">
             <Checkbox
               v-model="remember"
               binary
               inputId="remember"
-              class="pt-1"
             />
             <label
-              class="text-danger ml-2"
+              class="ml-2 text-sm text-surface-600 cursor-pointer"
               for="remember"
             >{{ t("Remember Me") }}</label>
           </div>
-          <div class="flex w-full mt-3 gap-2">
-            <div class="w-full">
-              <Button
-                type="submit"
-                class="w-full"
-                :label="t('Login')"
-              />
-            </div>
+
+          <!-- Login Button (protagonist) -->
+          <div class="mt-6">
+            <Button
+              type="submit"
+              class="w-full"
+              :label="t('Login')"
+              :loading="btnLoading"
+              raised
+            />
           </div>
-          <div class="flex justify-end w-full mt-4">
+
+          <!-- Forgot Password (always visible) -->
+          <div class="flex justify-end mt-4">
             <a
-              v-if="showResetPassword"
-              class="text-primary cursor-pointer"
+              class="text-primary text-sm cursor-pointer hover:underline"
               @click="router.visit(route('password.reset.request'))"
             >
               {{ t("Forgot Your Password?") }}
@@ -73,6 +141,7 @@
         </form>
       </div>
     </div>
+
     <Toast />
   </div>
 </template>
@@ -83,6 +152,8 @@ import {
   Password,
   Button,
   Checkbox,
+  IconField,
+  InputIcon,
   useToast,
   Toast,
 } from "primevue";
@@ -101,10 +172,11 @@ const toast = useToast();
 const username = ref("");
 const password = ref("");
 const remember = ref(false);
-const showResetPassword = ref(false);
+const btnLoading = ref(false);
 
 // Methods
 const login = async () => {
+  btnLoading.value = true;
   try {
     await loginApi({
       username: username.value,
@@ -113,30 +185,13 @@ const login = async () => {
     });
     router.visit(route("home"));
   } catch (error: any) {
-    showResetPassword.value = true;
     toast.add({
       severity: "error",
       summary: t("Error"),
       detail: t(error.response?.data?.message ?? "An unexpected error occurred."),
     });
+  } finally {
+    btnLoading.value = false;
   }
 };
-
 </script>
-
-<style scoped>
-    .register-container {
-        margin-top: 20%;
-        border-radius: 15px !important;
-    }
-
-    .logo-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 20px;
-    }
-
-    .logo-container img {
-        height: 100px;
-    }
-</style>
