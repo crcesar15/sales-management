@@ -267,5 +267,14 @@
   "Enter your password": "Enter your password",
   "Sales & Inventory Management": "Sales & Inventory Management",
   "Streamline your operations, track inventory in real time, and make data-driven decisions.": "Streamline your operations, track inventory in real time, and make data-driven decisions.",
-  "An unexpected error occurred.": "An unexpected error occurred."
+  "An unexpected error occurred.": "An unexpected error occurred.",
+  "Expand sidebar": "Expand sidebar",
+  "Collapse sidebar": "Collapse sidebar",
+  "Theme Colors": "Theme Colors",
+  "Stock Levels": "Stock Levels",
+  "Adjustments": "Adjustments",
+  "All Products": "All Products",
+  "Units": "Units",
+  "Sales Orders": "Sales Orders",
+  "Supplier Catalog": "Supplier Catalog"
 }

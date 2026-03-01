@@ -269,5 +269,14 @@
   "Enter your password": "Ingresa tu contrasena",
   "Sales & Inventory Management": "Gestion de Ventas e Inventario",
   "Streamline your operations, track inventory in real time, and make data-driven decisions.": "Optimiza tus operaciones, rastrea el inventario en tiempo real y toma decisiones basadas en datos.",
-  "An unexpected error occurred.": "Ocurrio un error inesperado."
+  "An unexpected error occurred.": "Ocurrio un error inesperado.",
+  "Expand sidebar": "Expandir barra lateral",
+  "Collapse sidebar": "Contraer barra lateral",
+  "Theme Colors": "Colores del Tema",
+  "Stock Levels": "Niveles de Stock",
+  "Adjustments": "Ajustes",
+  "All Products": "Todos los Productos",
+  "Units": "Unidades",
+  "Sales Orders": "Órdenes de Venta",
+  "Supplier Catalog": "Catálogo de Proveedores"
 }
