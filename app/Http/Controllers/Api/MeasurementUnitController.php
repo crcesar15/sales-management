@@ -81,7 +81,7 @@ final class MeasurementUnitController extends Controller
         return response()->noContent();
     }
 
-    public function restore($measurementUnit): Response
+    public function restore(int $measurementUnit): Response
     {
         $this->authorize(PermissionsEnum::MEASUREMENT_UNITS_RESTORE->value, auth()->user());
 

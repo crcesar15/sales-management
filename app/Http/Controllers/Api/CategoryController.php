@@ -82,7 +82,7 @@ final class CategoryController extends Controller
         return response()->noContent();
     }
 
-    public function restore($category): Response
+    public function restore(int $category): Response
     {
         $this->authorize(PermissionsEnum::CATEGORIES_RESTORE->value, auth()->user());
 

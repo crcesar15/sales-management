@@ -81,7 +81,7 @@ final class BrandController extends Controller
         return response()->noContent();
     }
 
-    public function restore($brand): Response
+    public function restore(int $brand): Response
     {
         $this->authorize(PermissionsEnum::BRANDS_RESTORE->value, auth()->user());
 
