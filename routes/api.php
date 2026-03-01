@@ -36,6 +36,7 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    Route::put('/categories/{category}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
 
     // Routes for Brands
     Route::get('/brands', [BrandController::class, 'index'])->name('brands');
@@ -43,6 +44,7 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
     Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
     Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
     Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
+    Route::put('/brands/{brand}/restore', [BrandController::class, 'restore'])->name('brands.restore');
 
     // Routes for Measurement Units
     Route::get('/measurement-units', [MeasurementUnitController::class, 'index'])->name('measurement-units');
@@ -52,6 +54,8 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
         ->name('measurement-units.update');
     Route::delete('/measurement-units/{measurementUnit}', [MeasurementUnitController::class, 'destroy'])
         ->name('measurement-units.destroy');
+    Route::put('/measurement-units/{measurementUnit}/restore', [MeasurementUnitController::class, 'restore'])
+        ->name('measurement-units.restore');
 
     // Products Media
     Route::post('/media/draft', [PendingMediaController::class, 'store'])

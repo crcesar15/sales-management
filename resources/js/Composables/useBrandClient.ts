@@ -32,6 +32,10 @@ export function useBrandClient() {
         return await apiClient.delete(route('api.v1.brands.destroy', id));
     }
 
+    const restoreBrandApi = async (id:number) => {
+        return await apiClient.put(route('api.v1.brands.restore', id));
+    }
+
     return {
         loading,
         fetchBrandsApi,
@@ -39,5 +43,6 @@ export function useBrandClient() {
         storeBrandApi,
         updateBrandApi,
         destroyBrandApi,
+        restoreBrandApi,
     }
 }

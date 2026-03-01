@@ -38,13 +38,42 @@
             <div class="grid grid-cols-12">
               <div
                 class="
-                  flex
-                  lg:col-span-3
-                  lg:col-start-10
-                  md:col-span-4
-                  md:col-start-9
-                  md:justify-end
+                  md:col-span-6
                   col-span-12
+                  flex
+                  md:justify-start
+                  justify-center
+                "
+              >
+                <SelectButton
+                  v-model="status"
+                  :allow-empty="false"
+                  :options="[{
+                    label: $t('All'),
+                    value: 'all',
+                  }, {
+                    label: $t('Active'),
+                    value: 'active',
+                  }, {
+                    label: $t('Archived'),
+                    value: 'archived',
+                  }]"
+                  optionLabel="label"
+                  optionValue="value"
+                  aria-labelledby="basic"
+                />
+              </div>
+              <div
+                class="
+                  flex
+                  xl:col-span-3
+                  xl:col-start-10
+                  lg:col-span-4
+                  lg:col-start-9
+                  md:col-span-6
+                  md:col-start-7
+                  col-span-12
+                  md:justify-end
                   justify-center
                 "
               >
@@ -102,6 +131,7 @@
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
+                  v-show="status !== 'archived'"
                   v-can="'category.edit'"
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
@@ -112,6 +142,18 @@
                   @click="editCategory(row.data)"
                 />
                 <Button
+                  v-show="status === 'archived'"
+                  v-can="'category.restore'"
+                  v-tooltip.top="$t('Restore')"
+                  icon="fa fa-trash-arrow-up"
+                  text
+                  rounded
+                  raised
+                  size="sm"
+                  @click="restoreCategory(row.data)"
+                />
+                <Button
+                  v-show="status !== 'archived'"
                   v-can="'category.delete'"
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
@@ -147,6 +189,7 @@ import {
   IconField,
   InputIcon,
   ConfirmDialog,
+  SelectButton,
   Tag,
   useToast,
   useConfirm,
@@ -174,6 +217,7 @@ defineOptions({
 
 // List Categories
 const categories = ref<Category[]>([]);
+const status = ref("all");
 const pagination = ref({
   total: 0,
   first: 0,
@@ -193,6 +237,10 @@ const fetchCategories = async () => {
   params.append("page", pagination.value.page.toString());
   params.append("order_by", pagination.value.sortField);
   params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
+
+  if (status.value !== "all") {
+    params.append("status", status.value);
+  }
 
   if (pagination.value.filter) {
     params.append("filter", pagination.value.filter);
@@ -237,6 +285,15 @@ watch(
   {
     immediate: true,
     deep: true,
+  },
+);
+
+watch(
+  status,
+  () => {
+    pagination.value.first = 0;
+    pagination.value.page = 1;
+    fetchCategories();
   },
 );
 
@@ -338,6 +395,38 @@ const deleteCategory = async (id: number) => {
           severity: "error",
           summary: t("Error"),
           detail: t(error?.response?.data?.message ?? error),
+          life: 3000,
+        });
+      }
+    },
+  });
+};
+
+// Restore Categories
+const restoreCategory = (category: Category) => {
+  confirm.require({
+    message: t("Are you sure you want to restore this category?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Restore"),
+    rejectClass: "p-button-secondary",
+    accept: async () => {
+      const { restoreCategoryApi } = useCategoryClient();
+      try {
+        await restoreCategoryApi(category.id);
+        toast.add({
+          severity: "success",
+          summary: t("Success"),
+          detail: t("Category restored successfully"),
+          life: 3000,
+        });
+        fetchCategories();
+      } catch (error: any) {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: error?.response?.data?.message ?? error,
           life: 3000,
         });
       }

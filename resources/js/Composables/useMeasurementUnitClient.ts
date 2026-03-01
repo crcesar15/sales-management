@@ -32,6 +32,10 @@ export function useMeasurementUnitClient() {
         return await apiClient.delete(route('api.v1.measurement-units.destroy', id));
     }
 
+    const restoreMeasurementUnitApi = async (id:number) => {
+        return await apiClient.put(route('api.v1.measurement-units.restore', id));
+    }
+
     return {
         loading,
         fetchMeasurementUnitsApi,
@@ -39,5 +43,6 @@ export function useMeasurementUnitClient() {
         storeMeasurementUnitApi,
         updateMeasurementUnitApi,
         destroyMeasurementUnitApi,
+        restoreMeasurementUnitApi,
     }
 }

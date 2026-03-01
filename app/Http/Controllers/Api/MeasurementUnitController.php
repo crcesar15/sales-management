@@ -27,6 +27,10 @@ final class MeasurementUnitController extends Controller
             $query->where('name', 'like', $request->string('filter')->value());
         }
 
+        if ($request->string('status')->value() === 'archived') {
+            $query->onlyTrashed();
+        }
+
         $query->withCount('products');
 
         $query->orderBy(
@@ -72,12 +76,18 @@ final class MeasurementUnitController extends Controller
     {
         $this->authorize(PermissionsEnum::MEASUREMENT_UNITS_DELETE->value, auth()->user());
 
-        DB::transaction(function () use ($measurementUnit) {
-            // remove the measurement unit from all products
-            $measurementUnit->products()->update(['measurement_unit_id' => null]);
+        $measurementUnit->delete();
 
-            $measurementUnit->delete();
-        });
+        return response()->noContent();
+    }
+
+    public function restore($measurementUnit): Response
+    {
+        $this->authorize(PermissionsEnum::MEASUREMENT_UNITS_RESTORE->value, auth()->user());
+
+        $measurementUnit = MeasurementUnit::withTrashed()->findOrFail($measurementUnit);
+
+        $measurementUnit->restore();
 
         return response()->noContent();
     }

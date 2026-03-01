@@ -23,18 +23,21 @@ final class PermissionSeeder extends Seeder
                 PermissionsEnum::BRANDS_CREATE->value,
                 PermissionsEnum::BRANDS_EDIT->value,
                 PermissionsEnum::BRANDS_DELETE->value,
+                PermissionsEnum::BRANDS_RESTORE->value,
             ],
             'categories' => [
                 PermissionsEnum::CATEGORIES_VIEW->value,
                 PermissionsEnum::CATEGORIES_CREATE->value,
                 PermissionsEnum::CATEGORIES_EDIT->value,
                 PermissionsEnum::CATEGORIES_DELETE->value,
+                PermissionsEnum::CATEGORIES_RESTORE->value,
             ],
             'measurement units' => [
                 PermissionsEnum::MEASUREMENT_UNITS_VIEW->value,
                 PermissionsEnum::MEASUREMENT_UNITS_CREATE->value,
                 PermissionsEnum::MEASUREMENT_UNITS_EDIT->value,
                 PermissionsEnum::MEASUREMENT_UNITS_DELETE->value,
+                PermissionsEnum::MEASUREMENT_UNITS_RESTORE->value,
             ],
             'products' => [
                 PermissionsEnum::PRODUCTS_VIEW->value,

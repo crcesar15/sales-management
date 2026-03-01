@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\User;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\assertSoftDeleted;
 
 it('admin user can list brands', function () {
     $user = User::factory()->create();
@@ -92,6 +93,37 @@ it('admin user can delete brands', function () {
     actingAs($user)
         ->delete(route('api.v1.brands.destroy', $newBrand->id))
         ->assertStatus(204);
+
+    assertSoftDeleted($newBrand);
+});
+
+it('admin user can restore brands', function () {
+    $user = User::factory()->create();
+    $user->assignRole(RolesEnum::ADMIN);
+
+    $brand = Brand::factory()->create();
+    $brand->delete();
+
+    assertSoftDeleted($brand);
+
+    actingAs($user)
+        ->put(route('api.v1.brands.restore', $brand->id))
+        ->assertStatus(204);
+
+    expect(Brand::find($brand->id))->not->toBeNull();
+});
+
+it('admin user can list archived brands', function () {
+    $user = User::factory()->create();
+    $user->assignRole(RolesEnum::ADMIN);
+
+    $brand = Brand::factory()->create();
+    $brand->delete();
+
+    actingAs($user)
+        ->get(route('api.v1.brands', ['status' => 'archived']))
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data');
 });
 
 it('non-admin user cannot list brands', function () {
@@ -149,5 +181,17 @@ it('non-admin user cannot delete brands', function () {
 
     actingAs($user)
         ->delete(route('api.v1.brands.destroy', $newBrand->id))
+        ->assertStatus(403);
+});
+
+it('non-admin user cannot restore brands', function () {
+    $user = User::factory()->create();
+    $user->assignRole(RolesEnum::SALESMAN);
+
+    $brand = Brand::factory()->create();
+    $brand->delete();
+
+    actingAs($user)
+        ->put(route('api.v1.brands.restore', $brand->id))
         ->assertStatus(403);
 });

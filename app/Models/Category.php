@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Route;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -18,6 +20,7 @@ final class Category extends Model
     use HasFactory;
 
     use LogsActivity;
+    use SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -40,5 +43,11 @@ final class Category extends Model
             ->logOnlyDirty()
             ->useLogName('category')
             ->dontSubmitEmptyLogs();
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        Route::bind('category', fn ($value) => Category::withTrashed()->findOrFail($value));
     }
 }

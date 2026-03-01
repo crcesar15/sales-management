@@ -38,11 +38,40 @@
             <div class="grid grid-cols-12">
               <div
                 class="
+                  md:col-span-6
+                  col-span-12
                   flex
-                  lg:col-span-3
-                  lg:col-start-10
-                  md:col-span-4
-                  md:col-start-9
+                  md:justify-start
+                  justify-center
+                "
+              >
+                <SelectButton
+                  v-model="status"
+                  :allow-empty="false"
+                  :options="[{
+                    label: t('All'),
+                    value: 'all',
+                  }, {
+                    label: t('Active'),
+                    value: 'active',
+                  }, {
+                    label: t('Archived'),
+                    value: 'archived',
+                  }]"
+                  optionLabel="label"
+                  optionValue="value"
+                  aria-labelledby="basic"
+                />
+              </div>
+              <div
+                class="
+                  flex
+                  xl:col-span-3
+                  xl:col-start-10
+                  lg:col-span-4
+                  lg:col-start-9
+                  md:col-span-6
+                  md:col-start-7
                   col-span-12
                   md:justify-end
                   justify-center
@@ -102,6 +131,7 @@
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
+                  v-show="status !== 'archived'"
                   v-can="'brand.edit'"
                   v-tooltip.top="t('Edit')"
                   icon="fa fa-edit"
@@ -112,6 +142,18 @@
                   @click="editBrand(row.data)"
                 />
                 <Button
+                  v-show="status === 'archived'"
+                  v-can="'brand.restore'"
+                  v-tooltip.top="t('Restore')"
+                  icon="fa fa-trash-arrow-up"
+                  text
+                  rounded
+                  raised
+                  size="sm"
+                  @click="restoreBrand(row.data)"
+                />
+                <Button
+                  v-show="status !== 'archived'"
                   v-can="'brand.delete'"
                   v-tooltip.top="t('Delete')"
                   icon="fa fa-trash"
@@ -141,7 +183,6 @@ import BrandEditor from "@pages/Brands/List/ItemEditor.vue";
 import useDatetimeFormatter from "@composables/useDatetimeFormatter";
 
 import {
-  Ref,
   ref,
   watch,
 } from "vue";
@@ -153,6 +194,7 @@ import {
   Card,
   Column,
   ConfirmDialog,
+  SelectButton,
   Button,
   InputText,
   IconField,
@@ -188,6 +230,7 @@ const pagination = ref({
 });
 
 const { loading, fetchBrandsApi } = useBrandClient();
+const status = ref("all");
 
 let brands = ref<Brand[]>();
 
@@ -198,6 +241,10 @@ const fetchBrands = async () => {
   params.append("page", pagination.value.page.toString());
   params.append("order_by", pagination.value.sortField);
   params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
+
+  if (status.value !== "all") {
+    params.append("status", status.value);
+  }
 
   if (pagination.value.filter) {
     params.append("filter", pagination.value.filter);
@@ -216,7 +263,7 @@ const fetchBrands = async () => {
     toast.add({
       severity: "error",
       summary: t("Error"),
-      detail: error.response.data.message,
+      detail: error?.response?.data?.message ?? error,
       life: 3000,
     });
   }
@@ -242,6 +289,15 @@ watch(
   {
     immediate: true,
     deep: true,
+  },
+);
+
+watch(
+  status,
+  () => {
+    pagination.value.first = 0;
+    pagination.value.page = 1;
+    fetchBrands();
   },
 );
 
@@ -275,7 +331,7 @@ const createBrand = async (brand:Pick<Brand, 'name'>) => {
     toast.add({
       severity: "error",
       summary: t("Error"),
-      detail: error.response.data.message,
+      detail: error?.response?.data?.message ?? error,
       life: 3000,
     });
   }
@@ -335,7 +391,7 @@ const deleteBrand = (id:number) => {
         toast.add({
           severity: "error",
           summary: t("Error"),
-          detail: error.response.data.message,
+          detail: error?.response?.data?.message ?? error,
           life: 3000,
         });
       }
@@ -343,6 +399,37 @@ const deleteBrand = (id:number) => {
   });
 };
 
+// Restore Brand
+const restoreBrand = (brand: Brand) => {
+  confirm.require({
+    message: t("Are you sure you want to restore this brand?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Restore"),
+    rejectClass: "p-button-secondary",
+    accept: async () => {
+      const { restoreBrandApi } = useBrandClient();
+      try {
+        await restoreBrandApi(brand.id);
+        toast.add({
+          severity: "success",
+          summary: t("Success"),
+          detail: t("Brand restored successfully"),
+          life: 3000,
+        });
+        fetchBrands();
+      } catch (error: any) {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: error?.response?.data?.message ?? error,
+          life: 3000,
+        });
+      }
+    },
+  });
+};
 </script>
 
 <style>

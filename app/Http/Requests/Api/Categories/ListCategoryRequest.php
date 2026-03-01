@@ -30,6 +30,7 @@ final class ListCategoryRequest extends FormRequest
             'order_by' => ['sometimes', 'string', 'in:name,created_at,updated_at'],
             'order_direction' => ['sometimes', 'string', 'in:asc,desc'],
             'filter' => ['sometimes', 'string', 'max:255'],
+            'status' => ['sometimes', 'string', 'in:active,archived'],
         ];
     }
 

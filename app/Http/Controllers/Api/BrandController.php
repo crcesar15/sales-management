@@ -27,6 +27,10 @@ final class BrandController extends Controller
             $query->where('name', 'like', $request->string('filter')->value());
         }
 
+        if ($request->string('status')->value() === 'archived') {
+            $query->onlyTrashed();
+        }
+
         $query->withCount('products');
 
         $query->orderBy(
@@ -72,11 +76,18 @@ final class BrandController extends Controller
     {
         $this->authorize(PermissionsEnum::BRANDS_DELETE->value, auth()->user());
 
-        DB::transaction(function () use ($brand) {
-            $brand->products()->update(['brand_id' => null]);
+        $brand->delete();
 
-            $brand->delete();
-        });
+        return response()->noContent();
+    }
+
+    public function restore($brand): Response
+    {
+        $this->authorize(PermissionsEnum::BRANDS_RESTORE->value, auth()->user());
+
+        $brand = Brand::withTrashed()->findOrFail($brand);
+
+        $brand->restore();
 
         return response()->noContent();
     }

@@ -37,11 +37,40 @@
             <div class="grid grid-cols-12">
               <div
                 class="
+                  md:col-span-6
+                  col-span-12
                   flex
-                  lg:col-span-3
-                  lg:col-start-10
-                  md:col-span-4
-                  md:col-start-9
+                  md:justify-start
+                  justify-center
+                "
+              >
+                <SelectButton
+                  v-model="status"
+                  :allow-empty="false"
+                  :options="[{
+                    label: $t('All'),
+                    value: 'all',
+                  }, {
+                    label: $t('Active'),
+                    value: 'active',
+                  }, {
+                    label: $t('Archived'),
+                    value: 'archived',
+                  }]"
+                  optionLabel="label"
+                  optionValue="value"
+                  aria-labelledby="basic"
+                />
+              </div>
+              <div
+                class="
+                  flex
+                  xl:col-span-3
+                  xl:col-start-10
+                  lg:col-span-4
+                  lg:col-start-9
+                  md:col-span-6
+                  md:col-start-7
                   col-span-12
                   md:justify-end
                   justify-center
@@ -89,6 +118,7 @@
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
+                  v-show="status !== 'archived'"
                   v-can="'measurement_unit.edit'"
                   v-tooltip.top="$t('Edit')"
                   icon="fa fa-edit"
@@ -99,6 +129,18 @@
                   @click="editMeasurementUnit(row.data)"
                 />
                 <Button
+                  v-show="status === 'archived'"
+                  v-can="'measurement_unit.restore'"
+                  v-tooltip.top="$t('Restore')"
+                  icon="fa fa-trash-arrow-up"
+                  text
+                  rounded
+                  raised
+                  size="sm"
+                  @click="restoreMeasurementUnit(row.data)"
+                />
+                <Button
+                  v-show="status !== 'archived'"
                   v-can="'measurement_unit.delete'"
                   v-tooltip.top="$t('Delete')"
                   icon="fa fa-trash"
@@ -133,6 +175,7 @@ import {
   IconField,
   InputIcon,
   ConfirmDialog,
+  SelectButton,
   useToast,
   useConfirm,
   DataTableSortEvent,
@@ -158,7 +201,7 @@ defineOptions({
   layout: AppLayout,
 });
 
-// List brands
+// List measurement units
 const pagination = ref({
   total: 0,
   first: 0,
@@ -170,6 +213,7 @@ const pagination = ref({
 });
 
 const measurementUnits = ref<MeasurementUnit[]>([]);
+const status = ref("all");
 
 const {fetchMeasurementUnitsApi, loading} = useMeasurementUnitClient();
 
@@ -181,6 +225,10 @@ const fetchMeasurementUnits = async () => {
       params.append("page", pagination.value.page.toString());
       params.append("order_by", pagination.value.sortField);
       params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
+
+      if (status.value !== "all") {
+        params.append("status", status.value);
+      }
 
       if (pagination.value.filter) {
         params.append("filter", pagination.value.filter);
@@ -223,6 +271,15 @@ watch(
   {
     immediate: true,
     deep: true,
+  },
+);
+
+watch(
+  status,
+  () => {
+    pagination.value.first = 0;
+    pagination.value.page = 1;
+    fetchMeasurementUnits();
   },
 );
 
@@ -323,6 +380,38 @@ const deleteMeasurementUnit = async (id: number) => {
           severity: "error",
           summary: t("Error"),
           detail: t(error?.response?.data?.message || error),
+          life: 3000,
+        });
+      }
+    },
+  });
+};
+
+// Restore Measurement Unit
+const restoreMeasurementUnit = (measurementUnit: MeasurementUnit) => {
+  confirm.require({
+    message: t("Are you sure you want to restore this measurement unit?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Restore"),
+    rejectClass: "p-button-secondary",
+    accept: async () => {
+      const { restoreMeasurementUnitApi } = useMeasurementUnitClient();
+      try {
+        await restoreMeasurementUnitApi(measurementUnit.id);
+        toast.add({
+          severity: "success",
+          summary: t("Success"),
+          detail: t("Measurement Unit restored successfully"),
+          life: 3000,
+        });
+        fetchMeasurementUnits();
+      } catch (error: any) {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: error?.response?.data?.message ?? error,
           life: 3000,
         });
       }

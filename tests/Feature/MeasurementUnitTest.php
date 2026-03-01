@@ -7,6 +7,7 @@ use App\Models\MeasurementUnit;
 use App\Models\User;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\assertSoftDeleted;
 
 it('admin user can list measurement units', function () {
     $user = User::factory()->create();
@@ -119,7 +120,36 @@ it('admin user can delete measurement units', function () {
         ->delete(route('api.v1.measurement-units.destroy', $newMeasurementUnit))
         ->assertStatus(204);
 
-    expect(MeasurementUnit::find($newMeasurementUnit->id))->toBeNull();
+    assertSoftDeleted($newMeasurementUnit);
+});
+
+it('admin user can restore measurement units', function () {
+    $user = User::factory()->create();
+    $user->assignRole(RolesEnum::ADMIN);
+
+    $measurementUnit = MeasurementUnit::factory()->create();
+    $measurementUnit->delete();
+
+    assertSoftDeleted($measurementUnit);
+
+    actingAs($user)
+        ->put(route('api.v1.measurement-units.restore', $measurementUnit->id))
+        ->assertStatus(204);
+
+    expect(MeasurementUnit::find($measurementUnit->id))->not->toBeNull();
+});
+
+it('admin user can list archived measurement units', function () {
+    $user = User::factory()->create();
+    $user->assignRole(RolesEnum::ADMIN);
+
+    $measurementUnit = MeasurementUnit::factory()->create();
+    $measurementUnit->delete();
+
+    actingAs($user)
+        ->get(route('api.v1.measurement-units', ['status' => 'archived']))
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data');
 });
 
 it('non-admin user cannot creates measurement units', function () {
@@ -183,5 +213,17 @@ it('non-admin user cannot delete measurement units', function () {
 
     actingAs($user)
         ->delete(route('api.v1.measurement-units.destroy', $newMeasurementUnit))
+        ->assertStatus(403);
+});
+
+it('non-admin user cannot restore measurement units', function () {
+    $user = User::factory()->create();
+    $user->assignRole(RolesEnum::SALESMAN);
+
+    $measurementUnit = MeasurementUnit::factory()->create();
+    $measurementUnit->delete();
+
+    actingAs($user)
+        ->put(route('api.v1.measurement-units.restore', $measurementUnit->id))
         ->assertStatus(403);
 });

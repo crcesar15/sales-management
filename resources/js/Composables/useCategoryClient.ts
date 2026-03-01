@@ -32,6 +32,10 @@ export function useCategoryClient() {
         return await apiClient.delete(route('api.v1.categories.destroy', id));
     }
 
+    const restoreCategoryApi = async (id:number) => {
+        return await apiClient.put(route('api.v1.categories.restore', id));
+    }
+
     return {
         loading,
         fetchCategoriesApi,
@@ -39,5 +43,6 @@ export function useCategoryClient() {
         storeCategoryApi,
         updateCategoryApi,
         destroyCategoryApi,
+        restoreCategoryApi,
     }
 }

@@ -10,16 +10,19 @@ enum PermissionsEnum: string
     case BRANDS_CREATE = 'brand.create';
     case BRANDS_EDIT = 'brand.edit';
     case BRANDS_DELETE = 'brand.delete';
+    case BRANDS_RESTORE = 'brand.restore';
 
     case CATEGORIES_VIEW = 'category.view';
     case CATEGORIES_CREATE = 'category.create';
     case CATEGORIES_EDIT = 'category.edit';
     case CATEGORIES_DELETE = 'category.delete';
+    case CATEGORIES_RESTORE = 'category.restore';
 
     case MEASUREMENT_UNITS_VIEW = 'measurement_unit.view';
     case MEASUREMENT_UNITS_CREATE = 'measurement_unit.create';
     case MEASUREMENT_UNITS_EDIT = 'measurement_unit.edit';
     case MEASUREMENT_UNITS_DELETE = 'measurement_unit.delete';
+    case MEASUREMENT_UNITS_RESTORE = 'measurement_unit.restore';
 
     case PRODUCTS_VIEW = 'product.view';
     case PRODUCTS_CREATE = 'product.create';

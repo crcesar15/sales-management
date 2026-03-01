@@ -27,6 +27,10 @@ final class CategoryController extends Controller
             $query->where('name', 'like', $request->string('filter')->value());
         }
 
+        if ($request->string('status')->value() === 'archived') {
+            $query->onlyTrashed();
+        }
+
         $query->withCount('products');
 
         $query->orderBy(
@@ -73,12 +77,18 @@ final class CategoryController extends Controller
     {
         $this->authorize(PermissionsEnum::CATEGORIES_DELETE->value, auth()->user());
 
-        DB::transaction(function () use ($category) {
-            // remove the category from the intermediate table
-            $category->products()->detach();
+        $category->delete();
 
-            $category->delete();
-        });
+        return response()->noContent();
+    }
+
+    public function restore($category): Response
+    {
+        $this->authorize(PermissionsEnum::CATEGORIES_RESTORE->value, auth()->user());
+
+        $category = Category::withTrashed()->findOrFail($category);
+
+        $category->restore();
 
         return response()->noContent();
     }
