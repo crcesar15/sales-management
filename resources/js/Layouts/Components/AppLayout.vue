@@ -4,13 +4,17 @@ import Toast from "primevue/toast";
 import { useLayout } from "./Composables/layout";
 import AppFooter from "./AppFooter.vue";
 import AppSidebar from "./AppSidebar.vue";
-import AppTopbar from "./AppTopbar.vue";
 
 const {
-  layoutConfig, layoutState, isSidebarActive, resetMenu,
+  layoutConfig,
+  layoutState,
+  isSidebarActive,
+  isSidebarCollapsed,
+  resetMenu,
+  onMenuToggle,
 } = useLayout();
 
-const outsideClickListener = ref(null);
+const outsideClickListener = ref<((event: Event) => void) | null>(null);
 
 watch(isSidebarActive, (newVal) => {
   if (newVal) {
@@ -26,11 +30,12 @@ const containerClass = computed(() => ({
   "layout-static-inactive": layoutState.staticMenuDesktopInactive && layoutConfig.menuMode === "static",
   "layout-overlay-active": layoutState.overlayMenuActive,
   "layout-mobile-active": layoutState.staticMenuMobileActive,
+  "layout-sidebar-collapsed": isSidebarCollapsed.value,
 }));
 
-function bindOutsideClickListener() {
+function bindOutsideClickListener(): void {
   if (!outsideClickListener.value) {
-    outsideClickListener.value = (event) => {
+    outsideClickListener.value = (event: Event) => {
       if (isOutsideClicked(event)) {
         resetMenu();
       }
@@ -39,18 +44,24 @@ function bindOutsideClickListener() {
   }
 }
 
-function unbindOutsideClickListener() {
+function unbindOutsideClickListener(): void {
   if (outsideClickListener.value) {
-    document.removeEventListener("click", outsideClickListener);
+    document.removeEventListener("click", outsideClickListener.value);
     outsideClickListener.value = null;
   }
 }
 
-function isOutsideClicked(event) {
+function isOutsideClicked(event: Event): boolean {
   const sidebarEl = document.querySelector(".layout-sidebar");
-  const topbarEl = document.querySelector(".layout-menu-button");
+  const mobileToggleEl = document.querySelector(".mobile-menu-toggle");
+  const target = event.target as Node;
 
-  return !(sidebarEl.isSameNode(event.target) || sidebarEl.contains(event.target) || topbarEl.isSameNode(event.target) || topbarEl.contains(event.target));
+  if (!sidebarEl) return true;
+
+  const isOutsideSidebar = !sidebarEl.isSameNode(target) && !sidebarEl.contains(target);
+  const isOutsideMobileToggle = !mobileToggleEl || (!mobileToggleEl.isSameNode(target) && !mobileToggleEl.contains(target));
+
+  return isOutsideSidebar && isOutsideMobileToggle;
 }
 </script>
 
@@ -59,13 +70,21 @@ function isOutsideClicked(event) {
     class="layout-wrapper"
     :class="containerClass"
   >
-    <app-topbar />
-    <app-sidebar />
+    <!-- Mobile Menu Toggle (visible only on mobile) -->
+    <button
+      class="mobile-menu-toggle"
+      aria-label="Toggle menu"
+      @click="onMenuToggle"
+    >
+      <i class="fa fa-bars" />
+    </button>
+
+    <AppSidebar />
     <div class="layout-main-container">
       <div class="layout-main">
         <slot />
       </div>
-      <app-footer />
+      <AppFooter />
     </div>
     <div class="layout-mask animate-fadein" />
   </div>

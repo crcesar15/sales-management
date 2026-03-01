@@ -1,20 +1,222 @@
 @use "mixins";
 
+// ========== Sidebar Variables ==========
+$sidebar-width-expanded: 15rem;
+$sidebar-width-collapsed: 4rem;
+$sidebar-transition: 200ms ease;
+
 .layout-sidebar {
     position: fixed;
-    width: 15rem;
-    height: calc(100vh - 8rem);
+    width: $sidebar-width-expanded;
+    height: 100vh;
     z-index: 999;
-    overflow-y: auto;
     user-select: none;
-    top: 5.5rem;
-    left: 2rem;
-    transition:
-        transform var(--layout-section-transition-duration),
-        left var(--layout-section-transition-duration);
+    top: 0;
+    left: 0;
+    transition: width $sidebar-transition;
     background-color: var(--surface-overlay);
-    border-radius: var(--content-border-radius);
-    padding: 0.5rem 0.5rem;
+    border-right: 1px solid var(--surface-border);
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    // ========== Header Section (Logo + Toggle) ==========
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0.5rem;
+        margin-bottom: 0.5rem;
+        flex-shrink: 0;
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-color);
+            gap: 0.75rem;
+            padding: 0.25rem;
+            border-radius: var(--p-content-border-radius);
+            transition: background 150ms ease;
+
+            &:hover {
+                background: var(--surface-hover);
+            }
+
+            &:focus-visible {
+                outline: 2px solid var(--primary-color);
+                outline-offset: 2px;
+            }
+        }
+
+        .logo-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: var(--p-content-border-radius);
+            background: var(--primary-color);
+            color: var(--primary-contrast-color);
+            font-size: 1.25rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .sidebar-collapse-btn {
+            display: none; // Hidden by default (mobile), shown on desktop via media query
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border: none;
+            background: transparent;
+            border-radius: var(--p-content-border-radius);
+            cursor: pointer;
+            color: var(--text-color-secondary);
+            transition: all 150ms ease;
+            flex-shrink: 0;
+
+            &:hover {
+                background: var(--surface-hover);
+                color: var(--text-color);
+            }
+
+            &:focus-visible {
+                outline: 2px solid var(--primary-color);
+                outline-offset: 2px;
+            }
+        }
+    }
+
+    // ========== Menu Section (Scrollable) ==========
+    .sidebar-menu {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    // ========== User Section (Fixed at Bottom) ==========
+    .sidebar-user {
+        flex-shrink: 0;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid var(--surface-border);
+
+        .user-button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            border-radius: var(--p-content-border-radius);
+            cursor: pointer;
+            transition: background 150ms ease;
+            text-align: left;
+
+            &:hover {
+                background: var(--surface-hover);
+            }
+
+            &:focus-visible {
+                outline: 2px solid var(--primary-color);
+                outline-offset: -2px;
+            }
+        }
+
+        .user-avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: var(--primary-contrast-color);
+            font-size: 1rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+            margin-left: 0.75rem;
+            overflow: hidden;
+            transition: opacity $sidebar-transition;
+        }
+
+        .user-name {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-menu-icon {
+            color: var(--text-color-secondary);
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+            transition: opacity $sidebar-transition;
+        }
+    }
+
+    // ========== Collapsed State ==========
+    &.sidebar-collapsed {
+        width: $sidebar-width-collapsed;
+
+        .sidebar-header {
+            justify-content: center;
+            padding: 0.75rem 0;
+
+            .sidebar-collapse-btn {
+                width: 2.5rem;
+                height: 2.5rem;
+            }
+        }
+
+        .sidebar-user {
+            .user-info,
+            .user-menu-icon {
+                opacity: 0;
+                width: 0;
+                margin: 0;
+            }
+
+            .user-button {
+                justify-content: center;
+            }
+        }
+
+        .layout-panel-menu {
+            .menu-item {
+                justify-content: center;
+                padding: 0.625rem;
+            }
+
+            .menu-label,
+            .menu-chevron {
+                opacity: 0;
+                width: 0;
+                margin: 0;
+                overflow: hidden;
+            }
+
+            .p-panelmenu-content {
+                display: none;
+            }
+        }
+    }
 
     .layout-panel-menu {
         border: none;

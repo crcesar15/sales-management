@@ -1,13 +1,55 @@
+// ========== Sidebar Variables (must match _menu.scss) ==========
+$sidebar-width-expanded: 15rem;
+$sidebar-width-collapsed: 4rem;
+
 .layout-main-container {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     justify-content: space-between;
-    padding: 5.5rem 2rem 0 2rem;
-    transition: margin-left var(--layout-section-transition-duration);
+    padding: 1.5rem 2rem 0 2rem;
+    margin-left: $sidebar-width-expanded;
+    transition: margin-left 200ms ease;
 }
 
 .layout-main {
     flex: 1 1 auto;
     padding-bottom: 2rem;
+}
+
+// ========== Mobile Menu Toggle Button ==========
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 998;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--p-content-border-radius);
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 1.25rem;
+    transition: all 150ms ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+        background: var(--surface-hover);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+}
+
+// ========== Collapsed State ==========
+.layout-sidebar-collapsed {
+    .layout-main-container {
+        margin-left: $sidebar-width-collapsed;
+    }
 }

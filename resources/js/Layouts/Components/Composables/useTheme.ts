@@ -29,10 +29,7 @@ export interface PresetOption {
   value: string;
 }
 
-export interface MenuModeOption {
-  label: string;
-  value: "static" | "overlay";
-}
+
 
 const presets = {
   Aura,
@@ -192,17 +189,11 @@ const surfaces: ThemeColor[] = [
 
 export function useTheme() {
   const {
-    layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode,
+    layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme,
   } = useLayout();
 
   const preset = ref<string>(layoutConfig.preset);
   const presetOptions = ref<string[]>(Object.keys(presets));
-
-  const menuMode = ref<"static" | "overlay">(layoutConfig.menuMode);
-  const menuModeOptions = ref<MenuModeOption[]>([
-    { label: "Static", value: "static" },
-    { label: "Overlay", value: "overlay" },
-  ]);
 
   function getPresetExt() {
     const color = primaryColors.find((c) => c.name === layoutConfig.primary);
@@ -324,21 +315,14 @@ export function useTheme() {
       .use({ useDefaultOptions: true });
   }
 
-  function onMenuModeChange(): void {
-    setMenuMode(menuMode.value);
-  }
-
   return {
     preset,
     presetOptions,
-    menuMode,
-    menuModeOptions,
     primaryColors,
     surfaces,
     layoutConfig,
     isDarkTheme,
     updateColors,
     onPresetChange,
-    onMenuModeChange,
   };
 }

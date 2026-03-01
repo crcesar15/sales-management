@@ -1,3 +1,7 @@
+// ========== Sidebar Variables (must match _menu.scss) ==========
+$sidebar-width-expanded: 15rem;
+$sidebar-width-collapsed: 4rem;
+
 @media screen and (min-width: 1960px) {
     .layout-main,
     .landing-wrapper {
@@ -7,8 +11,38 @@
     }
 }
 
+// ========== Desktop (992px and up) ==========
 @media (min-width: 992px) {
     .layout-wrapper {
+        // Hide mobile menu toggle on desktop
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        // Sidebar is always visible on desktop
+        .layout-sidebar {
+            transform: translateX(0);
+
+            // Show collapse toggle button on desktop
+            .sidebar-collapse-btn {
+                display: flex;
+            }
+        }
+
+        // Main container adjusts based on sidebar state
+        .layout-main-container {
+            margin-left: $sidebar-width-expanded;
+            transition: margin-left 200ms ease;
+        }
+
+        // Collapsed state
+        &.layout-sidebar-collapsed {
+            .layout-main-container {
+                margin-left: $sidebar-width-collapsed;
+            }
+        }
+
+        // Overlay mode (if needed)
         &.layout-overlay {
             .layout-main-container {
                 margin-left: 0;
@@ -17,15 +51,6 @@
 
             .layout-sidebar {
                 transform: translateX(-100%);
-                left: 0;
-                top: 0;
-                height: 100vh;
-                border-top-left-radius: 0;
-                border-bottom-left-radius: 0;
-                border-right: 1px solid var(--surface-border);
-                transition:
-                    transform 0.4s cubic-bezier(0.05, 0.74, 0.2, 0.99),
-                    left 0.4s cubic-bezier(0.05, 0.74, 0.2, 0.99);
                 box-shadow:
                     0px 3px 5px rgba(0, 0, 0, 0.02),
                     0px 0px 2px rgba(0, 0, 0, 0.05),
@@ -39,53 +64,96 @@
             }
         }
 
-        &.layout-static {
-            .layout-main-container {
-                margin-left: 17rem;
-            }
-
-            &.layout-static-inactive {
-                .layout-sidebar {
-                    transform: translateX(-100%);
-                    left: 0;
-                }
-
-                .layout-main-container {
-                    margin-left: 0;
-                    padding-left: 2rem;
-                }
-            }
-        }
-
         .layout-mask {
             display: none;
         }
     }
 }
 
+// ========== Mobile (991px and below) ==========
 @media (max-width: 991px) {
     .blocked-scroll {
         overflow: hidden;
     }
 
     .layout-wrapper {
+        // Show mobile menu toggle
+        .mobile-menu-toggle {
+            display: flex;
+        }
+
+        // Main container takes full width on mobile
         .layout-main-container {
             margin-left: 0;
-            padding-left: 2rem;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            padding-top: 4.5rem; // Space for mobile toggle button
         }
 
+        // Sidebar hidden by default on mobile
         .layout-sidebar {
             transform: translateX(-100%);
-            left: 0;
-            top: 0;
-            height: 100vh;
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-            transition:
-                transform 0.4s cubic-bezier(0.05, 0.74, 0.2, 0.99),
-                left 0.4s cubic-bezier(0.05, 0.74, 0.2, 0.99);
+            width: $sidebar-width-expanded; // Always expanded width on mobile
+            border-radius: 0;
+            transition: transform 0.3s cubic-bezier(0.05, 0.74, 0.2, 0.99);
+            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+
+            // Show logo on mobile (always expanded)
+            .sidebar-header {
+                .logo-link {
+                    display: flex;
+                }
+            }
+
+            // Reset collapsed state on mobile (always show full sidebar)
+            &.sidebar-collapsed {
+                width: $sidebar-width-expanded;
+
+                .sidebar-header {
+                    justify-content: flex-start;
+                    padding: 0.75rem 0.5rem;
+
+                    .logo-link {
+                        display: flex;
+                    }
+                }
+
+                .sidebar-user .user-info,
+                .sidebar-user .user-menu-icon {
+                    opacity: 1;
+                    width: auto;
+                }
+
+                .sidebar-user .user-info {
+                    margin-left: 0.75rem;
+                }
+
+                .sidebar-user .user-button {
+                    justify-content: flex-start;
+                }
+
+                .layout-panel-menu .menu-label,
+                .layout-panel-menu .menu-chevron {
+                    opacity: 1;
+                    width: auto;
+                }
+
+                .layout-panel-menu .menu-label {
+                    margin-left: 0.75rem;
+                }
+
+                .layout-panel-menu .menu-item {
+                    justify-content: flex-start;
+                    padding: 0.625rem 1rem;
+                }
+
+                .layout-panel-menu .p-panelmenu-content {
+                    display: block;
+                }
+            }
         }
 
+        // Overlay mask
         .layout-mask {
             display: none;
             position: fixed;
@@ -97,6 +165,7 @@
             background-color: var(--maskbg);
         }
 
+        // Mobile active state (sidebar visible)
         &.layout-mobile-active {
             .layout-sidebar {
                 transform: translateX(0);

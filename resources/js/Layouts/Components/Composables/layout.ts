@@ -16,6 +16,7 @@ interface LayoutState {
   staticMenuMobileActive: boolean;
   menuHoverActive: boolean;
   activeMenuItem: string | null;
+  sidebarCollapsed: boolean;
 }
 
 const layoutConfig = reactive<LayoutConfig>({
@@ -34,6 +35,7 @@ const layoutState = reactive<LayoutState>({
   staticMenuMobileActive: false,
   menuHoverActive: false,
   activeMenuItem: null,
+  sidebarCollapsed: false,
 });
 
 export function useLayout() {
@@ -84,6 +86,10 @@ export function useLayout() {
     }
   };
 
+  const onSidebarCollapse = (): void => {
+    layoutState.sidebarCollapsed = !layoutState.sidebarCollapsed;
+  };
+
   const resetMenu = () => {
     layoutState.overlayMenuActive = false;
     layoutState.staticMenuMobileActive = false;
@@ -98,7 +104,24 @@ export function useLayout() {
 
   const getSurface = computed(() => layoutConfig.surface);
 
+  const isSidebarCollapsed = computed(() => layoutState.sidebarCollapsed);
+
   return {
-    layoutConfig: readonly(layoutConfig), layoutState: readonly(layoutState), onMenuToggle, isSidebarActive, isDarkTheme, getPrimary, getSurface, setActiveMenuItem, toggleDarkMode, setPrimary, setSurface, setPreset, resetMenu, setMenuMode,
+    layoutConfig: readonly(layoutConfig),
+    layoutState: readonly(layoutState),
+    onMenuToggle,
+    onSidebarCollapse,
+    isSidebarActive,
+    isSidebarCollapsed,
+    isDarkTheme,
+    getPrimary,
+    getSurface,
+    setActiveMenuItem,
+    toggleDarkMode,
+    setPrimary,
+    setSurface,
+    setPreset,
+    resetMenu,
+    setMenuMode,
   };
 }

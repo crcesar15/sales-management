@@ -5,15 +5,12 @@ import { useTheme } from "./Composables/useTheme";
 const {
   preset,
   presetOptions,
-  menuMode,
-  menuModeOptions,
   primaryColors,
   surfaces,
   layoutConfig,
   isDarkTheme,
   updateColors,
   onPresetChange,
-  onMenuModeChange,
 } = useTheme();
 </script>
 
@@ -61,17 +58,6 @@ const {
           :options="presetOptions"
           :allow-empty="false"
           @change="onPresetChange"
-        />
-      </div>
-      <div class="flex flex-col gap-2">
-        <span class="text-sm text-muted-color font-semibold">{{ $t("Menu Mode") }}</span>
-        <SelectButton
-          v-model="menuMode"
-          :options="menuModeOptions"
-          :allow-empty="false"
-          option-label="label"
-          option-value="value"
-          @change="onMenuModeChange"
         />
       </div>
     </div>
