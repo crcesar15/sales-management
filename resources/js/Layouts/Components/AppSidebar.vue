@@ -81,7 +81,6 @@ function toggleUserMenu(event: Event): void {
     <!-- Header: Logo + Toggle -->
     <div class="sidebar-header">
       <a v-if="!isSidebarCollapsed" href="/" class="logo-link">
-        <span class="logo-icon">S</span>
         <span class="logo-text">SAKAI</span>
       </a>
       <button
@@ -90,7 +89,7 @@ function toggleUserMenu(event: Event): void {
         :aria-label="isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
         @click="onSidebarCollapse"
       >
-        <i class="fa fa-table-columns" />
+        <i class="fa fa-bars" />
       </button>
     </div>
 
@@ -112,7 +111,6 @@ function toggleUserMenu(event: Event): void {
         <span class="user-info">
           <span class="user-name">{{ userName }}</span>
         </span>
-        <i class="fa fa-ellipsis-vertical user-menu-icon" />
       </button>
       <Menu
         ref="userMenu"
