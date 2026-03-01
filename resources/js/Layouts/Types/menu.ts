@@ -5,6 +5,7 @@ export interface SidebarMenuItem extends MenuItem {
   routeUrl?: string;
   can?: string;
   items?: SidebarMenuItem[];
+  separator?: boolean; // Visual separator before this item
 }
 
 export interface UserAction {

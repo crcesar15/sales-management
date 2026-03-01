@@ -97,9 +97,15 @@ function onNavigate(): void {
     multiple
     class="layout-panel-menu"
     :pt="{
-      panel: {
-        style: 'border: none !important',
-      },
+      root: { class: 'border-none bg-transparent' },
+      panel: ({ instance }: { instance: { item: SidebarMenuItem } }) => ({
+        class: [
+          'border-none bg-transparent',
+          { 'menu-separator': instance.item?.separator },
+        ],
+      }),
+      headerContent: { class: 'border-none bg-transparent p-0' },
+      content: { class: 'border-none bg-transparent p-0' },
     }"
   >
     <template #item="{ item }">
@@ -107,25 +113,25 @@ function onNavigate(): void {
         v-if="item.to && !item.items"
         v-ripple
         :href="route(item.to)"
-        class="flex items-center cursor-pointer px-4 py-2"
+        class="menu-item"
         :class="{ 'active-route': isActiveRoute(item) }"
         @click="onNavigate"
       >
-        <span :class="item.icon" />
-        <span class="ml-2">{{ item.label }}</span>
+        <span class="menu-icon" :class="item.icon" />
+        <span class="menu-label">{{ item.label }}</span>
       </Link>
       <a
         v-else
         v-ripple
-        class="flex items-center cursor-pointer px-4 py-2"
+        class="menu-item menu-parent"
         :href="item.url"
         :target="item.target"
       >
-        <span :class="item.icon" />
-        <span class="ml-2">{{ item.label }}</span>
+        <span class="menu-icon" :class="item.icon" />
+        <span class="menu-label">{{ item.label }}</span>
         <span
           v-if="item.items"
-          class="fa fa-angle-down text-primary ml-auto"
+          class="fa fa-chevron-down menu-chevron"
         />
       </a>
     </template>

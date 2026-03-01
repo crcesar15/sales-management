@@ -8,20 +8,55 @@ export function useMenuItems() {
   const { t } = useI18n();
 
   const menuItems = computed<SidebarMenuItem[]>(() => [
+    // ========== OVERVIEW ==========
     {
       key: "dashboard",
       label: t("Dashboard"),
       icon: "fa fa-gauge",
       to: "home",
     },
+    // ========== OPERATIONS (Most Used) ==========
+    {
+      key: "pos",
+      label: t("Point of Sale"),
+      icon: "fa fa-cash-register",
+      to: "home",
+      separator: true, // Visual separator after Dashboard
+    },
+    {
+      key: "inventory",
+      label: t("Inventory"),
+      icon: "fa fa-warehouse",
+      items: [
+        {
+          key: "inventory-stock-levels",
+          label: t("Stock Levels"),
+          icon: "fa fa-boxes-stacked",
+          to: "home",
+        },
+        {
+          key: "inventory-stores",
+          label: t("Stores"),
+          icon: "fa fa-store",
+          to: "home",
+        },
+        {
+          key: "inventory-adjustments",
+          label: t("Adjustments"),
+          icon: "fa fa-sliders",
+          to: "home",
+        },
+      ],
+    },
+    // ========== MANAGEMENT ==========
     {
       key: "products",
       label: t("Products"),
-      icon: "fa fa-cubes",
+      icon: "fa fa-box",
       items: [
         {
           key: "products-list",
-          label: t("Products"),
+          label: t("All Products"),
           icon: "fa fa-list",
           to: "products",
           can: "product.view",
@@ -38,14 +73,14 @@ export function useMenuItems() {
         {
           key: "products-brands",
           label: t("Brands"),
-          icon: "fa fa-copyright",
+          icon: "fa fa-tag",
           to: "brands",
           can: "brand.view",
           routeUrl: route("brands"),
         },
         {
           key: "products-measurement-units",
-          label: t("Measurement Units"),
+          label: t("Units"),
           icon: "fa fa-weight-hanging",
           to: "measurement-units",
           can: "measurement_unit.view",
@@ -56,18 +91,12 @@ export function useMenuItems() {
     {
       key: "sales",
       label: t("Sales"),
-      icon: "fa fa-dollar-sign",
+      icon: "fa fa-receipt",
       items: [
         {
-          key: "sales-pos",
-          label: t("Point of Sale"),
-          icon: "fa fa-cash-register",
-          to: "home",
-        },
-        {
           key: "sales-orders",
-          label: t("Orders"),
-          icon: "fa fa-file-lines",
+          label: t("Sales Orders"),
+          icon: "fa fa-file-invoice-dollar",
           to: "home",
         },
         {
@@ -81,18 +110,18 @@ export function useMenuItems() {
     {
       key: "purchases",
       label: t("Purchases"),
-      icon: "fas fa-coins",
+      icon: "fa fa-cart-shopping",
       items: [
         {
           key: "purchases-orders",
-          label: t("Orders"),
-          icon: "fa fa-file-lines",
+          label: t("Purchase Orders"),
+          icon: "fa fa-file-invoice",
           to: "purchase-orders",
           routeUrl: route("purchase-orders"),
         },
         {
           key: "purchases-catalog",
-          label: t("Product Catalog"),
+          label: t("Supplier Catalog"),
           icon: "fa fa-tags",
           to: "catalog",
           routeUrl: route("catalog"),
@@ -106,41 +135,18 @@ export function useMenuItems() {
         },
       ],
     },
-    {
-      key: "inventory",
-      label: t("Inventory"),
-      icon: "fa fa-box-open",
-      items: [
-        {
-          key: "inventory-list",
-          label: t("Inventory"),
-          icon: "fa fa-boxes-stacked",
-          to: "home",
-        },
-        {
-          key: "inventory-stores",
-          label: t("Stores"),
-          icon: "fa fa-warehouse",
-          to: "home",
-        },
-        {
-          key: "inventory-stocks",
-          label: t("Stocks"),
-          icon: "fa fa-cubes-stacked",
-          to: "home",
-        },
-      ],
-    },
+    // ========== ANALYTICS & ADMIN ==========
     {
       key: "reports",
       label: t("Reports"),
       icon: "fa fa-chart-line",
       to: "home",
+      separator: true, // Visual separator before Analytics section
     },
     {
       key: "admin",
       label: t("Admin"),
-      icon: "fa fa-cogs",
+      icon: "fa fa-gear",
       items: [
         {
           key: "admin-users",
@@ -161,13 +167,13 @@ export function useMenuItems() {
         {
           key: "admin-permissions",
           label: t("Permissions"),
-          icon: "fa fa-user-lock",
+          icon: "fa fa-shield-halved",
           to: "home",
         },
         {
           key: "admin-settings",
           label: t("Settings"),
-          icon: "fa fa-cog",
+          icon: "fa fa-sliders",
           to: "settings",
           routeUrl: route("settings"),
         },
