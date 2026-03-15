@@ -1,0 +1,172 @@
+# Store Management — API
+
+## Endpoints
+
+### GET `/stores`
+List all stores with pagination and optional search.
+
+**Query Parameters:**
+```
+?search=main     // search by name or code
+?status=active   // filter by status
+?page=1          // pagination
+```
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Main Store",
+      "code": "HQ",
+      "address": "123 Main St, City, Country",
+      "status": "active",
+      "logo_url": "https://example.com/storage/stores/1/logo.jpg",
+      "logo_thumb_url": "https://example.com/storage/stores/1/conversions/logo-thumb.jpg",
+      "users_count": 5,
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "meta": { "current_page": 1, "last_page": 1, "per_page": 20, "total": 1 }
+}
+```
+
+---
+
+### POST `/stores`
+Create a new store.
+
+**Request Body (multipart/form-data):**
+```
+name     = "Branch Store"
+code     = "BR1"
+address  = "456 Branch Ave, City"
+status   = "active"
+logo     = [file upload, optional]
+```
+
+**Response (201):** Created store object.
+
+---
+
+### GET `/stores/{id}`
+Get a single store with its assigned users.
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "name": "Main Store",
+  "code": "HQ",
+  "address": "123 Main St",
+  "status": "active",
+  "logo_url": "https://...",
+  "users": [
+    {
+      "id": 1,
+      "full_name": "John Doe",
+      "email": "john@example.com",
+      "role": "admin"
+    },
+    {
+      "id": 2,
+      "full_name": "Jane Smith",
+      "email": "jane@example.com",
+      "role": "sales_rep"
+    }
+  ],
+  "created_at": "2026-01-01T00:00:00Z"
+}
+```
+
+---
+
+### PUT `/stores/{id}`
+Update store details.
+
+**Request Body (multipart/form-data):**
+```
+name     = "Updated Store Name"
+code     = "HQ2"
+address  = "New Address"
+status   = "active"
+logo     = [file upload, optional — replaces existing logo]
+```
+
+**Response (200):** Updated store object.
+
+---
+
+### PATCH `/stores/{id}/status`
+Toggle store active/inactive status.
+
+**Request Body:**
+```json
+{ "status": "inactive" }
+```
+
+**Response (200):** Updated store object.
+
+---
+
+### DELETE `/stores/{id}/logo`
+Remove the store logo.
+
+**Response (200):**
+```json
+{ "message": "Logo removed successfully." }
+```
+
+---
+
+### POST `/stores/{id}/users`
+Assign a user to a store with a role.
+
+**Request Body:**
+```json
+{
+  "user_id": 3,
+  "role_id": 2
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "User assigned to store successfully.",
+  "user": { "id": 3, "full_name": "Bob Lee", "role": "sales_rep" }
+}
+```
+
+**Error (409):** User is already assigned to this store.
+```json
+{ "message": "This user is already assigned to this store." }
+```
+
+---
+
+### PATCH `/stores/{id}/users/{user_id}`
+Update a user's role within a store.
+
+**Request Body:**
+```json
+{ "role_id": 1 }
+```
+
+**Response (200):**
+```json
+{ "message": "User role updated successfully." }
+```
+
+---
+
+### DELETE `/stores/{id}/users/{user_id}`
+Remove a user from a store.
+
+**Response (204):** No content.
+
+---
+
+## Middleware
+All routes require `auth` + `can:stores.manage` permission.
