@@ -58,11 +58,13 @@ final class HandleInertiaRequests extends Middleware
 
             $shared = [
                 'auth' => [
-                    'user' => auth()->user(),
-                    'permissions' => $permissions
-                        ->filter(fn (Permission $permission): bool => auth()->user()->can($permission->name))
-                        ->map(fn (Permission $permission) => $permission->name)
-                        ->all(),
+                    'user' => $request->user() ? [
+                        'id' => $request->user()->id,
+                        'name' => $request->user()->full_name,
+                        'email' => $request->user()->email,
+                        'roles' => $request->user()->getRoleNames(),
+                        'permissions' => $request->user()->getAllPermissions()->pluck('name'),
+                    ] : null,
                     'settings' => $formattedSettings,
                 ],
             ];
