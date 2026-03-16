@@ -27,18 +27,18 @@ final class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'max:50'],
             'email' => [
                 'required',
                 'email',
-                'max:255',
+                'max:100',
                 Rule::unique('users', 'email')->ignore($this->route('user')),
             ],
             'username' => [
                 'required',
                 'string',
-                'max:255',
+                'max:50',
                 Rule::unique('users', 'username')->ignore($this->route('user')),
             ],
             'phone' => ['nullable', 'string', 'max:20'],
@@ -47,8 +47,11 @@ final class UpdateUserRequest extends FormRequest
             'additional_properties' => ['nullable', 'array'],
             'password' => ['sometimes', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required_with:password', 'string', 'min:8'],
+            'role' => ['sometimes', 'string', 'exists:roles,name'],
             'roles' => ['sometimes', 'array'],
             'roles.*' => ['sometimes', 'exists:roles,id'],
+            'store_ids' => ['nullable', 'array'],
+            'store_ids.*' => ['exists:stores,id'],
         ];
     }
 }

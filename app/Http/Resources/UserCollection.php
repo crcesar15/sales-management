@@ -4,48 +4,29 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 final class UserCollection extends ResourceCollection
 {
+    /** @var string */
+    public $collects = UserResource::class;
+
     /**
      * Transform the resource collection into an array.
      *
-     * @return array<int|string, mixed>
+     * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {
         return [
-            // @phpstan-ignore-next-line
-            'data' => $this->collection->map(function (User $user) use ($request): array {
-                $collect = [
-                    'id' => $user->id,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'status' => $user->status,
-                    'created_at' => $user->created_at,
-                    'updated_at' => $user->updated_at,
-                ];
-
-                if (in_array('roles', explode(',', $request->string('include', '')->value()))) {
-                    if (isset($user->roles) && $user->roles->isNotEmpty()) {
-                        foreach ($user->roles as $role) {
-                            $collect['roles'][] = [
-                                'id' => $role->id ?? null,
-                                'name' => $role->name ?? null,
-                            ];
-                        }
-                    } else {
-                        $collect['roles'] = [];
-                    }
-                }
-
-                return $collect;
-            }),
+            'data' => $this->collection,
+            'meta' => [
+                'current_page' => $this->resource->currentPage(),
+                'last_page' => $this->resource->lastPage(),
+                'per_page' => $this->resource->perPage(),
+                'total' => $this->resource->total(),
+            ],
         ];
     }
 }

@@ -30,42 +30,36 @@ final class ListUserRequest extends FormRequest
             'page' => ['sometimes', 'integer', 'min:1'],
             'order_by' => ['sometimes', 'string', 'in:first_name,last_name,username,status,created_at,updated_at'],
             'order_direction' => ['sometimes', 'string', 'in:asc,desc'],
+            'search' => ['sometimes', 'string', 'max:255'],
             'filter' => ['sometimes', 'string', 'max:255'],
             'include' => ['sometimes', 'array', 'in:roles'],
             'status' => ['sometimes', 'string', 'in:active,inactive,archived'],
+            'store_id' => ['sometimes', 'integer', 'exists:stores,id'],
         ];
     }
 
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'per_page' => $this->integer('per_page', 10),
+            'per_page' => $this->integer('per_page', 20),
             'page' => $this->integer('page', 1),
             'order_by' => $this->string('order_by', 'first_name')->value(),
             'order_direction' => $this->string('order_direction', 'asc')->value(),
         ]);
 
-        if ($this->has('filter')) {
-            $this->merge([
-                'filter' => "%{$this->string('filter')->value()}%",
-            ]);
+        // Normalise: ?search= is the documented param; ?filter= is the legacy alias
+        if ($this->has('search') && ! $this->has('filter')) {
+            $this->merge(['filter' => $this->string('search')->value()]);
         }
 
-        if ($this->has('include')) {
+        if ($this->has('include') && is_string($this->input('include'))) {
             $this->merge([
                 'include' => explode(',', $this->string('include')->value()),
             ]);
         }
 
-        if ($this->has('status')) {
-            if ($this->string('status')->value() === 'all') {
-                // remove status from the query
-                $this->request->remove('status');
-            } else {
-                $this->merge([
-                    'status' => $this->string('status')->value(),
-                ]);
-            }
+        if ($this->has('status') && $this->string('status')->value() === 'all') {
+            $this->request->remove('status');
         }
     }
 }

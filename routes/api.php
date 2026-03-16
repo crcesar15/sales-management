@@ -80,6 +80,9 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::put('/users/{user}/restore', [UserController::class, 'restore'])->name('users.restore');
+    Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.update-status');
+    Route::post('/users/{user}/stores', [UserController::class, 'assignStore'])->name('users.stores.assign');
+    Route::delete('/users/{user}/stores/{store}', [UserController::class, 'removeStore'])->name('users.stores.remove');
 
     // Routes for Vendors
     Route::get('/vendors', [VendorsController::class, 'index'])->name('vendors');

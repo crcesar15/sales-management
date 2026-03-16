@@ -26,18 +26,21 @@ final class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
+            'first_name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'max:50'],
+            'email' => ['required', 'email', 'max:100', 'unique:users,email'],
+            'username' => ['required', 'string', 'max:50', 'unique:users,username'],
             'phone' => ['nullable', 'string', 'max:20'],
             'status' => ['required', 'string', 'in:active,inactive,archived'],
             'date_of_birth' => ['nullable', 'date'],
             'additional_properties' => ['nullable', 'array'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required_with:password', 'string', 'min:8'],
+            'role' => ['sometimes', 'string', 'exists:roles,name'],
             'roles' => ['sometimes', 'array'],
             'roles.*' => ['sometimes', 'exists:roles,id'],
+            'store_ids' => ['nullable', 'array'],
+            'store_ids.*' => ['exists:stores,id'],
         ];
     }
 }

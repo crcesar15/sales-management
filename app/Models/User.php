@@ -65,6 +65,13 @@ final class User extends Authenticatable
             ->dontSubmitEmptyLogs();
     }
 
+    public function stores()
+    {
+        return $this->belongsToMany(Store::class)
+            ->withPivot('role_id')
+            ->withTimestamps();
+    }
+
     protected static function boot(): void
     {
         parent::boot();
