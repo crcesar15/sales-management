@@ -11,7 +11,7 @@ export function useAuthClient() {
     }
 
     const loginApi = async (loginPayload:loginPayload) => {
-        return await apiClient.post(route('login.post'), loginPayload);
+        return await apiClient.post(route('login'), loginPayload);
     }
 
     const requestResetPasswordApi = async (payload: { email: string }) => {
