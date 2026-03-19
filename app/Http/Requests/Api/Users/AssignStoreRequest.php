@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\Users;
 
-use App\Enums\PermissionsEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -15,7 +14,7 @@ final class AssignStoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionsEnum::USERS_EDIT->value) ?? false;
+        return true;
     }
 
     /**

@@ -99,6 +99,8 @@ final class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user): UserResource
     {
+        $this->authorize('update', $user);
+
         $user = $this->userService->update($user, $request->validated());
 
         return new UserResource($user);
@@ -134,6 +136,8 @@ final class UserController extends Controller
      */
     public function updateStatus(UpdateUserStatusRequest $request, User $user): UserResource
     {
+        $this->authorize('update', $user);
+
         $user = $this->userService->updateStatus($user, $request->validated('status'));
 
         return new UserResource($user);

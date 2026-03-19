@@ -38,7 +38,8 @@ final class UserPolicy
      */
     public function update(User $user, User $target): bool
     {
-        return $user->can(PermissionsEnum::USERS_EDIT->value);
+        return $user->can(PermissionsEnum::USERS_EDIT->value)
+            && $user->id !== $target->id;
     }
 
     /**
@@ -56,7 +57,7 @@ final class UserPolicy
      */
     public function restore(User $user, User $target): bool
     {
-        return $user->can(PermissionsEnum::USERS_EDIT->value);
+        return $user->can(PermissionsEnum::USERS_DELETE->value);
     }
 
     /**
