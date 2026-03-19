@@ -6,8 +6,7 @@ import type { DefineComponent } from 'vue';
 declare module '@inertiajs/core' {
   interface PageProps {
     auth: {
-      user: User;
-      permissions: string[]
+      user: User & { permissions: string[] };
     };
     settings: SettingGrouped;
     appConfig?: {

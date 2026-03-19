@@ -22,7 +22,7 @@ export const useAuthStore = defineStore("auth", () => {
   // Actions
   function setAuth(authData: AuthData) {
     user.value = authData.user;
-    permissions.value = authData.permissions;
+    permissions.value = authData.user?.permissions || [];
     settings.value = authData.settings;
   }
 

@@ -14,7 +14,7 @@ const { layoutState, onMenuToggle } = useLayout();
 const expandedKeys = ref<Record<string, boolean>>({});
 
 const userPermissions = computed<string[]>(
-  () => (page.props.auth?.permissions || []) as string[],
+  () => (page.props.auth?.user?.permissions || []) as string[],
 );
 
 function hasPermission(item: SidebarMenuItem): boolean {
