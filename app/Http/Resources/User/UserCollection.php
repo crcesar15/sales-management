@@ -2,16 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\User;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 final class UserCollection extends ResourceCollection
 {
-    /** @var string */
-    public $collects = UserResource::class;
-
     /**
      * Transform the resource collection into an array.
      *
@@ -28,5 +25,15 @@ final class UserCollection extends ResourceCollection
                 'total' => $this->resource->total(),
             ],
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $paginated
+     * @param  array<string, mixed>  $default
+     * @return array<string, mixed>
+     */
+    public function paginationInformation(Request $request, array $paginated, array $default): array
+    {
+        return [];
     }
 }

@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Products\ListProductRequest;
 use App\Http\Requests\Api\Products\StoreProductRequest;
-use App\Http\Resources\Products as ApiCollection;
+use App\Http\Resources\Product\ProductCollection;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 final class ProductsController extends Controller
 {
-    public function index(ListProductRequest $request): ApiCollection
+    public function index(ListProductRequest $request): ProductCollection
     {
         $request->validated();
 
@@ -43,7 +43,7 @@ final class ProductsController extends Controller
 
         $response = $query->paginate($request->integer('per_page'));
 
-        return new ApiCollection($response);
+        return new ProductCollection($response);
     }
 
     public function show(Product $product): JsonResponse

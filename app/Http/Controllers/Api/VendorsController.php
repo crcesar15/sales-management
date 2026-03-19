@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
-use App\Http\Resources\Variants as VariantsResource;
+use App\Http\Resources\Product\ProductVariantCollection;
 use App\Models\ProductVariant;
 use App\Models\Vendor;
 use App\Services\VariantService;
@@ -79,7 +79,7 @@ final class VendorsController extends Controller
         Request $request,
         VariantService $variantService,
         Vendor $vendor
-    ): VariantsResource {
+    ): ProductVariantCollection {
         // TODO: Develop formRequest
         $includes = $request->string('includes', '')->value();
         $includes = explode(',', $includes);
@@ -111,7 +111,7 @@ final class VendorsController extends Controller
         // Fetch variants using the service
         $response = $variantService->getVariants($config);
 
-        return new VariantsResource($response);
+        return new ProductVariantCollection($response);
     }
 
     public function storeProductVariant(Request $request, Vendor $vendor, ProductVariant $variant): JsonResponse

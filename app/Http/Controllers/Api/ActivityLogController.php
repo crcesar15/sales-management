@@ -6,12 +6,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ActivityLogs\ListActivityLogRequest;
-use App\Http\Resources\ActivityLogCollection;
+use App\Http\Resources\ActivityLog\ActivityLogResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Spatie\Activitylog\Models\Activity;
 
 final class ActivityLogController extends Controller
 {
-    public function index(ListActivityLogRequest $request): ActivityLogCollection
+    public function index(ListActivityLogRequest $request): AnonymousResourceCollection
     {
         $request->validated();
 
@@ -37,6 +38,6 @@ final class ActivityLogController extends Controller
 
         $response = $query->paginate($request->integer('per_page'));
 
-        return new ActivityLogCollection($response);
+        return ActivityLogResource::collection($response);
     }
 }

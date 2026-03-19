@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Variants as ApiCollection;
+use App\Http\Resources\Product\ProductVariantCollection;
 use App\Models\ProductVariant;
 use App\Services\VariantService;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 
 final class VariantsController extends Controller
 {
-    public function index(Request $request, VariantService $variantService): ApiCollection
+    public function index(Request $request, VariantService $variantService): ProductVariantCollection
     {
         $includes = $request->string('includes', '')->value();
         $includes = explode(',', $includes);
@@ -42,7 +42,7 @@ final class VariantsController extends Controller
         // Fetch variants using the service
         $response = $variantService->getVariants($config);
 
-        return new ApiCollection($response);
+        return new ProductVariantCollection($response);
     }
 
     public function show(ProductVariant $variant): JsonResponse
