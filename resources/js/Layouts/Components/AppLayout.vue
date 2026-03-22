@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Toast from "primevue/toast";
-import { useLayout } from "./Composables/layout";
+import { useLayout } from "./Composables/useLayout";
 import AppFooter from "./AppFooter.vue";
 import AppSidebar from "./AppSidebar.vue";
 
 const {
-  layoutConfig,
   layoutState,
   isSidebarActive,
   isSidebarCollapsed,
@@ -25,9 +24,7 @@ watch(isSidebarActive, (newVal) => {
 });
 
 const containerClass = computed(() => ({
-  "layout-overlay": layoutConfig.menuMode === "overlay",
-  "layout-static": layoutConfig.menuMode === "static",
-  "layout-static-inactive": layoutState.staticMenuDesktopInactive && layoutConfig.menuMode === "static",
+  "layout-static-inactive": layoutState.staticMenuDesktopInactive,
   "layout-overlay-active": layoutState.overlayMenuActive,
   "layout-mobile-active": layoutState.staticMenuMobileActive,
   "layout-sidebar-collapsed": isSidebarCollapsed.value,

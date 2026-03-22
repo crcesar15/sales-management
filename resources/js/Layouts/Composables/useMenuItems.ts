@@ -1,12 +1,19 @@
-import { computed } from "vue";
-import type { SidebarMenuItem, UserAction } from "../Types/menu";
-import { router } from "@inertiajs/vue3";
+import { computed, ref, watch } from "vue";
+import { usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
+import type { SidebarMenuItem } from "../Types/menu";
+
+// Permission caching for performance
+const permissionCache = new Map<string, boolean>();
 
 export function useMenuItems() {
+  const page = usePage();
   const { t } = useI18n();
 
+  // ========================================
+  // Menu Items Definition
+  // ========================================
   const menuItems = computed<SidebarMenuItem[]>(() => [
     // ========== OVERVIEW ==========
     {
@@ -15,13 +22,11 @@ export function useMenuItems() {
       icon: "fa fa-gauge",
       to: "home",
     },
-    // ========== OPERATIONS (Most Used) ==========
     {
       key: "pos",
       label: t("Point of Sale"),
       icon: "fa fa-cash-register",
       to: "home",
-      separator: true, // Visual separator after Dashboard
     },
     {
       key: "inventory",
@@ -135,13 +140,11 @@ export function useMenuItems() {
         },
       ],
     },
-    // ========== ANALYTICS & ADMIN ==========
     {
       key: "reports",
       label: t("Reports"),
       icon: "fa fa-chart-line",
       to: "home",
-      separator: true, // Visual separator before Analytics section
     },
     {
       key: "admin",
@@ -189,25 +192,92 @@ export function useMenuItems() {
     },
   ]);
 
-  const userActions = computed<UserAction[]>(() => [
-    {
-      label: t("Profile"),
-      icon: "fa fa-user",
-      command: () => {
-        router.visit(route("profile"));
-      },
-    },
-    {
-      label: t("Logout"),
-      icon: "fa fa-sign-out-alt",
-      command: () => {
-        router.post(route("logout"));
-      },
-    },
-  ]);
+  // ========================================
+  // Permission Filtering
+  // ========================================
+  const userPermissions = computed<string[]>(
+    () => (page.props.auth?.user?.permissions || []) as string[]
+  );
+
+  const permissionSet = computed(() => new Set(userPermissions.value));
+
+  function hasPermission(permission?: string): boolean {
+    if (!permission) return true;
+
+    const cacheKey = `${permission}-${userPermissions.value.join(',')}`;
+    if (!permissionCache.has(cacheKey)) {
+      permissionCache.set(cacheKey, permissionSet.value.has(permission));
+    }
+    return permissionCache.get(cacheKey)!;
+  }
+
+  const filteredMenuItems = computed<SidebarMenuItem[]>(() => {
+    return menuItems.value.reduce((acc, group) => {
+      if (!group.items) {
+        return hasPermission(group.can) ? [...acc, group] : acc;
+      }
+
+      const visibleChildren = group.items.filter(child =>
+        hasPermission(child.can)
+      );
+
+      if (visibleChildren.length === 0) return acc;
+
+      return [...acc, { ...group, items: visibleChildren }];
+    }, [] as SidebarMenuItem[]);
+  });
+
+  // ========================================
+  // Active Route Detection
+  // ========================================
+  function getPathname(url: string): string {
+    try {
+      return new URL(url).pathname;
+    } catch {
+      return url;
+    }
+  }
+
+  function isActiveRoute(item: SidebarMenuItem): boolean {
+    if (!item.to) return false;
+    try {
+      const pathname = getPathname(route(item.to));
+      return page.url.startsWith(pathname);
+    } catch {
+      return false;
+    }
+  }
+
+  function computeExpandedKeys(): Record<string, boolean> {
+    const keys: Record<string, boolean> = {};
+    for (const group of filteredMenuItems.value) {
+      if (group.items) {
+        for (const child of group.items) {
+          if (isActiveRoute(child) && group.key) {
+            keys[group.key] = true;
+            break;
+          }
+        }
+      }
+    }
+    return keys;
+  }
+
+  const expandedKeys = ref<Record<string, boolean>>(computeExpandedKeys());
+
+  watch(
+    () => page.url,
+    () => {
+      const keys = computeExpandedKeys();
+      expandedKeys.value = { ...expandedKeys.value, ...keys };
+    }
+  );
 
   return {
     menuItems,
-    userActions,
+    filteredMenuItems,
+    expandedKeys,
+    isActiveRoute,
+    hasPermission,
   };
 }

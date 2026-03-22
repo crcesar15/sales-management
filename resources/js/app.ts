@@ -26,7 +26,6 @@ import type { AuthData } from "@app-types/auth-types";
 
 import en from "../lang/en.json";
 import es from "../lang/es.json";
-import { definePreset } from "@primeuix/themes";
 
 const messages = {
   en,
@@ -41,45 +40,6 @@ const i18n = createI18n({
 });
 
 InertiaProgress.init();
-
-// Preset
-const AuraPreset = definePreset(Aura, {
-  semantic: {
-    primary: {
-      50: "#eff6ff", 100: "#dbeafe", 200: "#bfdbfe", 300: "#93c5fd", 400: "#60a5fa", 500: "#3b82f6", 600: "#2563eb", 700: "#1d4ed8", 800: "#1e40af", 900: "#1e3a8a", 950: "#172554",
-    },
-    colorScheme: {
-      light: {
-        primary: {
-          color: "{primary.500}",
-          contrastColor: "#ffffff",
-          hoverColor: "{primary.600}",
-          activeColor: "{primary.700}",
-        },
-        highlight: {
-          background: "{primary.50}",
-          focusBackground: "{primary.100}",
-          color: "{primary.700}",
-          focusColor: "{primary.800}",
-        },
-      },
-      dark: {
-        primary: {
-          color: "{primary.400}",
-          contrastColor: "{surface.900}",
-          hoverColor: "{primary.300}",
-          activeColor: "{primary.200}",
-        },
-        highlight: {
-          background: "color-mix(in srgb, {primary.400}, transparent 84%)",
-          focusBackground: "color-mix(in srgb, {primary.400}, transparent 76%)",
-          color: "rgba(255,255,255,.87)",
-          focusColor: "rgba(255,255,255,.87)",
-        },
-      },
-    },
-  }
-});
 
 // pages
 const pages: Record<symbol, Promise<DefineComponent> | (() => Promise<DefineComponent>)> = import.meta.glob("./Pages/**/*.vue");
@@ -102,7 +62,7 @@ createInertiaApp({
         ripple: true,
         inputStyle: "filled",
         theme: {
-          preset: AuraPreset,
+          preset: Aura,
           options: {
             darkModeSelector: ".app-dark",
           },
