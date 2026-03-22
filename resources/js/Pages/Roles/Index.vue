@@ -20,10 +20,9 @@
           :value="roles"
           resizableColumns
           lazy
-          :totalRecords="pagination.total"
-          :rows="pagination.total"
-          :first="pagination.first"
-          :loading="loading"
+          :totalRecords="props.roles.meta.total"
+          :rows="props.roles.meta.per_page"
+          :first="(props.roles.meta.current_page - 1) * props.roles.meta.per_page"
           paginator
           sortField="name"
           :sortOrder="1"
@@ -53,7 +52,7 @@
                 >
                   <InputIcon class="fa fa-search" />
                   <InputText
-                    v-model="pagination.filter"
+                    v-model="filter"
                     :placeholder="t('Search')"
                     class="w-full"
                   />
@@ -131,11 +130,10 @@ import {
 import AppLayout from "@layouts/admin.vue";
 import useDatetimeFormatter from "@composables/useDatetimeFormatter";
 import { useI18n } from "vue-i18n";
-import { ref, watch } from "vue";
-import { router } from "@inertiajs/vue3";
+import { computed, ref, watch } from "vue";
+import { router, useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { RoleResponse } from "@/Types/role-types";
-import { useRoleClient } from "@/Composables/useRoleClient";
 
 // Set composables
 const toast = useToast();
@@ -147,78 +145,86 @@ defineOptions({
   layout: AppLayout,
 });
 
-// List roles
-const pagination = ref({
-  total: 0,
-  first: 0,
-  page: 1,
-  perPage: 10,
-  sortField: "name",
-  sortOrder: 1,
-  filter: "",
+// Props from Inertia
+const props = defineProps<{
+  roles: {
+    data: RoleResponse[];
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  };
+  filters: {
+    filter?: string;
+    order_by?: string;
+    order_direction?: string;
+    per_page?: number;
+  };
+}>();
+
+// Local filter state
+const filter = ref(props.filters.filter ?? "");
+const sortField = ref(props.filters.order_by ?? "name");
+const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
+
+// Debounced filter watch
+let filterTimer: ReturnType<typeof setTimeout>;
+watch(filter, (val) => {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => {
+    router.visit(route("roles"), {
+      data: {
+        filter: val,
+        order_by: sortField.value,
+        order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      },
+      preserveState: true,
+      replace: true,
+    });
+  }, 300);
 });
 
-const { loading, fetchRolesApi } = useRoleClient();
-
-const roles = ref<RoleResponse[]>();
-
-const fetchRoles = async () => {
-  const params = new URLSearchParams();
-
-  params.append("per_page", pagination.value.perPage.toString());
-  params.append("page", pagination.value.page.toString());
-  params.append("order_by", pagination.value.sortField);
-  params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
-
-  if (pagination.value.filter) {
-    params.append("filter", pagination.value.filter);
-  }
-
-  try {
-    const response = await fetchRolesApi(params.toString());
-    roles.value = response.data.data.map((item:RoleResponse) => ({
-      ...item,
-      created_at: useDatetimeFormatter(item.created_at),
-      updated_at: useDatetimeFormatter(item.updated_at),
-    }));
-    pagination.value.total = response.data.meta.total;
-  } catch (error:any) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: error.response.data.message,
-      life: 3000,
-    });
-  }
-};
-
-const onPage = (event: DataTablePageEvent) => {
-  pagination.value.page = event.page + 1;
-  pagination.value.perPage = event.rows;
-  fetchRoles();
-};
-const onSort = (event: DataTableSortEvent) => {
-  pagination.value.sortField = typeof event.sortField === "string" ? event.sortField : "name";
-  pagination.value.sortOrder = event.sortOrder ?? 0;
-  fetchRoles();
-};
-
-watch(
-  () => pagination.value.filter,
-  () => {
-    pagination.value.page = 1;
-    fetchRoles();
-  },
-  {
-    immediate: true,
-    deep: true,
-  },
+// Formatted rows
+const roles = computed(() =>
+  props.roles.data.map((item: RoleResponse) => ({
+    ...item,
+    created_at: useDatetimeFormatter(item.created_at),
+    updated_at: useDatetimeFormatter(item.updated_at),
+  }))
 );
 
-// Delete Role
-const deleteRole = (id:number) => {
-  const { destroyRoleApi } = useRoleClient();
+const onPage = (event: DataTablePageEvent) => {
+  router.visit(route("roles"), {
+    data: {
+      page: event.page + 1,
+      per_page: event.rows,
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      filter: filter.value,
+    },
+    preserveState: true,
+    replace: true,
+  });
+};
 
+const onSort = (event: DataTableSortEvent) => {
+  sortField.value = typeof event.sortField === "string" ? event.sortField : "name";
+  sortOrder.value = event.sortOrder ?? 1;
+  router.visit(route("roles"), {
+    data: {
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      filter: filter.value,
+    },
+    preserveState: true,
+    replace: true,
+  });
+};
+
+// Delete Role
+const deleteRole = (id: number) => {
   confirm.require({
     message: t("Are you sure you want to delete this role?"),
     header: t("Confirm"),
@@ -226,24 +232,26 @@ const deleteRole = (id:number) => {
     rejectLabel: t("Cancel"),
     acceptLabel: t("Delete"),
     rejectClass: "p-button-secondary",
-    accept: async () => {
-      try {
-        await destroyRoleApi(id);
-        toast.add({
-          severity: "success",
-          summary: t("Success"),
-          detail: t("Role deleted successfully"),
-          life: 3000,
-        });
-        fetchRoles();
-      } catch (error: any) {
-        toast.add({
-          severity: "error",
-          summary: t("Error"),
-          detail: error.response.data.message,
-          life: 3000,
-        });
-      }
+    accept: () => {
+      const form = useForm({});
+      form.delete(route("roles.destroy", id), {
+        onSuccess: () => {
+          toast.add({
+            severity: "success",
+            summary: t("Success"),
+            detail: t("Role deleted successfully"),
+            life: 3000,
+          });
+        },
+        onError: () => {
+          toast.add({
+            severity: "error",
+            summary: t("Error"),
+            detail: t("Could not delete role"),
+            life: 3000,
+          });
+        },
+      });
     },
   });
 };

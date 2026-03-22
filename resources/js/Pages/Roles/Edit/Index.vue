@@ -19,6 +19,7 @@
           :label="t('Save')"
           class="uppercase"
           raised
+          :loading="isSubmitting"
           @click="submit()"
         />
       </div>
@@ -34,15 +35,15 @@
                   <InputText
                     id="name"
                     v-model="name"
+                    v-bind="nameAttrs"
                     autocomplete="off"
-                    :class="{'p-invalid': v$.name.$invalid && v$.name.$dirty}"
-                    @blur="v$.name.$touch"
+                    :class="{'p-invalid': errors.name}"
                   />
                   <small
-                    v-if="v$.name.$invalid && v$.name.$dirty"
+                    v-if="errors.name"
                     class="text-red-400 dark:text-red-300"
                   >
-                    {{ v$.name.$errors[0].$message }}
+                    {{ errors.name }}
                   </small>
                 </div>
               </div>
@@ -111,13 +112,12 @@ import {
 
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
-import { required, createI18nMessage } from "@vuelidate/validators";
-import { useVuelidate } from "@vuelidate/core";
-import { RolePayload, RoleResponse } from "@/Types/role-types";
-import { Permission, PermissionGroupedAccordion } from "@/Types/permission-types";
-import { computed, onMounted, ref } from "vue";
-import { usePermissionClient } from "@/Composables/usePermissionClient";
-import { useRoleClient } from "@/Composables/useRoleClient";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string } from "yup";
+import { ref } from "vue";
+import { RoleResponse } from "@/Types/role-types";
+import { PermissionGroupedAccordion } from "@/Types/permission-types";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 
@@ -125,42 +125,42 @@ import { route } from "ziggy-js";
 const toast = useToast();
 const { t } = useI18n();
 
-//Get translations for validations
-const withI18nMessage = createI18nMessage({t});
-
 // Layout
 defineOptions({
   layout: AppLayout
 });
 
-//Get props
+// Props from Inertia
 const props = defineProps<{
-  role: RoleResponse,
-  permissions: string[]
+  role: RoleResponse;
+  permissions: string[];
+  availablePermissions: { id: number; name: string; category: string }[];
 }>();
 
-// Rules
-const rules = computed(() => ({
-  name: {
-    required: withI18nMessage(required),
-  },
-}));
-
-// From variables
-const name = ref("");
-const availablePermissions = ref<PermissionGroupedAccordion[]>([]);
-
-// Validator
-const v$ = useVuelidate(
-  rules,
-  {
-    name
-  }
+// VeeValidate + Yup schema (messages come from configureYupLocale in app.ts)
+const schema = toTypedSchema(
+  object({
+    name: string().required().max(255),
+  })
 );
 
-const groupPermissions = (permissions: Permission[]) => {
-  const formattedPermissions:PermissionGroupedAccordion[] = [];
-  let value = 0; // used for accordion
+const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    name: props.role.name,
+  },
+});
+
+const [name, nameAttrs] = defineField("name");
+
+// Permission accordion
+interface PermissionGrouped extends PermissionGroupedAccordion {
+  permissions: Array<{ id: number; name: string; enabled: boolean }>;
+}
+
+const groupPermissions = (permissions: { id: number; name: string; category: string }[]): PermissionGrouped[] => {
+  const formattedPermissions: PermissionGrouped[] = [];
+  let value = 0;
 
   permissions.forEach((item) => {
     const indexFound = formattedPermissions.findIndex((i) => i.category === item.category);
@@ -181,36 +181,10 @@ const groupPermissions = (permissions: Permission[]) => {
   return formattedPermissions;
 };
 
-const fetchPermissions = async () => {
-  try {
-    const params = new URLSearchParams();
+const availablePermissions = ref<PermissionGrouped[]>(groupPermissions(props.availablePermissions));
 
-    params.append('select', 'id,name,category');
-    params.append('per_page', '200');
-    params.append('order_by', 'category');
-    params.append('order_direction', 'asc');
-
-    const {fetchPermissionsApi} = usePermissionClient();
-    const response = await fetchPermissionsApi(params.toString());
-    const permissions = response.data.data.map((item: Permission) => ({ ...item, enabled: false }));
-
-    availablePermissions.value = groupPermissions(permissions);
-  } catch (error: any) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: t(error.response.data.message),
-    });
-  }
-}
-
-onMounted(() => {
-  name.value = props.role.name;
-  fetchPermissions();
-});
-
-const getEnabledPermissions = (permissionsGroups:PermissionGroupedAccordion[]):string[] => {
-  const enabledPermissions:string[] = [];
+const getEnabledPermissions = (permissionsGroups: PermissionGrouped[]): string[] => {
+  const enabledPermissions: string[] = [];
 
   permissionsGroups.forEach((group) => {
     group.permissions.forEach((permission) => {
@@ -221,38 +195,29 @@ const getEnabledPermissions = (permissionsGroups:PermissionGroupedAccordion[]):s
   });
 
   return enabledPermissions;
-}
+};
 
-const submit = async () => {
-  v$.value.$touch();
-
-  if (!v$.value.$invalid) {
-    const body:RolePayload = {
-      name: name.value,
+const submit = handleSubmit((values) => {
+  router.put(
+    route("roles.update", props.role.id),
+    {
+      name: values.name,
       permissions: getEnabledPermissions(availablePermissions.value),
-    };
-
-    const {updateRoleApi} = useRoleClient();
-
-    try {
-      await updateRoleApi(props.role.id, body);
-
-      toast.add({
-        severity: "success",
-        summary: t("Success"),
-        detail: t("Role updated successfully"),
-        life: 3000,
-      });
-
-      router.visit(route('roles'));
-    } catch (error:any) {
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: t(error.response.data.message),
-        life: 3000,
-      });
+    },
+    {
+      onSuccess: () => {
+        router.visit(route("roles"));
+      },
+      onError: (errs) => {
+        setErrors(errs);
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: t(Object.values(errs)[0] ?? "An error occurred"),
+          life: 3000,
+        });
+      },
     }
-  }
-}
+  );
+});
 </script>

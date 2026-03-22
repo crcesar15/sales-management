@@ -19,6 +19,7 @@
           :label="t('Save')"
           class="uppercase"
           raised
+          :loading="isSubmitting"
           @click="submit()"
         />
       </div>
@@ -34,15 +35,15 @@
                   <InputText
                     id="name"
                     v-model="name"
+                    v-bind="nameAttrs"
                     autocomplete="off"
-                    :class="{'p-invalid': v$.name.$invalid && v$.name.$dirty}"
-                    @blur="v$.name.$touch"
+                    :class="{'p-invalid': errors.name}"
                   />
                   <small
-                    v-if="v$.name.$invalid && v$.name.$dirty"
+                    v-if="errors.name"
                     class="text-red-400 dark:text-red-300"
                   >
-                    {{ v$.name.$errors[0].$message }}
+                    {{ errors.name }}
                   </small>
                 </div>
               </div>
@@ -110,12 +111,11 @@ import {
 } from "primevue";
 
 import { useI18n } from "vue-i18n";
-import { usePermissionClient} from '@composables/usePermissionClient';
-import { required, createI18nMessage } from "@vuelidate/validators";
-import { useVuelidate } from "@vuelidate/core";
-import { computed, onMounted, ref } from "vue";
-import { Permission, PermissionGroupedAccordion } from "@/Types/permission-types";
-import { useRoleClient } from "@/Composables/useRoleClient";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string } from "yup";
+import { ref } from "vue";
+import { PermissionGroupedAccordion } from "@/Types/permission-types";
 import { route } from "ziggy-js";
 import { router } from "@inertiajs/vue3";
 
@@ -125,36 +125,37 @@ import AppLayout from "@layouts/admin.vue";
 const toast = useToast();
 const { t } = useI18n();
 
-//Get translations for validations
-const withI18nMessage = createI18nMessage({t});
-
 // Layout
 defineOptions({
   layout: AppLayout
 });
 
-// Rules
-const rules = computed(() => ({
-  name: {
-    required: withI18nMessage(required),
-  },
-}));
+// Props from Inertia
+const props = defineProps<{
+  availablePermissions: { id: number; name: string; category: string }[];
+}>();
 
-// From variables
-const name = ref("");
-const availablePermissions = ref<PermissionGroupedAccordion[]>([]);
-
-// Validator
-const v$ = useVuelidate(
-  rules,
-  {
-    name
-  }
+// VeeValidate + Yup schema (messages come from configureYupLocale in app.ts)
+const schema = toTypedSchema(
+  object({
+    name: string().required().max(255),
+  })
 );
 
-const groupPermissions = (permissions: Permission[]) => {
-  const formattedPermissions:PermissionGroupedAccordion[] = [];
-  let value = 0; // used for accordion
+const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+  validationSchema: schema,
+});
+
+const [name, nameAttrs] = defineField("name");
+
+// Permission accordion
+interface PermissionGrouped extends PermissionGroupedAccordion {
+  permissions: Array<{ id: number; name: string; enabled: boolean }>;
+}
+
+const groupPermissions = (permissions: { id: number; name: string; category: string }[]): PermissionGrouped[] => {
+  const formattedPermissions: PermissionGrouped[] = [];
+  let value = 0;
 
   permissions.forEach((item) => {
     const indexFound = formattedPermissions.findIndex((i) => i.category === item.category);
@@ -174,35 +175,10 @@ const groupPermissions = (permissions: Permission[]) => {
   return formattedPermissions;
 };
 
-const fetchPermissions = async () => {
-  try {
-    const params = new URLSearchParams();
+const availablePermissions = ref<PermissionGrouped[]>(groupPermissions(props.availablePermissions));
 
-    params.append('select', 'id,name,category');
-    params.append('per_page', '200');
-    params.append('order_by', 'category');
-    params.append('order_direction', 'asc');
-
-    const {fetchPermissionsApi} = usePermissionClient();
-    const response = await fetchPermissionsApi(params.toString());
-    const permissions = response.data.data.map((item: Permission) => ({ ...item, enabled: false }));
-
-    availablePermissions.value = groupPermissions(permissions);
-  } catch (error: any) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: t(error.response.data.message),
-    });
-  }
-}
-
-onMounted(() => {
-  fetchPermissions();
-})
-
-const getEnabledPermissions = (permissionsGroups:PermissionGroupedAccordion[]) => {
-  const enabledPermissions:string[] = [];
+const getEnabledPermissions = (permissionsGroups: PermissionGrouped[]): string[] => {
+  const enabledPermissions: string[] = [];
 
   permissionsGroups.forEach((group) => {
     group.permissions.forEach((permission) => {
@@ -213,38 +189,29 @@ const getEnabledPermissions = (permissionsGroups:PermissionGroupedAccordion[]) =
   });
 
   return enabledPermissions;
-}
+};
 
-const submit = async () => {
-  v$.value.$touch();
-
-  if (!v$.value.$invalid) {
-    const body = {
-      name: name.value,
+const submit = handleSubmit((values) => {
+  router.post(
+    route("roles.store"),
+    {
+      name: values.name,
       permissions: getEnabledPermissions(availablePermissions.value),
-    };
-
-    const {storeRoleApi} = useRoleClient();
-
-    try {
-      await storeRoleApi(body);
-
-      toast.add({
-        severity: "success",
-        summary: t("Success"),
-        detail: t("Role created successfully"),
-        life: 3000,
-      });
-
-      router.visit(route('roles'));
-    } catch (error:any) {
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: t(error.response.data.message),
-        life: 3000,
-      });
+    },
+    {
+      onSuccess: () => {
+        router.visit(route("roles"));
+      },
+      onError: (errs) => {
+        setErrors(errs);
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: t(Object.values(errs)[0] ?? "An error occurred"),
+          life: 3000,
+        });
+      },
     }
-  }
-}
+  );
+});
 </script>
