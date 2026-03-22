@@ -25,7 +25,7 @@
       </div>
     </div>
     <div class="grid grid-cols-12 gap-4">
-      <div class="md:col-span-4 col-span-12">
+      <div class="md:col-span-8 col-span-12">
         <Card class="mb-4">
           <template #content>
             <div class="grid grid-cols-12 gap-4">
@@ -50,8 +50,6 @@
             </div>
           </template>
         </Card>
-      </div>
-      <div class="md:col-span-8 col-span-12">
         <Card class="mb-4">
           <template #content>
             <Accordion
@@ -90,6 +88,16 @@
                 </AccordionContent>
               </AccordionPanel>
             </Accordion>
+          </template>
+        </Card>
+      </div>
+      <div class="md:col-span-4 col-span-12">
+        <Card class="mb-4">
+          <template #title>
+            {{ t('Users') }}
+          </template>
+          <template #content>
+            Assigned users to this role
           </template>
         </Card>
       </div>
