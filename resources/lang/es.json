@@ -181,6 +181,7 @@
     "required": "Este campo es requerido",
     "requiredIf": "Este campo es requerido",
     "minLength": "Este campo debe tener al menos {min} caracteres",
+    "maxLength": "Este campo no debe exceder {max} caracteres",
     "minValue": "Este campo debe tener un valor mayor o igual a {min}",
     "email": "Este campo debe ser un correo electrónico válido",
     "sameAsPassword": "La confirmación de la contraseña no coincide",

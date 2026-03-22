@@ -20,6 +20,7 @@ import { InertiaProgress } from "@inertiajs/progress";
 import { ZiggyVue } from "ziggy-js";
 import Aura from "@primeuix/themes/aura";
 import Can from "./Directives/can";
+import { configureYupLocale } from "./validations/yupLocale";
 import { useAuthStore } from "@stores/auth";
 import { inertiaAuthSyncPlugin } from "@plugins/inertia-auth-sync";
 import type { AuthData } from "@app-types/auth-types";
@@ -38,6 +39,8 @@ const i18n = createI18n({
   messages,
   legacy: false,
 });
+
+configureYupLocale(i18n.global.t);
 
 InertiaProgress.init();
 

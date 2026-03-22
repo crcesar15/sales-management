@@ -181,6 +181,7 @@
     "required": "This field is required",
     "requiredIf": "This field is required",
     "minLength": "This field must have at least {min} characters",
+    "maxLength": "This field must not exceed {max} characters",
     "minValue": "This field must have a value greater than or equal to {min}",
     "email": "This field must be a valid email",
     "sameAsPassword": "The password confirmation does not match",
