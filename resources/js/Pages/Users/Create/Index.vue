@@ -19,6 +19,7 @@
           :label="t('Save')"
           class="uppercase"
           raised
+          :loading="isSubmitting"
           @click="submit()"
         />
       </div>
@@ -34,15 +35,12 @@
                   <InputText
                     id="first-name"
                     v-model="firstName"
+                    v-bind="firstNameAttrs"
                     autocomplete="off"
-                    :class="{'p-invalid': v$.firstName.$invalid && v$.firstName.$dirty}"
-                    @blur="v$.firstName.$touch"
+                    :class="{'p-invalid': errors.first_name}"
                   />
-                  <small
-                    v-if="v$.firstName.$invalid && v$.firstName.$dirty"
-                    class="text-red-400 dark:text-red-300"
-                  >
-                    {{ v$.firstName.$errors[0].$message }}
+                  <small v-if="errors.first_name" class="text-red-400 dark:text-red-300">
+                    {{ errors.first_name }}
                   </small>
                 </div>
               </div>
@@ -52,15 +50,12 @@
                   <InputText
                     id="last-name"
                     v-model="lastName"
+                    v-bind="lastNameAttrs"
                     autocomplete="off"
-                    :class="{'p-invalid': v$.lastName.$invalid && v$.lastName.$dirty}"
-                    @blur="v$.lastName.$touch"
+                    :class="{'p-invalid': errors.last_name}"
                   />
-                  <small
-                    v-if="v$.lastName.$invalid && v$.lastName.$dirty"
-                    class="text-red-400 dark:text-red-300"
-                  >
-                    {{ v$.lastName.$errors[0].$message }}
+                  <small v-if="errors.last_name" class="text-red-400 dark:text-red-300">
+                    {{ errors.last_name }}
                   </small>
                 </div>
               </div>
@@ -70,15 +65,12 @@
               <InputText
                 id="email"
                 v-model="email"
+                v-bind="emailAttrs"
                 autocomplete="off"
-                :class="{'p-invalid': v$.email.$invalid && v$.email.$dirty}"
-                @blur="v$.email.$touch"
+                :class="{'p-invalid': errors.email}"
               />
-              <small
-                v-if="v$.email.$invalid && v$.email.$dirty"
-                class="text-red-400 dark:text-red-300"
-              >
-                {{ v$.email.$errors[0].$message }}
+              <small v-if="errors.email" class="text-red-400 dark:text-red-300">
+                {{ errors.email }}
               </small>
             </div>
           </template>
@@ -95,6 +87,7 @@
                   <InputText
                     id="phone"
                     v-model="phone"
+                    v-bind="phoneAttrs"
                     autocomplete="off"
                   />
                 </div>
@@ -104,8 +97,9 @@
                   <label for="date-of-birth">{{ t('Date of Birth') }}</label>
                   <DatePicker
                     id="date-of-birth"
-                    :pt:pcInputText="{ root: 'w-full' }"
                     v-model="dateOfBirth"
+                    v-bind="dateOfBirthAttrs"
+                    :pt:pcInputText="{ root: 'w-full' }"
                   />
                 </div>
               </div>
@@ -121,6 +115,7 @@
               <Select
                 id="status"
                 v-model="status"
+                v-bind="statusAttrs"
                 :options="[
                   { name: t('Active'), value: 'active' },
                   { name: t('Inactive'), value: 'inactive' },
@@ -134,18 +129,15 @@
               <MultiSelect
                 id="roles"
                 v-model="roles"
+                v-bind="rolesAttrs"
                 display="chip"
                 :options="props.availableRoles"
                 option-label="name"
                 option-value="id"
-                :class="{'p-invalid': v$.roles.$invalid && v$.roles.$dirty}"
-                @blur="v$.roles.$touch"
+                :class="{'p-invalid': errors.roles}"
               />
-              <small
-                v-if="v$.roles.$invalid && v$.roles.$dirty"
-                class="text-red-400 dark:text-red-300"
-              >
-                {{ v$.roles.$errors[0].$message }}
+              <small v-if="errors.roles" class="text-red-400 dark:text-red-300">
+                {{ errors.roles }}
               </small>
             </div>
           </template>
@@ -160,35 +152,30 @@
               <InputText
                 id="username"
                 v-model="username"
+                v-bind="usernameAttrs"
                 autocomplete="off"
-                :class="{'p-invalid': v$.username.$invalid && v$.username.$dirty}"
-                @blur="v$.username.$touch"
+                :class="{'p-invalid': errors.username}"
               />
-              <small
-                v-if="v$.username.$invalid && v$.username.$dirty"
-                class="text-red-400 dark:text-red-300"
-              >
-                {{ v$.username.$errors[0].$message }}
+              <small v-if="errors.username" class="text-red-400 dark:text-red-300">
+                {{ errors.username }}
               </small>
             </div>
             <div class="flex flex-col gap-2 mb-3">
-              <label for="username">{{ t('Password') }}</label>
+              <label for="password">{{ t('Password') }}</label>
               <Password
                 id="password"
                 v-model="password"
-                :class="{'p-invalid': v$.password.$invalid && v$.password.$dirty}"
+                v-bind="passwordAttrs"
+                :class="{'p-invalid': errors.password}"
                 :prompt-label="t('Choose a password')"
                 :weak-label="t('Weak')"
                 :medium-label="t('Medium')"
                 :strong-label="t('Strong')"
                 toggle-mask
-                @blur="v$.password.$touch"
+                fluid
               />
-              <small
-                v-if="v$.password.$invalid && v$.password.$dirty"
-                class="text-red-400 dark:text-red-300"
-              >
-                {{ v$.password.$errors[0].$message }}
+              <small v-if="errors.password" class="text-red-400 dark:text-red-300">
+                {{ errors.password }}
               </small>
             </div>
             <div class="flex flex-col gap-2 mb-3">
@@ -196,20 +183,18 @@
               <Password
                 id="password-confirmation"
                 v-model="passwordConfirmation"
-                autocomplete="off"
-                :class="{'p-invalid': v$.passwordConfirmation.$invalid && v$.passwordConfirmation.$dirty}"
+                v-bind="passwordConfirmationAttrs"
+                :class="{'p-invalid': errors.password_confirmation}"
                 :prompt-label="t('Re-enter password')"
                 :weak-label="t('Weak')"
                 :medium-label="t('Medium')"
                 :strong-label="t('Strong')"
                 toggle-mask
-                @blur="v$.passwordConfirmation.$touch"
+                :feedback="false"
+                fluid
               />
-              <small
-                v-if="v$.passwordConfirmation.$invalid && v$.passwordConfirmation.$dirty"
-                class="text-red-400 dark:text-red-300"
-              >
-                {{ v$.passwordConfirmation.$errors[0].$message }}
+              <small v-if="errors.password_confirmation" class="text-red-400 dark:text-red-300">
+                {{ errors.password_confirmation }}
               </small>
             </div>
           </template>
@@ -220,15 +205,6 @@
 </template>
 
 <script setup lang="ts">
-import { useVuelidate } from "@vuelidate/core";
-import {
-  required,
-  email as emailValidator,
-  createI18nMessage,
-  sameAs,
-  minLength,
-} from "@vuelidate/validators";
-
 import {
   Button,
   MultiSelect,
@@ -240,148 +216,95 @@ import {
   useToast,
 } from "primevue";
 
-import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
-import { useUserClient } from "@/Composables/useUserClient";
-import { UserPayload } from "@/Types/user-types";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string, array, number, date, ref as yupRef } from "yup";
 import { route } from "ziggy-js";
 import { RoleResponse } from "@/Types/role-types";
-
-import AppLayout from "../../../Layouts/admin.vue";
-import useDatetimeFormatter from "@/Composables/useDatetimeFormatter";
+import AppLayout from "@layouts/admin.vue";
 
 // Set composables
 const toast = useToast();
 const { t } = useI18n();
-const withI18nMessage = createI18nMessage({t});
 
 // Layout
-defineOptions({
-  layout: AppLayout,
-});
+defineOptions({ layout: AppLayout });
 
-// Get Roles
+// Props from Inertia
 const props = defineProps<{
   availableRoles: RoleResponse[];
 }>();
 
-// Set variables
-const firstName = ref("");
-const lastName = ref("");
-const email = ref("");
-const status = ref("active");
-const roles = ref([]);
-const phone = ref("");
-const dateOfBirth = ref<Date | null>(null);
-const username = ref("");
-const password = ref("");
-const passwordConfirmation = ref("");
-
-// Set rules
-// Custom rule: must allow only letters, numbers, dashes, underscores and dots
-const validateUsername = (value:string) => {
-  if (!value) return true;
-
-  return /^[a-zA-Z0-9_.-]*$/.test(value);
-};
-
-const rules = computed(() => ({
-  firstName: {
-    required: withI18nMessage(required),
-  },
-  lastName: {
-    required: withI18nMessage(required),
-  },
-  email: {
-    required: withI18nMessage(required),
-    email: withI18nMessage(emailValidator),
-  },
-  username: {
-    required: withI18nMessage(required),
-    minLength: withI18nMessage(minLength(6)),
-    username: withI18nMessage(validateUsername),
-  },
-  roles: {
-    required: withI18nMessage(required),
-  },
-  password: {
-    required: withI18nMessage(required),
-    minLength: withI18nMessage(minLength(6)),
-  },
-  passwordConfirmation: {
-    required: withI18nMessage(required),
-    minLength: withI18nMessage(minLength(6)),
-    sameAsPassword: withI18nMessage(sameAs(password.value)),
-  },
-}));
-
-const v$ = useVuelidate(
-  rules,
-  {
-    firstName,
-    lastName,
-    email,
-    status,
-    roles,
-    phone,
-    dateOfBirth,
-    username,
-    password,
-    passwordConfirmation,
-  },
+// Schema
+const schema = toTypedSchema(
+  object({
+    first_name: string().required().max(50),
+    last_name: string().required().max(50),
+    email: string().required().email().max(100),
+    username: string()
+      .required()
+      .min(6)
+      .max(50)
+      .matches(/^[a-zA-Z0-9_.-]*$/, t('Username can only contain letters, numbers, dots, dashes and underscores')),
+    phone: string().nullable().optional(),
+    status: string().required().oneOf(['active', 'inactive']),
+    date_of_birth: date().nullable().optional(),
+    roles: array().of(number().required()).required().min(1, t('At least one role is required')),
+    password: string().required().min(8),
+    password_confirmation: string()
+      .required()
+      .min(8)
+      .oneOf([yupRef('password')], t('Passwords must match')),
+  })
 );
 
+const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    status: 'active',
+    roles: [],
+  },
+});
+
+const [firstName, firstNameAttrs] = defineField('first_name');
+const [lastName, lastNameAttrs] = defineField('last_name');
+const [email, emailAttrs] = defineField('email');
+const [username, usernameAttrs] = defineField('username');
+const [phone, phoneAttrs] = defineField('phone');
+const [status, statusAttrs] = defineField('status');
+const [dateOfBirth, dateOfBirthAttrs] = defineField('date_of_birth');
+const [roles, rolesAttrs] = defineField('roles');
+const [password, passwordAttrs] = defineField('password');
+const [passwordConfirmation, passwordConfirmationAttrs] = defineField('password_confirmation');
+
 // Submit
-const submit = async () => {
-  v$.value.$touch();
+const submit = handleSubmit((values) => {
+  const dateValue = values.date_of_birth instanceof Date
+    ? values.date_of_birth.toISOString().split('T')[0]
+    : (values.date_of_birth ?? null);
 
-  if (!v$.value.$invalid) {
-    const user: UserPayload = {
-      first_name: firstName.value,
-      last_name: lastName.value,
-      email: email.value,
-      status: status.value,
-      roles: roles.value,
-      phone: phone.value,
-      date_of_birth: useDatetimeFormatter(dateOfBirth.value?.toString() ?? '', "YYYY-MM-DD"),
-      username: username.value,
-      password: password.value,
-      password_confirmation: passwordConfirmation.value,
-    };
-
-    const { createUserApi } = useUserClient();
-
-    try {
-      await createUserApi(user);
-      toast.add({
-        severity: "success",
-        summary: t("Success"),
-        detail: t("User has been created successfully"),
-        life: 3000,
-      });
-      router.visit(route("users"));
-    } catch (error: any) {
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: t(error?.response?.data?.message ?? error) ,
-        life: 3000,
-      });
+  router.post(
+    route('users.store'),
+    {
+      ...values,
+      date_of_birth: dateValue,
+    },
+    {
+      onSuccess: () => {
+        router.visit(route('users'));
+      },
+      onError: (errs) => {
+        setErrors(errs);
+        toast.add({
+          severity: 'error',
+          summary: t('Error'),
+          detail: t(Object.values(errs)[0] ?? 'An error occurred'),
+          life: 3000,
+        });
+      },
     }
-  } else {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: t("Please review the errors in the form"),
-      life: 3000,
-    });
-  }
-};
+  );
+});
 </script>
-
-<style>
-.p-password > input {
-  width: 100% !important;
-}
-</style>
