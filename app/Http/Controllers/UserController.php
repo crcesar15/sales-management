@@ -5,60 +5,102 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
+use App\Http\Requests\Users\StoreUserRequest;
+use App\Http\Requests\Users\UpdateUserRequest;
+use App\Http\Resources\User\UserCollection;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Spatie\Permission\Models\Role;
 
 final class UserController extends Controller
 {
-    /**
-     * Display a listing of users.
-     */
+    public function __construct(private readonly UserService $userService) {}
+
     public function index(): InertiaResponse
     {
         $this->authorize(PermissionsEnum::USERS_VIEW, auth()->user());
 
-        return Inertia::render('Users/Index');
+        $status = request()->string('status', 'all')->value();
+
+        $users = $this->userService->list(
+            status: $status,
+            orderBy: request()->string('order_by', 'first_name')->value(),
+            orderDirection: request()->string('order_direction', 'asc')->value(),
+            perPage: request()->integer('per_page', 10),
+            filter: request()->string('filter')->value() ?: null,
+        );
+
+        return Inertia::render('Users/Index', [
+            'users' => new UserCollection($users),
+            'filters' => [
+                'filter' => request()->string('filter')->value() ?: null,
+                'status' => $status,
+                'order_by' => request()->string('order_by', 'first_name')->value(),
+                'order_direction' => request()->string('order_direction', 'asc')->value(),
+                'per_page' => request()->integer('per_page', 10),
+            ],
+        ]);
     }
 
-    /**
-     * Show the form for creating a new user.
-     */
     public function create(): InertiaResponse
     {
         $this->authorize(PermissionsEnum::USERS_CREATE, auth()->user());
 
-        // List of Roles
-        $roles = Role::all();
-
         return Inertia::render('Users/Create/Index', [
-            'availableRoles' => $roles,
+            'availableRoles' => Role::all(['id', 'name']),
         ]);
     }
 
-    /**
-     * Show the form for editing the specified user.
-     */
+    public function store(StoreUserRequest $request): RedirectResponse
+    {
+        $this->userService->create($request->validated());
+
+        return redirect()->route('users');
+    }
+
     public function edit(User $user): InertiaResponse
     {
         $this->authorize(PermissionsEnum::USERS_EDIT, auth()->user());
 
-        // Include the user role with only id and name without pivot
         $user->load(['roles' => function (MorphToMany $query) {
             $query->select('id', 'name');
         }]);
 
-        // remove password and remember_token from the user object
         $user->makeHidden(['password', 'remember_token']);
-
-        // List of Roles
-        $roles = Role::all();
 
         return Inertia::render('Users/Edit/Index', [
             'user' => $user,
-            'availableRoles' => $roles,
+            'availableRoles' => Role::all(['id', 'name']),
         ]);
+    }
+
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    {
+        $this->userService->update($user, $request->validated());
+
+        return redirect()->route('users');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        $this->authorize(PermissionsEnum::USERS_DELETE, auth()->user());
+
+        $this->userService->delete($user);
+
+        return redirect()->route('users');
+    }
+
+    public function restore(User $user): RedirectResponse
+    {
+        $this->authorize(PermissionsEnum::USERS_EDIT, auth()->user());
+
+        $user->restore();
+        $user->update(['status' => 'active']);
+
+        return redirect()->route('users');
     }
 }

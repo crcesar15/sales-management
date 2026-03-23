@@ -6,10 +6,40 @@ namespace App\Services;
 
 use App\Models\Store;
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 final class UserService
 {
+    /**
+     * Paginated, filtered and sorted list of users.
+     *
+     * @return LengthAwarePaginator<int, User>
+     */
+    public function list(
+        string $status = 'all',
+        string $orderBy = 'first_name',
+        string $orderDirection = 'asc',
+        int $perPage = 10,
+        ?string $filter = null,
+    ): LengthAwarePaginator {
+        return User::query()
+            ->with(['roles'])
+            ->when(
+                $filter !== null && $filter !== '',
+                fn ($q) => $q->where(fn ($q) => $q
+                    ->where('first_name', 'like', "%{$filter}%")
+                    ->orWhere('last_name', 'like', "%{$filter}%")
+                    ->orWhere('email', 'like', "%{$filter}%")
+                )
+            )
+            ->when($status === 'archived', fn ($q) => $q->onlyTrashed())
+            ->when($status !== 'all' && $status !== 'archived', fn ($q) => $q->where('status', $status))
+            ->orderBy($orderBy, $orderDirection)
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
     /**
      * Create a new user, assign role and stores within a transaction.
      *

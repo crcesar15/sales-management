@@ -7,6 +7,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -65,7 +66,8 @@ final class User extends Authenticatable
             ->dontSubmitEmptyLogs();
     }
 
-    public function stores()
+    /** @return BelongsToMany<Store, $this>*/
+    public function stores(): BelongsToMany
     {
         return $this->belongsToMany(Store::class)
             ->withPivot('role_id')
