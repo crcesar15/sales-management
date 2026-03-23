@@ -18,7 +18,12 @@ use Spatie\Permission\Models\Role;
 
 final class UserController extends Controller
 {
-    public function __construct(private readonly UserService $userService) {}
+    private $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
 
     public function index(): InertiaResponse
     {

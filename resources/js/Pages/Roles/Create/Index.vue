@@ -94,10 +94,60 @@
       <div class="md:col-span-4 col-span-12">
         <Card class="mb-4">
           <template #title>
-            {{ t('Users') }}
+            <div class="flex items-center justify-between">
+              <span>{{ t('Users') }}</span>
+              <Badge :value="assignedUsers.length" severity="secondary" />
+            </div>
           </template>
           <template #content>
-            Assigned users to this role
+            <AutoComplete
+              v-model="userSearch"
+              :suggestions="filteredUsers"
+              option-label="full_name"
+              :placeholder="t('Search users...')"
+              force-selection
+              fluid
+              class="mb-3"
+              @complete="onSearchUsers"
+              @option-select="onAddUser"
+            >
+              <template #option="{ option }">
+                <div class="flex items-center gap-2">
+                  <Avatar
+                    :label="option.full_name.charAt(0).toUpperCase()"
+                    size="small"
+                    shape="circle"
+                  />
+                  <div class="font-medium">{{ option.full_name }}</div>
+                </div>
+              </template>
+            </AutoComplete>
+
+            <div v-if="assignedUsers.length === 0" class="text-center text-surface-400 py-4 text-sm">
+              {{ t('No users assigned yet') }}
+            </div>
+
+            <div
+              v-for="user in assignedUsers"
+              :key="user.id"
+              class="flex items-center gap-3 p-2 mb-2 rounded-lg bg-surface-50 dark:bg-surface-800"
+            >
+              <Avatar
+                :label="user.full_name.charAt(0).toUpperCase()"
+                shape="circle"
+              />
+              <div class="flex-1 min-w-0">
+                <div class="font-medium truncate">{{ user.full_name }}</div>
+              </div>
+              <Button
+                icon="fa fa-trash"
+                text
+                rounded
+                severity="primary"
+                size="small"
+                @click="removeUser(user.id)"
+              />
+            </div>
           </template>
         </Card>
       </div>
@@ -114,6 +164,9 @@ import {
   AccordionPanel,
   AccordionHeader,
   AccordionContent,
+  AutoComplete,
+  Avatar,
+  Badge,
   useToast,
   Button
 } from "primevue";
@@ -122,7 +175,7 @@ import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string } from "yup";
-import { ref } from "vue";
+import { ref, nextTick } from "vue";
 import { PermissionGroupedAccordion } from "@/Types/permission-types";
 import { route } from "ziggy-js";
 import { router } from "@inertiajs/vue3";
@@ -139,8 +192,11 @@ defineOptions({
 });
 
 // Props from Inertia
+interface SimpleUser { id: number; full_name: string; email: string }
+
 const props = defineProps<{
   availablePermissions: { id: number; name: string; category: string }[];
+  availableUsers: SimpleUser[];
 }>();
 
 // VeeValidate + Yup schema (messages come from configureYupLocale in app.ts)
@@ -199,12 +255,38 @@ const getEnabledPermissions = (permissionsGroups: PermissionGrouped[]): string[]
   return enabledPermissions;
 };
 
+// User assignment
+const assignedUsers = ref<SimpleUser[]>([]);
+const userSearch = ref<SimpleUser | null>(null);
+const filteredUsers = ref<SimpleUser[]>([]);
+
+const onSearchUsers = (event: { query: string }) => {
+  const q = event.query.toLowerCase();
+  filteredUsers.value = props.availableUsers.filter(
+    (u) => !assignedUsers.value.find((a) => a.id === u.id) &&
+      (u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+  );
+};
+
+const onAddUser = async (event: { value: SimpleUser }) => {
+  if (!assignedUsers.value.find((u) => u.id === event.value.id)) {
+    assignedUsers.value.push(event.value);
+  }
+  await nextTick();
+  userSearch.value = null;
+};
+
+const removeUser = (id: number) => {
+  assignedUsers.value = assignedUsers.value.filter((u) => u.id !== id);
+};
+
 const submit = handleSubmit((values) => {
   router.post(
     route("roles.store"),
     {
       name: values.name,
       permissions: getEnabledPermissions(availablePermissions.value),
+      users: assignedUsers.value.map((u) => u.id),
     },
     {
       onSuccess: () => {

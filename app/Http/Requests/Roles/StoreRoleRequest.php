@@ -28,6 +28,8 @@ final class StoreRoleRequest extends FormRequest
                 'sometimes',
                 Rule::exists('permissions', 'name'),
             ],
+            'users' => ['sometimes', 'array'],
+            'users.*' => ['sometimes', Rule::exists('users', 'id')],
         ];
     }
 }

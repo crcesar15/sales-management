@@ -17,7 +17,12 @@ use Spatie\Permission\Models\Role;
 
 final class RoleController extends Controller
 {
-    public function __construct(private readonly RoleService $roleService) {}
+    private RoleService $roleService;
+
+    public function __construct(RoleService $roleService)
+    {
+        $this->roleService = $roleService;
+    }
 
     public function index(): InertiaResponse
     {
@@ -47,6 +52,7 @@ final class RoleController extends Controller
 
         return Inertia::render('Roles/Create/Index', [
             'availablePermissions' => $this->roleService->getAvailablePermissions(),
+            'availableUsers' => $this->roleService->getAvailableUsers(),
         ]);
     }
 
@@ -65,6 +71,12 @@ final class RoleController extends Controller
             'role' => (new RoleResource($role))->resolve(),
             'permissions' => $role->permissions()->pluck('name')->toArray(),
             'availablePermissions' => $this->roleService->getAvailablePermissions(),
+            'availableUsers' => $this->roleService->getAvailableUsers(),
+            'assignedUsers' => $role->users()->select('users.id', 'users.first_name', 'users.last_name', 'users.email')->get()->map(fn ($u) => [
+                'id' => $u->id,
+                'full_name' => "{$u->first_name} {$u->last_name}",
+                'email' => $u->email,
+            ]),
         ]);
     }
 

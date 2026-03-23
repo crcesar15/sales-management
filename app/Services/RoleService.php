@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,19 @@ final class RoleService
     }
 
     /**
+     * Get all users available for role assignment.
+     *
+     * @return Collection<int, array{id: int, full_name: string, email: string}>
+     */
+    public function getAvailableUsers(): Collection
+    {
+        return User::select('id', 'first_name', 'last_name', 'email')
+            ->selectRaw("CONCAT(first_name, ' ', last_name) as full_name")
+            ->orderBy('first_name')
+            ->get();
+    }
+
+    /**
      * Get all permissions ordered by category and name.
      *
      * @return Collection<int, Permission>
@@ -45,7 +59,7 @@ final class RoleService
     }
 
     /**
-     * Create a new role and sync its permissions.
+     * Create a new role and sync its permissions and users.
      *
      * @param  array<string, mixed>  $data
      */
@@ -63,12 +77,16 @@ final class RoleService
                 $role->syncPermissions($data['permissions']);
             }
 
+            if (isset($data['users'])) {
+                $role->users()->sync($data['users']);
+            }
+
             return $role;
         });
     }
 
     /**
-     * Update a role's name and permissions.
+     * Update a role's name, permissions and users.
      *
      * @param  array<string, mixed>  $data
      */
@@ -79,6 +97,10 @@ final class RoleService
 
             if (isset($data['permissions'])) {
                 $role->syncPermissions($data['permissions']);
+            }
+
+            if (isset($data['users'])) {
+                $role->users()->sync($data['users']);
             }
 
             return $role;

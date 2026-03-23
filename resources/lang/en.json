@@ -284,5 +284,7 @@
   "All Products": "All Products",
   "Units": "Units",
   "Sales Orders": "Sales Orders",
-  "Supplier Catalog": "Supplier Catalog"
+  "Supplier Catalog": "Supplier Catalog",
+  "Search users...": "Search users...",
+  "No users assigned yet": "No users assigned yet"
 }
