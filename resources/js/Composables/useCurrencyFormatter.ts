@@ -1,18 +1,18 @@
-import { useAuthStore } from "@/Stores/auth";
+import { useAuth } from "@/Composables/useAuth";
 
 export function useCurrencyFormatter() {
-  const authStore = useAuthStore();
+  const { getSetting } = useAuth();
 
   const formatCurrency = (value: string) => {
-    const currency = authStore.getSetting("finance", "currency");
-    const decimalPrecision = parseInt(authStore.getSetting("currency", "decimal_precision") ?? "2");
+    const currency = getSetting("finance", "currency");
+    const decimalPrecision = parseInt(getSetting("currency", "decimal_precision") ?? "2");
 
     return `${currency} ${parseFloat(value).toFixed(decimalPrecision)}`;
   };
 
   const formatCurrencySymbol = (value: string) => {
-    const currencySymbol = authStore.getSetting("finance", "currency_symbol");
-    const decimalPrecision = parseInt(authStore.getSetting("currency", "decimal_precision") ?? "2");
+    const currencySymbol = getSetting("finance", "currency_symbol");
+    const decimalPrecision = parseInt(getSetting("currency", "decimal_precision") ?? "2");
 
     return `${currencySymbol} ${parseFloat(value).toFixed(decimalPrecision)}`;
   };

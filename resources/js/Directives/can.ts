@@ -1,6 +1,6 @@
 import type { Directive, DirectiveBinding } from "vue";
 import { watch } from "vue";
-import { useAuthStore } from "@stores/auth";
+import { useAuth } from "@/Composables/useAuth";
 
 type PermissionValue = string | string[] | true;
 
@@ -11,7 +11,7 @@ interface CanDirectiveElement extends HTMLElement {
 
 const canDirective: Directive<CanDirectiveElement, PermissionValue> = {
   mounted(el: CanDirectiveElement, binding: DirectiveBinding<PermissionValue>) {
-    const authStore = useAuthStore();
+    const { can, canAny, permissions } = useAuth();
 
     const checkPermission = () => {
       const { value } = binding;
@@ -22,8 +22,8 @@ const canDirective: Directive<CanDirectiveElement, PermissionValue> = {
       }
 
       const hasPermission = Array.isArray(value)
-        ? authStore.canAny(value)
-        : authStore.can(value);
+        ? canAny(value)
+        : can(value);
 
       if (!hasPermission) {
         // Store original display value for potential restoration
@@ -44,11 +44,11 @@ const canDirective: Directive<CanDirectiveElement, PermissionValue> = {
 
     // Watch for permission changes (provides reactivity)
     const unwatch = watch(
-      () => authStore.permissions,
+      permissions,
       () => {
         checkPermission();
       },
-      { deep: true }
+      { deep: true },
     );
 
     // Store cleanup function for unmount
@@ -57,7 +57,7 @@ const canDirective: Directive<CanDirectiveElement, PermissionValue> = {
 
   updated(el: CanDirectiveElement, binding: DirectiveBinding<PermissionValue>) {
     // Re-check if binding value changes
-    const authStore = useAuthStore();
+    const { can, canAny } = useAuth();
     const { value } = binding;
 
     if (value === true) {
@@ -68,8 +68,8 @@ const canDirective: Directive<CanDirectiveElement, PermissionValue> = {
     }
 
     const hasPermission = Array.isArray(value)
-      ? authStore.canAny(value)
-      : authStore.can(value);
+      ? canAny(value)
+      : can(value);
 
     if (!hasPermission) {
       if (el.__canOriginalDisplay === undefined) {
