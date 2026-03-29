@@ -50,46 +50,19 @@
             </div>
           </template>
         </Card>
-        <Card class="mb-4">
-          <template #content>
-            <Accordion
-              :value="['0']"
-              multiple
-            >
-              <AccordionPanel
-                v-for="item in availablePermissions"
-                :key="item.category"
-                :value="item.value"
-              >
-                <AccordionHeader
-                  :pt="{root: {class: '!bg-surface-100 dark:!bg-surface-800 !rounded-md !mb-2'}}"
-                >
-                  <div class="w-full">
-                    <span class="uppercase font-extrabold">{{ t(item.category) }}</span>
-                  </div>
-                </AccordionHeader>
-                <AccordionContent>
-                  <div class="grid grid-cols-12 gap-4">
-                    <div
-                      v-for="permission in item.permissions"
-                      :key="permission.id"
-                      class="md:col-span-6 col-span-12 flex items-center flex-wrap gap-2"
-                    >
-                      <ToggleSwitch
-                        v-model="permission.enabled"
-                        :input-id="`tg-${permission.name}`"
-                      />
-                      <label
-                        :for="`tg-${permission.name}`"
-                        class="first-letter:uppercase"
-                      >{{ t(permission.name) }}</label>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionPanel>
-            </Accordion>
-          </template>
-        </Card>
+        <PermissionMatrix
+          :matrix="filteredMatrix"
+          :search-query="searchQuery"
+          :total-permissions="totalPermissions"
+          :total-enabled="totalEnabled"
+          :is-all-selected="isAllSelected"
+          :is-category-all-selected="isCategoryAllSelected"
+          :get-category-enabled-count="getCategoryEnabledCount"
+          @update:search-query="searchQuery = $event"
+          @toggle-permission="togglePermission"
+          @toggle-category-all="toggleCategoryAll"
+          @toggle-all="toggleAll"
+        />
       </div>
       <div class="md:col-span-4 col-span-12">
         <Card class="mb-4">
@@ -159,11 +132,6 @@
 import {
   Card,
   InputText,
-  ToggleSwitch,
-  Accordion,
-  AccordionPanel,
-  AccordionHeader,
-  AccordionContent,
   AutoComplete,
   Avatar,
   Badge,
@@ -176,11 +144,12 @@ import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string } from "yup";
 import { ref, nextTick } from "vue";
-import { PermissionGroupedAccordion } from "@/Types/permission-types";
 import { route } from "ziggy-js";
 import { router } from "@inertiajs/vue3";
 
 import AppLayout from "@layouts/admin.vue";
+import PermissionMatrix from "@/Components/PermissionMatrix.vue";
+import { usePermissions } from "@/Composables/usePermissions";
 
 // Set composables
 const toast = useToast();
@@ -199,7 +168,7 @@ const props = defineProps<{
   availableUsers: SimpleUser[];
 }>();
 
-// VeeValidate + Yup schema (messages come from configureYupLocale in app.ts)
+// VeeValidate + Yup schema
 const schema = toTypedSchema(
   object({
     name: string().required().max(255),
@@ -212,48 +181,20 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
 
 const [name, nameAttrs] = defineField("name");
 
-// Permission accordion
-interface PermissionGrouped extends PermissionGroupedAccordion {
-  permissions: Array<{ id: number; name: string; enabled: boolean }>;
-}
-
-const groupPermissions = (permissions: { id: number; name: string; category: string }[]): PermissionGrouped[] => {
-  const formattedPermissions: PermissionGrouped[] = [];
-  let value = 0;
-
-  permissions.forEach((item) => {
-    const indexFound = formattedPermissions.findIndex((i) => i.category === item.category);
-
-    if (indexFound >= 0) {
-      formattedPermissions[indexFound].permissions.push({ id: item.id, name: item.name, enabled: false });
-    } else {
-      formattedPermissions.push({
-        value: value.toString(),
-        category: item.category,
-        permissions: [{ id: item.id, name: item.name, enabled: false }],
-      });
-      value += 1;
-    }
-  });
-
-  return formattedPermissions;
-};
-
-const availablePermissions = ref<PermissionGrouped[]>(groupPermissions(props.availablePermissions));
-
-const getEnabledPermissions = (permissionsGroups: PermissionGrouped[]): string[] => {
-  const enabledPermissions: string[] = [];
-
-  permissionsGroups.forEach((group) => {
-    group.permissions.forEach((permission) => {
-      if (permission.enabled) {
-        enabledPermissions.push(permission.name);
-      }
-    });
-  });
-
-  return enabledPermissions;
-};
+// Permissions
+const {
+  filteredMatrix,
+  searchQuery,
+  enabledPermissionNames,
+  totalPermissions,
+  totalEnabled,
+  togglePermission,
+  toggleCategoryAll,
+  isCategoryAllSelected,
+  getCategoryEnabledCount,
+  toggleAll,
+  isAllSelected,
+} = usePermissions(props.availablePermissions);
 
 // User assignment
 const assignedUsers = ref<SimpleUser[]>([]);
@@ -285,7 +226,7 @@ const submit = handleSubmit((values) => {
     route("roles.store"),
     {
       name: values.name,
-      permissions: getEnabledPermissions(availablePermissions.value),
+      permissions: enabledPermissionNames.value,
       users: assignedUsers.value.map((u) => u.id),
     },
     {
