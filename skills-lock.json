@@ -16,6 +16,11 @@
       "sourceType": "github",
       "computedHash": "6412eb4eb3b91595ebab937f0c69501240e7ba761b3d82510b5cf506ec5c7adc"
     },
+    "inertia-vue-development": {
+      "source": "WINBIGFOX/TimeScribe",
+      "sourceType": "github",
+      "computedHash": "bc936aa33d3447d1d3f436a216097ec2c235a933b64d2031b1429fae44bf434a"
+    },
     "laravel-11-12-app-guidelines": {
       "source": "thienanblog/awesome-ai-agent-skills",
       "sourceType": "github",
@@ -24,7 +29,7 @@
     "laravel-best-practices": {
       "source": "asyrafhussin/agent-skills",
       "sourceType": "github",
-      "computedHash": "82fd2887e1b49b46230325fa16e0a1e4f4d20a9dca7a2cef510d5b26ea3695e7"
+      "computedHash": "6eb357774a2416b3e632cf4f7dec1ff9558af2d70c4b8ade802f5a65ce118fb5"
     },
     "laravel-specialist": {
       "source": "jeffallan/claude-skills",
@@ -74,7 +79,7 @@
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
-      "computedHash": "e688fcd4c5693e14ebd00d48e982dbd2be060fbea89f5f60531e79c704a1bc28"
+      "computedHash": "0a413bf988d06481f69bb81df2070741c3ba12dd9f1be2706d57f259c905992d"
     },
     "vue": {
       "source": "antfu/skills",
@@ -94,7 +99,7 @@
     "vueuse-functions": {
       "source": "antfu/skills",
       "sourceType": "github",
-      "computedHash": "325e49fd2a009bc2ae6dd974cc0c4a7413a342019c9f0e207e0491d2badb2fc5"
+      "computedHash": "fedfc78f035a88fe3e9d823f44725fe8981486c55b966c17fbd0d7c28339e49a"
     },
     "web-component-design": {
       "source": "wshobson/agents",
