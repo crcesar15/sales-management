@@ -1,7 +1,65 @@
 {
   "permissions": {
     "allow": [
-      "Bash(sudo chmod:*)"
+      "mcp__primevue__get_example",
+      "mcp__primevue__get_component_slots",
+      "mcp__primevue__get_component_pt",
+      "mcp__primevue__get_component_import",
+      "mcp__primevue__get_component_tokens",
+      "mcp__primevue__get_component_styles",
+      "mcp__laravel-boost__application-info",
+      "mcp__laravel-boost__database-schema",
+      "mcp__laravel-boost__search-docs",
+      "mcp__primevue__get_component",
+      "mcp__primevue__get_usage_example",
+      "mcp__primevue__search_components",
+      "mcp__laravel-boost__list-routes",
+      "Bash(./vendor/bin/pint:*)",
+      "Bash(php artisan test:*)",
+      "Bash(npm run type-check:*)",
+      "mcp__laravel-boost__database-query",
+      "Bash(./vendor/bin/pest:*)",
+      "Bash(chmod:*)",
+      "Bash(npx skills:*)",
+      "Bash(npm run:*)",
+      "mcp__laravel-boost__tinker",
+      "Bash(php artisan:*)",
+      "Bash(python3:*)",
+      "mcp__primevue__get_component_props",
+      "Bash(npx vite:*)",
+      "Bash(claude skill:*)",
+      "Bash(for skill:*)",
+      "Bash(do echo:*)",
+      "Bash(claude plugins:*)",
+      "Bash(done)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "laravel-boost"
+  ],
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code' 'Execution completed — ready for your next input'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(jq -r '.tool_input.file_path // .tool_input.path // empty'); if [ -n \"$file\" ]; then case \"$file\" in *.js|*.ts|*.vue|*.jsx|*.tsx) npx eslint --fix \"$file\" 2>/dev/null ;; *.php) vendor/bin/pint \"$file\" --quiet 2>/dev/null; vendor/bin/phpstan analyse \"$file\" --no-progress --error-format=table 2>/dev/null ;; esac; fi"
+          }
+        ]
+      }
     ]
   }
 }
