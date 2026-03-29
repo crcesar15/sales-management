@@ -8,7 +8,6 @@ import { createApp, DefineComponent, h } from "vue";
 import { createI18n } from "vue-i18n";
 import { createInertiaApp, Link } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
-import { createPinia } from "pinia";
 import Ripple from "primevue/ripple";
 import Tooltip from "primevue/tooltip";
 import StyleClass from "primevue/styleclass";
@@ -22,9 +21,6 @@ import { definePreset } from "@primeuix/themes";
 import Aura from "@primeuix/themes/aura";
 import Can from "./Directives/can";
 import { configureYupLocale } from "./validations/yupLocale";
-import { useAuthStore } from "@stores/auth";
-import { inertiaAuthSyncPlugin } from "@plugins/inertia-auth-sync";
-import type { AuthData } from "@app-types/auth-types";
 
 import en from "../lang/en.json";
 import es from "../lang/es.json";
@@ -101,13 +97,8 @@ createInertiaApp({
   setup({
     el, App, props, plugin,
   }) {
-    // Create Pinia instance
-    const pinia = createPinia();
-
     const app = createApp({ render: () => h(App, props) })
       .use(plugin)
-      .use(pinia)
-      .use(inertiaAuthSyncPlugin)
       .use(i18n)
       .use(ZiggyVue)
       .use(PrimeVue, {
@@ -128,9 +119,6 @@ createInertiaApp({
       .directive("can", Can)
       .mount(el);
 
-    // Initialize auth store from initial Inertia props
-    const authStore = useAuthStore();
-    authStore.setAuth(props.initialPage.props.auth as AuthData | null);
   },
 });
 
