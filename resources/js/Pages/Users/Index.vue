@@ -64,14 +64,29 @@
               </div>
             </div>
           </template>
-          <Column field="first_name" :header="t('First Name')" sortable />
-          <Column field="last_name" :header="t('Last Name')" sortable />
-          <Column field="username" :header="t('Username')" sortable />
+          <Column field="full_name" :header="t('Name')">
+            <template #body="row" >
+              <div class="flex items-center h-full gap-2">
+                <div class="!sm:hidden !md:flex items-center justify-center rounded-full" style="height: 55px; width: 55px;">
+                  <Tag
+                    severity="secondary"
+                    class="flex w-full h-full items-center justify-center rounded-full !text-lg"
+                  >
+                    {{ row.data.initials }}
+                  </Tag>
+                </div>
+                <div class="flex flex-col items-start">
+                  <span class="text-sm font-bold">{{ row.data.full_name }}</span>
+                  <span class="text-xs text-gray-500">{{ row.data.email }}</span>
+                </div>
+              </div>
+            </template>
+          </Column>
           <Column field="roles" :header="t('Roles')">
             <template #body="{ data }">
               <div style="height: 55px;" class="flex items-center">
-                <Tag v-if="data.roles" severity="secondary">
-                  {{ data.roles }}
+                <Tag v-for="role in data.roles" style="margin-right: 5px;" :key="role.id" severity="secondary">
+                  {{ role }}
                 </Tag>
               </div>
             </template>
@@ -85,7 +100,6 @@
               </div>
             </template>
           </Column>
-          <Column field="created_at" :header="t('Created At')" sortable />
           <Column
             field="actions"
             :header="t('Actions')"
@@ -99,9 +113,8 @@
                   v-tooltip.top="t('Edit')"
                   icon="fa fa-edit"
                   text
+                  size="large"
                   rounded
-                  raised
-                  size="sm"
                   @click="router.visit(route('users.edit', row.data.id))"
                 />
                 <Button
@@ -110,9 +123,8 @@
                   v-tooltip.top="t('Restore')"
                   icon="fa fa-trash-arrow-up"
                   text
+                  size="large"
                   rounded
-                  raised
-                  size="sm"
                   @click="restoreUser(row.data.id)"
                 />
                 <Button
@@ -122,9 +134,8 @@
                   :disabled="isCurrentUser(row.data.id)"
                   icon="fa fa-trash"
                   text
+                  size="large"
                   rounded
-                  raised
-                  size="sm"
                   :severity="isCurrentUser(row.data.id) ? 'secondary' : 'primary'"
                   @click="deleteUser(row.data.id)"
                 />
@@ -161,7 +172,7 @@ import { useI18n } from "vue-i18n";
 import { computed, ref, watch } from "vue";
 import { router, useForm, usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { UserResponse } from "@/Types/user-types";
+import { UserAuth, UserResponse } from "@/Types/user-types";
 
 // Set composables
 const toast = useToast();
@@ -192,17 +203,16 @@ const props = defineProps<{
 }>();
 
 // Current user
-const currentUser = usePage().props.auth.user as UserResponse;
+const currentUser = usePage().props.auth.user as UserAuth;
 const isCurrentUser = (id: number) => currentUser.id === id;
 
 // Local filter/sort state
 const filter = ref(props.filters.filter ?? "");
-const status = ref(props.filters.status ?? "all");
+const status = ref(props.filters.status ?? "active");
 const sortField = ref(props.filters.order_by ?? "first_name");
 const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
 
 const statusOptions = computed(() => [
-  { label: t('All'), value: 'all' },
   { label: t('Active'), value: 'active' },
   { label: t('Inactive'), value: 'inactive' },
   { label: t('Archived'), value: 'archived' },
@@ -212,7 +222,7 @@ const statusOptions = computed(() => [
 const users = computed(() =>
   props.users.data.map((item) => ({
     ...item,
-    roles: item.roles.join(', '),
+    initials: item.first_name.charAt(0) + item.last_name.charAt(0),
     created_at: useDatetimeFormatter(item.created_at),
   }))
 );

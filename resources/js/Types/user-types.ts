@@ -19,6 +19,11 @@ interface UserPayload extends User {
   roles: number[]
 }
 
+interface UserAuth extends User {
+  id: number,
+  permissions: [],
+}
+
 interface UserResponse extends User {
   id: number
   full_name: string
@@ -45,4 +50,4 @@ interface UserResponse extends User {
   purchase_orders?: PurchaseOrder[]
 }
 
-export { User, UserPayload, UserResponse }
+export { User, UserPayload, UserResponse, UserAuth }

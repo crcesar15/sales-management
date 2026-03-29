@@ -29,7 +29,7 @@ final class UserController extends Controller
     {
         $this->authorize(PermissionsEnum::USERS_VIEW, auth()->user());
 
-        $status = request()->string('status', 'all')->value();
+        $status = request()->string('status', 'active')->value();
 
         $users = $this->userService->list(
             status: $status,
