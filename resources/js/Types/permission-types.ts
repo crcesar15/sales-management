@@ -15,3 +15,22 @@ export interface PermissionGrouped {
 export type PermissionAccordion = Pick<Permission, 'id' | 'name'> & {enabled?: boolean}
 
 export type PermissionGroupedAccordion = Pick<PermissionGrouped, 'value' | 'category'> & {permissions: PermissionAccordion[]}
+
+// Permission Matrix types
+export interface PermissionItem {
+  id: number;
+  name: string;
+  displayName: string;
+  enabled: boolean;
+}
+
+export interface PermissionCategoryRow {
+  category: string;
+  permissions: PermissionItem[];
+}
+
+export interface RawPermission {
+  id: number;
+  name: string;
+  category: string;
+}
