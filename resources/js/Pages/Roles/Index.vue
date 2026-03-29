@@ -18,14 +18,14 @@
       <template #content>
         <DataTable
           :value="roles"
-          resizableColumns
+          resizable-columns
           lazy
-          :totalRecords="props.roles.meta.total"
+          :total-records="props.roles.meta.total"
           :rows="props.roles.meta.per_page"
           :first="(props.roles.meta.current_page - 1) * props.roles.meta.per_page"
           paginator
-          sortField="name"
-          :sortOrder="1"
+          sort-field="name"
+          :sort-order="1"
           @page="onPage($event)"
           @sort="onSort($event)"
         >
@@ -33,23 +33,18 @@
             {{ t('No roles found') }}
           </template>
           <template #header>
-            <div class="grid grid-cols-12">
+            <div class="grid grid-cols-12 gap-2">
               <div
                 class="
                   flex
-                  lg:col-span-3
-                  lg:col-start-10
-                  md:col-span-6
-                  md:col-start-7
+                  xl:col-span-3 xl:col-start-10
+                  lg:col-span-4 lg:col-start-9
+                  md:col-span-6 md:col-start-7
                   col-span-12
-                  md:justify-content-end
-                  justify-center
+                  md:justify-end justify-center
                 "
               >
-                <IconField
-                  iconPosition="left"
-                  class="w-full"
-                >
+                <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
                   <InputText
                     v-model="filter"
@@ -87,9 +82,8 @@
                   v-can="'role.edit'"
                   icon="fa fa-edit"
                   text
+                  size="large"
                   rounded
-                  raised
-                  size="sm"
                   @click="router.visit(route('roles.edit', row.data.id))"
                 />
                 <Button
@@ -97,9 +91,8 @@
                   v-can="'role.delete'"
                   icon="fa fa-trash"
                   text
+                  size="large"
                   rounded
-                  raised
-                  size="sm"
                   @click="deleteRole(row.data.id)"
                 />
               </div>
