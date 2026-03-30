@@ -116,8 +116,8 @@ import {
   ConfirmDialog,
   useToast,
   useConfirm,
-  DataTablePageEvent,
-  DataTableSortEvent,
+  type DataTablePageEvent,
+  type DataTableSortEvent,
 } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
@@ -126,7 +126,7 @@ import { useI18n } from "vue-i18n";
 import { computed, ref, watch } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { RoleResponse } from "@/Types/role-types";
+import { type RoleResponse } from "@/Types/role-types";
 
 // Set composables
 const toast = useToast();

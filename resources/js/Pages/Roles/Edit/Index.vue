@@ -145,7 +145,7 @@ import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string } from "yup";
 import { ref, nextTick } from "vue";
-import { RoleResponse } from "@/Types/role-types";
+import { type RoleResponse } from "@/Types/role-types";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 
