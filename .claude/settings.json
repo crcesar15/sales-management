@@ -35,9 +35,7 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "laravel-boost"
-  ],
+  "enabledMcpjsonServers": ["laravel-boost"],
   "hooks": {
     "Stop": [
       {
@@ -56,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "file=$(jq -r '.tool_input.file_path // .tool_input.path // empty'); if [ -n \"$file\" ]; then case \"$file\" in *.js|*.ts|*.vue|*.jsx|*.tsx) npx eslint --fix \"$file\" 2>/dev/null ;; *.php) vendor/bin/pint \"$file\" --quiet 2>/dev/null; vendor/bin/phpstan analyse \"$file\" --no-progress --error-format=table 2>/dev/null ;; esac; fi"
+            "command": "file=$(jq -r '.tool_input.file_path // .tool_input.path // empty'); if [ -n \"$file\" ]; then case \"$file\" in *.js|*.ts|*.vue|*.jsx|*.tsx) npx lint --fix \"$file\" 2>/dev/null ;; *.php) vendor/bin/pint \"$file\" --quiet 2>/dev/null; vendor/bin/phpstan analyse \"$file\" --no-progress --error-format=table 2>/dev/null ;; esac; fi"
           }
         ]
       }
