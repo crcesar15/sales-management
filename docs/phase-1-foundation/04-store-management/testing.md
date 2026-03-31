@@ -169,7 +169,7 @@ it('changes store status to inactive', function () {
 
     $this->actingAs($admin)
         ->patch(route('stores.status', $store), ['status' => 'inactive'])
-        ->assertOk();
+        ->assertRedirect();
 
     expect($store->fresh()->status)->toBe('inactive');
 });
@@ -238,8 +238,7 @@ it('removes the store logo', function () {
 
     $this->actingAs($admin)
         ->delete(route('stores.logo.remove', $store))
-        ->assertOk()
-        ->assertJsonFragment(['message' => 'Logo removed successfully.']);
+        ->assertRedirect();
 
     expect($store->fresh()->getFirstMedia('logo'))->toBeNull();
 });
@@ -270,8 +269,7 @@ it('assigns a user to a store', function () {
             'user_id' => $user->id,
             'role_id' => $role->id,
         ])
-        ->assertOk()
-        ->assertJsonFragment(['message' => 'User assigned to store successfully.']);
+        ->assertRedirect();
 
     $this->assertDatabaseHas('store_user', [
         'store_id' => $store->id,
@@ -293,7 +291,7 @@ it('prevents assigning the same user to a store twice', function () {
             'user_id' => $user->id,
             'role_id' => $role->id,
         ])
-        ->assertStatus(409);
+        ->assertSessionHasErrors();
 });
 
 it('removes a user from a store', function () {
@@ -305,7 +303,7 @@ it('removes a user from a store', function () {
 
     $this->actingAs($admin)
         ->delete(route('stores.users.remove', [$store, $user]))
-        ->assertNoContent();
+        ->assertRedirect();
 
     $this->assertDatabaseMissing('store_user', [
         'store_id' => $store->id,
@@ -326,7 +324,7 @@ it('updates a user role within a store', function () {
         ->patch(route('stores.users.role', [$store, $user]), [
             'role_id' => $adminRole->id,
         ])
-        ->assertOk();
+        ->assertRedirect();
 
     $this->assertDatabaseHas('store_user', [
         'store_id' => $store->id,
@@ -345,7 +343,8 @@ it('logs user assignment in activity log', function () {
         ->post(route('stores.users.assign', $store), [
             'user_id' => $user->id,
             'role_id' => $role->id,
-        ]);
+        ])
+        ->assertRedirect();
 
     $this->assertDatabaseHas('activity_log', [
         'log_name'    => 'stores',

@@ -96,7 +96,6 @@ use App\Http\Resources\StoreResource;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\StoreService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -167,7 +166,7 @@ class StoreController extends Controller
             ->with('success', 'Store updated successfully.');
     }
 
-    public function updateStatus(UpdateStoreStatusRequest $request, Store $store): JsonResponse
+    public function updateStatus(UpdateStoreStatusRequest $request, Store $store): \Illuminate\Http\RedirectResponse
     {
         $store->update(['status' => $request->validated('status')]);
 
@@ -177,32 +176,40 @@ class StoreController extends Controller
             ->withProperties(['status' => $request->validated('status')])
             ->log('status_changed');
 
-        return response()->json(new StoreResource($store));
+        return redirect()
+            ->back()
+            ->with('success', 'Store status updated successfully.');
     }
 
-    public function removeLogo(Store $store): JsonResponse
+    public function removeLogo(Store $store): \Illuminate\Http\RedirectResponse
     {
         $store->clearMediaCollection('logo');
 
-        return response()->json(['message' => 'Logo removed successfully.']);
+        return redirect()
+            ->back()
+            ->with('success', 'Logo removed successfully.');
     }
 
-    public function assignUser(AssignUserToStoreRequest $request, Store $store): JsonResponse
+    public function assignUser(AssignUserToStoreRequest $request, Store $store): \Illuminate\Http\RedirectResponse
     {
         $this->service->assignUser($store, $request->validated());
 
-        return response()->json(['message' => 'User assigned to store successfully.']);
+        return redirect()
+            ->back()
+            ->with('success', 'User assigned to store successfully.');
     }
 
-    public function updateUserRole(Request $request, Store $store, User $user): JsonResponse
+    public function updateUserRole(Request $request, Store $store, User $user): \Illuminate\Http\RedirectResponse
     {
         $request->validate(['role_id' => ['required', 'exists:roles,id']]);
         $store->users()->updateExistingPivot($user->id, ['role_id' => $request->role_id]);
 
-        return response()->json(['message' => 'User role updated successfully.']);
+        return redirect()
+            ->back()
+            ->with('success', 'User role updated successfully.');
     }
 
-    public function removeUser(Store $store, User $user): \Illuminate\Http\Response
+    public function removeUser(Store $store, User $user): \Illuminate\Http\RedirectResponse
     {
         $store->users()->detach($user->id);
 
@@ -212,7 +219,9 @@ class StoreController extends Controller
             ->withProperties(['user_id' => $user->id])
             ->log('user_removed');
 
-        return response()->noContent();
+        return redirect()
+            ->back()
+            ->with('success', 'User removed from store successfully.');
     }
 }
 ```
@@ -233,6 +242,7 @@ namespace App\Services;
 use App\Models\Store;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class StoreService
 {
@@ -291,7 +301,9 @@ class StoreService
         $roleId = $data['role_id'];
 
         if ($store->users()->where('user_id', $userId)->exists()) {
-            abort(409, 'This user is already assigned to this store.');
+            throw ValidationException::withMessages([
+                'user_id' => 'This user is already assigned to this store.',
+            ]);
         }
 
         $store->users()->attach($userId, ['role_id' => $roleId]);

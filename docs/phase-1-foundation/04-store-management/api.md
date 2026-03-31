@@ -1,5 +1,7 @@
 # Store Management — API
 
+> **Status: Deferred.** This API spec is kept for a future REST API phase. The v1 implementation uses Inertia routes exclusively — see `backend.md` and `frontend.md` for the current approach. No separate `Api/StoreController` is needed at this time.
+
 ## Endpoints
 
 ### GET `/stores`
