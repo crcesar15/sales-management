@@ -162,8 +162,8 @@ import {
   Tag,
   useToast,
   useConfirm,
-  DataTablePageEvent,
-  DataTableSortEvent,
+  type DataTablePageEvent,
+  type DataTableSortEvent,
 } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
@@ -172,7 +172,7 @@ import { useI18n } from "vue-i18n";
 import { computed, ref, watch } from "vue";
 import { router, useForm, usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { UserAuth, UserResponse } from "@/Types/user-types";
+import { type UserAuth, type UserResponse } from "@/Types/user-types";
 
 // Set composables
 const toast = useToast();

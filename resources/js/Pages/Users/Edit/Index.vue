@@ -99,7 +99,7 @@
                     id="date-of-birth"
                     v-model="dateOfBirth"
                     v-bind="dateOfBirthAttrs"
-                    :pt:pcInputText="{ root: 'w-full' }"
+                    :pt="{pcInputText: { root: 'w-full' }}"
                   />
                 </div>
               </div>
@@ -222,8 +222,8 @@ import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string, array, number, date, ref as yupRef } from "yup";
 import { route } from "ziggy-js";
-import { RoleResponse } from "@/Types/role-types";
-import { UserResponse } from "@/Types/user-types";
+import { type RoleResponse } from "@/Types/role-types";
+import { type UserResponse } from "@/Types/user-types";
 import AppLayout from "@layouts/admin.vue";
 
 // Set composables
@@ -297,7 +297,7 @@ const submit = handleSubmit((values) => {
     ? values.date_of_birth.toISOString().split('T')[0]
     : (values.date_of_birth ?? null);
 
-  const payload: Record<string, unknown> = {
+  const payload = {
     ...values,
     date_of_birth: dateValue,
   };

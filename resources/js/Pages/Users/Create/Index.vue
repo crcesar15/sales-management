@@ -99,7 +99,7 @@
                     id="date-of-birth"
                     v-model="dateOfBirth"
                     v-bind="dateOfBirthAttrs"
-                    :pt:pcInputText="{ root: 'w-full' }"
+                    :pt="{pcInputText: { root: 'w-full' }}"
                   />
                 </div>
               </div>
@@ -222,7 +222,7 @@ import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string, array, number, date, ref as yupRef } from "yup";
 import { route } from "ziggy-js";
-import { RoleResponse } from "@/Types/role-types";
+import { type RoleResponse } from "@/Types/role-types";
 import AppLayout from "@layouts/admin.vue";
 
 // Set composables
