@@ -34,15 +34,15 @@ export function useMenuItems() {
       icon: "fa fa-warehouse",
       items: [
         {
-          key: "inventory-stock-levels",
-          label: t("Stock Levels"),
-          icon: "fa fa-boxes-stacked",
-          to: "home",
-        },
-        {
           key: "inventory-stores",
           label: t("Stores"),
           icon: "fa fa-store",
+          to: "home",
+        },
+        {
+          key: "inventory-stock-levels",
+          label: t("Stock Levels"),
+          icon: "fa fa-boxes-stacked",
           to: "home",
         },
         {
