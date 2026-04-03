@@ -1,36 +1,139 @@
 <template>
-  <div>
+  <div class="max-w-5xl mx-auto">
     <div class="flex justify-between mb-3">
-      <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ $t("Settings") }}
-      </h2>
-      <Button
-        icon="fa fa-save"
-        :label="$t('Save')"
-        class="uppercase"
-        raised
-        @click="submit()"
-      />
+      <h4 class="text-2xl font-bold flex items-center m-0">
+        {{ t("Settings") }}
+      </h4>
     </div>
-    <ConfirmDialog />
+
     <Card>
       <template #content>
-        <div class="grid grid-cols-12 gap-4">
-          <div
-            v-for="setting in settings"
-            :key="setting.id"
-            class="col-span-12 md:col-span-6"
-          >
-            <div class="flex flex-col gap-2 mb-3">
-              <label :for="setting.key">{{ setting.name }}</label>
-              <InputText
-                :id="setting.key"
-                v-model="setting.value"
-                autocomplete="off"
-              />
-            </div>
-          </div>
-        </div>
+        <TabView>
+          <TabPanel :header="t('General')">
+            <form @submit.prevent="onSubmitGeneral" class="space-y-4">
+              <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="business_name">{{ t("Business Name") }}</label>
+                    <InputText
+                      id="business_name"
+                      v-model="generalBusinessName"
+                      v-bind="generalBusinessNameAttrs"
+                      autocomplete="off"
+                      :class="{ 'p-invalid': generalErrors.business_name }"
+                    />
+                    <small v-if="generalErrors.business_name" class="text-red-400 dark:text-red-300">
+                      {{ generalErrors.business_name }}
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="business_phone">{{ t("Business Phone") }}</label>
+                    <InputText
+                      id="business_phone"
+                      v-model="generalBusinessPhone"
+                      v-bind="generalBusinessPhoneAttrs"
+                      type="tel"
+                      autocomplete="off"
+                      :class="{ 'p-invalid': generalErrors.business_phone }"
+                    />
+                    <small v-if="generalErrors.business_phone" class="text-red-400 dark:text-red-300">
+                      {{ generalErrors.business_phone }}
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-span-12">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="business_address">{{ t("Business Address") }}</label>
+                    <InputText
+                      id="business_address"
+                      v-model="generalBusinessAddress"
+                      v-bind="generalBusinessAddressAttrs"
+                      autocomplete="off"
+                      :class="{ 'p-invalid': generalErrors.business_address }"
+                    />
+                    <small v-if="generalErrors.business_address" class="text-red-400 dark:text-red-300">
+                      {{ generalErrors.business_address }}
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="timezone">{{ t("Timezone") }}</label>
+                    <Select
+                      id="timezone"
+                      v-model="generalTimezone"
+                      v-bind="generalTimezoneAttrs"
+                      :options="timezoneOptions"
+                      option-label="label"
+                      option-value="value"
+                      filter
+                      :placeholder="t('Select timezone')"
+                      :class="{ 'p-invalid': generalErrors.timezone }"
+                    />
+                    <small v-if="generalErrors.timezone" class="text-red-400 dark:text-red-300">
+                      {{ generalErrors.timezone }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end mt-4">
+                <Button
+                  type="submit"
+                  :label="t('Save')"
+                  icon="fa fa-save"
+                  class="uppercase"
+                  raised
+                  :loading="generalIsSubmitting"
+                />
+              </div>
+            </form>
+          </TabPanel>
+
+          <TabPanel :header="t('Tax')">
+            <form @submit.prevent="onSubmitTax" class="space-y-4">
+              <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="tax_rate">{{ t("Tax Rate (%)") }}</label>
+                    <InputNumber
+                      id="tax_rate"
+                      v-model="taxTaxRate"
+                      v-bind="taxTaxRateAttrs"
+                      :min="0"
+                      :max="100"
+                      :min-fraction-digits="0"
+                      :max-fraction-digits="2"
+                      suffix=" %"
+                      class="w-full"
+                      :class="{ 'p-invalid': taxErrors.tax_rate }"
+                    />
+                    <small class="text-gray-500">{{ t("Applied to all sales transactions") }}</small>
+                    <small v-if="taxErrors.tax_rate" class="text-red-400 dark:text-red-300">
+                      {{ taxErrors.tax_rate }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end mt-4">
+                <Button
+                  type="submit"
+                  :label="t('Save')"
+                  icon="fa fa-save"
+                  class="uppercase"
+                  raised
+                  :loading="taxIsSubmitting"
+                />
+              </div>
+            </form>
+          </TabPanel>
+        </TabView>
       </template>
     </Card>
   </div>
@@ -38,83 +141,140 @@
 
 <script setup lang="ts">
 import {
-  Card,
   Button,
+  Card,
   InputText,
-  ConfirmDialog,
+  InputNumber,
+  Select,
+  TabView,
+  TabPanel,
   useToast,
-  useConfirm,
 } from "primevue";
 
-import AppLayout from "@layouts/admin.vue";
+import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
-import {onMounted, ref } from "vue";
-import { SettingResponse } from "@/Types/setting-types";
-import { useSettingClient } from "@/Composables/useSettingClient";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string, number } from "yup";
+import { route } from "ziggy-js";
+import AppLayout from "@layouts/admin.vue";
 
 // Set composables
 const toast = useToast();
-const confirm = useConfirm();
 const { t } = useI18n();
 
 // Layout
-defineOptions({
-  layout: AppLayout,
+defineOptions({ layout: AppLayout });
+
+// Props from Inertia
+const props = defineProps<{
+  settings: Record<string, Record<string, string>>;
+}>();
+
+// Timezone options
+const timezoneOptions = Intl.supportedValuesOf("timeZone").map((tz) => ({
+  label: tz.replace(/_/g, " "),
+  value: tz,
+}));
+
+// ─── General Form ──────────────────────────────────────────────────────────
+
+const generalSchema = toTypedSchema(
+  object({
+    business_name: string().required().max(100),
+    business_address: string().nullable().optional().max(500),
+    business_phone: string().nullable().optional().max(30),
+    timezone: string().required(),
+  })
+);
+
+const {
+  handleSubmit: handleSubmitGeneral,
+  errors: generalErrors,
+  defineField: generalDefineField,
+  isSubmitting: generalIsSubmitting,
+  setErrors: generalSetErrors,
+} = useForm({
+  validationSchema: generalSchema,
+  initialValues: {
+    business_name: props.settings.general?.business_name ?? "My Store",
+    business_address: props.settings.general?.business_address ?? "",
+    business_phone: props.settings.general?.business_phone ?? "",
+    timezone: props.settings.general?.timezone ?? "UTC",
+  },
 });
 
-// List settings
-const { fetchSettingsApi, updateSettingApi, loading } = useSettingClient();
+const [generalBusinessName, generalBusinessNameAttrs] = generalDefineField("business_name");
+const [generalBusinessAddress, generalBusinessAddressAttrs] = generalDefineField("business_address");
+const [generalBusinessPhone, generalBusinessPhoneAttrs] = generalDefineField("business_phone");
+const [generalTimezone, generalTimezoneAttrs] = generalDefineField("timezone");
 
-const settings = ref<SettingResponse[]>();
-
-const fetchSettings = async () => {
-  const params = new URLSearchParams();
-  params.append('per_page', '100');
-
-  try {
-    const response = await fetchSettingsApi(params.toString());
-    settings.value = response.data.data;
-  } catch (error) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: t("Failed to fetch settings"),
-      life: 3000,
-    });
-  }
-}
-
-const submit = async () => {
-  confirm.require({
-    message: t("Are you sure you want to save these settings?"),
-    header: t("Confirm"),
-    icon: "fas fa-exclamation-triangle",
-    rejectLabel: t("Cancel"),
-    acceptLabel: t("Save"),
-    rejectClass: "p-button-secondary",
-    accept: async () => {
-      try {
-        await updateSettingApi(settings.value as SettingResponse[]);
-
-        toast.add({
-          severity: "success",
-          summary: t("Success"),
-          detail: t("Settings updated successfully"),
-          life: 3000,
-        });
-      } catch (error:any) {
-        toast.add({
-          severity: "error",
-          summary: t("Error"),
-          detail: error.response.data.message,
-          life: 3000,
-        });
-      }
-    }
+const onSubmitGeneral = handleSubmitGeneral((values) => {
+  router.put(route("settings.general.update"), values, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.add({
+        severity: "success",
+        summary: t("Saved"),
+        detail: t("Settings updated successfully"),
+        life: 3000,
+      });
+    },
+    onError: (errors) => {
+      generalSetErrors(errors);
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: t("An unexpected error occurred."),
+        life: 3000,
+      });
+    },
   });
-}
+});
 
-onMounted(() => {
-  fetchSettings();
-})
+// ─── Tax Form ──────────────────────────────────────────────────────────────
+
+const taxSchema = toTypedSchema(
+  object({
+    tax_rate: number().required().min(0).max(100),
+  })
+);
+
+const {
+  handleSubmit: handleSubmitTax,
+  errors: taxErrors,
+  defineField: taxDefineField,
+  isSubmitting: taxIsSubmitting,
+  setErrors: taxSetErrors,
+} = useForm({
+  validationSchema: taxSchema,
+  initialValues: {
+    tax_rate: parseFloat(props.settings.tax?.tax_rate ?? "0") || 0,
+  },
+});
+
+const [taxTaxRate, taxTaxRateAttrs] = taxDefineField("tax_rate");
+
+const onSubmitTax = handleSubmitTax((values) => {
+  router.put(route("settings.tax.update"), values, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.add({
+        severity: "success",
+        summary: t("Saved"),
+        detail: t("Settings updated successfully"),
+        life: 3000,
+      });
+    },
+    onError: (errors) => {
+      taxSetErrors(errors);
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: t("An unexpected error occurred."),
+        life: 3000,
+      });
+    },
+  });
+});
 </script>
