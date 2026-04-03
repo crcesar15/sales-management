@@ -11,13 +11,19 @@ app/Models/Setting.php
 ```php
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
-class Setting extends Model
+final class Setting extends Model
 {
+    use LogsActivity;
+
     protected $fillable = ['key', 'value', 'name', 'group'];
 
     // ─── Static Helper Methods ────────────────────────────────────────────────
@@ -62,87 +68,33 @@ class Setting extends Model
 
     // ─── Type Casting ─────────────────────────────────────────────────────────
 
-    private static array $booleanKeys = ['show_logo'];
-    private static array $integerKeys = ['low_stock_default_threshold', 'expiry_alert_days'];
-    private static array $floatKeys   = ['tax_rate'];
+    private static array $floatKeys = ['tax_rate'];
 
     private static function castValue(string $key, string $value): mixed
     {
-        if (in_array($key, static::$booleanKeys)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
-        }
-
-        if (in_array($key, static::$integerKeys)) {
-            return (int) $value;
-        }
-
         if (in_array($key, static::$floatKeys)) {
             return (float) $value;
         }
 
         return $value;
     }
-}
-```
 
----
+    // ─── Activity Log ─────────────────────────────────────────────────────────
 
-### 2. Seeder
-
-```
-database/seeders/SettingsSeeder.php
-```
-
-```php
-<?php
-
-namespace Database\Seeders;
-
-use App\Models\Setting;
-use Illuminate\Database\Seeder;
-
-class SettingsSeeder extends Seeder
-{
-    public function run(): void
+    public function getActivitylogOptions(): LogOptions
     {
-        $settings = [
-            // General
-            ['key' => 'store_name',    'value' => 'My Store', 'name' => 'Store Name',    'group' => 'general'],
-            ['key' => 'store_address', 'value' => '',         'name' => 'Store Address', 'group' => 'general'],
-            ['key' => 'store_phone',   'value' => '',         'name' => 'Store Phone',   'group' => 'general'],
-            ['key' => 'timezone',      'value' => 'UTC',      'name' => 'Timezone',      'group' => 'general'],
-
-            // Tax
-            ['key' => 'tax_rate', 'value' => '0', 'name' => 'Tax Rate (%)', 'group' => 'tax'],
-
-            // Receipt
-            ['key' => 'receipt_header', 'value' => '',      'name' => 'Receipt Header', 'group' => 'receipt'],
-            ['key' => 'receipt_footer', 'value' => '',      'name' => 'Receipt Footer', 'group' => 'receipt'],
-            ['key' => 'show_logo',      'value' => 'false', 'name' => 'Show Logo',      'group' => 'receipt'],
-
-            // Inventory
-            ['key' => 'low_stock_default_threshold', 'value' => '5',  'name' => 'Low Stock Default Threshold', 'group' => 'inventory'],
-            ['key' => 'expiry_alert_days',           'value' => '30', 'name' => 'Expiry Alert Days',           'group' => 'inventory'],
-        ];
-
-        foreach ($settings as $setting) {
-            Setting::firstOrCreate(
-                ['key' => $setting['key']],
-                $setting
-            );
-        }
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('setting')
+            ->dontSubmitEmptyLogs();
     }
 }
 ```
 
-Register in `DatabaseSeeder`:
-```php
-$this->call(SettingsSeeder::class);
-```
-
 ---
 
-### 3. Service Class
+### 2. Service Class
 
 ```
 app/Services/SettingsService.php
@@ -151,35 +103,18 @@ app/Services/SettingsService.php
 ```php
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 
-class SettingsService
+final class SettingsService
 {
     /**
-     * Update multiple settings at once and flush cache.
-     * Only updates keys that already exist in the database.
-     */
-    public function updateMany(array $data): void
-    {
-        $validKeys = Setting::whereIn('key', array_keys($data))->pluck('key');
-
-        foreach ($validKeys as $key) {
-            Setting::where('key', $key)->update(['value' => (string) $data[$key]]);
-        }
-
-        Cache::tags(['settings'])->flush();
-
-        activity('settings')
-            ->causedBy(auth()->user())
-            ->withProperties(['updated_keys' => $validKeys->toArray()])
-            ->log('settings_updated');
-    }
-
-    /**
      * Update settings for a specific group.
+     * Only updates keys that already exist in the database.
      */
     public function updateGroup(string $group, array $data): void
     {
@@ -192,11 +127,6 @@ class SettingsService
         }
 
         Cache::tags(['settings'])->flush();
-
-        activity('settings')
-            ->causedBy(auth()->user())
-            ->withProperties(['group' => $group, 'updated_keys' => $validKeys->toArray()])
-            ->log('settings_updated');
     }
 
     /**
@@ -214,7 +144,7 @@ class SettingsService
 
 ---
 
-### 4. Controller
+### 3. Controller
 
 ```
 app/Http/Controllers/SettingController.php
@@ -223,19 +153,19 @@ app/Http/Controllers/SettingController.php
 ```php
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Requests\Settings\UpdateGeneralSettingsRequest;
 use App\Http\Requests\Settings\UpdateTaxSettingsRequest;
-use App\Http\Requests\Settings\UpdateReceiptSettingsRequest;
-use App\Http\Requests\Settings\UpdateInventorySettingsRequest;
-use App\Models\Setting;
 use App\Services\SettingsService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class SettingController extends Controller
+final class SettingController extends Controller
 {
     public function __construct(
         private readonly SettingsService $service
@@ -243,65 +173,33 @@ class SettingController extends Controller
 
     public function index(): Response
     {
+        $this->authorize(PermissionsEnum::SETTINGS_MANAGE, auth()->user());
+
         return Inertia::render('Settings/Index', [
             'settings' => $this->service->all(),
-            'groups'   => ['general', 'tax', 'receipt', 'inventory'],
+            'groups'   => ['general', 'tax'],
         ]);
     }
 
-    public function updateGeneral(UpdateGeneralSettingsRequest $request): JsonResponse
+    public function updateGeneral(UpdateGeneralSettingsRequest $request): RedirectResponse
     {
         $this->service->updateGroup('general', $request->validated());
 
-        return response()->json([
-            'message'  => 'Settings updated successfully.',
-            'settings' => $request->validated(),
-        ]);
+        return redirect()->route('settings');
     }
 
-    public function updateTax(UpdateTaxSettingsRequest $request): JsonResponse
+    public function updateTax(UpdateTaxSettingsRequest $request): RedirectResponse
     {
         $this->service->updateGroup('tax', $request->validated());
 
-        return response()->json([
-            'message'  => 'Settings updated successfully.',
-            'settings' => $request->validated(),
-        ]);
-    }
-
-    public function updateReceipt(UpdateReceiptSettingsRequest $request): JsonResponse
-    {
-        $this->service->updateGroup('receipt', $request->validated());
-
-        return response()->json([
-            'message'  => 'Settings updated successfully.',
-            'settings' => $request->validated(),
-        ]);
-    }
-
-    public function updateInventory(UpdateInventorySettingsRequest $request): JsonResponse
-    {
-        $this->service->updateGroup('inventory', $request->validated());
-
-        return response()->json([
-            'message'  => 'Settings updated successfully.',
-            'settings' => $request->validated(),
-        ]);
-    }
-
-    public function public(): JsonResponse
-    {
-        return response()->json([
-            'store_name' => Setting::get('store_name'),
-            'timezone'   => Setting::get('timezone'),
-        ]);
+        return redirect()->route('settings');
     }
 }
 ```
 
 ---
 
-### 5. Form Requests
+### 4. Form Requests
 
 ```
 app/Http/Requests/Settings/UpdateGeneralSettingsRequest.php
@@ -310,25 +208,28 @@ app/Http/Requests/Settings/UpdateGeneralSettingsRequest.php
 ```php
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Settings;
 
+use App\Enums\PermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateGeneralSettingsRequest extends FormRequest
+final class UpdateGeneralSettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('settings.manage');
+        return $this->user()?->can(PermissionsEnum::SETTINGS_MANAGE->value) ?? false;
     }
 
     public function rules(): array
     {
         return [
-            'store_name'    => ['required', 'string', 'max:100'],
-            'store_address' => ['nullable', 'string', 'max:500'],
-            'store_phone'   => ['nullable', 'string', 'max:30'],
-            'timezone'      => ['required', 'string', Rule::in(timezone_identifiers_list())],
+            'business_name'    => ['required', 'string', 'max:100'],
+            'business_address' => ['nullable', 'string', 'max:500'],
+            'business_phone'   => ['nullable', 'string', 'max:30'],
+            'timezone'         => ['required', 'string', Rule::in(timezone_identifiers_list())],
         ];
     }
 }
@@ -341,15 +242,18 @@ app/Http/Requests/Settings/UpdateTaxSettingsRequest.php
 ```php
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Settings;
 
+use App\Enums\PermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateTaxSettingsRequest extends FormRequest
+final class UpdateTaxSettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('settings.manage');
+        return $this->user()?->can(PermissionsEnum::SETTINGS_MANAGE->value) ?? false;
     }
 
     public function rules(): array
@@ -361,123 +265,48 @@ class UpdateTaxSettingsRequest extends FormRequest
 }
 ```
 
-```
-app/Http/Requests/Settings/UpdateReceiptSettingsRequest.php
-```
-
-```php
-<?php
-
-namespace App\Http\Requests\Settings;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class UpdateReceiptSettingsRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return $this->user()->can('settings.manage');
-    }
-
-    public function rules(): array
-    {
-        return [
-            'receipt_header' => ['nullable', 'string', 'max:500'],
-            'receipt_footer' => ['nullable', 'string', 'max:500'],
-            'show_logo'      => ['required', 'boolean'],
-        ];
-    }
-}
-```
-
-```
-app/Http/Requests/Settings/UpdateInventorySettingsRequest.php
-```
-
-```php
-<?php
-
-namespace App\Http\Requests\Settings;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class UpdateInventorySettingsRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return $this->user()->can('settings.manage');
-    }
-
-    public function rules(): array
-    {
-        return [
-            'low_stock_default_threshold' => ['required', 'integer', 'min:1', 'max:9999'],
-            'expiry_alert_days'           => ['required', 'integer', 'min:1', 'max:365'],
-        ];
-    }
-}
-```
-
 ---
 
-### 6. Routes
+### 5. Routes
 
 ```php
 // routes/web.php
 use App\Http\Controllers\SettingController;
 
-// Public route — no auth
-Route::get('/settings/public', [SettingController::class, 'public'])->name('settings.public');
-
-// Admin-only routes
-Route::middleware(['auth', 'can:settings.manage'])->group(function () {
-    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::put('/settings/general',   [SettingController::class, 'updateGeneral'])->name('settings.general.update');
-    Route::put('/settings/tax',       [SettingController::class, 'updateTax'])->name('settings.tax.update');
-    Route::put('/settings/receipt',   [SettingController::class, 'updateReceipt'])->name('settings.receipt.update');
-    Route::put('/settings/inventory', [SettingController::class, 'updateInventory'])->name('settings.inventory.update');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings');
+    Route::put('/settings/general', [SettingController::class, 'updateGeneral'])->name('settings.general.update');
+    Route::put('/settings/tax', [SettingController::class, 'updateTax'])->name('settings.tax.update');
 });
 ```
 
 ---
 
-### 7. Usage by Other Modules
+### 6. Usage by Other Modules
 
 ```php
-// POS — get current tax rate
+// Get business info
+$businessName = Setting::get('business_name');    // returns string
+$businessAddress = Setting::get('business_address'); // returns string
+$businessPhone = Setting::get('business_phone');     // returns string
+
+// Get tax rate (e.g., for POS calculations)
 $taxRate = Setting::get('tax_rate'); // returns float e.g. 10.5
 
-// Receipt generator
-$showLogo = Setting::get('show_logo');  // returns bool true/false
-$header   = Setting::get('receipt_header'); // returns string
+// Get timezone
+$timezone = Setting::get('timezone'); // returns string e.g. 'UTC'
 
-// Inventory alert
-$threshold = Setting::get('low_stock_default_threshold'); // returns int 5
-$expiryDays = Setting::get('expiry_alert_days'); // returns int 30
-
-// Store info for receipts
-$storeName    = Setting::get('store_name');
-$storeAddress = Setting::get('store_address');
-$storePhone   = Setting::get('store_phone');
+// With defaults
+$taxRate = Setting::get('tax_rate', 0); // returns 0 if not set
 ```
 
 ---
 
-### 8. Activity Logging
+### 7. Activity Logging
 
-Log all settings updates:
+The `Setting` model uses the `LogsActivity` trait to automatically log changes. When a setting value is updated via `Setting::set()` or the service, the change is recorded in the activity log.
 
-```php
-activity('settings')
-    ->causedBy(auth()->user())
-    ->withProperties([
-        'group'        => $group,
-        'updated_keys' => $keys,
-    ])
-    ->log('settings_updated');
-```
-
-Log events: `settings_updated`
+Log name: `setting`
 
 ---
 
@@ -486,5 +315,4 @@ Log events: `settings_updated`
 - Use the `Setting::get($key, $default)` static helper everywhere in the codebase — avoid direct `DB::` queries for settings
 - Store all values as strings in the DB; perform casting in the model's `castValue()` method
 - Validate each group's keys with a dedicated `FormRequest` — this makes validation maintainable as the settings grow
-- Use `firstOrCreate` in the seeder so re-seeding does not overwrite admin-configured values
 - If the cache driver does not support tags, replace `Cache::tags(['settings'])->flush()` with explicit `Cache::forget("settings.{$key}")` calls per key
