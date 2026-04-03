@@ -13,6 +13,7 @@ use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendorsController;
@@ -130,7 +131,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/purchase-orders/create', [PurchaseOrdersController::class, 'create'])->name('purchase-orders.create');
 
     // Settings
-    Route::get('/settings', fn () => Inertia::render('Settings/Index'))->name('settings');
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings');
+    Route::put('/settings/general', [SettingController::class, 'updateGeneral'])->name('settings.general.update');
+    Route::put('/settings/tax', [SettingController::class, 'updateTax'])->name('settings.tax.update');
 
     // Activity Logs
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs');
