@@ -347,7 +347,7 @@ it('soft-deleted store does not appear in active listing', function () {
     expect($activeStores)->toBeGreaterThanOrEqual(2);
 
     expect(Store::query()->count())->toBe(1);
-    expect(Store::query()->first()->name)->toBe('Visible Store');
+    expect(Store::query()->first()->name ?? null)->toBe('Visible Store');
 });
 
 it('store code uniqueness includes soft-deleted stores', function () {
@@ -448,8 +448,8 @@ it('logs activity when creating a store', function () {
         ->first();
 
     expect($activity)->not->toBeNull();
-    expect($activity->log_name)->toBe('store');
-    expect($activity->causer_id)->toBe($admin->id);
+    expect($activity->log_name ?? null)->toBe('store');
+    expect($activity->causer_id ?? null)->toBe($admin->id);
 });
 
 it('logs activity when updating a store', function () {
@@ -472,7 +472,7 @@ it('logs activity when updating a store', function () {
         ->first();
 
     expect($activity)->not->toBeNull();
-    expect($activity->log_name)->toBe('store');
+    expect($activity->log_name ?? null)->toBe('store');
 });
 
 it('logs activity when deleting a store', function () {
@@ -491,8 +491,8 @@ it('logs activity when deleting a store', function () {
         ->first();
 
     expect($activity)->not->toBeNull();
-    expect($activity->log_name)->toBe('store');
-    expect($activity->causer_id)->toBe($admin->id);
+    expect($activity->log_name ?? null)->toBe('store');
+    expect($activity->causer_id ?? null)->toBe($admin->id);
 });
 
 it('logs activity when restoring a store', function () {
@@ -512,5 +512,5 @@ it('logs activity when restoring a store', function () {
         ->first();
 
     expect($activity)->not->toBeNull();
-    expect($activity->log_name)->toBe('store');
+    expect($activity->log_name ?? null)->toBe('store');
 });

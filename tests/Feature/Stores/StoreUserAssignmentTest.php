@@ -9,6 +9,7 @@ use Spatie\Activitylog\Models\Activity;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
+use function Pest\Laravel\assertDatabaseMissing;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,7 +63,7 @@ it('syncs users replacing previous assignments', function () {
         'user_id' => $newUser->id,
     ]);
 
-    $this->assertDatabaseMissing('store_user', [
+    assertDatabaseMissing('store_user', [
         'store_id' => $store->id,
         'user_id' => $oldUser->id,
     ]);
@@ -85,7 +86,7 @@ it('removes all users when empty array passed', function () {
         ])
         ->assertRedirect(route('stores'));
 
-    $this->assertDatabaseMissing('store_user', [
+    assertDatabaseMissing('store_user', [
         'store_id' => $store->id,
         'user_id' => $user->id,
     ]);
@@ -136,6 +137,6 @@ it('logs activity when users are assigned', function () {
         ->first();
 
     expect($activity)->not->toBeNull();
-    expect($activity->log_name)->toBe('store');
-    expect($activity->causer_id)->toBe($admin->id);
+    expect($activity->log_name ?? null)->toBe('store');
+    expect($activity->causer_id ?? null)->toBe($admin->id);
 });
