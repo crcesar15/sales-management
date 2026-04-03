@@ -317,5 +317,12 @@
   "Could not restore store": "Could not restore store",
   "Could not assign user": "Could not assign user",
   "Could not remove user": "Could not remove user",
-  "No users assigned": "No users assigned"
+  "No users assigned": "No users assigned",
+  "Business Name": "Business Name",
+  "Business Address": "Business Address",
+  "Business Phone": "Business Phone",
+  "Timezone": "Timezone",
+  "Tax Rate (%)": "Tax Rate (%)",
+  "General": "General",
+  "Tax": "Tax"
 }

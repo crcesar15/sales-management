@@ -180,6 +180,7 @@ export function useMenuItems() {
           label: t("Settings"),
           icon: "fa fa-sliders",
           to: "settings",
+          can: "setting.manage",
           routeUrl: route("settings"),
         },
         {

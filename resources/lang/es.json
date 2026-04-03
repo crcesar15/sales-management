@@ -318,5 +318,12 @@
   "Could not restore store": "No se pudo restaurar la tienda",
   "Could not assign user": "No se pudo asignar el usuario",
   "Could not remove user": "No se pudo remover el usuario",
-  "No users assigned": "No hay usuarios asignados"
+  "No users assigned": "No hay usuarios asignados",
+  "Business Name": "Nombre del Negocio",
+  "Business Address": "Dirección del Negocio",
+  "Business Phone": "Teléfono del Negocio",
+  "Timezone": "Zona Horaria",
+  "Tax Rate (%)": "Tasa de Impuesto (%)",
+  "General": "General",
+  "Tax": "Impuestos"
 }
