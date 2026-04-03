@@ -73,7 +73,14 @@ final class StoreService
                 $data['code'] = mb_strtoupper($data['code']);
             }
 
+            $users = $data['users'] ?? null;
+            unset($data['users']);
+
             $store->update($data);
+
+            if ($users !== null) {
+                $store->users()->sync($users);
+            }
 
             activity('store')
                 ->performedOn($store)
@@ -81,7 +88,7 @@ final class StoreService
                 ->withProperties($store->getChanges())
                 ->log('updated');
 
-            return $store;
+            return $store->load('users');
         });
     }
 

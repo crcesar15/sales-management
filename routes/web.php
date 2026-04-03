@@ -114,8 +114,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::delete('/stores/{store}', [StoreController::class, 'destroy'])->name('stores.destroy');
     Route::put('/stores/{store}/restore', [StoreController::class, 'restore'])->name('stores.restore')->withTrashed();
     Route::patch('/stores/{store}/status', [StoreController::class, 'updateStatus'])->name('stores.status');
-    Route::post('/stores/{store}/users', [StoreController::class, 'assignUser'])->name('stores.users.assign');
-    Route::delete('/stores/{store}/users/{user}', [StoreController::class, 'removeUser'])->name('stores.users.remove');
 
     // Vendors Routes
     Route::get('/vendors', [VendorsController::class, 'index'])->name('vendors');

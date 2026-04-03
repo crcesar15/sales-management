@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
-use App\Http\Requests\Store\AssignUserToStoreRequest;
 use App\Http\Requests\Store\CreateStoreRequest;
 use App\Http\Requests\Store\UpdateStoreRequest;
 use App\Http\Resources\Store\StoreCollection;
@@ -70,9 +69,19 @@ final class StoreController extends Controller
         $this->authorize(PermissionsEnum::STORE_EDIT);
 
         $store->load(['users.roles']);
+        $availableUsers = User::query()
+            ->where('status', 'active')
+            ->select(['id', 'first_name', 'last_name', 'email'])
+            ->get()
+            ->map(fn (User $user): array => [
+                'id' => $user->id,
+                'full_name' => $user->full_name,
+                'email' => $user->email,
+            ]);
 
         return Inertia::render('Stores/Edit/Index', [
             'store' => $store,
+            'availableUsers' => $availableUsers,
         ]);
     }
 
@@ -108,25 +117,6 @@ final class StoreController extends Controller
         $status = request()->string('status')->value();
 
         $this->storeService->updateStatus($store, $status);
-
-        return redirect()->back();
-    }
-
-    public function assignUser(AssignUserToStoreRequest $request, Store $store): RedirectResponse
-    {
-        /** @var User $user */
-        $user = User::findOrFail($request->validated('user_id'));
-
-        $this->storeService->assignUser($store, $user);
-
-        return redirect()->back();
-    }
-
-    public function removeUser(Store $store, User $user): RedirectResponse
-    {
-        $this->authorize(PermissionsEnum::STORE_EDIT);
-
-        $this->storeService->removeUser($store, $user);
 
         return redirect()->back();
     }

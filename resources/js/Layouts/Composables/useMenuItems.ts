@@ -37,7 +37,9 @@ export function useMenuItems() {
           key: "inventory-stores",
           label: t("Stores"),
           icon: "fa fa-store",
-          to: "home",
+          to: "stores",
+          can: "store.view",
+          routeUrl: route("stores"),
         },
         {
           key: "inventory-stock-levels",

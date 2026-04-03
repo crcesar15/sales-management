@@ -36,6 +36,8 @@ final class UpdateStoreRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:150'],
             'status' => ['required', 'string', 'in:active,inactive'],
+            'users' => ['sometimes', 'nullable', 'array'],
+            'users.*' => ['exists:users,id'],
         ];
     }
 }
