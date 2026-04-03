@@ -31,7 +31,7 @@ System behavior must be configurable without code changes. Store name, tax rate,
 ## Requirements
 - Display all settings organized by group in a tabbed or sectioned UI
 - Admin can update any setting value via a single form per group (or all at once)
-- Settings are validated per type (numeric for tax, boolean for show_logo, etc.)
+- Settings are validated per type (numeric for tax_rate, etc.)
 - Settings are cached with a tagged cache; cache is flushed on any update
 - All settings are seeded with sensible defaults
 - Settings can be read by any module using a helper or service class
