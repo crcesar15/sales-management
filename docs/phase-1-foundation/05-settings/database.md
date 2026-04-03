@@ -48,22 +48,13 @@ public function down(): void
 
 $settings = [
     // general
-    ['key' => 'store_name',    'value' => 'My Store', 'name' => 'Store Name',    'group' => 'general'],
-    ['key' => 'store_address', 'value' => '',         'name' => 'Store Address', 'group' => 'general'],
-    ['key' => 'store_phone',   'value' => '',         'name' => 'Store Phone',   'group' => 'general'],
-    ['key' => 'timezone',      'value' => 'UTC',      'name' => 'Timezone',      'group' => 'general'],
+    ['key' => 'business_name',    'value' => 'My Store', 'name' => 'Business Name',    'group' => 'general'],
+    ['key' => 'business_address', 'value' => '',         'name' => 'Business Address', 'group' => 'general'],
+    ['key' => 'business_phone',   'value' => '',         'name' => 'Business Phone',   'group' => 'general'],
+    ['key' => 'timezone',         'value' => 'UTC',      'name' => 'Timezone',         'group' => 'general'],
 
     // tax
     ['key' => 'tax_rate', 'value' => '0', 'name' => 'Tax Rate (%)', 'group' => 'tax'],
-
-    // receipt
-    ['key' => 'receipt_header', 'value' => '',      'name' => 'Receipt Header', 'group' => 'receipt'],
-    ['key' => 'receipt_footer', 'value' => '',      'name' => 'Receipt Footer', 'group' => 'receipt'],
-    ['key' => 'show_logo',      'value' => 'false', 'name' => 'Show Logo',      'group' => 'receipt'],
-
-    // inventory
-    ['key' => 'low_stock_default_threshold', 'value' => '5',  'name' => 'Low Stock Default Threshold', 'group' => 'inventory'],
-    ['key' => 'expiry_alert_days',           'value' => '30', 'name' => 'Expiry Alert Days',           'group' => 'inventory'],
 ];
 ```
 
@@ -105,8 +96,8 @@ Cache::tags(['settings'])->flush();
 
 | Key | Stored Value | Cast To |
 |---|---|---|
-| `store_name` | string | string |
+| `business_name` | string | string |
+| `business_address` | string | string |
+| `business_phone` | string | string |
+| `timezone` | string | string |
 | `tax_rate` | `"10.5"` | float |
-| `show_logo` | `"true"` / `"false"` | bool |
-| `low_stock_default_threshold` | `"5"` | int |
-| `expiry_alert_days` | `"30"` | int |

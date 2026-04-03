@@ -6,20 +6,25 @@ A key-value settings store that holds configurable system-wide values grouped by
 ## Why
 System behavior must be configurable without code changes. Store name, tax rate, receipt layout, and inventory alert thresholds need to be adjustable by the admin. A simple key-value approach is flexible and easy to extend without new migrations.
 
-## Settings Groups & Keys
+## Phase 1 Settings Groups & Keys
 
 | Group | Key | Type | Default | Used By |
 |---|---|---|---|---|
-| `general` | `store_name` | string | `My Store` | Receipts, UI |
-| `general` | `store_address` | string | `` | Receipts |
-| `general` | `store_phone` | string | `` | Receipts |
+| `general` | `business_name` | string | `My Store` | UI |
+| `general` | `business_address` | string | `` | — |
+| `general` | `business_phone` | string | `` | — |
 | `general` | `timezone` | string | `UTC` | Reports, timestamps |
-| `tax` | `tax_rate` | numeric | `0` | POS, receipts |
-| `receipt` | `receipt_header` | text | `` | Receipt printing |
-| `receipt` | `receipt_footer` | text | `` | Receipt printing |
-| `receipt` | `show_logo` | boolean | `false` | Receipt printing |
-| `inventory` | `low_stock_default_threshold` | integer | `5` | Inventory alerts |
-| `inventory` | `expiry_alert_days` | integer | `30` | Expiry alerts |
+| `tax` | `tax_rate` | numeric | `0` | POS, receipts (future) |
+
+**Deferred to later phases** (added when consuming modules are built):
+
+| Group | Key | Type | Default | Phase |
+|---|---|---|---|---|
+| `receipt` | `receipt_header` | text | `` | POS/Receipt module |
+| `receipt` | `receipt_footer` | text | `` | POS/Receipt module |
+| `receipt` | `show_logo` | boolean | `false` | POS/Receipt module |
+| `inventory` | `low_stock_default_threshold` | integer | `5` | Inventory module |
+| `inventory` | `expiry_alert_days` | integer | `30` | Inventory module |
 
 **Note:** Payment methods (cash, credit_card, qr, transfer) are hardcoded and are **not** stored in settings.
 
@@ -33,17 +38,14 @@ System behavior must be configurable without code changes. Store name, tax rate,
 - Admin-only access (requires `settings.manage` permission)
 
 ## Acceptance Criteria
-- [ ] Seeder populates all settings with defaults
-- [ ] Admin can view all settings grouped by category
+- [ ] Seeder populates all Phase 1 settings with defaults
+- [ ] Admin can view all settings grouped by category (general, tax)
 - [ ] Admin can update any setting and changes are persisted
 - [ ] Tax rate accepts only numeric values (0–100)
-- [ ] `show_logo` is stored and handled as a boolean
 - [ ] Cache is invalidated immediately after any setting update
 - [ ] `Setting::get('key')` returns the cached value
 - [ ] `Setting::set('key', 'value')` updates and flushes cache
 - [ ] Non-admin users cannot access the settings page or API
-- [ ] Settings are accessible by the POS module for tax calculation
-- [ ] Settings are accessible by the receipt generator for header/footer/logo
 
 ## Dependencies
 - Phase 1: Authentication (admin must be logged in)
