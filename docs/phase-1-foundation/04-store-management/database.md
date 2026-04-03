@@ -45,88 +45,17 @@
 - `store_user(store_id, user_id)` — UNIQUE composite (prevent duplicate assignments)
 - `media(model_type, model_id)` — INDEX (Spatie default)
 
-## Migration — `stores` Table
-
-```php
-// database/migrations/xxxx_create_stores_table.php
-public function up(): void
-{
-    Schema::create('stores', function (Blueprint $table) {
-        $table->id();
-        $table->string('name', 100);
-        $table->string('code', 20)->unique();
-        $table->text('address')->nullable();
-        $table->enum('status', ['active', 'inactive'])->default('active');
-        $table->timestamps();
-
-        $table->index('status');
-    });
-}
-```
-
-## Migration — `store_user` Pivot
-
-```php
-// database/migrations/xxxx_create_store_user_table.php
-public function up(): void
-{
-    Schema::create('store_user', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('store_id')->constrained()->cascadeOnDelete();
-        $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-        $table->foreignId('role_id')->constrained('roles');
-        $table->timestamps();
-
-        $table->unique(['store_id', 'user_id']);
-    });
-}
-```
-
-## Query Patterns
-
-```php
-// List active stores with user count
-Store::where('status', 'active')
-    ->withCount('users')
-    ->orderBy('name')
-    ->paginate(20);
-
-// Search stores by name or code
-Store::where(function ($q) use ($search) {
-    $q->where('name', 'like', "%{$search}%")
-      ->orWhere('code', 'like', "%{$search}%");
-})->paginate(20);
-
-// Get all users for a store with their role
-Store::with(['users' => fn ($q) => $q->withPivot('role_id')])
-    ->findOrFail($storeId);
-
-// Get users with role names (join roles table)
-$store->users()
-    ->withPivot('role_id')
-    ->with('roles')
-    ->get();
-```
+## Migrations
+- `xxxx_create_stores_table.php` — columns as defined in table above, with `unique('code')` and `index('status')`
+- `xxxx_create_store_user_table.php` — pivot with `store_id`, `user_id`, `role_id` FKs, `unique(['store_id', 'user_id'])`
 
 ## Relationships
+- `Store ↔ User`: `BelongsToMany` via `store_user` pivot with `role_id`, both sides use `withPivot('role_id')->withTimestamps()`
 
-```php
-// Store model
-public function users(): BelongsToMany
-{
-    return $this->belongsToMany(User::class)
-        ->withPivot('role_id')
-        ->withTimestamps();
-}
-
-// User model (inverse)
-public function stores(): BelongsToMany
-{
-    return $this->belongsToMany(Store::class)
-        ->withPivot('role_id')
-        ->withTimestamps();
-}
-```
+## Query Hints
+- List stores: `->withCount('users')`, filter by `status`, search `name` or `code` with `LIKE`
+- Store detail: eager load `users.roles` to avoid N+1
+- Use `when()` for conditional query building per service conventions
 
 ## Media Library Notes
 - Collection name: `logo`

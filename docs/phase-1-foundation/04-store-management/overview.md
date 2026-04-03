@@ -16,7 +16,7 @@ Stores are the top-level organizational unit in the system. All sales, stock, pu
 - Assign a user to a store with a role (`admin` or `sales_rep`)
 - Remove a user from a store
 - View users assigned to a store
-- Admin-only access (requires `stores.manage` permission)
+- Admin-only access (requires `STORES_VIEW`, `STORES_CREATE`, `STORES_EDIT`, `STORES_DELETE` permissions via `PermissionsEnum`)
 
 ## Acceptance Criteria
 - [ ] Admin can create a new store with all required fields validated
@@ -34,7 +34,7 @@ Stores are the top-level organizational unit in the system. All sales, stock, pu
 
 ## Dependencies
 - Phase 1: Authentication (admin must be logged in)
-- Phase 1: Roles & Permissions (`stores.manage` permission, role assignments)
+- Phase 1: Roles & Permissions (`STORES_*` permissions in `PermissionsEnum`, role assignments)
 - Phase 1: User Management (users are assigned to stores)
 - `spatie/laravel-medialibrary` installed and configured
 
