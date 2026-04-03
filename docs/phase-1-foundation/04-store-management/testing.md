@@ -1,5 +1,7 @@
 # Store Management — Testing
 
+> **Status: Deferred.** These tests were originally designed for API endpoints. Since v1 uses Inertia web routes exclusively, these tests need to be adapted to handle CSRF tokens and web route assertions. Tests will be written when the API phase is implemented or when CSRF handling for Inertia web-route tests is set up.
+
 ## Test File Location
 ```
 tests/Feature/Stores/StoreManagementTest.php

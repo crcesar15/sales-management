@@ -64,6 +64,10 @@
     ],
     "post-create-project-cmd": [
       "@php artisan key:generate --ansi"
+    ],
+    "lint": [
+      "vendor/bin/pint --dirty",
+      "vendor/bin/phpstan analyse"
     ]
   },
   "extra": {

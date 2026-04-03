@@ -1,10 +1,9 @@
 ---
 name: inertia-vue-development
-description: >-
-  Develops Inertia.js v2 Vue client-side applications. Activates when creating
-  Vue pages, forms, or navigation; using <Link>, <Form>, useForm, or router;
-  working with deferred props, prefetching, or polling; or when user mentions
-  Vue with Inertia, Vue pages, Vue forms, or Vue navigation.
+description: "Develops Inertia.js v2 Vue client-side applications. Activates when creating Vue pages, forms, or navigation; using <Link>, <Form>, useForm, or router; working with deferred props, prefetching, or polling; or when user mentions Vue with Inertia, Vue pages, Vue forms, or Vue navigation."
+license: MIT
+metadata:
+  author: laravel
 ---
 
 # Inertia Vue Development
@@ -16,7 +15,7 @@ Activate this skill when:
 - Creating or modifying Vue page components for Inertia
 - Working with forms in Vue (using `<Form>` or `useForm`)
 - Implementing client-side navigation with `<Link>` or `router`
-- Using v2 features: deferred props, prefetching, or polling
+- Using v2 features: deferred props, prefetching, WhenVisible, InfiniteScroll, once props, flash data, or polling
 - Building Vue-specific features with the Inertia protocol
 
 ## Documentation
@@ -31,10 +30,8 @@ Vue page components should be placed in the `resources/js/Pages` directory.
 
 ### Page Component Structure
 
-Important: Vue components must have a single root element.
-
-<code-snippet name="Basic Vue Page Component" lang="vue">
-
+<!-- Basic Vue Page Component -->
+```vue
 <script setup>
 defineProps({
     users: Array
@@ -51,8 +48,7 @@ defineProps({
         </ul>
     </div>
 </template>
-
-</code-snippet>
+```
 
 ## Client-Side Navigation
 
@@ -60,8 +56,8 @@ defineProps({
 
 Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
 
-<code-snippet name="Inertia Vue Navigation" lang="vue">
-
+<!-- Inertia Vue Navigation -->
+```vue
 <script setup>
 import { Link } from '@inertiajs/vue3'
 </script>
@@ -73,13 +69,12 @@ import { Link } from '@inertiajs/vue3'
         <Link :href="`/users/${user.id}`">View User</Link>
     </div>
 </template>
-
-</code-snippet>
+```
 
 ### Link with Method
 
-<code-snippet name="Link with POST Method" lang="vue">
-
+<!-- Link with POST Method -->
+```vue
 <script setup>
 import { Link } from '@inertiajs/vue3'
 </script>
@@ -89,15 +84,14 @@ import { Link } from '@inertiajs/vue3'
         Logout
     </Link>
 </template>
-
-</code-snippet>
+```
 
 ### Prefetching
 
 Prefetch pages to improve perceived performance:
 
-<code-snippet name="Prefetch on Hover" lang="vue">
-
+<!-- Prefetch on Hover -->
+```vue
 <script setup>
 import { Link } from '@inertiajs/vue3'
 </script>
@@ -107,13 +101,12 @@ import { Link } from '@inertiajs/vue3'
         Users
     </Link>
 </template>
-
-</code-snippet>
+```
 
 ### Programmatic Navigation
 
-<code-snippet name="Router Visit" lang="vue">
-
+<!-- Router Visit -->
+```vue
 <script setup>
 import { router } from '@inertiajs/vue3'
 
@@ -135,8 +128,7 @@ function createUser() {
     <Link href="/users">Users</Link>
     <Link href="/logout" method="post" as="button">Logout</Link>
 </template>
-
-</code-snippet>
+```
 
 ## Form Handling
 
@@ -144,8 +136,8 @@ function createUser() {
 
 The recommended way to build forms is with the `<Form>` component:
 
-<code-snippet name="Form Component Example" lang="vue">
-
+<!-- Form Component Example -->
+```vue
 <script setup>
 import { Form } from '@inertiajs/vue3'
 </script>
@@ -165,13 +157,12 @@ import { Form } from '@inertiajs/vue3'
         <div v-if="wasSuccessful">User created!</div>
     </Form>
 </template>
-
-</code-snippet>
+```
 
 ### Form Component With All Props
 
-<code-snippet name="Form Component Full Example" lang="vue">
-
+<!-- Form Component Full Example -->
+```vue
 <script setup>
 import { Form } from '@inertiajs/vue3'
 </script>
@@ -210,8 +201,7 @@ import { Form } from '@inertiajs/vue3'
         <div v-if="wasSuccessful">Saved!</div>
     </Form>
 </template>
-
-</code-snippet>
+```
 
 ### Form Component Reset Props
 
@@ -223,8 +213,8 @@ The `<Form>` component supports automatic resetting:
 
 Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
 
-<code-snippet name="Form with Reset Props" lang="vue">
-
+<!-- Form with Reset Props -->
+```vue
 <script setup>
 import { Form } from '@inertiajs/vue3'
 </script>
@@ -245,8 +235,7 @@ import { Form } from '@inertiajs/vue3'
         </button>
     </Form>
 </template>
-
-</code-snippet>
+```
 
 Forms can also be built using the `useForm` composable for more programmatic control. Use the `search-docs` tool with a query of `useForm helper` for guidance.
 
@@ -254,8 +243,8 @@ Forms can also be built using the `useForm` composable for more programmatic con
 
 For more programmatic control or to follow existing conventions, use the `useForm` composable:
 
-<code-snippet name="useForm Composable Example" lang="vue">
-
+<!-- useForm Composable Example -->
+```vue
 <script setup>
 import { useForm } from '@inertiajs/vue3'
 
@@ -288,8 +277,7 @@ function submit() {
         </button>
     </form>
 </template>
-
-</code-snippet>
+```
 
 ## Inertia v2 Features
 
@@ -297,8 +285,8 @@ function submit() {
 
 Use deferred props to load data after initial page render:
 
-<code-snippet name="Deferred Props with Empty State" lang="vue">
-
+<!-- Deferred Props with Empty State -->
+```vue
 <script setup>
 defineProps({
     users: Array
@@ -319,15 +307,14 @@ defineProps({
         </ul>
     </div>
 </template>
-
-</code-snippet>
+```
 
 ### Polling
 
 Automatically refresh data at intervals:
 
-<code-snippet name="Polling Example" lang="vue">
-
+<!-- Polling Example -->
+```vue
 <script setup>
 import { router } from '@inertiajs/vue3'
 import { onMounted, onUnmounted } from 'vue'
@@ -355,42 +342,43 @@ onUnmounted(() => {
         <div>Active Users: {{ stats.activeUsers }}</div>
     </div>
 </template>
+```
 
-</code-snippet>
+### WhenVisible
 
-### WhenVisible (Infinite Scroll)
+Lazy-load a prop when an element scrolls into view. Useful for deferring expensive data that sits below the fold:
 
-Load more data when user scrolls to a specific element:
-
-<code-snippet name="Infinite Scroll with WhenVisible" lang="vue">
-
+<!-- WhenVisible Example -->
+```vue
 <script setup>
 import { WhenVisible } from '@inertiajs/vue3'
 
 defineProps({
-    users: Object
+    stats: Object
 })
 </script>
 
 <template>
     <div>
-        <div v-for="user in users.data" :key="user.id">
-            {{ user.name }}
-        </div>
+        <h1>Dashboard</h1>
 
-        <WhenVisible
-            v-if="users.next_page_url"
-            data="users"
-            :params="{ page: users.current_page + 1 }"
-        >
+        <!-- stats prop is loaded only when this section scrolls into view -->
+        <WhenVisible data="stats" :buffer="200">
             <template #fallback>
-                <div>Loading more...</div>
+                <div class="animate-pulse">Loading stats...</div>
+            </template>
+
+            <template #default="{ fetching }">
+                <div>
+                    <p>Total Users: {{ stats.total_users }}</p>
+                    <p>Revenue: {{ stats.revenue }}</p>
+                    <span v-if="fetching">Refreshing...</span>
+                </div>
             </template>
         </WhenVisible>
     </div>
 </template>
-
-</code-snippet>
+```
 
 ## Server-Side Patterns
 
