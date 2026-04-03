@@ -214,7 +214,7 @@ Inertia Response → Vue Page Component
 ### 3.3 Key Data Relationships
 
 ```
-stores ──────────────── store_user (pivot: store_id, user_id, role_id)
+stores ──────────────── store_user (pivot: store_id, user_id)
                                 │
 users ──────────────────────────┘
 

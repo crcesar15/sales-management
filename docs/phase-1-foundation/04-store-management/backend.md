@@ -9,7 +9,7 @@
 | `app/Services/StoreService.php` | `final` class — `create()`, `update()`, `delete()`, `restore()`, `assignUser()` with `DB::transaction()` + activity logging |
 | `app/Http/Requests/Store/CreateStoreRequest.php` | Validation + auth via `PermissionsEnum::STORE_CREATE` |
 | `app/Http/Requests/Store/UpdateStoreRequest.php` | Validation + auth via `PermissionsEnum::STORE_EDIT`, unique code `Rule::ignore()` |
-| `app/Http/Requests/Store/AssignUserToStoreRequest.php` | Validates `user_id` + `role_id`, auth via `PermissionsEnum::STORE_EDIT` |
+| `app/Http/Requests/Store/AssignUserToStoreRequest.php` | Validates `user_id`, auth via `PermissionsEnum::STORE_EDIT` |
 | `app/Http/Resources/StoreResource.php` | JSON resource — used for both web props and API responses |
 | `app/Policies/StorePolicy.php` | All actions check `STORE_*` permissions |
 
@@ -29,7 +29,6 @@
 | `restore` | PATCH | Delegates to `StoreService::restore()`, restores soft-deleted store, redirects to `stores.show` |
 | `updateStatus` | PATCH | Updates status + logs activity, redirects back |
 | `assignUser` | POST | Delegates to `StoreService::assignUser()`, redirects back |
-| `updateUserRole` | PATCH | Updates pivot `role_id`, redirects back |
 | `removeUser` | DELETE | Detaches user + logs activity, redirects back |
 
 ---
@@ -71,8 +70,6 @@ Route::middleware(['auth', 'can:stores.manage'])->group(function () {
          ->name('stores.status');
     Route::post('stores/{store}/users', [StoreController::class, 'assignUser'])
          ->name('stores.users.assign');
-    Route::patch('stores/{store}/users/{user}', [StoreController::class, 'updateUserRole'])
-         ->name('stores.users.role');
     Route::delete('stores/{store}/users/{user}', [StoreController::class, 'removeUser'])
          ->name('stores.users.remove');
 });

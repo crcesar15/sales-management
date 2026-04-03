@@ -82,14 +82,12 @@ Get a single store with its assigned users.
     {
       "id": 1,
       "full_name": "John Doe",
-      "email": "john@example.com",
-      "role": "admin"
+      "email": "john@example.com"
     },
     {
       "id": 2,
       "full_name": "Jane Smith",
-      "email": "jane@example.com",
-      "role": "sales_rep"
+      "email": "jane@example.com"
     }
   ],
   "created_at": "2026-01-01T00:00:00Z",
@@ -155,13 +153,12 @@ Toggle store active/inactive status.
 ---
 
 ### POST `/stores/{id}/users`
-Assign a user to a store with a role.
+Assign a user to a store.
 
 **Request Body:**
 ```json
 {
-  "user_id": 3,
-  "role_id": 2
+  "user_id": 3
 }
 ```
 
@@ -169,28 +166,13 @@ Assign a user to a store with a role.
 ```json
 {
   "message": "User assigned to store successfully.",
-  "user": { "id": 3, "full_name": "Bob Lee", "role": "sales_rep" }
+  "user": { "id": 3, "full_name": "Bob Lee" }
 }
 ```
 
 **Error (409):** User is already assigned to this store.
 ```json
 { "message": "This user is already assigned to this store." }
-```
-
----
-
-### PATCH `/stores/{id}/users/{user_id}`
-Update a user's role within a store.
-
-**Request Body:**
-```json
-{ "role_id": 1 }
-```
-
-**Response (200):**
-```json
-{ "message": "User role updated successfully." }
 ```
 
 ---

@@ -113,12 +113,10 @@ it('assigns a user to a store', function () {
     $admin = User::factory()->create()->assignRole('admin');
     $user = User::factory()->create();
     $store = Store::factory()->create();
-    $role = Role::findByName('sales_rep');
 
     $this->actingAs($admin)
         ->post(route('users.stores.assign', $user), [
             'store_id' => $store->id,
-            'role_id' => $role->id,
         ])
         ->assertOk();
 

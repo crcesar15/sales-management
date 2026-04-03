@@ -51,14 +51,11 @@ tests/Feature/Stores/StoreUserAssignmentTest.php
 ### `StoreUserAssignmentTest`
 
 **Assign**
-- Assigns user to store with role → verify `store_user` pivot record
+- Assigns user to store → verify `store_user` pivot record
 - Prevents duplicate assignment → `assertSessionHasErrors()`
 
 **Remove**
 - Removes user from store → verify pivot record deleted
-
-**Update Role**
-- Updates user role within store → verify pivot `role_id` changed
 
 **Activity Logging**
 - Logs `user_assigned` event → verify `activity_log` entry with correct `log_name`, `subject_id`, `causer_id`
@@ -74,5 +71,5 @@ tests/Feature/Stores/StoreUserAssignmentTest.php
 - Update with same code does not trigger unique constraint violation
 - Soft delete excludes store from listings
 - Restore brings store back to listings
-- User assignment, duplicate prevention, role update, removal
+- User assignment, duplicate prevention, removal
 - Activity logging for all key actions (CRUD, status change, user assignments)

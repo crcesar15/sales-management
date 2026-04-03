@@ -1,7 +1,7 @@
 # Store Management — Overview
 
 ## What
-CRUD operations for physical store locations. Each store has a name, unique code, structured address (street, city, state, zip code), contact info (phone, email), and status. Stores support soft deletes for safe removal with the ability to restore. Users are assigned to stores with a specific role via the `store_user` pivot table. All store actions are logged via Spatie Activity Log for a full audit trail.
+CRUD operations for physical store locations. Each store has a name, unique code, structured address (street, city, state, zip code), contact info (phone, email), and status. Stores support soft deletes for safe removal with the ability to restore. Users are assigned to stores via the `store_user` pivot table for access control — permissions are determined by the user's global role via `spatie/laravel-permission`, not by the store assignment. All store actions are logged via Spatie Activity Log for a full audit trail.
 
 ## Why
 Stores are the top-level organizational unit in the system. All sales, stock, purchase orders, and reports are scoped to a store. While v1 launches with a single store, the architecture supports multiple stores from day one. Admins must be able to configure stores and assign staff to them.
@@ -13,7 +13,7 @@ Stores are the top-level organizational unit in the system. All sales, stock, pu
 - Soft delete a store (sets `deleted_at`, does not permanently remove)
 - Restore a soft-deleted store
 - List all stores with pagination and search
-- Assign a user to a store with a role (`admin` or `sales_rep`)
+- Assign a user to a store (grants access to that store's data)
 - Remove a user from a store
 - View users assigned to a store
 - Admin-only access (requires `STORE_VIEW`, `STORE_CREATE`, `STORE_EDIT`, `STORE_DELETE`, `STORE_RESTORE` permissions via `PermissionsEnum`)
@@ -28,9 +28,9 @@ Stores are the top-level organizational unit in the system. All sales, stock, pu
 - [ ] Admin can restore a soft-deleted store
 - [ ] Admin can list stores with pagination (20 per page)
 - [ ] Admin can search stores by name or code
-- [ ] Admin can assign a user to a store with a role
+- [ ] Admin can assign a user to a store
 - [ ] Admin can remove a user from a store
-- [ ] Store detail page shows assigned users and their roles
+- [ ] Store detail page shows assigned users
 - [ ] Inactive stores are clearly indicated in the UI
 - [ ] Soft-deleted stores are excluded from listings by default
 - [ ] All store CRUD actions are logged in the activity log
@@ -47,4 +47,4 @@ Stores are the top-level organizational unit in the system. All sales, stock, pu
 - Address is structured as separate fields (address, city, state, zip_code) for filtering and reporting by location
 - Phone and email are for store contact information, useful for receipts and communications
 - Soft deletes are used instead of permanent deletion to preserve data integrity and referential history
-- `store_user` pivot is defined here but first referenced in User Management docs
+- `store_user` pivot is defined here but first referenced in User Management docs. The pivot only tracks which users have access to which stores — no role is stored on the pivot

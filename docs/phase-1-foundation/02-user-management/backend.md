@@ -35,7 +35,7 @@ class UserService
     {
         $user = User::create([...]);
         $user->assignRole($data['role']);
-        $user->stores()->attach($data['store_ids'], ['role_id' => $roleId]);
+        $user->stores()->attach($data['store_ids']);
         return $user;
     }
 

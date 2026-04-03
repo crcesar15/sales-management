@@ -13,7 +13,7 @@ The system must allow fine-grained control over what each user can do. Admins ha
 - Sales Rep role receives `sales.create` and `reports.view_own` by default; all other permissions are configurable
 - UI to assign/revoke individual permissions to/from the `sales_rep` role
 - Permissions are stored with a `category` column for grouped display in the UI
-- Store-level role assignment via `store_user` pivot (`store_id`, `user_id`, `role_id`)
+- Users are assigned to stores via `store_user` pivot for access control; permissions are determined by the user's global role via `spatie/laravel-permission`
 - Backend enforcement via Laravel Policies and `can:` middleware
 - Frontend enforcement via computed properties and a custom `v-can` directive
 
@@ -54,12 +54,12 @@ The system must allow fine-grained control over what each user can do. Admins ha
 ## Dependencies
 - Phase 1: Authentication (user must be authenticated)
 - Phase 1: User Management (users are assigned to roles)
-- Phase 1: Store Management (roles are scoped to stores via `store_user`)
+- Phase 1: Store Management (users are assigned to stores via `store_user` for access)
 - `spatie/laravel-permission` package installed and migrated
 
 ## Notes
 - Role creation is intentionally locked down — no UI for adding new roles
 - The `category` column on the `permissions` table is a custom addition beyond the Spatie default schema
 - Permissions are cached by Spatie by default; cache must be reset after any permission sync
-- The `store_user` pivot stores `role_id` so a user can be `admin` in one store and `sales_rep` in another (future multi-store support)
+- Store assignment is independent of roles — a user's permissions come from their global role via `spatie/laravel-permission`, not from any store-level role
 - For v1 (single store), every user has one role system-wide

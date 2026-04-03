@@ -27,7 +27,6 @@
 | `id` | BIGINT UNSIGNED | Primary key |
 | `store_id` | BIGINT UNSIGNED | FK → stores.id CASCADE |
 | `user_id` | BIGINT UNSIGNED | FK → users.id CASCADE |
-| `role_id` | BIGINT UNSIGNED | FK → roles.id CASCADE |
 | `created_at` | TIMESTAMP | |
 | `updated_at` | TIMESTAMP | |
 
@@ -60,7 +59,6 @@ User::where('first_name', 'like', "%{$search}%")
 public function stores(): BelongsToMany
 {
     return $this->belongsToMany(Store::class)
-        ->withPivot('role_id')
         ->withTimestamps();
 }
 ```

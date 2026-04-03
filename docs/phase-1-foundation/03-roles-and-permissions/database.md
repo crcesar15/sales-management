@@ -47,7 +47,6 @@
 | `id` | BIGINT UNSIGNED | Primary key |
 | `store_id` | BIGINT UNSIGNED | FK → stores.id CASCADE |
 | `user_id` | BIGINT UNSIGNED | FK → users.id CASCADE |
-| `role_id` | BIGINT UNSIGNED | FK → roles.id CASCADE — role within this store |
 | `created_at` | TIMESTAMP | |
 | `updated_at` | TIMESTAMP | |
 
@@ -55,7 +54,7 @@
 - `roles.name` + `roles.guard_name` — UNIQUE composite
 - `permissions.name` + `permissions.guard_name` — UNIQUE composite
 - `model_has_roles(model_id, model_type)` — INDEX (Spatie default)
-- `store_user(store_id, user_id)` — UNIQUE composite (one role per user per store)
+- `store_user(store_id, user_id)` — UNIQUE composite (one assignment per user per store)
 
 ## Migration Notes
 
@@ -115,7 +114,6 @@ $role->permissions;         // BelongsToMany Permission
 public function stores(): BelongsToMany
 {
     return $this->belongsToMany(Store::class)
-        ->withPivot('role_id')
         ->withTimestamps();
 }
 ```

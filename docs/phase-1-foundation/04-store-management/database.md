@@ -25,7 +25,6 @@
 | `id` | BIGINT UNSIGNED | Primary key |
 | `store_id` | BIGINT UNSIGNED | FK → stores.id CASCADE DELETE |
 | `user_id` | BIGINT UNSIGNED | FK → users.id CASCADE DELETE |
-| `role_id` | BIGINT UNSIGNED | FK → roles.id — role within this store |
 | `created_at` | TIMESTAMP | |
 | `updated_at` | TIMESTAMP | |
 
@@ -37,10 +36,10 @@
 
 ## Migrations
 - `xxxx_create_stores_table.php` — columns as defined in table above, with `unique('code')`, `index('status')`, `index('deleted_at')`, and `softDeletes()`
-- `xxxx_create_store_user_table.php` — pivot with `store_id`, `user_id`, `role_id` FKs, `unique(['store_id', 'user_id'])`
+- `xxxx_create_store_user_table.php` — pivot with `store_id`, `user_id` FKs, `unique(['store_id', 'user_id'])`
 
 ## Relationships
-- `Store ↔ User`: `BelongsToMany` via `store_user` pivot with `role_id`, both sides use `withPivot('role_id')->withTimestamps()`
+- `Store ↔ User`: `BelongsToMany` via `store_user` pivot, both sides use `withTimestamps()`
 
 ## Query Hints
 - List stores: `->withCount('users')`, filter by `status`, search `name` or `code` with `LIKE`

@@ -99,7 +99,7 @@ Assign a user to a store.
 
 **Request Body:**
 ```json
-{ "store_id": 1, "role_id": 2 }
+{ "store_id": 1 }
 ```
 
 **Response (200):** Updated user object.

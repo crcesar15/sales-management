@@ -74,8 +74,8 @@ Submit via `router.post()` / `router.put()` with `onSuccess`/`onError` callbacks
 
 ### Structure
 - Store info summary card (name, code, full address, phone, email, status)
-- Assigned users DataTable with name, email, role, actions
-- User assignment form: dropdown pickers for user and role
+- Assigned users DataTable with name, email, actions
+- User assignment form: dropdown picker for user
 - ConfirmDialog before removing a user
 - Delete button (soft delete) with confirmation
 - Restore button (visible only for soft-deleted stores)
@@ -89,11 +89,11 @@ Submit via `router.post()` / `router.put()` with `onSuccess`/`onError` callbacks
 |---|---|
 | `Card` | Store info summary card |
 | `DataTable` | Assigned users list |
-| `Column` | User name, email, role, actions |
-| `Dropdown` | User picker and role picker for assignment form |
+| `Column` | User name, email, actions |
+| `Dropdown` | User picker for assignment form |
 | `Button` | Assign user, remove user, delete store, restore store |
 | `ConfirmDialog` | Confirm before removing a user or deleting a store |
-| `Tag` | Role badge, status badge |
+| `Tag` | Status badge |
 
 ---
 
@@ -109,7 +109,6 @@ route('stores.destroy', { store: 1 })             // DELETE /stores/1
 route('stores.restore', { store: 1 })             // PATCH /stores/1/restore
 route('stores.status', { store: 1 })              // PATCH /stores/1/status
 route('stores.users.assign', { store: 1 })        // POST /stores/1/users
-route('stores.users.role', { store: 1, user: 2 }) // PATCH /stores/1/users/2
 route('stores.users.remove', { store: 1, user: 2}) // DELETE /stores/1/users/2
 ```
 
