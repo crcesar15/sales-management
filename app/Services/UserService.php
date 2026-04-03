@@ -67,14 +67,7 @@ final class UserService
             }
 
             if (! empty($data['store_ids'])) {
-                $role = $user->roles()->first();
-                $roleId = $role?->id;
-
-                $syncData = [];
-                foreach ($data['store_ids'] as $storeId) {
-                    $syncData[$storeId] = ['role_id' => $roleId];
-                }
-                $user->stores()->attach($syncData);
+                $user->stores()->attach($data['store_ids']);
             }
 
             activity('users')
@@ -117,14 +110,7 @@ final class UserService
             }
 
             if (array_key_exists('store_ids', $data)) {
-                $role = $user->roles()->first();
-                $roleId = $role?->id;
-
-                $syncData = [];
-                foreach (($data['store_ids'] ?? []) as $storeId) {
-                    $syncData[$storeId] = ['role_id' => $roleId];
-                }
-                $user->stores()->sync($syncData);
+                $user->stores()->sync($data['store_ids'] ?? []);
             }
 
             activity('users')
@@ -157,17 +143,11 @@ final class UserService
 
     /**
      * Assign a store to a user.
-     *
-     * @param  int|null  $roleId  Explicit role to store on the pivot; falls back to the user's first role.
      */
-    public function assignStore(User $user, Store $store, ?int $roleId = null): User
+    public function assignStore(User $user, Store $store): User
     {
-        if ($roleId === null) {
-            $roleId = $user->roles()->first()?->id;
-        }
-
         if (! $user->stores()->where('stores.id', $store->id)->exists()) {
-            $user->stores()->attach($store->id, ['role_id' => $roleId]);
+            $user->stores()->attach($store->id);
         }
 
         activity('users')

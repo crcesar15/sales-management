@@ -26,7 +26,6 @@ final class AssignStoreRequest extends FormRequest
     {
         return [
             'store_id' => ['required', 'integer', 'exists:stores,id'],
-            'role_id' => ['sometimes', 'integer', 'exists:roles,id'],
         ];
     }
 }

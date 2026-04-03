@@ -152,9 +152,8 @@ final class UserController extends Controller
 
         $validated = $request->validated();
         $store = Store::findOrFail($validated['store_id']);
-        $roleId = isset($validated['role_id']) ? (int) $validated['role_id'] : null;
 
-        $user = $this->userService->assignStore($user, $store, $roleId);
+        $user = $this->userService->assignStore($user, $store);
 
         return new UserResource($user);
     }
