@@ -48,9 +48,9 @@ final class SettingsSeeder extends Seeder
 
         foreach ($settingGroups as $group => $settings) {
             foreach ($settings as $setting) {
-                Setting::query()->create(
+                Setting::query()->firstOrCreate(
+                    ['key' => $setting['key']],
                     [
-                        'key' => $setting['key'],
                         'value' => $setting['value'],
                         'name' => $setting['name'],
                         'group' => $group,
