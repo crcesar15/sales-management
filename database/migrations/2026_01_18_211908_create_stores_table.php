@@ -15,11 +15,19 @@ return new class extends Migration
     {
         Schema::create('stores', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('code')->unique();
+            $table->string('name', 100);
+            $table->string('code', 20)->unique();
             $table->string('address')->nullable();
+            $table->string('city', 100)->nullable();
+            $table->string('state', 100)->nullable();
+            $table->string('zip_code', 20)->nullable();
+            $table->string('phone', 30)->nullable();
+            $table->string('email', 150)->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->index('status');
         });
     }
 
