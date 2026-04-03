@@ -15,8 +15,10 @@ return new class extends Migration
     {
         Schema::create('brands', function (Blueprint $table): void {
             $table->id();
-            $table->string('name', 50);
+            $table->string('name', 50)->index();
             $table->timestamps();
+            $table->softDeletes();
+            $table->index('deleted_at');
         });
     }
 

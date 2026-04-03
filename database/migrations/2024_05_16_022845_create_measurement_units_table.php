@@ -15,9 +15,10 @@ return new class extends Migration
     {
         Schema::create('measurement_units', function (Blueprint $table): void {
             $table->id();
-            $table->string('name', 100);
-            $table->string('abbreviation', 10);
+            $table->string('name', 100)->index();
+            $table->string('abbreviation', 10)->index();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('measure_units');
+        Schema::dropIfExists('measurement_units');
     }
 };
