@@ -19,10 +19,15 @@ final class StoreFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->company(),
-            'code' => mb_strtoupper($this->faker->unique()->bothify('STORE-###??')),
-            'address' => $this->faker->optional()->address(),
-            'status' => $this->faker->randomElement(['active', 'inactive']),
+            'name' => fake()->company(),
+            'code' => mb_strtoupper(fake()->unique()->bothify('???##')),
+            'address' => fake()->optional()->streetAddress(),
+            'city' => fake()->optional()->city(),
+            'state' => fake()->optional()->state(),
+            'zip_code' => fake()->optional()->postcode(),
+            'phone' => fake()->optional()->phoneNumber(),
+            'email' => fake()->optional()->companyEmail(),
+            'status' => fake()->randomElement(['active', 'inactive']),
         ];
     }
 }

@@ -57,6 +57,13 @@ final class PermissionSeeder extends Seeder
                 PermissionsEnum::USERS_EDIT->value,
                 PermissionsEnum::USERS_DELETE->value,
             ],
+            'stores' => [
+                PermissionsEnum::STORE_VIEW->value,
+                PermissionsEnum::STORE_CREATE->value,
+                PermissionsEnum::STORE_EDIT->value,
+                PermissionsEnum::STORE_DELETE->value,
+                PermissionsEnum::STORE_RESTORE->value,
+            ],
             'activity logs' => [
                 PermissionsEnum::ACTIVITY_LOGS_VIEW->value,
             ],
