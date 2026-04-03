@@ -23,7 +23,7 @@ final class StoreFactory extends Factory
             'code' => mb_strtoupper(fake()->unique()->bothify('???##')),
             'address' => fake()->optional()->streetAddress(),
             'city' => fake()->optional()->city(),
-            'state' => fake()->optional()->state(),
+            'state' => fake()->optional()->word(),
             'zip_code' => fake()->optional()->postcode(),
             'phone' => fake()->optional()->phoneNumber(),
             'email' => fake()->optional()->companyEmail(),
