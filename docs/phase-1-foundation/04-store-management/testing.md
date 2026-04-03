@@ -3,7 +3,6 @@
 ## Test File Locations
 ```
 tests/Feature/Stores/StoreManagementTest.php
-tests/Feature/Stores/StoreLogoTest.php
 tests/Feature/Stores/StoreUserAssignmentTest.php
 ```
 
@@ -21,29 +20,31 @@ tests/Feature/Stores/StoreUserAssignmentTest.php
 - Creates with valid data → `assertRedirect()` + `assertDatabaseHas()`
 - Code is uppercased on creation
 - Validates required fields → `assertSessionHasErrors(['name', 'code', 'status'])`
+- Validates optional fields: `email` must be valid email format, `zip_code` max 20 chars, `phone` max 30 chars
 - Enforces unique store code
-- Validates logo must be an image file
-- Validates logo max 2MB
 
 **Update Store**
 - Updates store successfully → `assertRedirect()`
 - Allows update with same code (no unique violation) → use `Rule::ignore()`
+- Updates address fields, phone, email
 
 **Status Toggle**
 - Changes status to inactive → `assertRedirect()` + verify in DB
 
----
+**Soft Delete**
+- Soft-deletes a store → `assertSoftDeleted()` in DB
+- Soft-deleted store does not appear in index listing
+- Store code remains unique constraint respected (including soft-deleted stores)
 
-### `StoreLogoTest`
+**Restore**
+- Restores a soft-deleted store → `assertDatabaseHas()` with `deleted_at` null
+- Restored store appears in index listing again
 
-**Upload**
-- Uploads logo on create → verify media exists via `getFirstMedia('logo')`
-- Replaces logo on update (method spoofing `_method: PUT`) → verify old media gone, new exists
-
-**Remove**
-- Removes logo → `DELETE` endpoint, verify media cleared
-
-**Setup**: `Storage::fake('public')` in `beforeEach()`
+**Activity Logging**
+- Creating a store logs `created` event → verify `activity_log` entry with correct `log_name`, `subject_id`, `causer_id`
+- Updating a store logs `updated` event with only dirty attributes
+- Soft-deleting a store logs `deleted` event
+- Restoring a store logs `restored` event
 
 ---
 
@@ -61,15 +62,17 @@ tests/Feature/Stores/StoreUserAssignmentTest.php
 
 **Activity Logging**
 - Logs `user_assigned` event → verify `activity_log` entry with correct `log_name`, `subject_id`, `causer_id`
+- Logs `user_removed` event
 
 ---
 
 ## Coverage Goals
-- All CRUD operations tested
+- All CRUD operations tested (create, read, update, soft delete, restore)
 - Permission enforcement (admin allowed, salesman denied)
-- Validation rules (required fields, unique code, logo type and size)
+- Validation rules (required fields, unique code, email format, field max lengths)
 - Store code is uppercased
 - Update with same code does not trigger unique constraint violation
-- Logo upload, replacement, and removal
+- Soft delete excludes store from listings
+- Restore brings store back to listings
 - User assignment, duplicate prevention, role update, removal
-- Activity logging for key actions
+- Activity logging for all key actions (CRUD, status change, user assignments)

@@ -22,12 +22,16 @@ List all stores with pagination and optional search.
       "id": 1,
       "name": "Main Store",
       "code": "HQ",
-      "address": "123 Main St, City, Country",
+      "address": "123 Main St",
+      "city": "Springfield",
+      "state": "Illinois",
+      "zip_code": "62701",
+      "phone": "+1 555-0100",
+      "email": "main@store.com",
       "status": "active",
-      "logo_url": "https://example.com/storage/stores/1/logo.jpg",
-      "logo_thumb_url": "https://example.com/storage/stores/1/conversions/logo-thumb.jpg",
       "users_count": 5,
-      "created_at": "2026-01-01T00:00:00Z"
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
     }
   ],
   "meta": { "current_page": 1, "last_page": 1, "per_page": 20, "total": 1 }
@@ -39,13 +43,19 @@ List all stores with pagination and optional search.
 ### POST `/stores`
 Create a new store.
 
-**Request Body (multipart/form-data):**
-```
-name     = "Branch Store"
-code     = "BR1"
-address  = "456 Branch Ave, City"
-status   = "active"
-logo     = [file upload, optional]
+**Request Body (JSON):**
+```json
+{
+  "name": "Branch Store",
+  "code": "BR1",
+  "address": "456 Branch Ave",
+  "city": "Shelbyville",
+  "state": "Illinois",
+  "zip_code": "62565",
+  "phone": "+1 555-0200",
+  "email": "branch@store.com",
+  "status": "active"
+}
 ```
 
 **Response (201):** Created store object.
@@ -62,8 +72,12 @@ Get a single store with its assigned users.
   "name": "Main Store",
   "code": "HQ",
   "address": "123 Main St",
+  "city": "Springfield",
+  "state": "Illinois",
+  "zip_code": "62701",
+  "phone": "+1 555-0100",
+  "email": "main@store.com",
   "status": "active",
-  "logo_url": "https://...",
   "users": [
     {
       "id": 1,
@@ -78,7 +92,9 @@ Get a single store with its assigned users.
       "role": "sales_rep"
     }
   ],
-  "created_at": "2026-01-01T00:00:00Z"
+  "created_at": "2026-01-01T00:00:00Z",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "deleted_at": null
 }
 ```
 
@@ -87,16 +103,42 @@ Get a single store with its assigned users.
 ### PUT `/stores/{id}`
 Update store details.
 
-**Request Body (multipart/form-data):**
-```
-name     = "Updated Store Name"
-code     = "HQ2"
-address  = "New Address"
-status   = "active"
-logo     = [file upload, optional — replaces existing logo]
+**Request Body (JSON):**
+```json
+{
+  "name": "Updated Store Name",
+  "code": "HQ2",
+  "address": "789 New St",
+  "city": "Springfield",
+  "state": "Illinois",
+  "zip_code": "62702",
+  "phone": "+1 555-0300",
+  "email": "updated@store.com",
+  "status": "active"
+}
 ```
 
 **Response (200):** Updated store object.
+
+---
+
+### DELETE `/stores/{id}`
+Soft-delete a store.
+
+**Response (200):**
+```json
+{ "message": "Store deleted successfully." }
+```
+
+---
+
+### PATCH `/stores/{id}/restore`
+Restore a soft-deleted store.
+
+**Response (200):**
+```json
+{ "message": "Store restored successfully." }
+```
 
 ---
 
@@ -109,16 +151,6 @@ Toggle store active/inactive status.
 ```
 
 **Response (200):** Updated store object.
-
----
-
-### DELETE `/stores/{id}/logo`
-Remove the store logo.
-
-**Response (200):**
-```json
-{ "message": "Logo removed successfully." }
-```
 
 ---
 
