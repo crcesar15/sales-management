@@ -34,7 +34,7 @@ final class RoleService
     /**
      * Get all users available for role assignment.
      *
-     * @return Collection<int, array{id: int, full_name: string, email: string}>
+     * @return Collection<int, User>
      */
     public function getAvailableUsers(): Collection
     {

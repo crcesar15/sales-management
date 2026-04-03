@@ -18,7 +18,7 @@ use Spatie\Permission\Models\Role;
 
 final class UserController extends Controller
 {
-    private $userService;
+    private readonly UserService $userService;
 
     public function __construct(UserService $userService)
     {

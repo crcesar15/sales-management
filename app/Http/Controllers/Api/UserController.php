@@ -153,6 +153,7 @@ final class UserController extends Controller
         $validated = $request->validated();
         $store = Store::findOrFail($validated['store_id']);
 
+        /** @var Store $store */
         $user = $this->userService->assignStore($user, $store);
 
         return new UserResource($user);

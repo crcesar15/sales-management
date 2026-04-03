@@ -9,6 +9,7 @@ use App\Http\Requests\Roles\StoreRoleRequest;
 use App\Http\Requests\Roles\UpdateRoleRequest;
 use App\Http\Resources\Role\RoleCollection;
 use App\Http\Resources\Role\RoleResource;
+use App\Models\User;
 use App\Services\RoleService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -72,11 +73,18 @@ final class RoleController extends Controller
             'permissions' => $role->permissions()->pluck('name')->toArray(),
             'availablePermissions' => $this->roleService->getAvailablePermissions(),
             'availableUsers' => $this->roleService->getAvailableUsers(),
-            'assignedUsers' => $role->users()->select('users.id', 'users.first_name', 'users.last_name', 'users.email')->get()->map(fn ($u) => [
-                'id' => $u->id,
-                'full_name' => "{$u->first_name} {$u->last_name}",
-                'email' => $u->email,
-            ]),
+            'assignedUsers' => $role
+                ->users()
+                ->select('users.id', 'users.first_name', 'users.last_name', 'users.email')
+                ->get()
+                ->map(function (\Illuminate\Database\Eloquent\Model $u) {
+                    /** @var User $u */
+                    return [
+                        'id' => $u->id,
+                        'full_name' => "{$u->first_name} {$u->last_name}",
+                        'email' => $u->email,
+                    ];
+                }),
         ]);
     }
 

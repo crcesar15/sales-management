@@ -13,6 +13,7 @@ use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StoreController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendorsController;
 use Illuminate\Http\Request;
@@ -103,6 +104,18 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::put('/users/{user}/restore', [UserController::class, 'restore'])->name('users.restore')->withTrashed();
+
+    // Store Routes
+    Route::get('/stores', [StoreController::class, 'index'])->name('stores');
+    Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
+    Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
+    Route::get('/stores/{store}/edit', [StoreController::class, 'edit'])->name('stores.edit');
+    Route::put('/stores/{store}', [StoreController::class, 'update'])->name('stores.update');
+    Route::delete('/stores/{store}', [StoreController::class, 'destroy'])->name('stores.destroy');
+    Route::put('/stores/{store}/restore', [StoreController::class, 'restore'])->name('stores.restore')->withTrashed();
+    Route::patch('/stores/{store}/status', [StoreController::class, 'updateStatus'])->name('stores.status');
+    Route::post('/stores/{store}/users', [StoreController::class, 'assignUser'])->name('stores.users.assign');
+    Route::delete('/stores/{store}/users/{user}', [StoreController::class, 'removeUser'])->name('stores.users.remove');
 
     // Vendors Routes
     Route::get('/vendors', [VendorsController::class, 'index'])->name('vendors');
