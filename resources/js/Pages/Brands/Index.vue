@@ -7,24 +7,23 @@
       <Button
         v-can="'brand.create'"
         :label="t('Add Brand')"
-        style="text-transform: uppercase"
         icon="fa fa-add"
         raised
-        class="ml-2"
+        class="ml-2 uppercase"
         @click="addBrand"
       />
     </div>
     <ConfirmDialog />
+    <Toast />
     <Card>
       <template #content>
         <DataTable
           :value="brands"
           resizable-columns
           lazy
-          :total-records="pagination.total"
-          :rows="pagination.perPage"
-          :first="pagination.first"
-          :loading="loading"
+          :total-records="props.brands.meta.total"
+          :rows="props.brands.meta.per_page"
+          :first="(props.brands.meta.current_page - 1) * props.brands.meta.per_page"
           paginator
           sort-field="name"
           :sort-order="1"
@@ -32,7 +31,10 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ t('No brands found') }}
+            <div class="flex flex-col items-center py-8 text-surface-400">
+              <i class="fa fa-folder-open text-4xl mb-3"></i>
+              <span>{{ t('No brands found') }}</span>
+            </div>
           </template>
           <template #header>
             <div class="grid grid-cols-12">
@@ -49,18 +51,14 @@
                   v-model="status"
                   :allow-empty="false"
                   :options="[{
-                    label: t('All'),
-                    value: 'all',
-                  }, {
                     label: t('Active'),
                     value: 'active',
                   }, {
                     label: t('Archived'),
                     value: 'archived',
                   }]"
-                  optionLabel="label"
-                  optionValue="value"
-                  aria-labelledby="basic"
+                  option-label="label"
+                  option-value="value"
                 />
               </div>
               <div
@@ -83,9 +81,9 @@
                 >
                   <InputIcon class="fa fa-search" />
                   <InputText
-                    v-model="pagination.filter"
+                    v-model="filter"
                     :placeholder="t('Search')"
-                    class="w-full"
+                    fluid
                   />
                 </IconField>
               </div>
@@ -106,9 +104,9 @@
             >
               <div class="flex justify-center">
                 <Tag
+                  rounded
                   severity="secondary"
                   :value="row.data.products_count"
-                  rounded
                 />
               </div>
             </template>
@@ -131,36 +129,33 @@
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
-                  v-show="status !== 'archived'"
+                  v-if="status !== 'archived'"
                   v-can="'brand.edit'"
                   v-tooltip.top="t('Edit')"
                   icon="fa fa-edit"
                   text
+                  size="large"
                   rounded
-                  raised
-                  size="sm"
                   @click="editBrand(row.data)"
                 />
                 <Button
-                  v-show="status === 'archived'"
+                  v-if="status === 'archived'"
                   v-can="'brand.restore'"
                   v-tooltip.top="t('Restore')"
                   icon="fa fa-trash-arrow-up"
                   text
+                  size="large"
                   rounded
-                  raised
-                  size="sm"
-                  @click="restoreBrand(row.data)"
+                  @click="restoreBrand(row.data.id)"
                 />
                 <Button
-                  v-show="status !== 'archived'"
+                  v-if="status !== 'archived'"
                   v-can="'brand.delete'"
                   v-tooltip.top="t('Delete')"
                   icon="fa fa-trash"
                   text
+                  size="large"
                   rounded
-                  raised
-                  size="sm"
                   @click="deleteBrand(row.data.id)"
                 />
               </div>
@@ -172,204 +167,158 @@
     <BrandEditor
       v-model:show-modal="showModal"
       :brand="selectedBrand"
-      @submitted="saveBrand"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import AppLayout from '@layouts/admin.vue';
-import BrandEditor from "@pages/Brands/List/ItemEditor.vue";
-import useDatetimeFormatter from "@composables/useDatetimeFormatter";
-
 import {
-  ref,
-  watch,
-} from "vue";
-
-import {
-  useToast,
-  useConfirm,
   DataTable,
   Card,
   Column,
-  ConfirmDialog,
-  SelectButton,
+  Toast,
   Button,
   InputText,
   IconField,
   InputIcon,
+  ConfirmDialog,
+  SelectButton,
   Tag,
-  DataTablePageEvent,
-  DataTableSortEvent,
-} from "primevue";
+  useToast,
+  useConfirm,
+  type DataTablePageEvent,
+  type DataTableSortEvent,
+} from "primevue"
 
+import AppLayout from "@layouts/admin.vue";
+import BrandEditor from "@pages/Brands/List/ItemEditor.vue";
+import useDatetimeFormatter from "@composables/useDatetimeFormatter";
+import { computed, ref, watch } from "vue";
+import { router, useForm } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import { type BrandResponse } from "@/Types/brand-types";
 import { useI18n } from "vue-i18n";
-import { useBrandClient } from "@/Composables/useBrandClient";
-import { Brand } from '@app-types/brand-types';
 
 // Set composables
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
 
-// Layout
-defineOptions({
-  layout: AppLayout,
-});
+// Set Layout
+defineOptions({ layout: AppLayout });
 
-// List brands
-const pagination = ref({
-  total: 0,
-  first: 0,
-  page: 1,
-  perPage: 10,
-  sortField: "name",
-  sortOrder: 1,
-  filter: "",
-});
+// Props from Inertia
+const props = defineProps<{
+  brands: {
+    data: BrandResponse[];
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  };
+  filters: {
+    filter?: string | null;
+    status?: string;
+    order_by?: string;
+    order_direction?: string;
+    per_page?: number;
+  };
+}>();
 
-const { loading, fetchBrandsApi } = useBrandClient();
-const status = ref("all");
+// Local filter/sort state
+const filter = ref(props.filters.filter ?? "");
+const status = ref(props.filters.status ?? "active");
+const sortField = ref(props.filters.order_by ?? "name");
+const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
 
-let brands = ref<Brand[]>();
+// Formatted rows
+const brands = computed(() =>
+  props.brands.data.map((item) => ({
+    ...item,
+    created_at: useDatetimeFormatter(item.created_at),
+    updated_at: useDatetimeFormatter(item.updated_at),
+  }))
+);
 
-const fetchBrands = async () => {
-  const params = new URLSearchParams();
-
-  params.append("per_page", pagination.value.perPage.toString());
-  params.append("page", pagination.value.page.toString());
-  params.append("order_by", pagination.value.sortField);
-  params.append("order_direction", pagination.value.sortOrder === -1 ? "desc" : "asc");
-
-  if (status.value !== "all") {
-    params.append("status", status.value);
-  }
-
-  if (pagination.value.filter) {
-    params.append("filter", pagination.value.filter);
-  }
-
-  try {
-    const response = await fetchBrandsApi(params.toString());
-
-    brands.value = response.data.data.map((item:Brand) => ({
-      ...item,
-      created_at: useDatetimeFormatter(item.created_at),
-      updated_at: useDatetimeFormatter(item.updated_at),
-    }));
-    pagination.value.total = response.data.meta.total;
-  } catch (error:any) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: error?.response?.data?.message ?? error,
-      life: 3000,
+// Debounced filter watch
+let filterTimer: ReturnType<typeof setTimeout>;
+watch(filter, (val) => {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => {
+    router.visit(route("brands"), {
+      data: {
+        filter: val,
+        status: status.value,
+        order_by: sortField.value,
+        order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      },
+      preserveState: true,
+      replace: true,
     });
-  }
+  }, 300);
+});
+
+watch(status, (val) => {
+  router.visit(route("brands"), {
+    data: {
+      status: val,
+      filter: filter.value,
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+    },
+    preserveState: true,
+    replace: true,
+  });
+});
+
+const onPage = (event: DataTablePageEvent) => {
+  router.visit(route("brands"), {
+    data: {
+      page: event.page + 1,
+      per_page: event.rows,
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      filter: filter.value,
+      status: status.value,
+    },
+    preserveState: true,
+    replace: true,
+  });
 };
 
-const onPage = (event:DataTablePageEvent ) => {
-  pagination.value.page = event.page + 1;
-  pagination.value.perPage = event.rows;
-  fetchBrands();
+const onSort = (event: DataTableSortEvent) => {
+  sortField.value = typeof event.sortField === "string" ? event.sortField : "name";
+  sortOrder.value = event.sortOrder ?? 1;
+  router.visit(route("brands"), {
+    data: {
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      filter: filter.value,
+      status: status.value,
+    },
+    preserveState: true,
+    replace: true,
+  });
 };
-const onSort = (event:DataTableSortEvent) => {
-  pagination.value.sortField = typeof event.sortField === 'string' ? event.sortField : 'name';
-  pagination.value.sortOrder = event.sortOrder ?? 0;
-  fetchBrands();
-};
 
-watch(
-  () => pagination.value.filter,
-  () => {
-    pagination.value.page = 1;
-    fetchBrands();
-  },
-  {
-    immediate: true,
-    deep: true,
-  },
-);
-
-watch(
-  status,
-  () => {
-    pagination.value.first = 0;
-    pagination.value.page = 1;
-    fetchBrands();
-  },
-);
-
-// Add/Edit Brand
-const selectedBrand = ref<Brand | null>(null);
-const showModal = ref(false);
+// Create/Edit Brands
+let showModal = ref(false);
+let selectedBrand = ref<BrandResponse | null>(null);
 
 const addBrand = () => {
-  showModal.value = true;
   selectedBrand.value = null;
-};
-const editBrand = (brand: Brand) => {
   showModal.value = true;
+};
+
+const editBrand = (brand: BrandResponse) => {
   selectedBrand.value = brand;
+  showModal.value = true;
 };
 
-
-const createBrand = async (brand:Pick<Brand, 'name'>) => {
-  const {storeBrandApi} = useBrandClient();
-
-  try {
-    await storeBrandApi(brand);
-    toast.add({
-      severity: "success",
-      summary: t("Success"),
-      detail: t("Brand created successfully"),
-      life: 3000,
-    });
-    fetchBrands();
-  } catch (error:any) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: error?.response?.data?.message ?? error,
-      life: 3000,
-    });
-  }
-};
-
-const updateBrand = async (brand: Brand) => {
-  const {updateBrandApi} = useBrandClient();
-
-  try {
-    await updateBrandApi(brand.id, brand);
-    toast.add({
-      severity: "success",
-      summary: t("Success"),
-      detail: t("Brand updated successfully"),
-      life: 3000,
-    });
-    fetchBrands();
-  } catch (error:any) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: error?.response?.data?.message ?? error,
-      life: 3000,
-    });
-  }
-};
-
-const saveBrand = (brand:Brand | Pick<Brand, 'id' | 'name' >) => {
-  if (brand?.id !== undefined) {
-    updateBrand(brand as Brand);
-  } else {
-    createBrand(brand);
-  }
-};
-
-const deleteBrand = (id:number) => {
-  const {destroyBrandApi} = useBrandClient();
-
+// Delete Brand
+const deleteBrand = (id: number) => {
   confirm.require({
     message: t("Are you sure you want to delete this brand?"),
     header: t("Confirm"),
@@ -377,30 +326,22 @@ const deleteBrand = (id:number) => {
     rejectLabel: t("Cancel"),
     acceptLabel: t("Delete"),
     rejectClass: "p-button-secondary",
-    accept: async () => {
-      try {
-        await destroyBrandApi(id);
-        toast.add({
-          severity: "success",
-          summary: t("Success"),
-          detail: t("Brand deleted successfully"),
-          life: 3000,
-        });
-        fetchBrands();
-      } catch (error: any) {
-        toast.add({
-          severity: "error",
-          summary: t("Error"),
-          detail: error?.response?.data?.message ?? error,
-          life: 3000,
-        });
-      }
+    accept: () => {
+      const form = useForm({});
+      form.delete(route("brands.destroy", id), {
+        onSuccess: () => {
+          toast.add({ severity: "success", summary: t("Success"), detail: t("Brand deleted successfully"), life: 3000 });
+        },
+        onError: () => {
+          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not delete brand"), life: 3000 });
+        },
+      });
     },
   });
 };
 
 // Restore Brand
-const restoreBrand = (brand: Brand) => {
+const restoreBrand = (id: number) => {
   confirm.require({
     message: t("Are you sure you want to restore this brand?"),
     header: t("Confirm"),
@@ -408,44 +349,17 @@ const restoreBrand = (brand: Brand) => {
     rejectLabel: t("Cancel"),
     acceptLabel: t("Restore"),
     rejectClass: "p-button-secondary",
-    accept: async () => {
-      const { restoreBrandApi } = useBrandClient();
-      try {
-        await restoreBrandApi(brand.id);
-        toast.add({
-          severity: "success",
-          summary: t("Success"),
-          detail: t("Brand restored successfully"),
-          life: 3000,
-        });
-        fetchBrands();
-      } catch (error: any) {
-        toast.add({
-          severity: "error",
-          summary: t("Error"),
-          detail: error?.response?.data?.message ?? error,
-          life: 3000,
-        });
-      }
+    accept: () => {
+      const form = useForm({});
+      form.put(route("brands.restore", id), {
+        onSuccess: () => {
+          toast.add({ severity: "success", summary: t("Success"), detail: t("Brand restored successfully"), life: 3000 });
+        },
+        onError: () => {
+          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not restore brand"), life: 3000 });
+        },
+      });
     },
   });
 };
 </script>
-
-<style>
-.sortable-column [data-pc-section="sort"] {
-  padding-left: 0.2rem;
-}
-
-.sortable-column [data-pc-section="headercontent"] {
-  display: flex;
-  align-items: center;
-}
-.sortable-column th:hover {
-  cursor: pointer;
-  background-color: #ccc;
-}
-.p-datatable .p-datatable-tbody>tr.no-expander>td .p-row-toggler {
-  display: none;
-}
-</style>

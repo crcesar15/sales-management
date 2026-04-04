@@ -2,54 +2,54 @@
   <div>
     <Dialog
       v-model:visible="showModal"
-      :header="$t('Measurement Unit')"
+      :header="t('Measurement Unit')"
       :breakpoints="{ '1100px': '60vw', '750px': '75vw', '500px': '90vw' }"
       :style="{ width: '30vw' }"
       modal
-      @hide="closeModal"
+      @hide="onHide"
     >
-      <div class="flex flex-col">
-        <label for="name">{{ $t('Name') }}</label>
+      <div class="flex flex-col gap-2 mb-3">
+        <label for="name">
+          {{ t('Name') }} <span class="text-red-500">*</span>
+        </label>
         <InputText
           id="name"
           v-model="name"
+          v-bind="nameAttrs"
           autocomplete="off"
-          class="mt-2"
-          :class="{ 'p-invalid': nameErrorMessage }"
+          :class="{ 'p-invalid': errors.name }"
         />
-        <small
-          id="text-error"
-          class="text-red-400 dark:text-red-300"
-        >
-          {{ nameErrorMessage || '&nbsp;' }}
+        <small v-if="errors.name" class="text-red-400 dark:text-red-300">
+          {{ errors.name }}
         </small>
-        <label for="abbreviation">{{ $t('Abbreviation') }}</label>
+      </div>
+      <div class="flex flex-col gap-2 mb-3">
+        <label for="abbreviation">
+          {{ t('Abbreviation') }} <span class="text-red-500">*</span>
+        </label>
         <InputText
           id="abbreviation"
           v-model="abbreviation"
+          v-bind="abbreviationAttrs"
           autocomplete="off"
-          class="mt-2"
-          :class="{ 'p-invalid': abbreviationErrorMessage }"
+          :class="{ 'p-invalid': errors.abbreviation }"
         />
-        <small
-          id="text-error"
-          class="text-red-400 dark:text-red-300"
-        >
-          {{ abbreviationErrorMessage || '&nbsp;' }}
+        <small class="text-surface-500">{{ t("Short form (e.g., kg, ltr, pcs)") }}</small>
+        <small v-if="errors.abbreviation" class="text-red-400 dark:text-red-300">
+          {{ errors.abbreviation }}
         </small>
       </div>
-      <template
-        #footer
-        class="flex flex-wrap justify-end"
-      >
+      <template #footer>
         <Button
           severity="secondary"
-          :label="$t('Cancel')"
-          @click="closeModal"
+          :label="t('Cancel')"
+          :disabled="isSubmitting"
+          @click="showModal = false"
         />
         <Button
           severity="primary"
-          :label="$t('Save')"
+          :label="t('Save')"
+          :loading="isSubmitting"
           @click="submit"
         />
       </template>
@@ -58,94 +58,95 @@
 </template>
 
 <script setup lang="ts">
-
-import { MeasurementUnit } from "@app-types/measurement-unit-types";
 import {
   Dialog,
   InputText,
   Button,
+  useToast,
 } from "primevue"
-import { computed, ref, watch } from "vue";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string } from "yup";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import { watch, nextTick } from "vue";
+import { useI18n } from "vue-i18n";
+import { type MeasurementUnitResponse } from "@/Types/measurement-unit-types";
 
-// Define v-model:show-modal
-const showModal = defineModel("show-modal", {type: Boolean, required: true});
+const toast = useToast();
+const { t } = useI18n();
+
+// Define v-model
+const showModal = defineModel("show-modal", { type: Boolean, required: true });
 
 // Define props
 const props = defineProps<{
-  measurementUnit: MeasurementUnit | Pick<MeasurementUnit, 'id' | 'name' | 'abbreviation'> | null;
+  measurementUnit: MeasurementUnitResponse | null;
 }>();
 
-// Define emits
-const emit = defineEmits(["submitted"]);
-
-// Open modal
-let name = ref("");
-let abbreviation = ref("");
-let submitted = ref(false);
-
-watch(
-  showModal,
-  (val) => {
-    if (val) {
-      name.value = props?.measurementUnit?.name || "";
-      abbreviation.value = props?.measurementUnit?.abbreviation || "";
-    }
-  },
+// Schema
+const schema = toTypedSchema(
+  object({
+    name: string().required(t("Name is required")).max(100, t("Name must be at most 100 characters")),
+    abbreviation: string()
+      .required(t("Abbreviation is required"))
+      .max(10, t("Abbreviation must be at most 10 characters")),
+  })
 );
 
-// Submit validations
-const nameErrorMessage = computed(() => {
-  if (submitted.value && (name.value === undefined || name.value === "")) {
-    return "Name is required";
-  }
-  return null;
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    name: "",
+    abbreviation: "",
+  },
 });
 
-const abbreviationErrorMessage = computed(() => {
-  if (submitted.value && (abbreviation.value === undefined || abbreviation.value === "")) {
-    return "Abbreviation is required";
+const [name, nameAttrs] = defineField("name");
+const [abbreviation, abbreviationAttrs] = defineField("abbreviation");
+
+// Reset form when dialog opens
+watch(showModal, async (val) => {
+  if (val) {
+    resetForm({
+      values: {
+        name: props.measurementUnit?.name ?? "",
+        abbreviation: props.measurementUnit?.abbreviation ?? "",
+      },
+    });
+    await nextTick();
+    document.getElementById("name")?.focus();
   }
-  if (submitted.value && (abbreviation.value === undefined || abbreviation.value.length > 10)) {
-    return "Abbreviation must be less than 10 characters";
-  }
-  return null;
 });
 
-const validate = () => {
-  if (name.value === undefined || name.value === "") {
-    return false;
-  }
-
-  if (abbreviation.value === undefined || abbreviation.value === "") {
-    return false;
-  }
-
-  if (abbreviation.value === undefined || abbreviation.value.length > 10) {
-    return false;
-  }
-
-  return true;
+const onHide = () => {
+  resetForm();
 };
 
 // Submit
-const submit = () => {
-  submitted.value = true;
-  if (validate()) {
+const submit = handleSubmit((values) => {
+  const onSuccess = () => {
     showModal.value = false;
-    submitted.value = false;
-    if(props.measurementUnit === null) {
-      emit("submitted", { name: name.value, abbreviation: abbreviation.value });
-    } else {
-      emit("submitted", {
-        ...props.measurementUnit,
-        name: name.value,
-        abbreviation: abbreviation.value,
-      });
-    }
-  }
-};
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: props.measurementUnit ? t("Measurement Unit updated successfully") : t("Measurement Unit created successfully"),
+      life: 3000,
+    });
+  };
 
-const closeModal = () => {
-  showModal.value = false;
-};
+  const onError = (errs: Record<string, string>) => {
+    setErrors(errs);
+    nextTick(() => {
+      const el = document.querySelector<HTMLInputElement>(".p-invalid");
+      el?.focus();
+    });
+  };
+
+  if (props.measurementUnit === null) {
+    router.post(route("measurement-units.store"), values, { onSuccess, onError });
+  } else {
+    router.put(route("measurement-units.update", props.measurementUnit.id), values, { onSuccess, onError });
+  }
+});
 </script>

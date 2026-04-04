@@ -2,38 +2,38 @@
   <div>
     <Dialog
       v-model:visible="showModal"
-      :header="$t('Category')"
+      :header="t('Category')"
       :breakpoints="{ '1100px': '60vw', '750px': '75vw', '500px': '90vw' }"
       :style="{ width: '30vw' }"
       modal
-      @hide="closeModal"
+      @hide="onHide"
     >
-      <div class="flex flex-col">
-        <label for="name">{{ $t('Name') }}</label>
+      <div class="flex flex-col gap-2 mb-3">
+        <label for="name">
+          {{ t('Name') }} <span class="text-red-500">*</span>
+        </label>
         <InputText
           id="name"
           v-model="name"
+          v-bind="nameAttrs"
           autocomplete="off"
-          class="mt-2"
-          :class="{ 'p-invalid': nameErrorMessage }"
+          :class="{ 'p-invalid': errors.name }"
         />
-        <small
-          id="text-error"
-          class="text-red-400 dark:text-red-300"
-        >{{ nameErrorMessage || '&nbsp;' }}</small>
+        <small v-if="errors.name" class="text-red-400 dark:text-red-300">
+          {{ errors.name }}
+        </small>
       </div>
-      <template
-        #footer
-        class="flex flex-wrap justify-end"
-      >
+      <template #footer>
         <Button
           severity="secondary"
-          :label="$t('Cancel')"
-          @click="closeModal"
+          :label="t('Cancel')"
+          :disabled="isSubmitting"
+          @click="showModal = false"
         />
         <Button
           severity="primary"
-          :label="$t('Save')"
+          :label="t('Save')"
+          :loading="isSubmitting"
           @click="submit"
         />
       </template>
@@ -42,71 +42,85 @@
 </template>
 
 <script setup lang="ts">
-
 import {
   Dialog,
   InputText,
-  Button
+  Button,
+  useToast,
 } from "primevue"
-import { computed, ref, watch } from "vue";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string } from "yup";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import { watch, nextTick } from "vue";
+import { useI18n } from "vue-i18n";
+import { type CategoryResponse } from "@/Types/category-types";
 
-// Define v-model:show-dialog
+const toast = useToast();
+const { t } = useI18n();
+
+// Define v-model
 const showModal = defineModel("show-modal", { type: Boolean, required: true });
 
 // Define props
-const props = defineProps({
-  category: {
-    type: Object,
-    default: () => ({})
-  },
-})
+const props = defineProps<{
+  category: CategoryResponse | null;
+}>();
 
-// Define emits
-const emit = defineEmits(["submitted"]);
-
-// Open modal
-let name = ref("");
-let submitted = ref(false);
-
-watch(
-  showModal,
-  (val) => {
-    if (val) {
-      name.value = props.category?.name ?? "";
-    }
-  },
+// Schema
+const schema = toTypedSchema(
+  object({
+    name: string().required(t("Name is required")).max(50, t("Name must be at most 50 characters")),
+  })
 );
 
-// Submit Validations
-const nameErrorMessage = computed(() => {
-  if (submitted.value && (name.value === undefined || name.value === "")) {
-    return "Name is required";
-  }
-  return null;
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    name: "",
+  },
 });
 
-const validate = () => {
-  if (name.value === undefined || name.value === "") {
-    return false;
+const [name, nameAttrs] = defineField("name");
+
+// Reset form when dialog opens
+watch(showModal, async (val) => {
+  if (val) {
+    resetForm({ values: { name: props.category?.name ?? "" } });
+    await nextTick();
+    document.getElementById("name")?.focus();
   }
-  return true;
+});
+
+const onHide = () => {
+  resetForm();
 };
 
 // Submit
-const submit = () => {
-  submitted.value = true;
-  if (validate()) {
+const submit = handleSubmit((values) => {
+  const onSuccess = () => {
     showModal.value = false;
-    submitted.value = false;
-    if (props.category === null) {
-      emit("submitted", { name: name.value });
-    } else {
-      emit("submitted", { ...props.category, name: name.value });
-    }
-  }
-};
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: props.category ? t("Category updated successfully") : t("Category created successfully"),
+      life: 3000,
+    });
+  };
 
-const closeModal = () => {
-  showModal.value = false;
-}
+  const onError = (errs: Record<string, string>) => {
+    setErrors(errs);
+    nextTick(() => {
+      const el = document.querySelector<HTMLInputElement>(".p-invalid");
+      el?.focus();
+    });
+  };
+
+  if (props.category === null) {
+    router.post(route("categories.store"), values, { onSuccess, onError });
+  } else {
+    router.put(route("categories.update", props.category.id), values, { onSuccess, onError });
+  }
+});
 </script>
