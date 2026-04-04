@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\PendingMedia;
+use App\Models\PendingMediaUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -18,23 +18,23 @@ final class PendingMediaController extends Controller
             'file' => ['required', 'image'],
         ]);
 
-        $uuid = uuid_create();
-
-        $pending = PendingMedia::firstOrCreate([
-            'upload_token' => $uuid,
+        $pending = PendingMediaUpload::create([
+            'user_id' => $request->user()?->id,
         ]);
 
-        $pending->addMediaFromRequest('file')->toMediaCollection('temp');
+        $media = $pending->addMediaFromRequest('file')->toMediaCollection('temp');
 
         return response()->json([
-            'id' => $uuid,
-            'url' => $pending->getMedia('temp')[0]->getUrl(),
+            'id' => $pending->id,
+            'thumb_url' => $media->getUrl('thumb'),
+            'full_url' => $media->getUrl(),
         ]);
     }
 
-    public function destroy(string $uuid): Response
+    public function destroy(int $id): Response
     {
-        PendingMedia::where('upload_token', $uuid)->firstOrFail()->deleteOrFail();
+        $pending = PendingMediaUpload::findOrFail($id);
+        $pending->delete();
 
         return response()->noContent();
     }

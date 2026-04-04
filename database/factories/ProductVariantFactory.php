@@ -21,7 +21,7 @@ final class ProductVariantFactory extends Factory
     {
         return [
             'identifier' => fake()->unique()->ean13(),
-            'name' => fake()->sentence(3),
+            'barcode' => fake()->unique()->ean13(),
             'price' => fake()->randomFloat(2, 10, 1000),
             'stock' => fake()->numberBetween(0, 100),
             'status' => fake()->randomElement(['active', 'inactive', 'archived']),
