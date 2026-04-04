@@ -109,14 +109,14 @@ pending_media_uploads ——→ media   (HasMedia — temporary container, media
 
 **Image URLs:** `getFirstMediaUrl('images', 'thumb')` for list thumbnail; `getMedia('images')` for full gallery.
 
-## Enum: `ProductStatus`
-| Case | Value | Usage |
-|---|---|---|
-| `Active` | `'active'` | Visible in POS and lists |
-| `Inactive` | `'inactive'` | Hidden from POS, editable |
-| `Archived` | `'archived'` | Hidden from POS, preserved in order history |
+## Status Values
 
-Cast in model: `protected $casts = ['status' => ProductStatus::class];`
+Used by both `products` and `product_variants`:
+- `'active'` — Visible in POS and lists
+- `'inactive'` — Hidden from POS, editable
+- `'archived'` — Hidden from POS, preserved in order history
+
+Enforced at validation layer (`in:active,inactive,archived`). No enum class — plain string values.
 
 ## Notable Patterns
 - **Default variant creation**: wrapped in `DB::transaction()` alongside product creation; price and stock come from the product create form
