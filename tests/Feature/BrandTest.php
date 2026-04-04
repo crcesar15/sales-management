@@ -4,187 +4,288 @@ declare(strict_types=1);
 
 use App\Enums\RolesEnum;
 use App\Models\Brand;
+use App\Models\MeasurementUnit;
+use App\Models\Product;
 use App\Models\User;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertSoftDeleted;
+use function Pest\Laravel\get;
 
-it('admin user can list brands', function () {
+// ─── Authorization ────────────────────────────────────────────────────────────
+
+it('guest is redirected to login', function () {
+    get(route('brands'))
+        ->assertRedirect(route('login'));
+});
+
+it('user without permission receives 403', function () {
     $user = User::factory()->create();
-    $user->assignRole(RolesEnum::ADMIN);
-
-    $newBrand = Brand::factory()->create();
+    $user->assignRole(RolesEnum::SALESMAN);
 
     actingAs($user)
+        ->getJson(route('brands'))
+        ->assertForbidden();
+});
+
+it('admin with permission can access the page', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    actingAs($admin)
         ->get(route('brands'))
-        ->assertStatus(200);
-
-    actingAs($user)
-        ->get(route('api.v1.brands'))
-        ->assertStatus(200);
-
-    actingAs($user)
-        ->get(route('api.v1.brands.show', $newBrand->id))
-        ->assertStatus(200);
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Brands/Index')
+            ->has('brands')
+            ->has('filters')
+        );
 });
 
-it('admin user can create brands', function () {
-    $user = User::factory()->create();
-    $user->assignRole(RolesEnum::ADMIN);
+// ─── List ─────────────────────────────────────────────────────────────────────
 
-    $newBrand = [
-        'name' => fake()->word,
-    ];
+it('returns paginated brands ordered by name', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
 
-    actingAs($user)
-        ->post(route('api.v1.brands.store'), $newBrand)
-        ->assertStatus(201);
+    Brand::factory()->create(['name' => 'Zebra Corp']);
+    Brand::factory()->create(['name' => 'Alpha Inc']);
+    Brand::factory()->create(['name' => 'Middle LLC']);
 
-    $latestBrand = Brand::latest('id')->firstOrFail();
-
-    expect($latestBrand->name)->toBe($newBrand['name']);
+    actingAs($admin)
+        ->get(route('brands'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Brands/Index')
+            ->where('brands.data.0.name', 'Alpha Inc')
+            ->where('brands.data.1.name', 'Middle LLC')
+            ->where('brands.data.2.name', 'Zebra Corp')
+            ->has('brands.meta')
+        );
 });
 
-it('creating brands with invalid data', function () {
-    $user = User::factory()->create();
-    $user->assignRole(RolesEnum::ADMIN);
+it('search by name filters correctly', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
 
-    actingAs($user)
-        ->post(route('api.v1.brands.store'), [], ['Accept' => 'application/json'])
-        ->assertStatus(422);
+    Brand::factory()->create(['name' => 'Acme Corporation']);
+    Brand::factory()->create(['name' => 'Globex']);
+
+    actingAs($admin)
+        ->get(route('brands', ['filter' => 'Acme']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Brands/Index')
+            ->where('brands.data.0.name', 'Acme Corporation')
+            ->where('brands.meta.total', 1)
+        );
 });
 
-it('admin user can update brands', function () {
-    $user = User::factory()->create();
-    $user->assignRole(RolesEnum::ADMIN);
+it('soft-deleted records excluded from default list', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
 
-    $newBrand = Brand::factory()->create();
+    $brand = Brand::factory()->create(['name' => 'Deleted Brand']);
+    $brand->delete();
+    Brand::factory()->create(['name' => 'Active Brand']);
 
-    $updatedDataBrand = [
-        'name' => fake()->word,
-    ];
-
-    actingAs($user)
-        ->put(route('api.v1.brands.update', $newBrand->id), $updatedDataBrand)
-        ->assertStatus(200);
-
-    $updatedBrand = Brand::findOrFail($newBrand->id);
-
-    expect($updatedBrand->name)->toBe($updatedDataBrand['name']);
+    actingAs($admin)
+        ->get(route('brands'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Brands/Index')
+            ->where('brands.meta.total', 1)
+            ->where('brands.data.0.name', 'Active Brand')
+        );
 });
 
-it('updating brands with invalid data', function () {
-    $user = User::factory()->create();
-    $user->assignRole(RolesEnum::ADMIN);
+it('status=archived returns only soft-deleted records', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
 
-    $newBrand = Brand::factory()->create();
+    $brand = Brand::factory()->create(['name' => 'Deleted Brand']);
+    $brand->delete();
+    Brand::factory()->create(['name' => 'Active Brand']);
 
-    actingAs($user)
-        ->put(route('api.v1.brands.update', $newBrand->id), [], ['Accept' => 'application/json'])
-        ->assertStatus(422);
+    actingAs($admin)
+        ->get(route('brands', ['status' => 'archived']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Brands/Index')
+            ->where('brands.meta.total', 1)
+            ->where('brands.data.0.name', 'Deleted Brand')
+        );
 });
 
-it('admin user can delete brands', function () {
-    $user = User::factory()->create();
-    $user->assignRole(RolesEnum::ADMIN);
+// ─── Create ───────────────────────────────────────────────────────────────────
 
-    $newBrand = Brand::factory()->create();
+it('admin creates a brand', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
 
-    actingAs($user)
-        ->delete(route('api.v1.brands.destroy', $newBrand->id))
-        ->assertStatus(204);
+    actingAs($admin)
+        ->post(route('brands.store'), ['name' => 'Acme Corp'])
+        ->assertRedirect(route('brands'));
 
-    assertSoftDeleted($newBrand);
+    expect(Brand::where('name', 'Acme Corp')->exists())->toBeTrue();
 });
 
-it('admin user can restore brands', function () {
-    $user = User::factory()->create();
-    $user->assignRole(RolesEnum::ADMIN);
+it('empty name returns validation error', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    actingAs($admin)
+        ->post(route('brands.store'), ['name' => ''])
+        ->assertSessionHasErrors(['name']);
+});
+
+it('name exceeding 50 chars returns validation error', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    actingAs($admin)
+        ->post(route('brands.store'), ['name' => str_repeat('a', 51)])
+        ->assertSessionHasErrors(['name']);
+});
+
+it('duplicate name returns validation error', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    Brand::factory()->create(['name' => 'Acme Corp']);
+
+    actingAs($admin)
+        ->post(route('brands.store'), ['name' => 'Acme Corp'])
+        ->assertSessionHasErrors(['name']);
+});
+
+// ─── Update ───────────────────────────────────────────────────────────────────
+
+it('admin updates a brand name', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $brand = Brand::factory()->create(['name' => 'Old Name']);
+
+    actingAs($admin)
+        ->put(route('brands.update', $brand), ['name' => 'New Name'])
+        ->assertRedirect(route('brands'));
+
+    $brand->refresh();
+    expect($brand->name)->toBe('New Name');
+});
+
+it('updating with the same name passes unique rule', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $brand = Brand::factory()->create(['name' => 'Acme Corp']);
+
+    actingAs($admin)
+        ->put(route('brands.update', $brand), ['name' => 'Acme Corp'])
+        ->assertRedirect(route('brands'));
+
+    $brand->refresh();
+    expect($brand->name)->toBe('Acme Corp');
+});
+
+it('renaming to an existing name returns validation error', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    Brand::factory()->create(['name' => 'Taken']);
+    $brand = Brand::factory()->create(['name' => 'Other']);
+
+    actingAs($admin)
+        ->put(route('brands.update', $brand), ['name' => 'Taken'])
+        ->assertSessionHasErrors(['name']);
+});
+
+// ─── Soft Delete ──────────────────────────────────────────────────────────────
+
+it('admin deletes a brand', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $brand = Brand::factory()->create();
+
+    actingAs($admin)
+        ->delete(route('brands.destroy', $brand))
+        ->assertRedirect(route('brands'));
+
+    assertSoftDeleted($brand);
+});
+
+it('brand with active products cannot be deleted', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $brand = Brand::factory()->create();
+    $unit = MeasurementUnit::factory()->create();
+    Product::factory()->create(['brand_id' => $brand->id, 'measurement_unit_id' => $unit->id]);
+
+    actingAs($admin)
+        ->delete(route('brands.destroy', $brand))
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    $brand->refresh();
+    expect($brand->deleted_at)->toBeNull();
+});
+
+// ─── Restore ──────────────────────────────────────────────────────────────────
+
+it('admin restores a soft-deleted brand', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
 
     $brand = Brand::factory()->create();
     $brand->delete();
 
     assertSoftDeleted($brand);
 
-    actingAs($user)
-        ->put(route('api.v1.brands.restore', $brand->id))
-        ->assertStatus(204);
+    actingAs($admin)
+        ->put(route('brands.restore', $brand->id))
+        ->assertRedirect(route('brands'));
 
-    expect(Brand::find($brand->id))->not->toBeNull();
+    $brand->refresh();
+    expect($brand->deleted_at)->toBeNull();
 });
 
-it('admin user can list archived brands', function () {
+// ─── Permission Denials ──────────────────────────────────────────────────────
+
+it('non-admin cannot create brands', function () {
     $user = User::factory()->create();
-    $user->assignRole(RolesEnum::ADMIN);
+    $user->assignRole(RolesEnum::SALESMAN);
+
+    actingAs($user)
+        ->post(route('brands.store'), ['name' => 'Test'])
+        ->assertForbidden();
+});
+
+it('non-admin cannot update brands', function () {
+    $user = User::factory()->create();
+    $user->assignRole(RolesEnum::SALESMAN);
 
     $brand = Brand::factory()->create();
-    $brand->delete();
 
     actingAs($user)
-        ->get(route('api.v1.brands', ['status' => 'archived']))
-        ->assertStatus(200)
-        ->assertJsonCount(1, 'data');
+        ->put(route('brands.update', $brand), ['name' => 'Test'])
+        ->assertForbidden();
 });
 
-it('non-admin user cannot list brands', function () {
+it('non-admin cannot delete brands', function () {
     $user = User::factory()->create();
     $user->assignRole(RolesEnum::SALESMAN);
 
-    $newBrand = Brand::factory()->create();
+    $brand = Brand::factory()->create();
 
     actingAs($user)
-        ->get(route('brands'))
-        ->assertStatus(403);
-
-    actingAs($user)
-        ->get(route('api.v1.brands'))
-        ->assertStatus(403);
-
-    actingAs($user)
-        ->get(route('api.v1.brands.show', $newBrand->id))
-        ->assertStatus(403);
+        ->delete(route('brands.destroy', $brand))
+        ->assertForbidden();
 });
 
-it('non-admin user cannot create brands', function () {
-    $user = User::factory()->create();
-    $user->assignRole(RolesEnum::SALESMAN);
-
-    $newBrand = [
-        'name' => fake()->word,
-    ];
-
-    actingAs($user)
-        ->post(route('api.v1.brands.store'), $newBrand)
-        ->assertStatus(403);
-});
-
-it('non-admin user cannot update brands', function () {
-    $user = User::factory()->create();
-    $user->assignRole(RolesEnum::SALESMAN);
-
-    $newBrand = Brand::factory()->create();
-
-    $updatedDataBrand = [
-        'name' => fake()->word,
-    ];
-
-    actingAs($user)
-        ->put(route('api.v1.brands.update', $newBrand->id), $updatedDataBrand)
-        ->assertStatus(403);
-});
-
-it('non-admin user cannot delete brands', function () {
-    $user = User::factory()->create();
-    $user->assignRole(RolesEnum::SALESMAN);
-
-    $newBrand = Brand::factory()->create();
-
-    actingAs($user)
-        ->delete(route('api.v1.brands.destroy', $newBrand->id))
-        ->assertStatus(403);
-});
-
-it('non-admin user cannot restore brands', function () {
+it('non-admin cannot restore brands', function () {
     $user = User::factory()->create();
     $user->assignRole(RolesEnum::SALESMAN);
 
@@ -192,6 +293,6 @@ it('non-admin user cannot restore brands', function () {
     $brand->delete();
 
     actingAs($user)
-        ->put(route('api.v1.brands.restore', $brand->id))
-        ->assertStatus(403);
+        ->put(route('brands.restore', $brand->id))
+        ->assertForbidden();
 });
