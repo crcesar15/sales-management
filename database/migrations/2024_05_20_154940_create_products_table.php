@@ -15,12 +15,15 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('brand_id')->nullable()->constrained();
-            $table->foreignId('measurement_unit_id')->nullable()->constrained();
+            $table->foreignId('brand_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('measurement_unit_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->string('description', 350)->nullable();
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->softDeletes();
+            $table->index('status');
+            $table->index('name');
+            $table->index('deleted_at');
             $table->timestamps();
         });
     }

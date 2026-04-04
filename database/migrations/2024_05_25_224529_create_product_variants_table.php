@@ -17,9 +17,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->string('identifier', 50)->unique()->nullable();
+            $table->string('barcode', 100)->nullable()->index();
             $table->decimal('price', 10, 2);
-            $table->integer('stock');
+            $table->unsignedInteger('stock');
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
+            $table->index('status');
             $table->timestamps();
         });
     }

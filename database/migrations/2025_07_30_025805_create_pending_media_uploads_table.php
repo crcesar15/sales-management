@@ -13,10 +13,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pending_media', function (Blueprint $table) {
+        Schema::create('pending_media_uploads', function (Blueprint $table): void {
             $table->id();
-            $table->uuid('upload_token')->index();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
+
+            $table->index('created_at');
         });
     }
 
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pending_media');
+        Schema::dropIfExists('pending_media_uploads');
     }
 };
