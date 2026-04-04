@@ -6,10 +6,10 @@
 | Column | Type | Notes |
 |---|---|---|
 | `id` | BIGINT UNSIGNED PK | |
-| `brand_id` | BIGINT UNSIGNED NULL | FK → `brands.id` `nullOnDelete` |
-| `measurement_unit_id` | BIGINT UNSIGNED NULL | FK → `measurement_units.id` `nullOnDelete` |
+| `brand_id` | BIGINT UNSIGNED NULL | FK → `brands.id` `nullOnDelete` (migration needed — current FK is `NO ACTION`) |
+| `measurement_unit_id` | BIGINT UNSIGNED NULL | FK → `measurement_units.id` `nullOnDelete` (migration needed — current FK is `NO ACTION`) |
 | `name` | VARCHAR(255) | Not unique at DB level |
-| `description` | TEXT NULL | Max 350 chars enforced at app layer |
+| `description` | VARCHAR(350) NULL | |
 | `status` | ENUM('active','inactive','archived') | Default `'active'` |
 | `deleted_at` | TIMESTAMP NULL | Soft delete |
 | `created_at` / `updated_at` | TIMESTAMP NULL | |
@@ -31,6 +31,7 @@
 | `id` | BIGINT UNSIGNED PK | |
 | `product_id` | BIGINT UNSIGNED | FK → `products.id` CASCADE DELETE |
 | `identifier` | VARCHAR(50) NULL | SKU / barcode — unique where not null |
+| `barcode` | VARCHAR(100) NULL | EAN/UPC — independent from internal SKU |
 | `price` | DECIMAL(10,2) | User-provided on creation |
 | `stock` | INT UNSIGNED | User-provided on creation; read-only after (Phase 3 manages adjustments) |
 | `status` | ENUM('active','inactive','archived') | Default `'active'` |
@@ -54,11 +55,13 @@
 | Column | Type | Notes |
 |---|---|---|
 | `id` | BIGINT UNSIGNED PK | |
+| `user_id` | BIGINT UNSIGNED NULL | FK → `users.id` nullOnDelete — scopes uploads to owner |
 | `created_at` / `updated_at` | TIMESTAMP NULL | |
 
 > Lightweight model implementing `HasMedia`. Acts as a temporary container for images before the product exists.
 > On product save, media is moved to the `Product` via Spatie's `move()` method, then the record is deleted.
 > Cleanup cron deletes records (and their media) older than 24h.
+> The existing `pending_media` table (UUID-token based) becomes obsolete. Drop it in the same migration batch as creating `pending_media_uploads`.
 
 ### `media_product_variant` (pivot — NEW)
 | Column | Type | Notes |
@@ -66,15 +69,18 @@
 | `id` | BIGINT UNSIGNED PK | |
 | `media_id` | BIGINT UNSIGNED | FK → `media.id` CASCADE DELETE |
 | `product_variant_id` | BIGINT UNSIGNED | FK → `product_variants.id` CASCADE DELETE |
+| `position` | INT UNSIGNED DEFAULT 0 | Sort order for variant images |
 | `created_at` / `updated_at` | TIMESTAMP NULL | |
 
 > Logical association between product images and specific variants. No file duplication.
+> Unique constraint on `(media_id, product_variant_id)` prevents duplicate associations.
 > **Inheritance rule**: variant with zero rows → inherits ALL product images. Variant with one or more rows → shows only explicitly associated images.
 
 ## Key Indexes
-- `products`: `INDEX (brand_id)`, `INDEX (measurement_unit_id)`, `INDEX (status)`, `INDEX (name)`, `INDEX (deleted_at)`
-- `product_variants`: `INDEX (product_id)`, `INDEX (status)`, `UNIQUE (identifier)`
-- `media_product_variant`: `INDEX (media_id)`, `INDEX (product_variant_id)`
+- `products`: `INDEX (brand_id)` (exists), `INDEX (measurement_unit_id)` (exists), **NEW** `INDEX (status)`, **NEW** `INDEX (name)`, **NEW** `INDEX (deleted_at)`
+- `product_variants`: `INDEX (product_id)` (exists), `UNIQUE (identifier)` (exists), **NEW** `INDEX (status)`, **NEW** `INDEX (barcode)`
+- `media_product_variant`: **NEW** `INDEX (media_id)`, **NEW** `INDEX (product_variant_id)`, **NEW** `UNIQUE (media_id, product_variant_id)`
+- `pending_media_uploads`: **NEW** `INDEX (user_id)`, **NEW** `INDEX (created_at)`
 
 ## Relationships
 ```
