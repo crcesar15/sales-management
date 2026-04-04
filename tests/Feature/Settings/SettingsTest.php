@@ -10,6 +10,7 @@ use Database\Seeders\SettingsSeeder;
 use Illuminate\Support\Facades\Cache;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\get;
 use function Pest\Laravel\seed;
 
 beforeEach(function () {
@@ -77,7 +78,7 @@ it('denies user without permission access to settings page', function () {
 });
 
 it('denies unauthenticated access to settings page', function () {
-    $this->get(route('settings'))
+    get(route('settings'))
         ->assertRedirect(route('login'));
 });
 
