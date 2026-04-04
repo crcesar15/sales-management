@@ -83,11 +83,26 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     Route::get('/gallery', fn () => Inertia::render('Gallery/Index'))->name('gallery');
 
+    // Category Routes
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    Route::put('/categories/{category}/restore', [CategoryController::class, 'restore'])->name('categories.restore')->withTrashed();
 
+    // Brand Routes
     Route::get('/brands', [BrandController::class, 'index'])->name('brands');
+    Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
+    Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
+    Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
+    Route::put('/brands/{brand}/restore', [BrandController::class, 'restore'])->name('brands.restore')->withTrashed();
 
+    // Measurement Unit Routes
     Route::get('/measurement-units', [MeasurementUnitController::class, 'index'])->name('measurement-units');
+    Route::post('/measurement-units', [MeasurementUnitController::class, 'store'])->name('measurement-units.store');
+    Route::put('/measurement-units/{measurementUnit}', [MeasurementUnitController::class, 'update'])->name('measurement-units.update');
+    Route::delete('/measurement-units/{measurementUnit}', [MeasurementUnitController::class, 'destroy'])->name('measurement-units.destroy');
+    Route::put('/measurement-units/{measurementUnit}/restore', [MeasurementUnitController::class, 'restore'])->name('measurement-units.restore')->withTrashed();
 
     // Role routes
     Route::get('/roles', [RoleController::class, 'index'])->name('roles');

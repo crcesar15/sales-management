@@ -36,6 +36,11 @@ final class Category extends Model
         return $this->belongsToMany(Product::class);
     }
 
+    public function hasActiveProducts(): bool
+    {
+        return $this->products()->whereNull('products.deleted_at')->exists();
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
