@@ -20,11 +20,18 @@ final class ProductVariantFactory extends Factory
     public function definition(): array
     {
         return [
-            'identifier' => fake()->unique()->ean13(),
-            'barcode' => fake()->unique()->ean13(),
+            'identifier' => 'SKU-' . fake()->numerify('####'),
+            'barcode' => fake()->ean13(),
             'price' => fake()->randomFloat(2, 10, 1000),
             'stock' => fake()->numberBetween(0, 100),
-            'status' => fake()->randomElement(['active', 'inactive', 'archived']),
+            'status' => 'active',
         ];
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => 'inactive',
+        ]);
     }
 }

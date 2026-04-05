@@ -20,11 +20,16 @@ final class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'brand_id' => random_int(1, 10),
-            'measurement_unit_id' => random_int(1, 10),
             'name' => fake()->text(20),
             'description' => fake()->sentence(10),
-            'status' => fake()->randomElement(['active', 'inactive', 'archived']),
+            'status' => 'active',
         ];
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => 'inactive',
+        ]);
     }
 }
