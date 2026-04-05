@@ -111,6 +111,17 @@ final class ProductService
                 }
             }
 
+            if (isset($data['price']) || isset($data['stock']) || isset($data['barcode'])) {
+                $defaultVariant = $product->variants()->first();
+                if ($defaultVariant) {
+                    $defaultVariant->update([
+                        'price' => $data['price'] ?? $defaultVariant->price,
+                        'stock' => $data['stock'] ?? $defaultVariant->stock,
+                        'barcode' => $data['barcode'] ?? $defaultVariant->barcode,
+                    ]);
+                }
+            }
+
             return $product->load(['brand', 'measurementUnit', 'categories', 'media', 'variants']);
         });
     }

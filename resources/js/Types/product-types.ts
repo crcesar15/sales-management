@@ -1,43 +1,66 @@
 import { Category } from "./category-types"
 import { Brand } from "./brand-types"
-import { ProductVariantResponse } from "./product-variant-types"
-import { ProductVariantPayload } from "./product-variant-types"
 import { MeasurementUnit } from "./measurement-unit-types"
+
+import type { ProductVariant } from "./product-variant-types"
 
 interface ProductBase {
   brand_id?: number | null
   measurement_unit_id?: number | null
   name: string
   description?: string | null
-  options?: Array<{name: string; values: string[]; saved: boolean}> | null
-  status: string,
-  categories: Category[]
+  status: string
 }
+
+export type Product = ProductBase
 
 export interface ProductResponse extends ProductBase {
-  // columns
   id: number
-  // relations
-  brand: Brand
-  measurement_unit: MeasurementUnit
-  variants: ProductVariantResponse[]
-  // counts
+  brand: Brand | null
+  measurement_unit: MeasurementUnit | null
+  categories: Category[]
+  media: ProductMedia[]
+  variants: ProductVariantInline[]
   categories_count?: number
   variants_count?: number
-  // exists
-  categories_exists?: boolean
-  brand_exists?: boolean
-  measurement_unit_exists?: boolean
-  variants_exists?: boolean
 }
 
-export interface ProductPayload extends ProductBase {
+export interface ProductVariantInline {
+  id: number
+  name: string
+  status: string
+  price: number
+  stock: number
+  barcode: string | null
+  identifier: string | null
+}
+
+export interface ProductMedia {
+  id: number
+  thumb_url: string
+  full_url: string
+}
+
+export interface ProductPayload {
+  name: string
+  description?: string | null
+  status: string
+  brand_id?: number | null
+  measurement_unit_id?: number | null
   categories_ids?: number[]
-  media?: {id: number}[]
-  variants?: ProductVariantPayload[]
+  price: number
+  stock: number
+  barcode?: string | null
+  pending_media_ids?: number[]
+  remove_media_ids?: number[]
 }
 
-// List page types (matches ProductCollection output)
+export interface PendingMediaResponse {
+  id: number
+  thumb_url: string
+  full_url: string
+}
+
 export interface ProductListResponse {
   id: number
   name: string

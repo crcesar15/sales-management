@@ -89,7 +89,25 @@ final class ProductController extends Controller
         ]);
 
         return Inertia::render('Products/Edit/Index', [
-            'product' => $product,
+            'product' => [
+                ...$product->toArray(),
+                'brand_id' => $product->brand_id,
+                'measurement_unit_id' => $product->measurement_unit_id,
+                'categories' => $product->categories->map(fn ($c) => ['id' => $c->id, 'name' => $c->name]),
+                'media' => $product->getMedia('images')->map(fn ($m) => [
+                    'id' => $m->id,
+                    'thumb_url' => $m->getUrl('thumb'),
+                    'full_url' => $m->getUrl(),
+                ]),
+                'variants' => $product->variants->map(fn ($v) => [
+                    'id' => $v->id,
+                    'name' => $v->name,
+                    'price' => (float) $v->price,
+                    'stock' => $v->stock,
+                    'barcode' => $v->barcode,
+                    'status' => $v->status,
+                ]),
+            ],
             'brands' => Brand::orderBy('name')->get(),
             'categories' => Category::orderBy('name')->get(),
             'measurementUnits' => MeasurementUnit::orderBy('name')->get(),
