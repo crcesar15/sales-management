@@ -11,12 +11,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 final class ProductVariant extends Model
 {
     /** @use HasFactory<ProductVariantFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     protected $fillable = [
         'product_id',
@@ -64,6 +68,15 @@ final class ProductVariant extends Model
             'product_variant_id',
             'product_option_value_id'
         );
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('product_variant')
+            ->dontSubmitEmptyLogs();
     }
 
     /** @return Attribute<string, never> */

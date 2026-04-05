@@ -12,6 +12,9 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductMediaController;
+use App\Http\Controllers\Products\OptionValueController;
+use App\Http\Controllers\Products\ProductOptionController;
+use App\Http\Controllers\Products\ProductVariantController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
@@ -87,6 +90,18 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::put('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore')->withTrashed();
+
+    // Product Options & Variants
+    Route::post('/products/{product}/options', [ProductOptionController::class, 'store'])->name('option.store');
+    Route::put('/products/{product}/options/{option}', [ProductOptionController::class, 'update'])->name('option.update');
+    Route::delete('/products/{product}/options/{option}', [ProductOptionController::class, 'destroy'])->name('option.destroy');
+    Route::post('/products/{product}/options/{option}/values', [OptionValueController::class, 'store'])->name('value.store');
+    Route::delete('/products/{product}/options/{option}/values/{value}', [OptionValueController::class, 'destroy'])->name('value.destroy');
+    Route::post('/products/{product}/variants/generate', [ProductVariantController::class, 'generate'])->name('variant.generate');
+    Route::post('/products/{product}/variants', [ProductVariantController::class, 'store'])->name('variant.store');
+    Route::put('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])->name('variant.update');
+    Route::delete('/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variant.destroy');
+    Route::put('/products/{product}/variants/{variant}/images', [ProductVariantController::class, 'syncImages'])->name('variant.images.sync');
 
     Route::get('/gallery', fn () => Inertia::render('Gallery/Index'))->name('gallery');
 
