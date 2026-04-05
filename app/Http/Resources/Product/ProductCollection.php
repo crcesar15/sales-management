@@ -29,6 +29,12 @@ final class ProductCollection extends ResourceCollection
                 ]),
                 'variants' => $product->variants->map(fn ($v) => [
                     'id' => $v->id,
+                    'identifier' => $v->identifier,
+                    'name' => $v->name,
+                    'option_values' => $v->values->map(fn ($val) => [
+                        'option_name' => $val->option?->name,
+                        'value' => $val->value,
+                    ]),
                     'status' => $v->status,
                     'price' => (float) $v->price,
                     'stock' => $v->stock,

@@ -157,7 +157,26 @@
             <span class="text-sm font-semibold">{{ t('Variants') }} ({{ product.variants.length }})</span>
           </Divider>
           <DataTable :value="product.variants" size="small" show-gridlines>
-            <Column field="name" :header="t('Variant')" />
+            <Column field="identifier" :header="t('Identifier')" style="width: 140px">
+              <template #body="{ data: variant }">
+                <span class="text-muted-color">{{ variant.identifier ?? '—' }}</span>
+              </template>
+            </Column>
+            <Column :header="t('Variant')">
+              <template #body="{ data: variant }">
+                <template v-if="variant.option_values.length">
+                  <Tag
+                    v-for="ov in variant.option_values"
+                    :key="ov.option_name + ov.value"
+                    :value="`${ov.option_name}: ${ov.value}`"
+                    severity="info"
+                    rounded
+                    class="mr-1 mb-1"
+                  />
+                </template>
+                <Tag v-else :value="t('Default')" severity="secondary" />
+              </template>
+            </Column>
             <Column field="status" :header="t('Status')" style="width: 100px">
               <template #body="{ data: variant }">
                 <Tag

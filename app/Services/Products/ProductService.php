@@ -31,7 +31,7 @@ final class ProductService
                 'brand:id,name',
                 'categories:id,name',
                 'media',
-                'variants' => fn ($q) => $q->select(['id', 'product_id', 'status', 'price', 'stock']),
+                'variants' => fn ($q) => $q->select(['id', 'product_id', 'identifier', 'status', 'price', 'stock'])->with('values.option'),
             ])
             ->withCount('variants')
             ->withSum('variants as stock', 'stock')

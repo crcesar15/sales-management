@@ -186,8 +186,18 @@
             </template>
           </Column>
           <template #expansion="{ data }">
-            <DataTable :value="data.variants" show-gridlines>
-              <Column field="name" :header="t('Variant')" />
+            <DataTable :value="data.variants" show-gridlines size="small">
+              <Column field="identifier" :header="t('Identifier')" style="width: 140px">
+                <template #body="{ data: variant }">
+                  <span class="text-muted-color">{{ variant.identifier ?? '—' }}</span>
+                </template>
+              </Column>
+              <Column field="name" :header="t('Variant')">
+                <template #body="{ data: variant }">
+                  <span v-if="variant.name" class="font-medium">{{ variant.name }}</span>
+                  <Tag v-else :value="t('Default')" severity="secondary" />
+                </template>
+              </Column>
               <Column field="status" :header="t('Status')">
                 <template #body="{ data: variant }">
                   <Tag v-if="variant.status === 'active'" severity="success" :value="t('Active')" />

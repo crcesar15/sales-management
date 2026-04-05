@@ -69,7 +69,15 @@ export interface ProductListResponse {
   brand: { id: number; name: string } | null
   categories: { id: number; name: string }[]
   media: { id: number; thumb_url: string; full_url: string }[]
-  variants: { id: number; name: string; status: string; price: number; stock: number }[]
+  variants: {
+    id: number
+    identifier: string | null
+    name: string
+    option_values: { option_name: string | null; value: string }[]
+    status: string
+    price: number
+    stock: number
+  }[]
   variants_count: number
   stock: number
   price_min: number | null
