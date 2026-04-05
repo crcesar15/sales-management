@@ -60,6 +60,7 @@
   "Are you sure you want to delete this product?": "¿Estás seguro de que deseas eliminar este producto?",
   "File uploaded": "Archivo subido",
   "File removed": "Archivo eliminado",
+  "Close": "Cerrar",
   "Confirm": "Confirmar",
   "Success": "Éxito",
   "Delete": "Eliminar",
@@ -329,5 +330,11 @@
   "Timezone": "Zona Horaria",
   "Tax Rate (%)": "Tasa de Impuesto (%)",
   "General": "General",
-  "Tax": "Impuestos"
+  "Tax": "Impuestos",
+  "Finance": "Finanzas",
+  "Currency Code": "Código de Moneda",
+  "Currency Symbol": "Símbolo de Moneda",
+  "Decimal Precision": "Precisión Decimal",
+  "Applied to all monetary values": "Aplicado a todos los valores monetarios",
+  "Select currency": "Seleccionar moneda"
 }

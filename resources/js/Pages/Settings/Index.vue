@@ -133,6 +133,77 @@
               </div>
             </form>
           </TabPanel>
+
+          <TabPanel :header="t('Finance')">
+            <form @submit.prevent="onSubmitFinance" class="space-y-4">
+              <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="currency">{{ t("Currency Code") }}</label>
+                    <Select
+                      id="currency"
+                      v-model="financeCurrency"
+                      v-bind="financeCurrencyAttrs"
+                      :options="currencyOptions"
+                      option-label="label"
+                      option-value="value"
+                      :placeholder="t('Select currency')"
+                      :class="{ 'p-invalid': financeErrors.currency }"
+                    />
+                    <small v-if="financeErrors.currency" class="text-red-400 dark:text-red-300">
+                      {{ financeErrors.currency }}
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="currency_symbol">{{ t("Currency Symbol") }}</label>
+                    <InputText
+                      id="currency_symbol"
+                      v-model="financeCurrencySymbol"
+                      v-bind="financeCurrencySymbolAttrs"
+                      autocomplete="off"
+                      :class="{ 'p-invalid': financeErrors.currency_symbol }"
+                    />
+                    <small v-if="financeErrors.currency_symbol" class="text-red-400 dark:text-red-300">
+                      {{ financeErrors.currency_symbol }}
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="decimal_precision">{{ t("Decimal Precision") }}</label>
+                    <InputNumber
+                      id="decimal_precision"
+                      v-model="financeDecimalPrecision"
+                      v-bind="financeDecimalPrecisionAttrs"
+                      :min="0"
+                      :max="6"
+                      class="w-full"
+                      :class="{ 'p-invalid': financeErrors.decimal_precision }"
+                    />
+                    <small class="text-gray-500">{{ t("Applied to all monetary values") }}</small>
+                    <small v-if="financeErrors.decimal_precision" class="text-red-400 dark:text-red-300">
+                      {{ financeErrors.decimal_precision }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end mt-4">
+                <Button
+                  type="submit"
+                  :label="t('Save')"
+                  icon="fa fa-save"
+                  class="uppercase"
+                  raised
+                  :loading="financeIsSubmitting"
+                />
+              </div>
+            </form>
+          </TabPanel>
         </TabView>
       </template>
     </Card>
@@ -268,6 +339,66 @@ const onSubmitTax = handleSubmitTax((values) => {
     },
     onError: (errors) => {
       taxSetErrors(errors);
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: t("An unexpected error occurred."),
+        life: 3000,
+      });
+    },
+  });
+});
+
+// ─── Finance Form ──────────────────────────────────────────────────────────
+
+const currencyOptions = [
+  { label: "USD ($)", value: "USD" },
+  { label: "EUR (€)", value: "EUR" },
+  { label: "MXN ($)", value: "MXN" },
+  { label: "COP ($)", value: "COP" },
+  { label: "BOB (Bs)", value: "BOB" },
+];
+
+const financeSchema = toTypedSchema(
+  object({
+    currency: string().required(),
+    currency_symbol: string().required().max(5),
+    decimal_precision: number().required().min(0).max(6),
+  })
+);
+
+const {
+  handleSubmit: handleSubmitFinance,
+  errors: financeErrors,
+  defineField: financeDefineField,
+  isSubmitting: financeIsSubmitting,
+  setErrors: financeSetErrors,
+} = useForm({
+  validationSchema: financeSchema,
+  initialValues: {
+    currency: props.settings.finance?.currency ?? "USD",
+    currency_symbol: props.settings.finance?.currency_symbol ?? "$",
+    decimal_precision: parseInt(props.settings.finance?.decimal_precision ?? "2") || 2,
+  },
+});
+
+const [financeCurrency, financeCurrencyAttrs] = financeDefineField("currency");
+const [financeCurrencySymbol, financeCurrencySymbolAttrs] = financeDefineField("currency_symbol");
+const [financeDecimalPrecision, financeDecimalPrecisionAttrs] = financeDefineField("decimal_precision");
+
+const onSubmitFinance = handleSubmitFinance((values) => {
+  router.put(route("settings.finance.update"), values, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.add({
+        severity: "success",
+        summary: t("Saved"),
+        detail: t("Settings updated successfully"),
+        life: 3000,
+      });
+    },
+    onError: (errors) => {
+      financeSetErrors(errors);
       toast.add({
         severity: "error",
         summary: t("Error"),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
+use App\Http\Requests\Settings\UpdateFinanceSettingsRequest;
 use App\Http\Requests\Settings\UpdateGeneralSettingsRequest;
 use App\Http\Requests\Settings\UpdateTaxSettingsRequest;
 use App\Services\SettingsService;
@@ -27,7 +28,7 @@ final class SettingController extends Controller
 
         return Inertia::render('Settings/Index', [
             'settings' => $this->service->all(),
-            'groups' => ['general', 'tax'],
+            'groups' => ['general', 'tax', 'finance'],
         ]);
     }
 
@@ -41,6 +42,13 @@ final class SettingController extends Controller
     public function updateTax(UpdateTaxSettingsRequest $request): RedirectResponse
     {
         $this->service->updateGroup('tax', $request->validated());
+
+        return redirect()->route('settings');
+    }
+
+    public function updateFinance(UpdateFinanceSettingsRequest $request): RedirectResponse
+    {
+        $this->service->updateGroup('finance', $request->validated());
 
         return redirect()->route('settings');
     }

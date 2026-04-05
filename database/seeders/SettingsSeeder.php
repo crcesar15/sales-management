@@ -44,6 +44,23 @@ final class SettingsSeeder extends Seeder
                     'name' => 'Tax Rate (%)',
                 ],
             ],
+            'finance' => [
+                [
+                    'key' => 'currency',
+                    'value' => 'USD',
+                    'name' => 'Currency Code',
+                ],
+                [
+                    'key' => 'currency_symbol',
+                    'value' => '$',
+                    'name' => 'Currency Symbol',
+                ],
+                [
+                    'key' => 'decimal_precision',
+                    'value' => '2',
+                    'name' => 'Decimal Precision',
+                ],
+            ],
         ];
 
         foreach ($settingGroups as $group => $settings) {

@@ -156,6 +156,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/settings', [SettingController::class, 'index'])->name('settings');
     Route::put('/settings/general', [SettingController::class, 'updateGeneral'])->name('settings.general.update');
     Route::put('/settings/tax', [SettingController::class, 'updateTax'])->name('settings.tax.update');
+    Route::put('/settings/finance', [SettingController::class, 'updateFinance'])->name('settings.finance.update');
 
     // Activity Logs
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs');
