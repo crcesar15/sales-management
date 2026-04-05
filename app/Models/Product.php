@@ -82,4 +82,9 @@ final class Product extends Model implements HasMedia
             ->useLogName('product')
             ->dontSubmitEmptyLogs();
     }
+
+    public function hasActiveVariants(): bool
+    {
+        return $this->variants()->whereNotIn('status', ['archived'])->exists();
+    }
 }
