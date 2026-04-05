@@ -44,6 +44,7 @@ final class PermissionSeeder extends Seeder
                 PermissionsEnum::PRODUCTS_CREATE->value,
                 PermissionsEnum::PRODUCTS_EDIT->value,
                 PermissionsEnum::PRODUCTS_DELETE->value,
+                PermissionsEnum::PRODUCTS_RESTORE->value,
             ],
             'roles' => [
                 PermissionsEnum::ROLES_VIEW->value,

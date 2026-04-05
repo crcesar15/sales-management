@@ -28,6 +28,7 @@ enum PermissionsEnum: string
     case PRODUCTS_CREATE = 'product.create';
     case PRODUCTS_EDIT = 'product.edit';
     case PRODUCTS_DELETE = 'product.delete';
+    case PRODUCTS_RESTORE = 'product.restore';
 
     case ROLES_VIEW = 'role.view';
     case ROLES_CREATE = 'role.create';
