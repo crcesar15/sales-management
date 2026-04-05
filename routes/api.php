@@ -6,10 +6,7 @@ use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MeasurementUnitController;
-use App\Http\Controllers\Api\PendingMediaController;
 use App\Http\Controllers\Api\PermissionsController;
-use App\Http\Controllers\Api\ProductsController;
-use App\Http\Controllers\Api\ProductsMediaController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingsController;
@@ -23,13 +20,6 @@ Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $reques
 
 // API v1 Routes
 Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.'], function (): void {
-    // Routes for Products
-    Route::get('/products', [ProductsController::class, 'index'])->name('products');
-    Route::get('/products/{product}', [ProductsController::class, 'show'])->name('products.show');
-    Route::post('/products', [ProductsController::class, 'store'])->name('products.store');
-    Route::put('/products/{product}', [ProductsController::class, 'update'])->name('products.update');
-    Route::delete('/products/{product}', [ProductsController::class, 'destroy'])->name('products.destroy');
-
     // Routes for Categories
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
     Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
@@ -56,15 +46,6 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
         ->name('measurement-units.destroy');
     Route::put('/measurement-units/{measurementUnit}/restore', [MeasurementUnitController::class, 'restore'])
         ->name('measurement-units.restore');
-
-    // Products Media
-    Route::post('/media/draft', [PendingMediaController::class, 'store'])
-        ->name('media.draft.store');
-    Route::delete('/media/draft/{media}', [PendingMediaController::class, 'destroy'])
-        ->name('media.draft.destroy');
-    Route::post('/products/{product}/media', [ProductsMediaController::class, 'store'])->name('products.media.store');
-    Route::delete('/products/{product}/media/{media}', [ProductsMediaController::class, 'destroy'])
-        ->name('products.media.destroy');
 
     // Routes for Roles
     Route::get('/roles', [RoleController::class, 'index'])->name('roles');

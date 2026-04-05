@@ -10,7 +10,8 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MeasurementUnitController;
-use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductMediaController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
@@ -77,9 +78,15 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/home', fn () => Inertia::render('Dashboard/Index'))->name('home');
 
     // Products Routes
-    Route::get('/products', [ProductsController::class, 'index'])->name('products');
-    Route::get('/products/{product}/edit', [ProductsController::class, 'edit'])->name('products.edit');
-    Route::get('/products/create', [ProductsController::class, 'create'])->name('products.create');
+    Route::post('/products/media/pending', [ProductMediaController::class, 'store'])->name('products.media.store');
+    Route::delete('/products/media/pending/{pendingMediaUpload}', [ProductMediaController::class, 'destroy'])->name('products.media.destroy');
+    Route::get('/products', [ProductController::class, 'index'])->name('products');
+    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::put('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore')->withTrashed();
 
     Route::get('/gallery', fn () => Inertia::render('Gallery/Index'))->name('gallery');
 
