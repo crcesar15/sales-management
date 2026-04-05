@@ -27,8 +27,16 @@ final class ProductService
         int $perPage = 20,
     ): LengthAwarePaginator {
         return Product::query()
-            ->with(['brand', 'measurementUnit', 'categories', 'media'])
+            ->with([
+                'brand:id,name',
+                'categories:id,name',
+                'media',
+                'variants' => fn ($q) => $q->select(['id', 'product_id', 'status', 'price', 'stock']),
+            ])
             ->withCount('variants')
+            ->withSum('variants as stock', 'stock')
+            ->withMin('variants as price_min', 'price')
+            ->withMax('variants as price_max', 'price')
             ->when($filter, fn ($q) => $q->where('name', 'like', "%{$filter}%"))
             ->when($brandId, fn ($q) => $q->where('brand_id', $brandId))
             ->when($categoryId, fn ($q) => $q->whereHas('categories', fn ($q) => $q->where('categories.id', $categoryId)))

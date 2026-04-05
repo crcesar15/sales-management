@@ -36,3 +36,29 @@ export interface ProductPayload extends ProductBase {
   media?: {id: number}[]
   variants?: ProductVariantPayload[]
 }
+
+// List page types (matches ProductCollection output)
+export interface ProductListResponse {
+  id: number
+  name: string
+  description: string | null
+  status: string
+  brand: { id: number; name: string } | null
+  categories: { id: number; name: string }[]
+  media: { id: number; thumb_url: string; full_url: string }[]
+  variants: { id: number; name: string; status: string; price: number; stock: number }[]
+  variants_count: number
+  stock: number
+  price_min: number | null
+  price_max: number | null
+  deleted_at: string | null
+  created_at: string
+}
+
+export interface ProductFilters {
+  filter?: string | null
+  status?: string
+  order_by?: string
+  order_direction?: string
+  per_page?: number
+}

@@ -40,7 +40,7 @@ final class ProductController extends Controller
             categoryId: request()->integer('category_id') ?: null,
             orderBy: request()->string('order_by', 'name')->value(),
             orderDirection: request()->string('order_direction', 'asc')->value(),
-            perPage: request()->integer('per_page', 20),
+            perPage: request()->integer('per_page', 10),
         );
 
         return Inertia::render('Products/Index', [
