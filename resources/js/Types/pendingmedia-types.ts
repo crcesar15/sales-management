@@ -1,15 +1,15 @@
-import { Media } from "./media-types"
+import { type Media } from "./media-types";
 
 export interface PendingMedia {
   // columns
-  id: number
-  upload_token: string
-  created_at: string | null
-  updated_at: string | null
+  id: number;
+  upload_token: string;
+  created_at: string | null;
+  updated_at: string | null;
   // relations
-  media: Media[]
+  media: Media[];
   // counts
-  media_count: number
+  media_count: number;
   // exists
-  media_exists: boolean
+  media_exists: boolean;
 }

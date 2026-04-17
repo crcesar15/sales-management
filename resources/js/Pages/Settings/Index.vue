@@ -83,14 +83,7 @@
               </div>
 
               <div class="flex justify-end mt-4">
-                <Button
-                  type="submit"
-                  :label="t('Save')"
-                  icon="fa fa-save"
-                  class="uppercase"
-                  raised
-                  :loading="generalIsSubmitting"
-                />
+                <Button type="submit" :label="t('Save')" icon="fa fa-save" class="uppercase" raised :loading="generalIsSubmitting" />
               </div>
             </form>
           </TabPanel>
@@ -122,14 +115,7 @@
               </div>
 
               <div class="flex justify-end mt-4">
-                <Button
-                  type="submit"
-                  :label="t('Save')"
-                  icon="fa fa-save"
-                  class="uppercase"
-                  raised
-                  :loading="taxIsSubmitting"
-                />
+                <Button type="submit" :label="t('Save')" icon="fa fa-save" class="uppercase" raised :loading="taxIsSubmitting" />
               </div>
             </form>
           </TabPanel>
@@ -193,14 +179,7 @@
               </div>
 
               <div class="flex justify-end mt-4">
-                <Button
-                  type="submit"
-                  :label="t('Save')"
-                  icon="fa fa-save"
-                  class="uppercase"
-                  raised
-                  :loading="financeIsSubmitting"
-                />
+                <Button type="submit" :label="t('Save')" icon="fa fa-save" class="uppercase" raised :loading="financeIsSubmitting" />
               </div>
             </form>
           </TabPanel>
@@ -211,16 +190,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Button,
-  Card,
-  InputText,
-  InputNumber,
-  Select,
-  TabView,
-  TabPanel,
-  useToast,
-} from "primevue";
+import { Button, Card, InputText, InputNumber, Select, TabView, TabPanel, useToast } from "primevue";
 
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
@@ -256,7 +226,7 @@ const generalSchema = toTypedSchema(
     business_address: string().nullable().optional().max(500),
     business_phone: string().nullable().optional().max(30),
     timezone: string().required(),
-  })
+  }),
 );
 
 const {
@@ -308,7 +278,7 @@ const onSubmitGeneral = handleSubmitGeneral((values) => {
 const taxSchema = toTypedSchema(
   object({
     tax_rate: number().required().min(0).max(100),
-  })
+  }),
 );
 
 const {
@@ -364,7 +334,7 @@ const financeSchema = toTypedSchema(
     currency: string().required(),
     currency_symbol: string().required().max(5),
     decimal_precision: number().required().min(0).max(6),
-  })
+  }),
 );
 
 const {

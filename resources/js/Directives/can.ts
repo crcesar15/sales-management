@@ -21,9 +21,7 @@ const canDirective: Directive<CanDirectiveElement, PermissionValue> = {
         return;
       }
 
-      const hasPermission = Array.isArray(value)
-        ? canAny(value)
-        : can(value);
+      const hasPermission = Array.isArray(value) ? canAny(value) : can(value);
 
       if (!hasPermission) {
         // Store original display value for potential restoration
@@ -67,9 +65,7 @@ const canDirective: Directive<CanDirectiveElement, PermissionValue> = {
       return;
     }
 
-    const hasPermission = Array.isArray(value)
-      ? canAny(value)
-      : can(value);
+    const hasPermission = Array.isArray(value) ? canAny(value) : can(value);
 
     if (!hasPermission) {
       if (el.__canOriginalDisplay === undefined) {

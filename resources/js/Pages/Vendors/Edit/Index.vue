@@ -2,25 +2,13 @@
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex">
-        <PButton
-          icon="fa fa-arrow-left"
-          text
-          severity="secondary"
-          class="hover:shadow-md mr-2"
-          @click="$inertia.visit(route('vendors'))"
-        />
+        <PButton icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="$inertia.visit(route('vendors'))" />
         <h4 class="text-2xl font-bold flex items-center m-0">
           {{ $t("Edit Vendor") }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
-        <PButton
-          icon="fa fa-save"
-          :label="$t('Save')"
-          class="uppercase"
-          raised
-          @click="submit()"
-        />
+        <PButton icon="fa fa-save" :label="$t('Save')" class="uppercase" raised @click="submit()" />
       </div>
     </div>
     <div class="grid grid-cols-12 gap-4">
@@ -35,13 +23,10 @@
                     id="fullname"
                     v-model="fullname"
                     autocomplete="off"
-                    :class="{'p-invalid': v$.fullname.$invalid && v$.fullname.$dirty}"
+                    :class="{ 'p-invalid': v$.fullname.$invalid && v$.fullname.$dirty }"
                     @blur="v$.fullname.$touch"
                   />
-                  <small
-                    v-if="v$.fullname.$invalid && v$.fullname.$dirty"
-                    class="text-red-400 dark:text-red-300"
-                  >
+                  <small v-if="v$.fullname.$invalid && v$.fullname.$dirty" class="text-red-400 dark:text-red-300">
                     {{ v$.fullname.$errors[0].$message }}
                   </small>
                 </div>
@@ -53,13 +38,10 @@
                     id="phone"
                     v-model="phone"
                     autocomplete="off"
-                    :class="{'p-invalid': v$.phone.$invalid && v$.phone.$dirty}"
+                    :class="{ 'p-invalid': v$.phone.$invalid && v$.phone.$dirty }"
                     @blur="v$.phone.$touch"
                   />
-                  <small
-                    v-if="v$.phone.$invalid && v$.phone.$dirty"
-                    class="text-red-400 dark:text-red-300"
-                  >
+                  <small v-if="v$.phone.$invalid && v$.phone.$dirty" class="text-red-400 dark:text-red-300">
                     {{ v$.phone.$errors[0].$message }}
                   </small>
                 </div>
@@ -71,31 +53,20 @@
                 id="email"
                 v-model="email"
                 autocomplete="off"
-                :class="{'p-invalid': v$.email.$invalid && v$.email.$dirty}"
+                :class="{ 'p-invalid': v$.email.$invalid && v$.email.$dirty }"
                 @blur="v$.email.$touch"
               />
-              <small
-                v-if="v$.email.$invalid && v$.email.$dirty"
-                class="text-red-400 dark:text-red-300"
-              >
+              <small v-if="v$.email.$invalid && v$.email.$dirty" class="text-red-400 dark:text-red-300">
                 {{ v$.email.$errors[0].$message }}
               </small>
             </div>
             <div class="flex flex-col gap-2 mb-2">
               <label for="address">{{ $t("Address") }}</label>
-              <InputText
-                id="address"
-                v-model="address"
-                autocomplete="off"
-              />
+              <InputText id="address" v-model="address" autocomplete="off" />
             </div>
             <div class="flex flex-col gap-2 mb-2">
               <label for="details">{{ $t("Details") }}</label>
-              <Textarea
-                id="details"
-                v-model="details"
-                rows="3"
-              />
+              <Textarea id="details" v-model="details" rows="3" />
             </div>
           </template>
         </Card>
@@ -106,35 +77,18 @@
                 {{ $t("Additional Contacts") }}
               </div>
               <div class="flex items-center">
-                <label
-                  for="hasAdditionalContacts"
-                  class="mr-3 text-primary"
-                  style="font-size: 14px;"
-                >
+                <label for="hasAdditionalContacts" class="mr-3 text-primary" style="font-size: 14px">
                   {{ $t("This vendor has additional contacts?") }}
                 </label>
-                <ToggleSwitch
-                  v-model="hasAdditionalContacts"
-                  input-id="hasAdditionalContacts"
-                />
+                <ToggleSwitch v-model="hasAdditionalContacts" input-id="hasAdditionalContacts" />
               </div>
             </div>
           </template>
           <template #content>
-            <div
-              v-show="hasAdditionalContacts"
-              class="mt-3"
-            >
-              <div
-                v-for="(contact, index) in additionalContacts"
-                :key="index"
-                class="border-2 rounded-border border-surface p-2 mb-2"
-              >
+            <div v-show="hasAdditionalContacts" class="mt-3">
+              <div v-for="(contact, index) in additionalContacts" :key="index" class="border-2 rounded-border border-surface p-2 mb-2">
                 <div>
-                  <div
-                    class="flex justify-end items-center"
-                    style="margin-bottom: -20px;"
-                  >
+                  <div class="flex justify-end items-center" style="margin-bottom: -20px">
                     <PButton
                       v-tooltip.top="$t('Delete')"
                       icon="fa fa-trash"
@@ -153,7 +107,7 @@
                       <InputText
                         v-model="contact.fullname"
                         autocomplete="off"
-                        :class="{'p-invalid': v$.additionalContacts.$each.$response.$errors[index].fullname.length > 0}"
+                        :class="{ 'p-invalid': v$.additionalContacts.$each.$response.$errors[index].fullname.length > 0 }"
                         @blur="v$.additionalContacts.$each.$response.$errors[index].fullname.$touch"
                       />
                       <small
@@ -170,7 +124,7 @@
                       <InputText
                         v-model="contact.phone"
                         autocomplete="off"
-                        :class="{'p-invalid': v$.additionalContacts.$each.$response.$errors[index].phone.length > 0}"
+                        :class="{ 'p-invalid': v$.additionalContacts.$each.$response.$errors[index].phone.length > 0 }"
                         @blur="v$.additionalContacts.$each.$response.$errors[index].phone.$touch"
                       />
                       <small
@@ -187,7 +141,7 @@
                       <InputText
                         v-model="contact.email"
                         autocomplete="off"
-                        :class="{'p-invalid': v$.additionalContacts.$each.$response.$errors[index].email.length > 0}"
+                        :class="{ 'p-invalid': v$.additionalContacts.$each.$response.$errors[index].email.length > 0 }"
                         @blur="v$.additionalContacts.$each.$response.$errors[index].email.$touch"
                       />
                       <small
@@ -200,10 +154,7 @@
                   </div>
                 </div>
               </div>
-              <small
-                v-show="additionalContacts.length === 0"
-                class="text-red-400 dark:text-red-300"
-              >
+              <small v-show="additionalContacts.length === 0" class="text-red-400 dark:text-red-300">
                 {{ $t("You need to add at least one additional contact") }}
               </small>
               <div class="flex justify-end">
@@ -225,7 +176,7 @@
           </template>
           <template #content>
             <div class="flex flex-col gap-2 mb-3">
-              <label for="status">{{ $t('Status') }}</label>
+              <label for="status">{{ $t("Status") }}</label>
               <Select
                 id="status"
                 v-model="status"
@@ -253,13 +204,7 @@ import PButton from "primevue/button";
 import ToggleSwitch from "primevue/toggleswitch";
 
 import { useVuelidate } from "@vuelidate/core";
-import {
-  required,
-  requiredIf,
-  email,
-  createI18nMessage,
-  helpers,
-} from "@vuelidate/validators";
+import { required, requiredIf, email, createI18nMessage, helpers } from "@vuelidate/validators";
 import axios from "axios";
 import AppLayout from "../../../Layouts/admin.vue";
 import i18n from "../../../app";
@@ -344,13 +289,13 @@ export default {
         required: withI18nMessage(requiredIf(() => this.hasAdditionalContacts)),
         $each: helpers.forEach({
           fullname: {
-            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+            required: withI18nMessage(required, { messagePath: () => "validations.required" }),
           },
           phone: {
-            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+            required: withI18nMessage(required, { messagePath: () => "validations.required" }),
           },
           email: {
-            email: withI18nMessage(email, { messagePath: () => ("validations.email") }),
+            email: withI18nMessage(email, { messagePath: () => "validations.email" }),
           },
         }),
       },
@@ -375,23 +320,26 @@ export default {
           vendor.additional_contacts = null;
         }
 
-        axios.put(route("api.vendors.update", this.vendor.id), vendor).then(() => {
-          this.$toast.add({
-            severity: "success",
-            summary: this.$t("Success"),
-            detail: this.$t("Vendor has been updated successfully"),
-            life: 3000,
-          });
+        axios
+          .put(route("api.vendors.update", this.vendor.id), vendor)
+          .then(() => {
+            this.$toast.add({
+              severity: "success",
+              summary: this.$t("Success"),
+              detail: this.$t("Vendor has been updated successfully"),
+              life: 3000,
+            });
 
-          this.$inertia.visit(route("vendors"));
-        }).catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: this.$t(error.response.data.message),
-            life: 3000,
+            this.$inertia.visit(route("vendors"));
+          })
+          .catch((error) => {
+            this.$toast.add({
+              severity: "error",
+              summary: this.$t("Error"),
+              detail: this.$t(error.response.data.message),
+              life: 3000,
+            });
           });
-        });
       } else {
         this.$toast.add({
           severity: "error",

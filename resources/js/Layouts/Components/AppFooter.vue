@@ -10,11 +10,6 @@ const appName = computed<string>(() => page.props.appConfig?.name || "Sales Mana
 <template>
   <div class="layout-footer">
     {{ appName }} powered by
-    <a
-      href="https://primevue.org"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="text-primary font-bold hover:underline"
-    >PrimeVue</a>
+    <a href="https://primevue.org" target="_blank" rel="noopener noreferrer" class="text-primary font-bold hover:underline">PrimeVue</a>
   </div>
 </template>

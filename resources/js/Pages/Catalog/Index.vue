@@ -27,85 +27,49 @@
           </template>
           <template #header>
             <div class="grid grid-cols-12">
-              <div
-                class="
-                  flex
-                  xl:col-span-3
-                  lg:col-span-4
-                  md:col-span-6
-                  col-span-12
-                  md:justify-start
-                  justify-center
-                "
-              >
+              <div class="flex xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12 md:justify-start justify-center">
                 <SelectButton
                   v-model="status"
                   :allow-empty="false"
-                  :options="[{
-                    label: $t('All'),
-                    value: 'all',
-                  }, {
-                    label: $t('Active'),
-                    value: 'active',
-                  }, {
-                    label: $t('Inactive'),
-                    value: 'inactive',
-                  }, {
-                    label: $t('Archived'),
-                    value: 'archived',
-                  }]"
+                  :options="[
+                    {
+                      label: $t('All'),
+                      value: 'all',
+                    },
+                    {
+                      label: $t('Active'),
+                      value: 'active',
+                    },
+                    {
+                      label: $t('Inactive'),
+                      value: 'inactive',
+                    },
+                    {
+                      label: $t('Archived'),
+                      value: 'archived',
+                    },
+                  ]"
                   option-label="label"
                   option-value="value"
                   aria-labelledby="basic"
                 />
               </div>
               <div
-                class="
-                  flex
-                  xl:col-span-3
-                  xl:col-start-10
-                  lg:col-span-4
-                  lg:col-start-9
-                  md:col-span-6
-                  md:col-start-7
-                  col-span-12
-                  md:justify-end
-                  justify-center
-                "
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
               >
-                <IconField
-                  icon-position="left"
-                  class="w-full"
-                >
+                <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
-                  <InputText
-                    v-model="pagination.filter"
-                    :placeholder="$t('Search')"
-                    class="w-full"
-                  />
+                  <InputText v-model="pagination.filter" :placeholder="$t('Search')" class="w-full" />
                 </IconField>
-                <PButton
-                  v-tooltip.top="$t('Filter')"
-                  icon="fa-solid fa-filter"
-                  class="ml-2"
-                  raised
-                  @click="toggleFilter"
-                />
+                <PButton v-tooltip.top="$t('Filter')" icon="fa-solid fa-filter" class="ml-2" raised @click="toggleFilter" />
               </div>
             </div>
           </template>
-          <Column
-            field="name"
-            :header="$t('Name')"
-            sortable
-          >
+          <Column field="name" :header="$t('Name')" sortable>
             <template #body="{ data }">
               <div class="flex flex-col">
                 <span class="font-bold">{{ data.name }}</span>
-                <span
-                  v-if="data.variant"
-                  class="p-tag p-component p-tag-secondary font-bold w-fit"
-                >
+                <span v-if="data.variant" class="p-tag p-component p-tag-secondary font-bold w-fit">
                   {{ data.variant }}
                 </span>
               </div>
@@ -114,8 +78,8 @@
           <Column
             field="media"
             :header="$t('Image')"
-            style="padding: 4px 12px; margin: 0px;"
-            :pt="{columnHeaderContent: 'justify-center'}"
+            style="padding: 4px 12px; margin: 0px"
+            :pt="{ columnHeaderContent: 'justify-center' }"
           >
             <template #body="{ data }">
               <div class="flex justify-center">
@@ -123,77 +87,33 @@
                   v-if="data.media.length"
                   :src="data.media[0].url"
                   alt="Product Image"
-                  class="
-                    rounded-xl
-                    border-slate-300
-                    dark:border-slate-700
-                    shadow-md
-                  "
-                  style="height: 55px; width: 55px;"
-                >
+                  class="rounded-xl border-slate-300 dark:border-slate-700 shadow-md"
+                  style="height: 55px; width: 55px"
+                />
                 <div
                   v-else
-                  class="
-                    bg-surface-50
-                    dark:bg-surface-950
-                    rounded-xl
-                    justify-center
-                    items-center
-                    flex
-                    border-slate-300
-                    dark:border-slate-700
-                    shadow-md
-                  "
-                  style="height: 55px; width: 55px;"
+                  class="bg-surface-50 dark:bg-surface-950 rounded-xl justify-center items-center flex border-slate-300 dark:border-slate-700 shadow-md"
+                  style="height: 55px; width: 55px"
                 >
-                  <p style="font-size: 18px; font-weight: bold;">
+                  <p style="font-size: 18px; font-weight: bold">
                     {{ data.name.substring(0, 2).toUpperCase() }}
                   </p>
                 </div>
               </div>
             </template>
           </Column>
-          <Column
-            field="status"
-            :header="$t('Status')"
-            header-class="flex justify-center"
-            class="flex justify-center"
-          >
+          <Column field="status" :header="$t('Status')" header-class="flex justify-center" class="flex justify-center">
             <template #body="{ data }">
-              <div
-                style="height: 55px;"
-                class="flex items-center"
-              >
-                <Tag
-                  v-if="data.status === 'active'"
-                  severity="success"
-                  :value="$t('Active')"
-                />
-                <Tag
-                  v-else-if="data.status === 'inactive'"
-                  severity="warn"
-                  :value="$t('Inactive')"
-                />
-                <Tag
-                  v-else
-                  severity="danger"
-                  :value="$t('Archived')"
-                />
+              <div style="height: 55px" class="flex items-center">
+                <Tag v-if="data.status === 'active'" severity="success" :value="$t('Active')" />
+                <Tag v-else-if="data.status === 'inactive'" severity="warn" :value="$t('Inactive')" />
+                <Tag v-else severity="danger" :value="$t('Archived')" />
               </div>
             </template>
           </Column>
-          <Column
-            field="brand"
-            :header="$t('Brand')"
-          />
-          <Column
-            field="categories"
-            :header="$t('Category')"
-          />
-          <Column
-            :header="$t('Actions')"
-            :pt="{columnHeaderContent: 'justify-center'}"
-          >
+          <Column field="brand" :header="$t('Brand')" />
+          <Column field="categories" :header="$t('Category')" />
+          <Column :header="$t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
             <template #body="{ data }">
               <span class="flex justify-center gap-2">
                 <p-button
@@ -246,87 +166,39 @@
       :style="{ width: '50rem' }"
       :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     >
-      <DataTable
-        :value="productVendors"
-        resizable-columns
-        :rows="10"
-        table-class="border-t"
-      >
+      <DataTable :value="productVendors" resizable-columns :rows="10" table-class="border-t">
         <template #empty>
           <div class="flex w-full justify-between">
             <p class="m-0 flex items-center">
               {{ $t("No vendors found") }}
             </p>
-            <PButton
-              icon="fa fa-plus"
-              :label="$t('Add Vendor')"
-
-              @click="editVendors(selectedVariantId)"
-            />
+            <PButton icon="fa fa-plus" :label="$t('Add Vendor')" @click="editVendors(selectedVariantId)" />
           </div>
         </template>
-        <Column
-          field="fullname"
-          :header="$t('Vendor')"
-        />
-        <Column
-          field="email"
-          :header="$t('Email')"
-        />
-        <Column
-          field="phone"
-          :header="$t('Phone')"
-        />
-        <Column
-          field="price"
-          :header="$t('Price')"
-        />
-        <Column
-          field="payment_terms"
-          :header="$t('Payment Term')"
-        >
+        <Column field="fullname" :header="$t('Vendor')" />
+        <Column field="email" :header="$t('Email')" />
+        <Column field="phone" :header="$t('Phone')" />
+        <Column field="price" :header="$t('Price')" />
+        <Column field="payment_terms" :header="$t('Payment Term')">
           <template #body="{ data }">
             <span v-if="data.payment_terms === 'debit'">
-              {{ $t('Cash') }}
+              {{ $t("Cash") }}
             </span>
             <span v-else-if="data.payment_terms === 'credit'">
-              {{ $t('Credit') }}
+              {{ $t("Credit") }}
             </span>
           </template>
         </Column>
-        <Column
-          field="status"
-          :header="$t('Status')"
-          header-class="flex justify-center"
-          class="flex justify-center"
-        >
+        <Column field="status" :header="$t('Status')" header-class="flex justify-center" class="flex justify-center">
           <template #body="{ data }">
-            <div
-              style="height: 55px;"
-              class="flex items-center"
-            >
-              <Tag
-                v-if="data.status === 'active'"
-                severity="success"
-                :value="$t('Active')"
-              />
-              <Tag
-                v-else-if="data.status === 'inactive'"
-                severity="warn"
-                :value="$t('Inactive')"
-              />
-              <Tag
-                v-else
-                severity="danger"
-                :value="$t('Archived')"
-              />
+            <div style="height: 55px" class="flex items-center">
+              <Tag v-if="data.status === 'active'" severity="success" :value="$t('Active')" />
+              <Tag v-else-if="data.status === 'inactive'" severity="warn" :value="$t('Inactive')" />
+              <Tag v-else severity="danger" :value="$t('Archived')" />
             </div>
           </template>
         </Column>
-        <Column
-          :header="$t('Actions')"
-          :pt="{columnHeaderContent: 'justify-center'}"
-        >
+        <Column :header="$t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
           <template #body="{ data }">
             <span class="p-buttonset flex justify-center">
               <p-button
@@ -334,7 +206,7 @@
                 icon="fa fa-edit"
                 text
                 size="sm"
-                @click="$inertia.visit(route('vendors.edit', {vendor: data.id}))"
+                @click="$inertia.visit(route('vendors.edit', { vendor: data.id }))"
               />
             </span>
           </template>
@@ -343,6 +215,7 @@
     </Dialog>
   </div>
 </template>
+
 <script>
 import DataTable from "primevue/datatable";
 import Card from "primevue/card";
@@ -444,7 +317,8 @@ export default {
         params.order_direction = "asc";
       }
 
-      axios.get(route("api.variants"), { params })
+      axios
+        .get(route("api.variants"), { params })
         .then((response) => {
           this.variants = response.data.data;
           this.pagination.total = response.data.meta.total;
@@ -515,7 +389,8 @@ export default {
       this.showVendors = true;
       this.productVendors = [];
 
-      axios.get(route("api.variants.vendors", id))
+      axios
+        .get(route("api.variants.vendors", id))
         .then((response) => {
           this.productVendors = response.data.data.map((vendor) => ({
             id: vendor.id,

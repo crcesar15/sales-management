@@ -198,16 +198,14 @@ export function useMenuItems() {
   // ========================================
   // Permission Filtering
   // ========================================
-  const userPermissions = computed<string[]>(
-    () => (page.props.auth?.user?.permissions || []) as string[]
-  );
+  const userPermissions = computed<string[]>(() => (page.props.auth?.user?.permissions || []) as string[]);
 
   const permissionSet = computed(() => new Set(userPermissions.value));
 
   function hasPermission(permission?: string): boolean {
     if (!permission) return true;
 
-    const cacheKey = `${permission}-${userPermissions.value.join(',')}`;
+    const cacheKey = `${permission}-${userPermissions.value.join(",")}`;
     if (!permissionCache.has(cacheKey)) {
       permissionCache.set(cacheKey, permissionSet.value.has(permission));
     }
@@ -220,9 +218,7 @@ export function useMenuItems() {
         return hasPermission(group.can) ? [...acc, group] : acc;
       }
 
-      const visibleChildren = group.items.filter(child =>
-        hasPermission(child.can)
-      );
+      const visibleChildren = group.items.filter((child) => hasPermission(child.can));
 
       if (visibleChildren.length === 0) return acc;
 
@@ -273,7 +269,7 @@ export function useMenuItems() {
     () => {
       const keys = computeExpandedKeys();
       expandedKeys.value = { ...expandedKeys.value, ...keys };
-    }
+    },
   );
 
   return {

@@ -1,26 +1,26 @@
-import type { Product } from "./product-types"
+import type { Product } from "./product-types";
 
 export interface Brand {
   // columns
-  id: number
-  name: string
-  created_at: string | null
-  updated_at: string | null
-  deleted_at: string | null
+  id: number;
+  name: string;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted_at: string | null;
   // relations
-  products?: Product[]
+  products?: Product[];
   // counts
-  products_count?: number
+  products_count?: number;
   // exists
-  products_exists?: boolean
+  products_exists?: boolean;
 }
 
 export interface BrandResponse {
-  id: number
-  name: string
-  products_count: number
-  products_exists: boolean
-  created_at: string | null
-  updated_at: string | null
-  deleted_at: string | null
+  id: number;
+  name: string;
+  products_count: number;
+  products_exists: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted_at: string | null;
 }

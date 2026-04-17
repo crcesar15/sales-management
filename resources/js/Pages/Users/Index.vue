@@ -30,48 +30,28 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ t('No users found') }}
+            {{ t("No users found") }}
           </template>
           <template #header>
             <div class="grid grid-cols-12 gap-2">
               <div class="md:col-span-6 col-span-12 flex md:justify-start justify-center">
-                <SelectButton
-                  v-model="status"
-                  :allow-empty="false"
-                  :options="statusOptions"
-                  option-label="label"
-                  option-value="value"
-                />
+                <SelectButton v-model="status" :allow-empty="false" :options="statusOptions" option-label="label" option-value="value" />
               </div>
               <div
-                class="
-                  flex
-                  xl:col-span-3 xl:col-start-10
-                  lg:col-span-4 lg:col-start-9
-                  md:col-span-6 md:col-start-7
-                  col-span-12
-                  md:justify-end justify-center
-                "
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
               >
                 <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
-                  <InputText
-                    v-model="filter"
-                    :placeholder="t('Search')"
-                    class="w-full"
-                  />
+                  <InputText v-model="filter" :placeholder="t('Search')" class="w-full" />
                 </IconField>
               </div>
             </div>
           </template>
           <Column field="full_name" :header="t('Name')">
-            <template #body="row" >
+            <template #body="row">
               <div class="flex items-center h-full gap-2">
-                <div class="!sm:hidden !md:flex items-center justify-center rounded-full" style="height: 55px; width: 55px;">
-                  <Tag
-                    severity="secondary"
-                    class="flex w-full h-full items-center justify-center rounded-full !text-lg"
-                  >
+                <div class="!sm:hidden !md:flex items-center justify-center rounded-full" style="height: 55px; width: 55px">
+                  <Tag severity="secondary" class="flex w-full h-full items-center justify-center rounded-full !text-lg">
                     {{ row.data.initials }}
                   </Tag>
                 </div>
@@ -84,8 +64,8 @@
           </Column>
           <Column field="roles" :header="t('Roles')">
             <template #body="{ data }">
-              <div style="height: 55px;" class="flex items-center">
-                <Tag v-for="role in data.roles" style="margin-right: 5px;" :key="role.id" severity="secondary">
+              <div style="height: 55px" class="flex items-center">
+                <Tag v-for="role in data.roles" style="margin-right: 5px" :key="role.id" severity="secondary">
                   {{ role }}
                 </Tag>
               </div>
@@ -93,18 +73,14 @@
           </Column>
           <Column field="status" :header="t('Status')" sortable>
             <template #body="{ data }">
-              <div style="height: 55px;" class="flex items-center">
-                <Tag v-if="data.status === 'active'" severity="success">{{ t('Active') }}</Tag>
-                <Tag v-else-if="data.status === 'inactive'" severity="warn">{{ t('Inactive') }}</Tag>
-                <Tag v-else severity="danger">{{ t('Archived') }}</Tag>
+              <div style="height: 55px" class="flex items-center">
+                <Tag v-if="data.status === 'active'" severity="success">{{ t("Active") }}</Tag>
+                <Tag v-else-if="data.status === 'inactive'" severity="warn">{{ t("Inactive") }}</Tag>
+                <Tag v-else severity="danger">{{ t("Archived") }}</Tag>
               </div>
             </template>
           </Column>
-          <Column
-            field="actions"
-            :header="t('Actions')"
-            :pt="{columnHeaderContent: 'justify-center'}"
-          >
+          <Column field="actions" :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
@@ -213,9 +189,9 @@ const sortField = ref(props.filters.order_by ?? "first_name");
 const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
 
 const statusOptions = computed(() => [
-  { label: t('Active'), value: 'active' },
-  { label: t('Inactive'), value: 'inactive' },
-  { label: t('Archived'), value: 'archived' },
+  { label: t("Active"), value: "active" },
+  { label: t("Inactive"), value: "inactive" },
+  { label: t("Archived"), value: "archived" },
 ]);
 
 // Formatted rows
@@ -224,7 +200,7 @@ const users = computed(() =>
     ...item,
     initials: item.first_name.charAt(0) + item.last_name.charAt(0),
     created_at: useDatetimeFormatter(item.created_at),
-  }))
+  })),
 );
 
 // Debounced filter watch

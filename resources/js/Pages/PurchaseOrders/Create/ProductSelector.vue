@@ -22,11 +22,8 @@
               filter
               :invalid="productState === false"
             />
-            <small
-              v-if="productState === false"
-              class="text-red-400 dark:text-red-300"
-            >
-              {{ $t('validations.required') }}
+            <small v-if="productState === false" class="text-red-400 dark:text-red-300">
+              {{ $t("validations.required") }}
             </small>
           </div>
           <div class="flex flex-col md:flex-row justify-around items-center gap-2 mt-2">
@@ -42,11 +39,8 @@
                   :min="1"
                   :invalid="quantityState === false"
                 />
-                <small
-                  v-if="quantityState === false"
-                  class="text-red-400 dark:text-red-300"
-                >
-                  {{ $t('validations.required') }}
+                <small v-if="quantityState === false" class="text-red-400 dark:text-red-300">
+                  {{ $t("validations.required") }}
                 </small>
               </div>
             </div>
@@ -61,27 +55,17 @@
                   currency="BOB"
                   show-buttons
                   :invalid="priceState === false"
-                  :step="0.50"
+                  :step="0.5"
                 />
-                <small
-                  v-if="priceState === false"
-                  class="text-red-400 dark:text-red-300"
-                >
-                  {{ $t('validations.required') }}
+                <small v-if="priceState === false" class="text-red-400 dark:text-red-300">
+                  {{ $t("validations.required") }}
                 </small>
               </div>
             </div>
             <div class="w-full">
               <div class="form-group">
                 <label for="total">Total</label>
-                <InputNumber
-                  id="total"
-                  v-model="total"
-                  class="w-full"
-                  disabled
-                  mode="currency"
-                  currency="BOB"
-                />
+                <InputNumber id="total" v-model="total" class="w-full" disabled mode="currency" currency="BOB" />
               </div>
             </div>
           </div>
@@ -89,17 +73,8 @@
       </template>
       <template #footer>
         <div class="flex justify-end gap-2">
-          <PButton
-            label="Cancel"
-            icon="fa fa-times"
-            outlined
-            @click="closeProductModal"
-          />
-          <PButton
-            label="Save"
-            icon="fa fa-save"
-            @click="saveProduct"
-          />
+          <PButton label="Cancel" icon="fa fa-times" outlined @click="closeProductModal" />
+          <PButton label="Save" icon="fa fa-save" @click="saveProduct" />
         </div>
       </template>
     </Dialog>
@@ -107,13 +82,7 @@
 </template>
 
 <script>
-import {
-  Dialog,
-  Select,
-  InputNumber,
-  InputText,
-  Button as PButton,
-} from "primevue";
+import { Dialog, Select, InputNumber, InputText, Button as PButton } from "primevue";
 
 export default {
   components: {

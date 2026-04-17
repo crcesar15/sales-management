@@ -79,12 +79,13 @@ const app = createApp({
         });
     },
     register() {
-      apiClient.post(`${window.location.origin}/register`, {
-        name: this.name,
-        email: this.email,
-        password: this.password,
-        password_confirmation: this.password_confirmation,
-      })
+      apiClient
+        .post(`${window.location.origin}/register`, {
+          name: this.name,
+          email: this.email,
+          password: this.password,
+          password_confirmation: this.password_confirmation,
+        })
         .then(() => {
           this.redirect("/");
         })
@@ -172,14 +173,16 @@ const Noir = definePreset(Aura, {
   },
 });
 
-app.use(PrimeVue, {
-  ripple: true,
-  theme: {
-    preset: Noir,
-    options: {
-      darkModeSelector: ".app-dark",
+app
+  .use(PrimeVue, {
+    ripple: true,
+    theme: {
+      preset: Noir,
+      options: {
+        darkModeSelector: ".app-dark",
+      },
     },
-  },
-}).use(ToastService);
+  })
+  .use(ToastService);
 
 app.mount("#app");

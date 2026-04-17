@@ -59,10 +59,7 @@ function onNavigate(): void {
 </script>
 
 <template>
-  <div
-    class="layout-sidebar"
-    :class="{ 'sidebar-collapsed': isSidebarCollapsed }"
-  >
+  <div class="layout-sidebar" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <!-- Header Section: Logo + Toggle -->
     <div class="sidebar-header">
       <a v-if="!isSidebarCollapsed" href="/" class="logo-link">
@@ -81,17 +78,14 @@ function onNavigate(): void {
     <!-- Menu Section: Scrollable Navigation -->
     <div class="sidebar-menu">
       <PanelMenu
-        v-model:expandedKeys="expandedKeys"
+        v-model:expanded-keys="expandedKeys"
         :model="filteredMenuItems"
         multiple
         class="layout-panel-menu"
         :pt="{
           root: { class: 'border-none bg-transparent' },
           panel: ({ instance }: { instance: { item: SidebarMenuItem } }) => ({
-            class: [
-              'border-none bg-transparent',
-              { 'menu-separator': instance.item?.separator },
-            ],
+            class: ['border-none bg-transparent', { 'menu-separator': instance.item?.separator }],
           }),
           headerContent: { class: 'border-none bg-transparent p-0' },
           content: { class: 'border-none bg-transparent p-0' },
@@ -109,19 +103,10 @@ function onNavigate(): void {
             <span class="menu-icon" :class="item.icon" />
             <span class="menu-label">{{ item.label }}</span>
           </Link>
-          <a
-            v-else
-            v-ripple
-            class="menu-item menu-parent"
-            :href="item.url"
-            :target="item.target"
-          >
+          <a v-else v-ripple class="menu-item menu-parent" :href="item.url" :target="item.target">
             <span class="menu-icon" :class="item.icon" />
             <span class="menu-label">{{ item.label }}</span>
-            <span
-              v-if="item.items"
-              class="fa fa-chevron-down menu-chevron"
-            />
+            <span v-if="item.items" class="fa fa-chevron-down menu-chevron" />
           </a>
         </template>
       </PanelMenu>
@@ -129,21 +114,13 @@ function onNavigate(): void {
 
     <!-- User Section: Profile + Dropdown -->
     <div class="sidebar-user">
-      <button
-        v-ripple
-        class="user-button"
-        @click="toggleUserMenu"
-      >
+      <button v-ripple class="user-button" @click="toggleUserMenu">
         <span class="user-avatar">{{ userInitial }}</span>
         <span class="user-info">
           <span class="user-name">{{ userName }}</span>
         </span>
       </button>
-      <Menu
-        ref="userMenu"
-        :model="userMenuItems"
-        :popup="true"
-      />
+      <Menu ref="userMenu" :model="userMenuItems" :popup="true" />
     </div>
   </div>
 </template>

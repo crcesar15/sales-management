@@ -31,124 +31,65 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ $t('No purchase orders found') }}
+            {{ $t("No purchase orders found") }}
           </template>
           <template #header>
             <div class="grid grid-cols-12">
-              <div
-                class="
-                  flex
-                  md:justify-start
-                  justify-center
-                  xl:col-span-3
-                  lg:col-span-4
-                  md:col-span-6
-                  col-span-12
-                "
-              >
+              <div class="flex md:justify-start justify-center xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12">
                 <SelectButton
                   v-model="status"
                   :allow-empty="false"
-                  :options="[{
-                    label: $t('All'),
-                    value: 'all',
-                  }, {
-                    label: $t('Pending'),
-                    value: 'pending',
-                  }, {
-                    label: $t('Draft'),
-                    value: 'draft',
-                  }, {
-                    label: $t('Paid'),
-                    value: 'paid',
-                  }, {
-                    label: $t('Canceled'),
-                    value: 'canceled',
-                  }]"
+                  :options="[
+                    {
+                      label: $t('All'),
+                      value: 'all',
+                    },
+                    {
+                      label: $t('Pending'),
+                      value: 'pending',
+                    },
+                    {
+                      label: $t('Draft'),
+                      value: 'draft',
+                    },
+                    {
+                      label: $t('Paid'),
+                      value: 'paid',
+                    },
+                    {
+                      label: $t('Canceled'),
+                      value: 'canceled',
+                    },
+                  ]"
                   option-label="label"
                   option-value="value"
                   aria-labelledby="basic"
                 />
               </div>
               <div
-                class="
-                  flex
-                  xl:col-span-3
-                  xl:col-start-10
-                  lg:col-span-4
-                  lg:col-start-9
-                  md:col-span-6
-                  md:col-start-7
-                  col-span-12
-                  md:justify-end
-                  justify-center
-                "
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
               >
-                <IconField
-                  icon-position="left"
-                  class="w-full"
-                >
+                <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
-                  <InputText
-                    v-model="pagination.filter"
-                    :placeholder="$t('Search')"
-                    class="w-full"
-                  />
+                  <InputText v-model="pagination.filter" :placeholder="$t('Search')" class="w-full" />
                 </IconField>
               </div>
             </div>
           </template>
-          <Column
-            field="vendor.fullname"
-            :header="$t('Vendor')"
-          />
-          <Column
-            field="user.full_name"
-            :header="$t('User')"
-          />
-          <Column
-            field="total"
-            :header="$t('Total')"
-          />
-          <Column
-            field="status"
-            :header="$t('Status')"
-            header-class="flex justify-center"
-            class="flex justify-center"
-          >
+          <Column field="vendor.fullname" :header="$t('Vendor')" />
+          <Column field="user.full_name" :header="$t('User')" />
+          <Column field="total" :header="$t('Total')" />
+          <Column field="status" :header="$t('Status')" header-class="flex justify-center" class="flex justify-center">
             <template #body="{ data }">
-              <div
-                style="height: 55px;"
-                class="flex items-center"
-              >
-                <Tag
-                  v-if="data.status === 'draft'"
-                  severity="info"
-                  :value="$t('Draft')"
-                />
-                <Tag
-                  v-else-if="data.status === 'pending'"
-                  severity="warn"
-                  :value="$t('Pending')"
-                />
-                <Tag
-                  v-else-if="data.status === 'paid'"
-                  severity="warn"
-                  :value="$t('Paid')"
-                />
-                <Tag
-                  v-else
-                  severity="canceled"
-                  :value="$t('Canceled')"
-                />
+              <div style="height: 55px" class="flex items-center">
+                <Tag v-if="data.status === 'draft'" severity="info" :value="$t('Draft')" />
+                <Tag v-else-if="data.status === 'pending'" severity="warn" :value="$t('Pending')" />
+                <Tag v-else-if="data.status === 'paid'" severity="warn" :value="$t('Paid')" />
+                <Tag v-else severity="canceled" :value="$t('Canceled')" />
               </div>
             </template>
           </Column>
-          <Column
-            field="created_at"
-            :header="$t('Created At')"
-            sortable
-          />
+          <Column field="created_at" :header="$t('Created At')" sortable />
         </DataTable>
       </template>
     </Card>

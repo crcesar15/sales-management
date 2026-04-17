@@ -4,14 +4,7 @@
       <h2 class="text-2xl font-bold flex items-end m-0">
         {{ t("Categories") }}
       </h2>
-      <Button
-        v-can="'category.create'"
-        :label="t('Add Category')"
-        icon="fa fa-add"
-        raised
-        class="ml-2 uppercase"
-        @click="addCategory"
-      />
+      <Button v-can="'category.create'" :label="t('Add Category')" icon="fa fa-add" raised class="ml-2 uppercase" @click="addCategory" />
     </div>
     <ConfirmDialog />
     <Toast />
@@ -33,99 +26,50 @@
           <template #empty>
             <div class="flex flex-col items-center py-8 text-surface-400">
               <i class="fa fa-folder-open text-4xl mb-3"></i>
-              <span>{{ t('No categories found') }}</span>
+              <span>{{ t("No categories found") }}</span>
             </div>
           </template>
           <template #header>
             <div class="grid grid-cols-12">
-              <div
-                class="
-                  md:col-span-6
-                  col-span-12
-                  flex
-                  md:justify-start
-                  justify-center
-                "
-              >
+              <div class="md:col-span-6 col-span-12 flex md:justify-start justify-center">
                 <SelectButton
                   v-model="status"
                   :allow-empty="false"
-                  :options="[{
-                    label: t('Active'),
-                    value: 'active',
-                  }, {
-                    label: t('Archived'),
-                    value: 'archived',
-                  }]"
+                  :options="[
+                    {
+                      label: t('Active'),
+                      value: 'active',
+                    },
+                    {
+                      label: t('Archived'),
+                      value: 'archived',
+                    },
+                  ]"
                   option-label="label"
                   option-value="value"
                 />
               </div>
               <div
-                class="
-                  flex
-                  xl:col-span-3
-                  xl:col-start-10
-                  lg:col-span-4
-                  lg:col-start-9
-                  md:col-span-6
-                  md:col-start-7
-                  col-span-12
-                  md:justify-end
-                  justify-center
-                "
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
               >
-                <IconField
-                  icon-position="left"
-                  class="w-full"
-                >
+                <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
-                  <InputText
-                    v-model="filter"
-                    :placeholder="t('Search')"
-                    fluid
-                  />
+                  <InputText v-model="filter" :placeholder="t('Search')" fluid />
                 </IconField>
               </div>
             </div>
           </template>
-          <Column
-            field="name"
-            :header="t('Name')"
-            sortable
-          />
-          <Column
-            field="products_count"
-            :header="t('Products')"
-            :pt="{columnHeaderContent: 'justify-center'}"
-          >
-            <template
-              #body="row"
-            >
+          <Column field="name" :header="t('Name')" sortable />
+          <Column field="products_count" :header="t('Products')" :pt="{ columnHeaderContent: 'justify-center' }">
+            <template #body="row">
               <div class="flex justify-center">
-                <Tag
-                  rounded
-                  severity="secondary"
-                  :value="row.data.products_count"
-                />
+                <Tag rounded severity="secondary" :value="row.data.products_count" />
               </div>
             </template>
           </Column>
-          <Column
-            field="created_at"
-            :header="t('Created At')"
-            sortable
-          />
-          <Column
-            field="updated_at"
-            :header="t('Updated At')"
-            sortable
-          />
-          <Column
-            field="actions"
-            :header="t('Actions')"
-            :pt="{columnHeaderContent: 'justify-center'}"
-          >
+          <Column field="created_at" :header="t('Created At')" sortable />
+          <Column field="updated_at" :header="t('Updated At')" sortable />
+          <Column field="actions" :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
@@ -164,10 +108,7 @@
         </DataTable>
       </template>
     </Card>
-    <CategoryEditor
-      v-model:show-modal="showModal"
-      :category="selectedCategory"
-    />
+    <CategoryEditor v-model:show-modal="showModal" :category="selectedCategory" />
   </div>
 </template>
 
@@ -188,7 +129,7 @@ import {
   useConfirm,
   type DataTablePageEvent,
   type DataTableSortEvent,
-} from "primevue"
+} from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
 import CategoryEditor from "@pages/Categories/List/ItemEditor.vue";
@@ -239,7 +180,7 @@ const categories = computed(() =>
     ...item,
     created_at: useDatetimeFormatter(item.created_at),
     updated_at: useDatetimeFormatter(item.updated_at),
-  }))
+  })),
 );
 
 // Debounced filter watch

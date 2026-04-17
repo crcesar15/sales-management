@@ -11,10 +11,7 @@
             input-id="global-select-all"
             @update:model-value="emit('toggle-all', $event)"
           />
-          <label
-            for="global-select-all"
-            class="font-semibold uppercase text-sm cursor-pointer"
-          >{{ t('Select All') }}</label>
+          <label for="global-select-all" class="font-semibold uppercase text-sm cursor-pointer">{{ t("Select All") }}</label>
           <Badge
             :value="`${totalEnabled} / ${totalPermissions}`"
             :severity="totalEnabled === totalPermissions && totalPermissions > 0 ? 'primary' : 'secondary'"
@@ -49,13 +46,14 @@
                     :input-id="`cat-${row.category}`"
                     @update:model-value="emit('toggle-category-all', row.category, $event)"
                   />
-                  <label
-                    :for="`cat-${row.category}`"
-                    class="uppercase font-bold text-sm cursor-pointer"
-                  >{{ t(row.category) }}</label>
+                  <label :for="`cat-${row.category}`" class="uppercase font-bold text-sm cursor-pointer">{{ t(row.category) }}</label>
                   <Badge
                     :value="getCategoryEnabledCount(row.category)"
-                    :severity="getCategoryEnabledCount(row.category) === row.permissions.length && row.permissions.length > 0 ? 'primary' : 'secondary'"
+                    :severity="
+                      getCategoryEnabledCount(row.category) === row.permissions.length && row.permissions.length > 0
+                        ? 'primary'
+                        : 'secondary'
+                    "
                   />
                 </div>
               </td>
@@ -87,16 +85,9 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Card,
-  Checkbox,
-  Badge,
-  IconField,
-  InputIcon,
-  InputText,
-} from 'primevue';
-import { useI18n } from 'vue-i18n';
-import type { PermissionCategoryRow } from '@/Types/permission-types';
+import { Card, Checkbox, Badge, IconField, InputIcon, InputText } from "primevue";
+import { useI18n } from "vue-i18n";
+import type { PermissionCategoryRow } from "@/Types/permission-types";
 
 const { t } = useI18n();
 
@@ -111,9 +102,9 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:searchQuery', value: string): void;
-  (e: 'toggle-permission', category: string, permissionName: string): void;
-  (e: 'toggle-category-all', category: string, enabled: boolean): void;
-  (e: 'toggle-all', enabled: boolean): void;
+  (e: "update:searchQuery", value: string): void;
+  (e: "toggle-permission", category: string, permissionName: string): void;
+  (e: "toggle-category-all", category: string, enabled: boolean): void;
+  (e: "toggle-all", enabled: boolean): void;
 }>();
 </script>

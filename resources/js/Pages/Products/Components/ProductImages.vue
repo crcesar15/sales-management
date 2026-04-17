@@ -27,10 +27,10 @@
       </div>
       <div class="text-center">
         <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
-          {{ t('Drop images here or click to browse') }}
+          {{ t("Drop images here or click to browse") }}
         </p>
         <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">
-          {{ t('WebP, PNG, JPG up to 10MB') }}
+          {{ t("WebP, PNG, JPG up to 10MB") }}
         </p>
       </div>
     </div>
@@ -45,11 +45,7 @@
           class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
         >
           <!-- Image -->
-          <img
-            :src="file.thumb_url || file.full_url"
-            :alt="t('Product image')"
-            class="h-full w-full object-cover"
-          />
+          <img :src="file.thumb_url || file.full_url" :alt="t('Product image')" class="h-full w-full object-cover" />
 
           <!-- Hover Overlay -->
           <div
@@ -87,7 +83,7 @@
         >
           <div class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
             <i class="fa-solid fa-plus text-xl" />
-            <span class="text-xs">{{ t('Add') }}</span>
+            <span class="text-xs">{{ t("Add") }}</span>
           </div>
         </div>
       </div>
@@ -121,7 +117,7 @@
       <template #header>
         <div class="flex w-full items-center gap-2">
           <i class="fa-solid fa-crop-simple text-lg text-primary-500" />
-          <span class="text-lg font-semibold">{{ t('Crop Image') }}</span>
+          <span class="text-lg font-semibold">{{ t("Crop Image") }}</span>
         </div>
       </template>
 
@@ -183,17 +179,8 @@
 
       <template #footer>
         <div class="flex items-center justify-end gap-2 pt-2">
-          <Button
-            :label="t('Cancel')"
-            icon="fa-solid fa-xmark"
-            outlined
-            @click="cropperVisible = false"
-          />
-          <Button
-            :label="t('Crop & Save')"
-            icon="fa-solid fa-check"
-            @click="saveCropped"
-          />
+          <Button :label="t('Cancel')" icon="fa-solid fa-xmark" outlined @click="cropperVisible = false" />
+          <Button :label="t('Crop & Save')" icon="fa-solid fa-check" @click="saveCropped" />
         </div>
       </template>
     </Dialog>
@@ -233,46 +220,37 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Button,
-  Dialog,
-  FileUpload,
-  Galleria,
-  useToast,
-} from "primevue"
-import { ref, computed } from "vue"
-import { useI18n } from "vue-i18n"
-import { route } from "ziggy-js"
-import axios from "axios"
-import "vue-advanced-cropper/dist/style.css"
-import { Cropper } from "vue-advanced-cropper"
-import type { PendingMediaResponse } from "@app-types/product-types"
+import { Button, Dialog, FileUpload, Galleria, useToast } from "primevue";
+import { ref, computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { route } from "ziggy-js";
+import axios from "axios";
+import "vue-advanced-cropper/dist/style.css";
+import { Cropper } from "vue-advanced-cropper";
+import type { PendingMediaResponse } from "@app-types/product-types";
 
-const toast = useToast()
-const { t } = useI18n()
+const toast = useToast();
+const { t } = useI18n();
 
 interface MediaItem {
-  id: number
-  thumb_url: string
-  full_url: string
+  id: number;
+  thumb_url: string;
+  full_url: string;
 }
 
 const props = defineProps<{
-  pendingMedia: MediaItem[]
-  existingMedia?: MediaItem[]
-  removeMediaIds: number[]
-}>()
+  pendingMedia: MediaItem[];
+  existingMedia?: MediaItem[];
+  removeMediaIds: number[];
+}>();
 
 const emit = defineEmits<{
-  "update:pendingMedia": [value: MediaItem[]]
-  "update:removeMediaIds": [value: number[]]
-}>()
+  "update:pendingMedia": [value: MediaItem[]];
+  "update:removeMediaIds": [value: number[]];
+}>();
 
 // Combined display list
-const displayFiles = computed(() => [
-  ...(props.existingMedia ?? []),
-  ...props.pendingMedia,
-])
+const displayFiles = computed(() => [...(props.existingMedia ?? []), ...props.pendingMedia]);
 
 // Galleria data
 const galleriaItems = computed(() =>
@@ -281,88 +259,88 @@ const galleriaItems = computed(() =>
     thumbnailImageSrc: f.thumb_url,
     alt: "Product image",
   })),
-)
+);
 
 // Drag-and-drop state
-const isDragOver = ref(false)
+const isDragOver = ref(false);
 
 // Lightbox state
-const lightboxVisible = ref(false)
-const lightboxActiveIndex = ref(0)
+const lightboxVisible = ref(false);
+const lightboxActiveIndex = ref(0);
 
 // Cropper state
-const cropperVisible = ref(false)
-const cropperImageSrc = ref("")
-const cropperRef = ref()
-const fileUploadRef = ref()
+const cropperVisible = ref(false);
+const cropperImageSrc = ref("");
+const cropperRef = ref();
+const fileUploadRef = ref();
 
 const openFileUpload = () => {
-  cropperVisible.value = false
-  cropperImageSrc.value = ""
-  fileUploadRef.value?.choose()
-}
+  cropperVisible.value = false;
+  cropperImageSrc.value = "";
+  fileUploadRef.value?.choose();
+};
 
 const onUploader = (event: { files: File[] | File }) => {
-  const file = Array.isArray(event.files) ? event.files[0] : event.files
-  loadImage(file)
-}
+  const file = Array.isArray(event.files) ? event.files[0] : event.files;
+  loadImage(file);
+};
 
 const onDrop = (event: DragEvent) => {
-  isDragOver.value = false
-  const file = event.dataTransfer?.files?.[0]
+  isDragOver.value = false;
+  const file = event.dataTransfer?.files?.[0];
   if (file && file.type.startsWith("image/")) {
-    loadImage(file)
+    loadImage(file);
   }
-}
+};
 
 const loadImage = (file: File) => {
-  const reader = new FileReader()
-  reader.readAsDataURL(file)
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
   reader.onload = () => {
-    cropperImageSrc.value = String(reader.result)
-    cropperVisible.value = true
-  }
-}
+    cropperImageSrc.value = String(reader.result);
+    cropperVisible.value = true;
+  };
+};
 
 const openLightbox = (index: number) => {
-  lightboxActiveIndex.value = index
-  lightboxVisible.value = true
-}
+  lightboxActiveIndex.value = index;
+  lightboxVisible.value = true;
+};
 
 const flip = (x: number, y: number) => {
-  cropperRef.value?.flip(x, y)
-}
+  cropperRef.value?.flip(x, y);
+};
 
 const rotate = (angle: number) => {
-  cropperRef.value?.rotate(angle)
-}
+  cropperRef.value?.rotate(angle);
+};
 
 const saveCropped = () => {
-  const { canvas } = cropperRef.value.getResult()
+  const { canvas } = cropperRef.value.getResult();
   canvas.toBlob((blob: Blob) => {
-    const formData = new FormData()
-    formData.append("file", blob, `${Date.now()}.webp`)
+    const formData = new FormData();
+    formData.append("file", blob, `${Date.now()}.webp`);
 
-    toast.add({ severity: "info", summary: t("Uploading..."), life: 3000 })
+    toast.add({ severity: "info", summary: t("Uploading..."), life: 3000 });
 
     axios
       .post(route("products.media.store"), formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((response) => {
-        const data: PendingMediaResponse = response.data
+        const data: PendingMediaResponse = response.data;
         const newMedia: MediaItem = {
           id: data.id,
           thumb_url: data.thumb_url,
           full_url: data.full_url,
-        }
-        emit("update:pendingMedia", [...props.pendingMedia, newMedia])
+        };
+        emit("update:pendingMedia", [...props.pendingMedia, newMedia]);
         toast.add({
           severity: "success",
           summary: t("Success"),
           detail: t("File uploaded"),
           life: 3000,
-        })
+        });
       })
       .catch((error) => {
         toast.add({
@@ -370,18 +348,18 @@ const saveCropped = () => {
           summary: t("Error"),
           detail: t(error?.response?.data?.message || "Upload failed"),
           life: 3000,
-        })
-      })
+        });
+      });
 
-    cropperVisible.value = false
-  })
-}
+    cropperVisible.value = false;
+  });
+};
 
 const removeFile = (file: MediaItem) => {
-  const isExisting = props.existingMedia?.some((m) => m.id === file.id)
+  const isExisting = props.existingMedia?.some((m) => m.id === file.id);
 
   if (isExisting) {
-    emit("update:removeMediaIds", [...props.removeMediaIds, file.id])
+    emit("update:removeMediaIds", [...props.removeMediaIds, file.id]);
   } else {
     axios
       .delete(route("products.media.destroy", file.id))
@@ -389,13 +367,13 @@ const removeFile = (file: MediaItem) => {
         emit(
           "update:pendingMedia",
           props.pendingMedia.filter((m) => m.id !== file.id),
-        )
+        );
         toast.add({
           severity: "success",
           summary: t("Success"),
           detail: t("File removed"),
           life: 3000,
-        })
+        });
       })
       .catch((error) => {
         toast.add({
@@ -403,10 +381,10 @@ const removeFile = (file: MediaItem) => {
           summary: t("Error"),
           detail: t(error?.response?.data?.message || "Remove failed"),
           life: 3000,
-        })
-      })
+        });
+      });
   }
-}
+};
 </script>
 
 <style>

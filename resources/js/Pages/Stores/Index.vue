@@ -30,36 +30,19 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ t('No stores found') }}
+            {{ t("No stores found") }}
           </template>
           <template #header>
             <div class="grid grid-cols-12 gap-2">
               <div class="md:col-span-6 col-span-12 flex md:justify-start justify-center">
-                <SelectButton
-                  v-model="status"
-                  :allow-empty="false"
-                  :options="statusOptions"
-                  option-label="label"
-                  option-value="value"
-                />
+                <SelectButton v-model="status" :allow-empty="false" :options="statusOptions" option-label="label" option-value="value" />
               </div>
               <div
-                class="
-                  flex
-                  xl:col-span-3 xl:col-start-10
-                  lg:col-span-4 lg:col-start-9
-                  md:col-span-6 md:col-start-7
-                  col-span-12
-                  md:justify-end justify-center
-                "
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
               >
                 <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
-                  <InputText
-                    v-model="filter"
-                    :placeholder="t('Search')"
-                    class="w-full"
-                  />
+                  <InputText v-model="filter" :placeholder="t('Search')" class="w-full" />
                 </IconField>
               </div>
             </div>
@@ -77,20 +60,20 @@
           <Column field="address" :header="t('Address')" sortable>
             <template #body="{ data }">
               <div class="flex items-center">
-                {{ data.address ?? '—' }}
+                {{ data.address ?? "—" }}
               </div>
             </template>
           </Column>
           <Column field="phone" :header="t('Phone')">
             <template #body="{ data }">
-              {{ data.phone ?? '—' }}
+              {{ data.phone ?? "—" }}
             </template>
           </Column>
           <Column field="status" :header="t('Status')" sortable>
             <template #body="{ data }">
-              <Tag v-if="data.status === 'active'" severity="success">{{ t('Active') }}</Tag>
-              <Tag v-else-if="data.status === 'inactive'" severity="warn">{{ t('Inactive') }}</Tag>
-              <Tag v-else severity="danger">{{ t('Archived') }}</Tag>
+              <Tag v-if="data.status === 'active'" severity="success">{{ t("Active") }}</Tag>
+              <Tag v-else-if="data.status === 'inactive'" severity="warn">{{ t("Inactive") }}</Tag>
+              <Tag v-else severity="danger">{{ t("Archived") }}</Tag>
             </template>
           </Column>
           <Column field="users_count" :header="t('Users')" sortable>
@@ -98,11 +81,7 @@
               {{ data.users_count ?? 0 }}
             </template>
           </Column>
-          <Column
-            field="actions"
-            :header="t('Actions')"
-            :pt="{columnHeaderContent: 'justify-center'}"
-          >
+          <Column field="actions" :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
@@ -204,9 +183,9 @@ const sortField = ref(props.filters.order_by ?? "name");
 const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
 
 const statusOptions = computed(() => [
-  { label: t('Active'), value: 'active' },
-  { label: t('Inactive'), value: 'inactive' },
-  { label: t('Archived'), value: 'archived' },
+  { label: t("Active"), value: "active" },
+  { label: t("Inactive"), value: "inactive" },
+  { label: t("Archived"), value: "archived" },
 ]);
 
 // Formatted rows

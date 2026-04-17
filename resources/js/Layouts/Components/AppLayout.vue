@@ -5,13 +5,7 @@ import { useLayout } from "./Composables/useLayout";
 import AppFooter from "./AppFooter.vue";
 import AppSidebar from "./AppSidebar.vue";
 
-const {
-  layoutState,
-  isSidebarActive,
-  isSidebarCollapsed,
-  resetMenu,
-  onMenuToggle,
-} = useLayout();
+const { layoutState, isSidebarActive, isSidebarCollapsed, resetMenu, onMenuToggle } = useLayout();
 
 const outsideClickListener = ref<((event: Event) => void) | null>(null);
 
@@ -63,16 +57,9 @@ function isOutsideClicked(event: Event): boolean {
 </script>
 
 <template>
-  <div
-    class="layout-wrapper"
-    :class="containerClass"
-  >
+  <div class="layout-wrapper" :class="containerClass">
     <!-- Mobile Menu Toggle (visible only on mobile) -->
-    <button
-      class="mobile-menu-toggle"
-      aria-label="Toggle menu"
-      @click="onMenuToggle"
-    >
+    <button class="mobile-menu-toggle" aria-label="Toggle menu" @click="onMenuToggle">
       <i class="fa fa-bars" />
     </button>
 

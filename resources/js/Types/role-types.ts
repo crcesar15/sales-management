@@ -1,16 +1,16 @@
-import {Permission} from "./permission-types"
+import { type Permission } from "./permission-types";
 
 interface RoleBase {
-    name: string,
+  name: string;
 }
 
 export interface RoleResponse extends RoleBase {
-    id: number,
-    created_at: string,
-    updated_at: string,
-    permissions: Permission[]
+  id: number;
+  created_at: string;
+  updated_at: string;
+  permissions: Permission[];
 }
 
 export interface RolePayload extends RoleBase {
-    permissions: string[]
+  permissions: string[];
 }

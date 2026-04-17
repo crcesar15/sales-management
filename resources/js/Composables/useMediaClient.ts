@@ -1,10 +1,10 @@
 import { Media } from "@app-types/media-types";
 import { useApi } from "./useApi";
 import { route } from "ziggy-js";
-import { AxiosResponse } from "axios";
+import { type AxiosResponse } from "axios";
 
 export const useMediaClient = () => {
-  const {apiClient, loading} = useApi();
+  const { apiClient, loading } = useApi();
 
   const uploadDraftFile = async (file: FormData): Promise<AxiosResponse> => {
     return await apiClient.post(route("api.v1.media.draft.store"), file, {

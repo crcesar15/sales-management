@@ -2,75 +2,46 @@
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex">
-        <PButton
-          icon="fa fa-arrow-left"
-          text
-          severity="secondary"
-          class="hover:shadow-md mr-2"
-          @click="$inertia.visit(route('catalog'))"
-        />
+        <PButton icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="$inertia.visit(route('catalog'))" />
         <h4 class="text-2xl font-bold flex items-center m-0">
-          {{ $t('Edit Vendors') }}
+          {{ $t("Edit Vendors") }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
-        <PButton
-          icon="fa fa-save"
-          :label="$t('Save')"
-          style="text-transform: uppercase"
-          raised
-          @click="submit()"
-        />
+        <PButton icon="fa fa-save" :label="$t('Save')" style="text-transform: uppercase" raised @click="submit()" />
       </div>
     </div>
     <div class="grid grid-cols-12 gap-4">
       <div class="col-span-12">
         <Card class="mb-4">
           <template #title>
-            {{ $t('Product') }}
+            {{ $t("Product") }}
           </template>
           <template #content>
             <div class="grid grid-cols-12 gap-4">
               <div class="flex flex-col md:col-span-6 col-span-12">
-                <label for="name">{{ $t('Name') }}</label>
+                <label for="name">{{ $t("Name") }}</label>
                 <InputText
                   id="name"
-                  :value="(variant.name === variant.product.name) ? variant.name : `${variant.product.name} - ${variant.name}`"
+                  :value="variant.name === variant.product.name ? variant.name : `${variant.product.name} - ${variant.name}`"
                   disabled
                 />
               </div>
               <div class="flex flex-col md:col-span-6 col-span-12">
-                <label for="description">{{ $t('Description') }}</label>
-                <Textarea
-                  id="description"
-                  rows="1"
-                  :value="variant.product.description"
-                  disabled
-                />
+                <label for="description">{{ $t("Description") }}</label>
+                <Textarea id="description" rows="1" :value="variant.product.description" disabled />
               </div>
               <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
-                <label for="brand">{{ $t('Brand') }}</label>
-                <InputText
-                  id="brand"
-                  :value="variant.product.brand.name"
-                  disabled
-                />
+                <label for="brand">{{ $t("Brand") }}</label>
+                <InputText id="brand" :value="variant.product.brand.name" disabled />
               </div>
               <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
-                <label for="categories">{{ $t('Categories') }}</label>
-                <InputText
-                  id="categories"
-                  :value="variant.product.categories.map((category) => category.name).join(', ')"
-                  disabled
-                />
+                <label for="categories">{{ $t("Categories") }}</label>
+                <InputText id="categories" :value="variant.product.categories.map((category) => category.name).join(', ')" disabled />
               </div>
               <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
-                <label for="identifier">{{ $t('Bar Code or Identifier') }}</label>
-                <InputText
-                  id="identifier"
-                  :value="variant.identifier"
-                  disabled
-                />
+                <label for="identifier">{{ $t("Bar Code or Identifier") }}</label>
+                <InputText id="identifier" :value="variant.identifier" disabled />
               </div>
             </div>
           </template>
@@ -79,33 +50,21 @@
           <template #title>
             <div class="flex justify-between mb-3">
               <div>
-                {{ $t('Vendors') }}
+                {{ $t("Vendors") }}
               </div>
               <div>
-                <PButton
-                  icon="fa fa-plus"
-                  class="uppercase"
-                  :label="$t('Add Vendor')"
-                  @click="addVendor()"
-                />
+                <PButton icon="fa fa-plus" class="uppercase" :label="$t('Add Vendor')" @click="addVendor()" />
               </div>
             </div>
           </template>
           <template #content>
-            <DataTable
-              :value="catalog"
-              table-class="border-t"
-              resizable-columns
-            >
+            <DataTable :value="catalog" table-class="border-t" resizable-columns>
               <template #empty>
                 <p class="text-red-400 dark:text-red-300">
-                  {{ $t('At least one provided must be added') }}
+                  {{ $t("At least one provided must be added") }}
                 </p>
               </template>
-              <Column
-                field="vendor"
-                :header="$t('Name')"
-              >
+              <Column field="vendor" :header="$t('Name')">
                 <template #body="slotProps">
                   <div class="flex flex-col">
                     <Select
@@ -130,10 +89,7 @@
                   </div>
                 </template>
               </Column>
-              <Column
-                field="price"
-                :header="$t('Price')"
-              >
+              <Column field="price" :header="$t('Price')">
                 <template #body="slotProps">
                   <div class="flex flex-col">
                     <InputNumber
@@ -152,10 +108,7 @@
                   </div>
                 </template>
               </Column>
-              <Column
-                field="payment_terms"
-                :header="$t('Payment Term')"
-              >
+              <Column field="payment_terms" :header="$t('Payment Term')">
                 <template #body="slotProps">
                   <div class="flex flex-col">
                     <Select
@@ -179,24 +132,12 @@
                   </div>
                 </template>
               </Column>
-              <Column
-                field="details"
-                :header="$t('Details')"
-              >
+              <Column field="details" :header="$t('Details')">
                 <template #body="slotProps">
-                  <Textarea
-                    v-model="slotProps.data.details"
-                    class="w-full"
-                    rows="1"
-                  />
+                  <Textarea v-model="slotProps.data.details" class="w-full" rows="1" />
                 </template>
               </Column>
-              <Column
-                field="actions"
-                :header="$t('Actions')"
-                header-class="flex justify-center"
-                class="flex justify-center"
-              >
+              <Column field="actions" :header="$t('Actions')" header-class="flex justify-center" class="flex justify-center">
                 <template #body="slotProps">
                   <PButton
                     v-tooltip.top="$t('Delete')"
@@ -227,10 +168,7 @@ import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import InputNumber from "primevue/inputnumber";
 import { useVuelidate } from "@vuelidate/core";
-import {
-  helpers, required, minValue,
-  createI18nMessage,
-} from "@vuelidate/validators";
+import { helpers, required, minValue, createI18nMessage } from "@vuelidate/validators";
 import AppLayout from "../../../Layouts/admin.vue";
 import i18n from "../../../app";
 
@@ -267,13 +205,15 @@ export default {
   },
   data() {
     return {
-      catalog: [{
-        vendorsLoading: false,
-        vendor: null,
-        price: 0,
-        payment_terms: "debit",
-        details: "",
-      }],
+      catalog: [
+        {
+          vendorsLoading: false,
+          vendor: null,
+          price: 0,
+          payment_terms: "debit",
+          details: "",
+        },
+      ],
       vendors: [],
     };
   },
@@ -301,14 +241,14 @@ export default {
         required: withI18nMessage(required),
         $each: helpers.forEach({
           vendor: {
-            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+            required: withI18nMessage(required, { messagePath: () => "validations.required" }),
           },
           price: {
-            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
-            minValue: withI18nMessage(minValue(0.5), { messagePath: () => ("validations.minValue") }),
+            required: withI18nMessage(required, { messagePath: () => "validations.required" }),
+            minValue: withI18nMessage(minValue(0.5), { messagePath: () => "validations.minValue" }),
           },
           payment_terms: {
-            required: withI18nMessage(required, { messagePath: () => ("validations.required") }),
+            required: withI18nMessage(required, { messagePath: () => "validations.required" }),
           },
         }),
       },
@@ -355,11 +295,7 @@ export default {
         }));
 
         // check if any of the selected vendors is duplicated
-        const duplicates = selectedVendors.filter((vendor, index, self) => (
-          index !== self.findIndex((t) => (
-            t.id === vendor.id
-          ))
-        ));
+        const duplicates = selectedVendors.filter((vendor, index, self) => index !== self.findIndex((t) => t.id === vendor.id));
 
         if (duplicates.length > 0) {
           this.$toast.add({
@@ -372,10 +308,8 @@ export default {
           return;
         }
 
-        axios.put(
-          route("api.variants.vendors.update", this.variant.id),
-          { vendors: selectedVendors },
-        )
+        axios
+          .put(route("api.variants.vendors.update", this.variant.id), { vendors: selectedVendors })
           .then(() => {
             this.$toast.add({
               severity: "success",

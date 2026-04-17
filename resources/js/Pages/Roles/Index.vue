@@ -30,51 +30,24 @@
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ t('No roles found') }}
+            {{ t("No roles found") }}
           </template>
           <template #header>
             <div class="grid grid-cols-12 gap-2">
               <div
-                class="
-                  flex
-                  xl:col-span-3 xl:col-start-10
-                  lg:col-span-4 lg:col-start-9
-                  md:col-span-6 md:col-start-7
-                  col-span-12
-                  md:justify-end justify-center
-                "
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
               >
                 <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
-                  <InputText
-                    v-model="filter"
-                    :placeholder="t('Search')"
-                    class="w-full"
-                  />
+                  <InputText v-model="filter" :placeholder="t('Search')" class="w-full" />
                 </IconField>
               </div>
             </div>
           </template>
-          <Column
-            field="name"
-            :header="t('Name')"
-            sortable
-          />
-          <Column
-            field="created_at"
-            :header="t('Created At')"
-            sortable
-          />
-          <Column
-            field="updated_at"
-            :header="t('Updated At')"
-            sortable
-          />
-          <Column
-            field="actions"
-            :header="t('Actions')"
-            :pt="{columnHeaderContent: 'justify-center'}"
-          >
+          <Column field="name" :header="t('Name')" sortable />
+          <Column field="created_at" :header="t('Created At')" sortable />
+          <Column field="updated_at" :header="t('Updated At')" sortable />
+          <Column field="actions" :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
@@ -185,7 +158,7 @@ const roles = computed(() =>
     ...item,
     created_at: useDatetimeFormatter(item.created_at),
     updated_at: useDatetimeFormatter(item.updated_at),
-  }))
+  })),
 );
 
 const onPage = (event: DataTablePageEvent) => {
@@ -263,7 +236,7 @@ const deleteRole = (id: number) => {
   cursor: pointer;
   background-color: #ccc;
 }
-.p-datatable .p-datatable-tbody>tr.no-expander>td .p-row-toggler {
+.p-datatable .p-datatable-tbody > tr.no-expander > td .p-row-toggler {
   display: none;
 }
 </style>

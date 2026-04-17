@@ -4,13 +4,7 @@
       <h2 class="text-2xl font-bold flex items-end m-0">
         {{ $t("Vendors") }}
       </h2>
-      <PButton
-        :label="$t('Add Vendor')"
-        icon="fa fa-add"
-        raised
-        class="ml-2 uppercase"
-        @click="$inertia.visit(route('vendors.create'))"
-      />
+      <PButton :label="$t('Add Vendor')" icon="fa fa-add" raised class="ml-2 uppercase" @click="$inertia.visit(route('vendors.create'))" />
     </div>
     <ConfirmDialog />
     <Card>
@@ -34,111 +28,56 @@
           </template>
           <template #header>
             <div class="grid grid-cols-12">
-              <div
-                class="
-                  md:col-span-6
-                  col-span-12
-                  flex
-                  md:justify-start
-                  justify-center
-                "
-              >
+              <div class="md:col-span-6 col-span-12 flex md:justify-start justify-center">
                 <SelectButton
                   v-model="status"
                   :allow-empty="false"
-                  :options="[{
-                    label: $t('All'),
-                    value: 'all',
-                  }, {
-                    label: $t('Active'),
-                    value: 'active',
-                  }, {
-                    label: $t('Inactive'),
-                    value: 'inactive',
-                  }]"
+                  :options="[
+                    {
+                      label: $t('All'),
+                      value: 'all',
+                    },
+                    {
+                      label: $t('Active'),
+                      value: 'active',
+                    },
+                    {
+                      label: $t('Inactive'),
+                      value: 'inactive',
+                    },
+                  ]"
                   option-label="label"
                   option-value="value"
                   aria-labelledby="basic"
                 />
               </div>
               <div
-                class="
-                  flex
-                  xl:col-span-3
-                  xl:col-start-10
-                  lg:col-span-4
-                  lg:col-start-9
-                  md:col-span-6
-                  md:col-start-7
-                  col-span-12
-                  md:justify-content-end
-                  justify-center
-                "
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-content-end justify-center"
               >
-                <IconField
-                  icon-position="left"
-                  class="w-full"
-                >
+                <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
-                  <InputText
-                    v-model="pagination.filter"
-                    :placeholder="$t('Search')"
-                    class="w-full"
-                  />
+                  <InputText v-model="pagination.filter" :placeholder="$t('Search')" class="w-full" />
                 </IconField>
               </div>
             </div>
           </template>
-          <Column
-            field="fullname"
-            :header="$t('Full Name')"
-            sortable
-          />
-          <Column
-            field="status"
-            :header="$t('Status')"
-            sortable
-          >
+          <Column field="fullname" :header="$t('Full Name')" sortable />
+          <Column field="status" :header="$t('Status')" sortable>
             <template #body="{ data }">
-              <div
-                style="height: 55px;"
-                class="flex items-center"
-              >
-                <Tag
-                  v-if="data.status === 'active'"
-                  severity="success"
-                >
-                  {{ $t('Active') }}
+              <div style="height: 55px" class="flex items-center">
+                <Tag v-if="data.status === 'active'" severity="success">
+                  {{ $t("Active") }}
                 </Tag>
-                <Tag
-                  v-else-if="data.status === 'inactive'"
-                  severity="warn"
-                >
-                  {{ $t('Inactive') }}
+                <Tag v-else-if="data.status === 'inactive'" severity="warn">
+                  {{ $t("Inactive") }}
                 </Tag>
               </div>
             </template>
           </Column>
-          <Column
-            field="phone"
-            :header="$t('Phone')"
-            sortable
-          />
-          <Column
-            field="created_at"
-            :header="$t('Created At')"
-            sortable
-          />
-          <Column
-            field="updated_at"
-            :header="$t('Updated At')"
-            sortable
-          />
-          <Column
-            field="actions"
-            :header="$t('Actions')"
-            :pt="{columnHeaderContent: 'justify-center'}"
-          >
+          <Column field="phone" :header="$t('Phone')" sortable />
+          <Column field="created_at" :header="$t('Created At')" sortable />
+          <Column field="updated_at" :header="$t('Updated At')" sortable />
+          <Column field="actions" :header="$t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <p-button
@@ -150,15 +89,7 @@
                   size="sm"
                   @click="showProducts(row.data.id)"
                 />
-                <p-button
-                  v-tooltip.top="$t('Edit')"
-                  icon="fa fa-edit"
-                  text
-                  rounded
-                  raised
-                  size="sm"
-                  @click="editVendor(row.data)"
-                />
+                <p-button v-tooltip.top="$t('Edit')" icon="fa fa-edit" text rounded raised size="sm" @click="editVendor(row.data)" />
                 <p-button
                   v-show="row.data.status !== 'archived'"
                   v-tooltip.top="$t('Delete')"
@@ -177,6 +108,7 @@
     </Card>
   </div>
 </template>
+
 <script>
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
@@ -264,7 +196,8 @@ export default {
         url += `&filter=${this.pagination.filter}`;
       }
 
-      axios.get(url)
+      axios
+        .get(url)
         .then((response) => {
           this.vendors = response.data.data;
           this.pagination.total = response.data.meta.total;
@@ -295,7 +228,8 @@ export default {
         acceptLabel: this.$t("Delete"),
         rejectClass: "p-button-secondary",
         accept: () => {
-          axios.delete(route("api.vendors.destroy", id))
+          axios
+            .delete(route("api.vendors.destroy", id))
             .then(() => {
               this.$toast.add({
                 severity: "success",

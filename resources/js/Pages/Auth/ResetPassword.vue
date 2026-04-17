@@ -17,11 +17,7 @@
 
       <!-- Top: Logo -->
       <div class="relative z-10">
-        <img
-          src="/images/logo.png"
-          alt="logo"
-          class="h-40"
-        />
+        <img src="/images/logo.png" alt="logo" class="h-40" />
       </div>
 
       <!-- Center: Value proposition -->
@@ -36,9 +32,7 @@
 
       <!-- Bottom: Subtle footer -->
       <div class="relative z-10 flex justify-end">
-        <p class="text-sm text-white/60">
-          &copy; {{ new Date().getFullYear() }}
-        </p>
+        <p class="text-sm text-white/60">&copy; {{ new Date().getFullYear() }}</p>
       </div>
     </div>
 
@@ -47,11 +41,7 @@
       <div class="w-full max-w-md">
         <!-- Mobile logo (visible only on small screens) -->
         <div class="flex justify-center mb-8 lg:hidden">
-          <img
-            src="/images/logo.png"
-            alt="logo"
-            class="h-60"
-          />
+          <img src="/images/logo.png" alt="logo" class="h-60" />
         </div>
 
         <!-- Heading -->
@@ -67,10 +57,7 @@
         <form @submit.prevent="resetPassword">
           <!-- Email -->
           <div class="flex flex-col gap-2">
-            <label
-              for="email"
-              class="text-surface-700 font-medium text-sm"
-            >{{ t("Email Address") }}</label>
+            <label for="email" class="text-surface-700 font-medium text-sm">{{ t("Email Address") }}</label>
             <IconField>
               <InputIcon class="fa fa-envelope" />
               <InputText
@@ -87,16 +74,13 @@
 
           <!-- Password -->
           <div class="flex flex-col gap-2 mt-5">
-            <label
-              for="password"
-              class="text-surface-700 font-medium text-sm"
-            >{{ t("New Password") }}</label>
+            <label for="password" class="text-surface-700 font-medium text-sm">{{ t("New Password") }}</label>
             <Password
               v-model="password"
               class="w-full"
-              inputClass="w-full"
-              toggleMask
-              inputId="password"
+              input-class="w-full"
+              toggle-mask
+              input-id="password"
               :required="true"
               :feedback="false"
               :placeholder="t('Enter your new password')"
@@ -105,16 +89,13 @@
 
           <!-- Confirm Password -->
           <div class="flex flex-col gap-2 mt-5">
-            <label
-              for="password-confirm"
-              class="text-surface-700 font-medium text-sm"
-            >{{ t("Confirm Password") }}</label>
+            <label for="password-confirm" class="text-surface-700 font-medium text-sm">{{ t("Confirm Password") }}</label>
             <Password
               v-model="passwordConfirmation"
               class="w-full"
-              inputClass="w-full"
-              toggleMask
-              inputId="password-confirm"
+              input-class="w-full"
+              toggle-mask
+              input-id="password-confirm"
               :required="true"
               :feedback="false"
               :placeholder="t('Confirm your new password')"
@@ -123,21 +104,12 @@
 
           <!-- Submit Button (protagonist) -->
           <div class="mt-6">
-            <Button
-              type="submit"
-              class="w-full"
-              :label="t('Reset Password')"
-              :loading="btnLoading"
-              raised
-            />
+            <Button type="submit" class="w-full" :label="t('Reset Password')" :loading="btnLoading" raised />
           </div>
 
           <!-- Back to Login -->
           <div class="flex justify-center mt-4">
-            <a
-              class="text-primary text-sm cursor-pointer hover:underline"
-              @click="router.visit(route('login'))"
-            >
+            <a class="text-primary text-sm cursor-pointer hover:underline" @click="router.visit(route('login'))">
               {{ t("Back to Login") }}
             </a>
           </div>
@@ -150,15 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  InputText,
-  Password,
-  Button,
-  IconField,
-  InputIcon,
-  Toast,
-  useToast,
-} from "primevue";
+import { InputText, Password, Button, IconField, InputIcon, Toast, useToast } from "primevue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { router } from "@inertiajs/vue3";

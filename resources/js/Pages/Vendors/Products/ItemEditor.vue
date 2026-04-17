@@ -34,67 +34,33 @@
               <template #option="slotProps">
                 <div class="flex flex-row gap-2 h-6">
                   <p>{{ slotProps.option.name }}</p>
-                  <span
-                    v-if="slotProps.option.variant"
-                    class="font-bold italic w-fit"
-                  >({{ slotProps.option.variant }})</span>
+                  <span v-if="slotProps.option.variant" class="font-bold italic w-fit">({{ slotProps.option.variant }})</span>
                 </div>
               </template>
             </Select>
           </div>
           <div class="col-span-12 flex flex-col">
             <label for="product-price">{{ $t("Price") }}</label>
-            <InputNumber
-              id="product-price"
-              v-model="price"
-              mode="currency"
-              currency="BOB"
-              :readonly="false"
-            />
+            <InputNumber id="product-price" v-model="price" mode="currency" currency="BOB" :readonly="false" />
           </div>
           <div class="col-span-12 flex flex-col">
             <label for="product-payment-term">{{ $t("Payment Term") }}</label>
-            <Select
-              id="product-payment-term"
-              v-model="paymentTerm"
-              :options="payment_terms"
-              option-value="value"
-              option-label="label"
-            />
+            <Select id="product-payment-term" v-model="paymentTerm" :options="payment_terms" option-value="value" option-label="label" />
           </div>
           <div class="col-span-12 flex flex-col">
             <label for="product-status">{{ $t("Status") }}</label>
-            <Select
-              id="product-status"
-              v-model="status"
-              :options="statusOptions"
-              option-value="value"
-              option-label="label"
-            />
+            <Select id="product-status" v-model="status" :options="statusOptions" option-value="value" option-label="label" />
           </div>
           <div class="col-span-12 flex flex-col">
             <label for="product-details">{{ $t("Details") }}</label>
-            <Textarea
-              id="product-details"
-              v-model="details"
-              :readonly="false"
-            />
+            <Textarea id="product-details" v-model="details" :readonly="false" />
           </div>
         </div>
       </template>
       <template #footer>
         <div class="flex justify-end gap-2">
-          <PButton
-            :label="$t('Cancel')"
-            icon="fa fa-times"
-            outlined
-            @click="close"
-          />
-          <PButton
-            :label="$t('Save')"
-            icon="fa fa-save"
-            @click="save"
-          />
+          <PButton :label="$t('Cancel')" icon="fa fa-times" outlined @click="close" />
+          <PButton :label="$t('Save')" icon="fa fa-save" @click="save" />
         </div>
       </template>
     </Dialog>
@@ -200,9 +166,8 @@ export default {
     searchProducts(event) {
       this.productsLoading = true;
 
-      axios.get(
-        route("api.variants"),
-        {
+      axios
+        .get(route("api.variants"), {
           params: {
             per_page: 10,
             page: 1,
@@ -211,17 +176,17 @@ export default {
             filter: event ? event.value.toLowerCase() : "",
             includes: "product",
           },
-        },
-      ).then((response) => {
-        this.products = response.data.data.map((product) => ({
-          id: product.id,
-          name: product.name,
-          label: (product.variant) ? `${product.name} - (${product.variant})` : product.name,
-          variant: product.variant,
-        }));
+        })
+        .then((response) => {
+          this.products = response.data.data.map((product) => ({
+            id: product.id,
+            name: product.name,
+            label: product.variant ? `${product.name} - (${product.variant})` : product.name,
+            variant: product.variant,
+          }));
 
-        this.productsLoading = false;
-      });
+          this.productsLoading = false;
+        });
     },
   },
 };

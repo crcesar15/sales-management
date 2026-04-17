@@ -1,53 +1,26 @@
 <template>
   <div>
     <div v-if="items.length > 0">
-      <div
-        class="
-          relative
-          overflow-x-auto
-          sm:rounded-lg
-        "
-      >
-        <table
-          class="
-            w-full
-            text-left
-            rtl:text-right
-            border
-            border-gray-300
-            dark:border-gray-600
-            text-gray-500
-            dark:text-gray-400
-          "
-        >
+      <div class="relative overflow-x-auto sm:rounded-lg">
+        <table class="w-full text-left rtl:text-right border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400">
           <thead
-            class="
-              text-xs
-              uppercase
-              border
-              border-gray-300
-              dark:border-gray-600
-              bg-gray-50
-              dark:bg-gray-950
-              text-gray-700
-              dark:text-gray-400
-            "
+            class="text-xs uppercase border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-950 text-gray-700 dark:text-gray-400"
           >
             <tr>
               <th class="text-left px-6 py-3">
-                {{ $t('Product') }}
+                {{ $t("Product") }}
               </th>
               <th class="text-left px-6 py-3">
-                {{ $t('Stock') }}
+                {{ $t("Stock") }}
               </th>
               <th class="text-left px-6 py-3">
-                {{ $t('Quantity') }}
+                {{ $t("Quantity") }}
               </th>
               <th class="text-left px-6 py-3">
-                {{ $t('Price') }}
+                {{ $t("Price") }}
               </th>
               <th class="text-left px-6 py-3">
-                {{ $t('Total') }}
+                {{ $t("Total") }}
               </th>
               <th class="text-left px-6 py-3" />
             </tr>
@@ -56,13 +29,7 @@
             <tr
               v-for="(item, index) in items"
               :key="index"
-              class="
-                bg-white border-b
-                dark:bg-gray-950
-                dark:border-gray-600
-                hover:bg-gray-50
-                dark:hover:bg-gray-600
-              "
+              class="bg-white border-b dark:bg-gray-950 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
             >
               <td class="px-6 py-4">
                 {{ item.product.name }}
@@ -91,12 +58,8 @@
                   </template>
                 </InputNumber>
               </td>
-              <td class="px-6 py-4">
-                BOB. {{ item.unit_price }}
-              </td>
-              <td class="px-6 py-4">
-                BOB. {{ getSubtotal(item).toFixed(2) }}
-              </td>
+              <td class="px-6 py-4">BOB. {{ item.unit_price }}</td>
+              <td class="px-6 py-4">BOB. {{ getSubtotal(item).toFixed(2) }}</td>
               <td class="px-6 py-4">
                 <button @click="removeItem(index)">
                   <i class="fa fa-trash" />
@@ -107,22 +70,8 @@
         </table>
       </div>
     </div>
-    <div
-      v-else
-      class="
-        flex
-        justify-center
-        items-center
-        h-16
-        border
-        border-gray-300
-        dark:border-gray-600
-        rounded
-      "
-    >
-      <h6 class="m-0 text-gray-500 dark:text-gray-400">
-        Add Some Products
-      </h6>
+    <div v-else class="flex justify-center items-center h-16 border border-gray-300 dark:border-gray-600 rounded">
+      <h6 class="m-0 text-gray-500 dark:text-gray-400">Add Some Products</h6>
     </div>
   </div>
 </template>
@@ -167,5 +116,4 @@ export default {
     },
   },
 };
-
 </script>

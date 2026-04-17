@@ -3,15 +3,13 @@ import { ref, computed, reactive, readonly, watch } from "vue";
 // ========================================
 // Dark Mode Management
 // ========================================
-const DARK_MODE_KEY = 'app-dark-mode';
+const DARK_MODE_KEY = "app-dark-mode";
 
-const isDarkMode = ref<boolean>(
-  localStorage.getItem(DARK_MODE_KEY) === 'true'
-);
+const isDarkMode = ref<boolean>(localStorage.getItem(DARK_MODE_KEY) === "true");
 
 // Apply initial state
 if (isDarkMode.value) {
-  document.documentElement.classList.add('app-dark');
+  document.documentElement.classList.add("app-dark");
 }
 
 // Persist changes
@@ -29,17 +27,15 @@ const toggleDarkMode = (): void => {
 
 const executeDarkModeToggle = (): void => {
   isDarkMode.value = !isDarkMode.value;
-  document.documentElement.classList.toggle('app-dark');
+  document.documentElement.classList.toggle("app-dark");
 };
 
 // ========================================
 // Sidebar Collapse State
 // ========================================
-const SIDEBAR_KEY = 'app-sidebar-collapsed';
+const SIDEBAR_KEY = "app-sidebar-collapsed";
 
-const isSidebarCollapsed = ref<boolean>(
-  localStorage.getItem(SIDEBAR_KEY) === 'true'
-);
+const isSidebarCollapsed = ref<boolean>(localStorage.getItem(SIDEBAR_KEY) === "true");
 
 // Persist changes
 watch(isSidebarCollapsed, (newValue) => {
@@ -74,7 +70,7 @@ const layoutState = reactive<LayoutState>({
 });
 
 const setActiveMenuItem = (item: { value?: string } | string): void => {
-  layoutState.activeMenuItem = typeof item === "string" ? item : (item.value || null);
+  layoutState.activeMenuItem = typeof item === "string" ? item : item.value || null;
 };
 
 const onMenuToggle = () => {
@@ -92,9 +88,7 @@ const resetMenu = () => {
   layoutState.menuHoverActive = false;
 };
 
-const isSidebarActive = computed(() =>
-  layoutState.overlayMenuActive || layoutState.staticMenuMobileActive
-);
+const isSidebarActive = computed(() => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive);
 
 // ========================================
 // Export Single Composable

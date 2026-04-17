@@ -10,44 +10,24 @@
     >
       <div class="flex flex-col gap-2 mb-3">
         <label for="name">
-          {{ t('Name') }} <span class="text-red-500">*</span>
+          {{ t("Name") }}
+          <span class="text-red-500">*</span>
         </label>
-        <InputText
-          id="name"
-          v-model="name"
-          v-bind="nameAttrs"
-          autocomplete="off"
-          :class="{ 'p-invalid': errors.name }"
-        />
+        <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': errors.name }" />
         <small v-if="errors.name" class="text-red-400 dark:text-red-300">
           {{ errors.name }}
         </small>
       </div>
       <template #footer>
-        <Button
-          severity="secondary"
-          :label="t('Cancel')"
-          :disabled="isSubmitting"
-          @click="showModal = false"
-        />
-        <Button
-          severity="primary"
-          :label="t('Save')"
-          :loading="isSubmitting"
-          @click="submit"
-        />
+        <Button severity="secondary" :label="t('Cancel')" :disabled="isSubmitting" @click="showModal = false" />
+        <Button severity="primary" :label="t('Save')" :loading="isSubmitting" @click="submit" />
       </template>
     </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  Dialog,
-  InputText,
-  Button,
-  useToast,
-} from "primevue"
+import { Dialog, InputText, Button, useToast } from "primevue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string } from "yup";
@@ -72,7 +52,7 @@ const props = defineProps<{
 const schema = toTypedSchema(
   object({
     name: string().required(t("Name is required")).max(50, t("Name must be at most 50 characters")),
-  })
+  }),
 );
 
 const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm } = useForm({

@@ -2,26 +2,13 @@
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex">
-        <Button
-          icon="fa fa-arrow-left"
-          text
-          severity="secondary"
-          class="hover:shadow-md mr-2"
-          @click="router.visit(route('roles'))"
-        />
+        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="router.visit(route('roles'))" />
         <h4 class="text-2xl font-bold flex items-center m-0 capitalize">
-          {{ t('edit role') }}
+          {{ t("edit role") }}
         </h4>
       </div>
       <div class="flex flex-col justify-center">
-        <Button
-          icon="fa fa-save"
-          :label="t('Save')"
-          class="uppercase"
-          raised
-          :loading="isSubmitting"
-          @click="submit()"
-        />
+        <Button icon="fa fa-save" :label="t('Save')" class="uppercase" raised :loading="isSubmitting" @click="submit()" />
       </div>
     </div>
     <div class="grid grid-cols-12 gap-4">
@@ -31,18 +18,9 @@
             <div class="grid grid-cols-12 gap-4">
               <div class="col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
-                  <label for="name">{{ t('Name') }}</label>
-                  <InputText
-                    id="name"
-                    v-model="name"
-                    v-bind="nameAttrs"
-                    autocomplete="off"
-                    :class="{'p-invalid': errors.name}"
-                  />
-                  <small
-                    v-if="errors.name"
-                    class="text-red-400 dark:text-red-300"
-                  >
+                  <label for="name">{{ t("Name") }}</label>
+                  <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': errors.name }" />
+                  <small v-if="errors.name" class="text-red-400 dark:text-red-300">
                     {{ errors.name }}
                   </small>
                 </div>
@@ -68,7 +46,7 @@
         <Card class="mb-4">
           <template #title>
             <div class="flex items-center justify-between">
-              <span>{{ t('Users') }}</span>
+              <span>{{ t("Users") }}</span>
               <Badge :value="assignedUsers.length" severity="secondary" />
             </div>
           </template>
@@ -86,18 +64,14 @@
             >
               <template #option="{ option }">
                 <div class="flex items-center gap-2">
-                  <Avatar
-                    :label="option.full_name.charAt(0).toUpperCase()"
-                    size="small"
-                    shape="circle"
-                  />
+                  <Avatar :label="option.full_name.charAt(0).toUpperCase()" size="small" shape="circle" />
                   <div class="font-medium">{{ option.full_name }}</div>
                 </div>
               </template>
             </AutoComplete>
 
             <div v-if="assignedUsers.length === 0" class="text-center text-surface-400 py-4 text-sm">
-              {{ t('No users assigned yet') }}
+              {{ t("No users assigned yet") }}
             </div>
 
             <div
@@ -105,21 +79,11 @@
               :key="user.id"
               class="flex items-center gap-3 p-2 mb-2 rounded-lg bg-surface-50 dark:bg-surface-800"
             >
-              <Avatar
-                :label="user.full_name.charAt(0).toUpperCase()"
-                shape="circle"
-              />
+              <Avatar :label="user.full_name.charAt(0).toUpperCase()" shape="circle" />
               <div class="flex-1 min-w-0">
                 <div class="font-medium truncate">{{ user.full_name }}</div>
               </div>
-              <Button
-                icon="fa fa-trash"
-                text
-                rounded
-                severity="primary"
-                size="small"
-                @click="removeUser(user.id)"
-              />
+              <Button icon="fa fa-trash" text rounded severity="primary" size="small" @click="removeUser(user.id)" />
             </div>
           </template>
         </Card>
@@ -129,15 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Card,
-  InputText,
-  AutoComplete,
-  Avatar,
-  Badge,
-  useToast,
-  Button
-} from "primevue";
+import { Card, InputText, AutoComplete, Avatar, Badge, useToast, Button } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
@@ -158,11 +114,15 @@ const { t } = useI18n();
 
 // Layout
 defineOptions({
-  layout: AppLayout
+  layout: AppLayout,
 });
 
 // Props from Inertia
-interface SimpleUser { id: number; full_name: string; email: string }
+interface SimpleUser {
+  id: number;
+  full_name: string;
+  email: string;
+}
 
 const props = defineProps<{
   role: RoleResponse;
@@ -176,7 +136,7 @@ const props = defineProps<{
 const schema = toTypedSchema(
   object({
     name: string().required().max(255),
-  })
+  }),
 );
 
 const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
@@ -211,8 +171,7 @@ const filteredUsers = ref<SimpleUser[]>([]);
 const onSearchUsers = (event: { query: string }) => {
   const q = event.query.toLowerCase();
   filteredUsers.value = props.availableUsers.filter(
-    (u) => !assignedUsers.value.find((a) => a.id === u.id) &&
-      (u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+    (u) => !assignedUsers.value.find((a) => a.id === u.id) && (u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)),
   );
 };
 
@@ -249,7 +208,7 @@ const submit = handleSubmit((values) => {
           life: 3000,
         });
       },
-    }
+    },
   );
 });
 </script>
