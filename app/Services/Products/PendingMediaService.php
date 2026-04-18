@@ -23,11 +23,15 @@ final class PendingMediaService
     }
 
     /**
+     * Commit pending media to a product and return a mapping of pending IDs to media IDs.
+     *
      * @param  array<int>  $pendingMediaIds
+     * @return array<int, int> Mapping of pending_media_uploads.id → media.id
      */
-    public function commit(Product $product, array $pendingMediaIds): void
+    public function commit(Product $product, array $pendingMediaIds): array
     {
         $userId = Auth::id();
+        $pendingMediaMap = [];
 
         foreach ($pendingMediaIds as $pendingMediaId) {
             $pending = PendingMediaUpload::where('user_id', $userId)
@@ -36,11 +40,14 @@ final class PendingMediaService
             $media = $pending->getFirstMedia('temp');
 
             if ($media) {
-                $media->move($product, 'images');
+                $movedMedia = $media->move($product, 'images');
+                $pendingMediaMap[$pendingMediaId] = $movedMedia->id;
             }
 
             $pending->delete();
         }
+
+        return $pendingMediaMap;
     }
 
     public function delete(PendingMediaUpload $pendingMedia): void

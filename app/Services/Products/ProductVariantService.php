@@ -76,6 +76,72 @@ final class ProductVariantService
     }
 
     /**
+     * Create options and variants from frontend-submitted data.
+     *
+     * Creates ProductOption + ProductOptionValue records, builds a name-to-ID
+     * lookup map, then creates each variant with its specific price/stock/barcode.
+     *
+     * @param  array<int, array{name: string, values: array<int, string>}>  $optionsData
+     * @param  array<int, array{option_values: array<string, string>, price: float|int, stock: int, barcode: string|null, pending_media_ids?: array<int, int>}>  $variantsData
+     * @param  array<int, int>  $pendingMediaMap  Mapping of pending_media_uploads.id → media.id
+     */
+    public function createVariantsFromData(Product $product, array $optionsData, array $variantsData, array $pendingMediaMap = []): void
+    {
+        DB::transaction(function () use ($product, $optionsData, $variantsData, $pendingMediaMap): void {
+            $valueLookup = [];
+
+            foreach ($optionsData as $optionData) {
+                $option = ProductOption::create([
+                    'product_id' => $product->id,
+                    'name' => $optionData['name'],
+                ]);
+
+                $valueLookup[$optionData['name']] = [];
+
+                foreach ($optionData['values'] as $value) {
+                    $created = ProductOptionValue::create([
+                        'product_option_id' => $option->id,
+                        'value' => $value,
+                    ]);
+                    $valueLookup[$optionData['name']][$value] = $created->id;
+                }
+            }
+
+            foreach ($variantsData as $variantData) {
+                $optionValueIds = [];
+
+                foreach ($variantData['option_values'] as $optionName => $valueString) {
+                    $optionValueIds[] = $valueLookup[$optionName][$valueString];
+                }
+
+                $variant = ProductVariant::create([
+                    'product_id' => $product->id,
+                    'identifier' => null,
+                    'barcode' => $variantData['barcode'] ?? null,
+                    'price' => $variantData['price'],
+                    'stock' => $variantData['stock'],
+                    'status' => 'active',
+                ]);
+
+                $variant->values()->sync($optionValueIds);
+
+                if (! empty($variantData['pending_media_ids']) && ! empty($pendingMediaMap)) {
+                    $mediaIds = [];
+                    foreach ($variantData['pending_media_ids'] as $pendingId) {
+                        if (isset($pendingMediaMap[$pendingId])) {
+                            $mediaIds[] = $pendingMediaMap[$pendingId];
+                        }
+                    }
+
+                    if (! empty($mediaIds)) {
+                        $this->syncVariantImages($variant, $mediaIds);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
      * Manually create a single variant with specific option values.
      *
      * @param  array<string, mixed>  $data
@@ -148,7 +214,6 @@ final class ProductVariantService
                 'values as matching_count' => fn ($q) => $q->whereIn('product_option_values.id', $valueIds),
             ])
             ->having('matching_count', $combinationSize)
-            ->having('values_count', $combinationSize)
             ->exists();
     }
 

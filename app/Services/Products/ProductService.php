@@ -66,18 +66,29 @@ final class ProductService
                 $product->categories()->sync($data['categories_ids']);
             }
 
+            $pendingMediaMap = [];
+
             if (! empty($data['pending_media_ids'])) {
-                $this->pendingMediaService->commit($product, $data['pending_media_ids']);
+                $pendingMediaMap = $this->pendingMediaService->commit($product, $data['pending_media_ids']);
             }
 
-            ProductVariant::create([
-                'product_id' => $product->id,
-                'identifier' => null,
-                'barcode' => $data['barcode'] ?? null,
-                'price' => $data['price'],
-                'stock' => $data['stock'],
-                'status' => 'active',
-            ]);
+            if (! empty($data['has_variants']) && ! empty($data['options']) && ! empty($data['variants'])) {
+                app(ProductVariantService::class)->createVariantsFromData(
+                    $product,
+                    $data['options'],
+                    $data['variants'],
+                    $pendingMediaMap,
+                );
+            } else {
+                ProductVariant::create([
+                    'product_id' => $product->id,
+                    'identifier' => null,
+                    'barcode' => $data['barcode'] ?? null,
+                    'price' => $data['price'] ?? 0,
+                    'stock' => $data['stock'] ?? 0,
+                    'status' => 'active',
+                ]);
+            }
 
             return $product->load(['brand', 'measurementUnit', 'categories', 'media', 'variants']);
         });
