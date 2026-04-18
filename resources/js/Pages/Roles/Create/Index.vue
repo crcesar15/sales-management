@@ -1,3 +1,115 @@
+<script setup lang="ts">
+import { Card, InputText, AutoComplete, Avatar, Badge, useToast, Button } from "primevue";
+
+import { useI18n } from "vue-i18n";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string } from "yup";
+import { ref, nextTick } from "vue";
+import { route } from "ziggy-js";
+import { router } from "@inertiajs/vue3";
+
+import AppLayout from "@layouts/admin.vue";
+import PermissionMatrix from "@pages/Roles/Components/PermissionMatrix.vue";
+import { usePermissions } from "@/Composables/usePermissions";
+
+// Layout
+defineOptions({
+  layout: AppLayout,
+});
+const props = defineProps<{
+  availablePermissions: { id: number; name: string; category: string }[];
+  availableUsers: SimpleUser[];
+}>();
+// Set composables
+const toast = useToast();
+const { t } = useI18n();
+
+// Props from Inertia
+interface SimpleUser {
+  id: number;
+  full_name: string;
+  email: string;
+}
+
+// VeeValidate + Yup schema
+const schema = toTypedSchema(
+  object({
+    name: string().required().max(255),
+  }),
+);
+
+const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+  validationSchema: schema,
+});
+
+const [name, nameAttrs] = defineField("name");
+
+// Permissions
+const {
+  filteredMatrix,
+  searchQuery,
+  enabledPermissionNames,
+  totalPermissions,
+  totalEnabled,
+  togglePermission,
+  toggleCategoryAll,
+  isCategoryAllSelected,
+  getCategoryEnabledCount,
+  toggleAll,
+  isAllSelected,
+} = usePermissions(props.availablePermissions);
+
+// User assignment
+const assignedUsers = ref<SimpleUser[]>([]);
+const userSearch = ref<SimpleUser | null>(null);
+const filteredUsers = ref<SimpleUser[]>([]);
+
+const onSearchUsers = (event: { query: string }) => {
+  const q = event.query.toLowerCase();
+  filteredUsers.value = props.availableUsers.filter(
+    (u) => !assignedUsers.value.find((a) => a.id === u.id) && (u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)),
+  );
+};
+
+const onAddUser = async (event: { value: SimpleUser }) => {
+  if (!assignedUsers.value.find((u) => u.id === event.value.id)) {
+    assignedUsers.value.push(event.value);
+  }
+  await nextTick();
+  userSearch.value = null;
+};
+
+const removeUser = (id: number) => {
+  assignedUsers.value = assignedUsers.value.filter((u) => u.id !== id);
+};
+
+const submit = handleSubmit((values) => {
+  router.post(
+    route("roles.store"),
+    {
+      name: values.name,
+      permissions: enabledPermissionNames.value,
+      users: assignedUsers.value.map((u) => u.id),
+    },
+    {
+      onSuccess: () => {
+        router.visit(route("roles"));
+      },
+      onError: (errs) => {
+        setErrors(errs);
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: t(Object.values(errs)[0] ?? "An error occurred"),
+          life: 3000,
+        });
+      },
+    },
+  );
+});
+</script>
+
 <template>
   <div>
     <div class="flex justify-between mb-3">
@@ -91,117 +203,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { Card, InputText, AutoComplete, Avatar, Badge, useToast, Button } from "primevue";
-
-import { useI18n } from "vue-i18n";
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/yup";
-import { object, string } from "yup";
-import { ref, nextTick } from "vue";
-import { route } from "ziggy-js";
-import { router } from "@inertiajs/vue3";
-
-import AppLayout from "@layouts/admin.vue";
-import PermissionMatrix from "@/Components/PermissionMatrix.vue";
-import { usePermissions } from "@/Composables/usePermissions";
-
-// Set composables
-const toast = useToast();
-const { t } = useI18n();
-
-// Layout
-defineOptions({
-  layout: AppLayout,
-});
-
-// Props from Inertia
-interface SimpleUser {
-  id: number;
-  full_name: string;
-  email: string;
-}
-
-const props = defineProps<{
-  availablePermissions: { id: number; name: string; category: string }[];
-  availableUsers: SimpleUser[];
-}>();
-
-// VeeValidate + Yup schema
-const schema = toTypedSchema(
-  object({
-    name: string().required().max(255),
-  }),
-);
-
-const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
-  validationSchema: schema,
-});
-
-const [name, nameAttrs] = defineField("name");
-
-// Permissions
-const {
-  filteredMatrix,
-  searchQuery,
-  enabledPermissionNames,
-  totalPermissions,
-  totalEnabled,
-  togglePermission,
-  toggleCategoryAll,
-  isCategoryAllSelected,
-  getCategoryEnabledCount,
-  toggleAll,
-  isAllSelected,
-} = usePermissions(props.availablePermissions);
-
-// User assignment
-const assignedUsers = ref<SimpleUser[]>([]);
-const userSearch = ref<SimpleUser | null>(null);
-const filteredUsers = ref<SimpleUser[]>([]);
-
-const onSearchUsers = (event: { query: string }) => {
-  const q = event.query.toLowerCase();
-  filteredUsers.value = props.availableUsers.filter(
-    (u) => !assignedUsers.value.find((a) => a.id === u.id) && (u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)),
-  );
-};
-
-const onAddUser = async (event: { value: SimpleUser }) => {
-  if (!assignedUsers.value.find((u) => u.id === event.value.id)) {
-    assignedUsers.value.push(event.value);
-  }
-  await nextTick();
-  userSearch.value = null;
-};
-
-const removeUser = (id: number) => {
-  assignedUsers.value = assignedUsers.value.filter((u) => u.id !== id);
-};
-
-const submit = handleSubmit((values) => {
-  router.post(
-    route("roles.store"),
-    {
-      name: values.name,
-      permissions: enabledPermissionNames.value,
-      users: assignedUsers.value.map((u) => u.id),
-    },
-    {
-      onSuccess: () => {
-        router.visit(route("roles"));
-      },
-      onError: (errs) => {
-        setErrors(errs);
-        toast.add({
-          severity: "error",
-          summary: t("Error"),
-          detail: t(Object.values(errs)[0] ?? "An error occurred"),
-          life: 3000,
-        });
-      },
-    },
-  );
-});
-</script>
