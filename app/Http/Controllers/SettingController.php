@@ -36,6 +36,8 @@ final class SettingController extends Controller
     {
         $this->service->updateGroup('general', $request->validated());
 
+        cache()->forget('settings');
+
         return redirect()->route('settings');
     }
 
@@ -43,12 +45,16 @@ final class SettingController extends Controller
     {
         $this->service->updateGroup('tax', $request->validated());
 
+        cache()->forget('settings');
+
         return redirect()->route('settings');
     }
 
     public function updateFinance(UpdateFinanceSettingsRequest $request): RedirectResponse
     {
         $this->service->updateGroup('finance', $request->validated());
+
+        cache()->forget('settings');
 
         return redirect()->route('settings');
     }
