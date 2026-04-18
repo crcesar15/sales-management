@@ -1,101 +1,3 @@
-<template>
-  <div>
-    <div class="flex justify-between mb-3">
-      <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ $t("Purchase Orders") }}
-      </h2>
-      <p-button
-        :label="$t('Purchase Order')"
-        style="text-transform: uppercase"
-        icon="fa fa-add"
-        raised
-        class="ml-2"
-        @click="addPurchaseOrder"
-      />
-    </div>
-    <ConfirmDialog />
-    <Card>
-      <template #content>
-        <DataTable
-          :value="purchaseOrders"
-          resizable-columns
-          lazy
-          :total-records="pagination.total"
-          :rows="pagination.rows"
-          :first="pagination.first"
-          :loading="loading"
-          paginator
-          sort-field="name"
-          :sort-order="1"
-          @page="onPage($event)"
-          @sort="onSort($event)"
-        >
-          <template #empty>
-            {{ $t("No purchase orders found") }}
-          </template>
-          <template #header>
-            <div class="grid grid-cols-12">
-              <div class="flex md:justify-start justify-center xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12">
-                <SelectButton
-                  v-model="status"
-                  :allow-empty="false"
-                  :options="[
-                    {
-                      label: $t('All'),
-                      value: 'all',
-                    },
-                    {
-                      label: $t('Pending'),
-                      value: 'pending',
-                    },
-                    {
-                      label: $t('Draft'),
-                      value: 'draft',
-                    },
-                    {
-                      label: $t('Paid'),
-                      value: 'paid',
-                    },
-                    {
-                      label: $t('Canceled'),
-                      value: 'canceled',
-                    },
-                  ]"
-                  option-label="label"
-                  option-value="value"
-                  aria-labelledby="basic"
-                />
-              </div>
-              <div
-                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
-              >
-                <IconField icon-position="left" class="w-full">
-                  <InputIcon class="fa fa-search" />
-                  <InputText v-model="pagination.filter" :placeholder="$t('Search')" class="w-full" />
-                </IconField>
-              </div>
-            </div>
-          </template>
-          <Column field="vendor.fullname" :header="$t('Vendor')" />
-          <Column field="user.full_name" :header="$t('User')" />
-          <Column field="total" :header="$t('Total')" />
-          <Column field="status" :header="$t('Status')" header-class="flex justify-center" class="flex justify-center">
-            <template #body="{ data }">
-              <div style="height: 55px" class="flex items-center">
-                <Tag v-if="data.status === 'draft'" severity="info" :value="$t('Draft')" />
-                <Tag v-else-if="data.status === 'pending'" severity="warn" :value="$t('Pending')" />
-                <Tag v-else-if="data.status === 'paid'" severity="warn" :value="$t('Paid')" />
-                <Tag v-else severity="canceled" :value="$t('Canceled')" />
-              </div>
-            </template>
-          </Column>
-          <Column field="created_at" :header="$t('Created At')" sortable />
-        </DataTable>
-      </template>
-    </Card>
-  </div>
-</template>
-
 <script>
 import PButton from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
@@ -205,3 +107,101 @@ export default {
   },
 };
 </script>
+
+<template>
+  <div>
+    <div class="flex justify-between mb-3">
+      <h2 class="text-2xl font-bold flex items-end m-0">
+        {{ $t("Purchase Orders") }}
+      </h2>
+      <p-button
+        :label="$t('Purchase Order')"
+        style="text-transform: uppercase"
+        icon="fa fa-add"
+        raised
+        class="ml-2"
+        @click="addPurchaseOrder"
+      />
+    </div>
+    <ConfirmDialog />
+    <Card>
+      <template #content>
+        <DataTable
+          :value="purchaseOrders"
+          resizable-columns
+          lazy
+          :total-records="pagination.total"
+          :rows="pagination.rows"
+          :first="pagination.first"
+          :loading="loading"
+          paginator
+          sort-field="name"
+          :sort-order="1"
+          @page="onPage($event)"
+          @sort="onSort($event)"
+        >
+          <template #empty>
+            {{ $t("No purchase orders found") }}
+          </template>
+          <template #header>
+            <div class="grid grid-cols-12">
+              <div class="flex md:justify-start justify-center xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12">
+                <SelectButton
+                  v-model="status"
+                  :allow-empty="false"
+                  :options="[
+                    {
+                      label: $t('All'),
+                      value: 'all',
+                    },
+                    {
+                      label: $t('Pending'),
+                      value: 'pending',
+                    },
+                    {
+                      label: $t('Draft'),
+                      value: 'draft',
+                    },
+                    {
+                      label: $t('Paid'),
+                      value: 'paid',
+                    },
+                    {
+                      label: $t('Canceled'),
+                      value: 'canceled',
+                    },
+                  ]"
+                  option-label="label"
+                  option-value="value"
+                  aria-labelledby="basic"
+                />
+              </div>
+              <div
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
+              >
+                <IconField icon-position="left" class="w-full">
+                  <InputIcon class="fa fa-search" />
+                  <InputText v-model="pagination.filter" :placeholder="$t('Search')" class="w-full" />
+                </IconField>
+              </div>
+            </div>
+          </template>
+          <Column field="vendor.fullname" :header="$t('Vendor')" />
+          <Column field="user.full_name" :header="$t('User')" />
+          <Column field="total" :header="$t('Total')" />
+          <Column field="status" :header="$t('Status')" header-class="flex justify-center" class="flex justify-center">
+            <template #body="{ data }">
+              <div style="height: 55px" class="flex items-center">
+                <Tag v-if="data.status === 'draft'" severity="info" :value="$t('Draft')" />
+                <Tag v-else-if="data.status === 'pending'" severity="warn" :value="$t('Pending')" />
+                <Tag v-else-if="data.status === 'paid'" severity="warn" :value="$t('Paid')" />
+                <Tag v-else severity="canceled" :value="$t('Canceled')" />
+              </div>
+            </template>
+          </Column>
+          <Column field="created_at" :header="$t('Created At')" sortable />
+        </DataTable>
+      </template>
+    </Card>
+  </div>
+</template>

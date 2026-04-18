@@ -1,12 +1,12 @@
-import { type DraftUser, User } from "@app-types/user-types";
+import type { UserPayload } from "@app-types/user-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
-import { type AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 
 export function useUserClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchUsersApi = async <T = any>(queryParameters?: string): Promise<AxiosResponse<T>> => {
+  const fetchUsersApi = async <T = unknown>(queryParameters?: string): Promise<AxiosResponse<T>> => {
     let url: string = route("api.v1.users");
 
     if (queryParameters) {
@@ -20,11 +20,11 @@ export function useUserClient() {
     return await apiClient.get(route("api.v1.users.show", id));
   };
 
-  const createUserApi = async (user: DraftUser) => {
+  const createUserApi = async (user: UserPayload) => {
     return await apiClient.post(route("api.v1.users.store"), user);
   };
 
-  const updateUserApi = async (id: number, user: DraftUser) => {
+  const updateUserApi = async (id: number, user: UserPayload) => {
     return await apiClient.put(route("api.v1.users.update", id), user);
   };
 

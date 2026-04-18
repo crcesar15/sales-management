@@ -1,5 +1,5 @@
-import { type ProductVariant } from "./product-variant-types";
-import { type PurchaseOrder } from "./purchase-order-types";
+import type { ProductVariant } from "./product-variant-types";
+import type { PurchaseOrder } from "./purchase-order-types";
 
 export interface Vendor {
   // columns

@@ -1,7 +1,6 @@
 import { setLocale } from "yup";
-import type { Composer } from "vue-i18n";
 
-export function configureYupLocale(t: Composer["t"]): void {
+export function configureYupLocale(t: (key: string, options?: Record<string, unknown>) => string): void {
   setLocale({
     mixed: {
       required: () => t("validations.required"),

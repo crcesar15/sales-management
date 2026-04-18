@@ -94,7 +94,7 @@ const pages: Record<symbol, Promise<DefineComponent> | (() => Promise<DefineComp
 createInertiaApp({
   resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, pages),
   setup({ el, App, props, plugin }) {
-    const app = createApp({ render: () => h(App, props) })
+    createApp({ setup: () => () => h(App, props) })
       .use(plugin)
       .use(i18n)
       .use(ZiggyVue)

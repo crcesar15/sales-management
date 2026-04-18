@@ -1,12 +1,12 @@
-import { type Role } from "@app-types/role-types";
+import type { Role } from "@app-types/role-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
-import { type AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 
 export function useRoleClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchRolesApi = async <T = any>(queryParameters?: string): Promise<AxiosResponse<T>> => {
+  const fetchRolesApi = async <T = unknown>(queryParameters?: string): Promise<AxiosResponse<T>> => {
     let url: string = route("api.v1.roles");
 
     if (queryParameters) {

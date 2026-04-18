@@ -1,3 +1,193 @@
+<script>
+import { useVuelidate } from "@vuelidate/core";
+import { createI18nMessage, required } from "@vuelidate/validators";
+
+import { Button as PButton, Card, Select, DatePicker, Popover, AutoComplete, InputNumber } from "primevue";
+import ProductSelector from "./ProductSelector.vue";
+import OrderGrid from "./OrderGrid.vue";
+
+import AppLayout from "../../../Layouts/admin.vue";
+import i18n from "../../../app";
+
+export default {
+  components: {
+    PButton,
+    Card,
+    Select,
+    DatePicker,
+    Popover,
+    ProductSelector,
+    OrderGrid,
+    AutoComplete,
+    InputNumber,
+  },
+  layout: AppLayout,
+  props: {
+    date: {
+      type: String,
+      default: "",
+    },
+    time: {
+      type: String,
+      default: "",
+    },
+  },
+  setup() {
+    return {
+      v$: useVuelidate(),
+    };
+  },
+  data() {
+    return {
+      selectedVendor: null,
+      vendorsLoading: false,
+      vendors: [],
+      status: "draft",
+      orderDate: "",
+      expectedArrivalDate: "",
+      items: [],
+      availableProducts: [],
+      selectedProduct: null,
+      showSelectProductModal: false,
+      amountDiscount: 0,
+      percentageDiscount: 0,
+    };
+  },
+  computed: {
+    currentDate() {
+      return new Date(this.date);
+    },
+    subtotal() {
+      return this.items.reduce((acc, item) => acc + item.quantity * item.unit_price, 0);
+    },
+    total() {
+      const discount = this.amountDiscount || (this.subtotal * this.percentageDiscount) / 100;
+      return this.subtotal - discount;
+    },
+  },
+  mounted() {
+    this.orderDate = this.date;
+    this.searchVendors();
+  },
+  methods: {
+    setAmountDiscount() {
+      this.$nextTick(() => {
+        this.amountDiscount = ((this.subtotal * this.percentageDiscount) / 100).toFixed(2);
+      });
+    },
+    setPercentageDiscount() {
+      this.$nextTick(() => {
+        this.percentageDiscount = ((this.amountDiscount / this.subtotal) * 100).toFixed(2);
+      });
+    },
+    fetchProductByVendor(event) {
+      if (event.query.trim().length) {
+        const vendorId = this.selectedVendor.id;
+        axios
+          .get(
+            route("api.vendors.variants", {
+              vendor: vendorId,
+              per_page: 10,
+              includes: "product,vendors",
+              order_by: "name",
+              order_direction: "asc",
+            }),
+          )
+          .then((response) => {
+            this.availableProducts = response.data.data;
+          });
+      }
+    },
+    searchVendors(event = null) {
+      if (event !== null && event.query.trim().length) {
+        this.vendorsLoading = true;
+        const body = {
+          params: {
+            per_page: 10,
+            page: 1,
+            order_by: "fullname",
+            order_direction: "asc",
+            filter: event.query.toLowerCase(),
+          },
+        };
+
+        axios
+          .get(route("api.vendors"), body)
+          .then((response) => {
+            this.vendors = response.data.data;
+          })
+          .catch((error) => {
+            this.$toast.add({
+              severity: "error",
+              summary: this.$t("Error"),
+              detail: error.response.data.message,
+              life: 3000,
+            });
+          })
+          .finally(() => {
+            this.vendorsLoading = false;
+          });
+      }
+    },
+    toggleVendorInfo(event) {
+      this.$refs.vendorInfo.toggle(event);
+    },
+    openVendor(id) {
+      // open vendor in a new tab
+      window.open(route("vendors.edit", id), "_blank");
+    },
+    addProduct(event) {
+      const item = event.value;
+
+      // check if the product is already in the list
+      const index = this.items.findIndex((i) => i.product.id === item.id);
+
+      if (index === -1) {
+        this.items.push({
+          id: Math.random().toString(36).substring(2, 11),
+          product: item,
+          quantity: 1,
+          unit_price: item.price,
+          subtotal: item.price,
+        });
+      } else {
+        this.$toast.add({
+          severity: "warn",
+          summary: this.$t("Warning"),
+          detail: this.$t("Product already added"),
+          life: 3000,
+        });
+      }
+
+      this.$nextTick(() => {
+        this.selectedProduct = null;
+      });
+    },
+    productSubTotal(quantity, price) {
+      if (!quantity || !price) {
+        return 0;
+      }
+
+      return quantity * price;
+    },
+  },
+  validations() {
+    const { t } = i18n.global;
+
+    const withI18nMessage = createI18nMessage({
+      t,
+      messagesPath: "validations",
+    });
+
+    return {
+      vendor: {
+        required: withI18nMessage(required),
+      },
+    };
+  },
+};
+</script>
+
 <template>
   <div>
     <div class="flex justify-between mb-3">
@@ -197,193 +387,3 @@
     />
   </div>
 </template>
-
-<script>
-import { useVuelidate } from "@vuelidate/core";
-import { createI18nMessage, required } from "@vuelidate/validators";
-
-import { Button as PButton, Card, Select, DatePicker, Popover, AutoComplete, InputNumber } from "primevue";
-import ProductSelector from "./ProductSelector.vue";
-import OrderGrid from "./OrderGrid.vue";
-
-import AppLayout from "../../../Layouts/admin.vue";
-import i18n from "../../../app";
-
-export default {
-  components: {
-    PButton,
-    Card,
-    Select,
-    DatePicker,
-    Popover,
-    ProductSelector,
-    OrderGrid,
-    AutoComplete,
-    InputNumber,
-  },
-  layout: AppLayout,
-  props: {
-    date: {
-      type: String,
-      default: "",
-    },
-    time: {
-      type: String,
-      default: "",
-    },
-  },
-  setup() {
-    return {
-      v$: useVuelidate(),
-    };
-  },
-  data() {
-    return {
-      selectedVendor: null,
-      vendorsLoading: false,
-      vendors: [],
-      status: "draft",
-      orderDate: "",
-      expectedArrivalDate: "",
-      items: [],
-      availableProducts: [],
-      selectedProduct: null,
-      showSelectProductModal: false,
-      amountDiscount: 0,
-      percentageDiscount: 0,
-    };
-  },
-  computed: {
-    currentDate() {
-      return new Date(this.date);
-    },
-    subtotal() {
-      return this.items.reduce((acc, item) => acc + item.quantity * item.unit_price, 0);
-    },
-    total() {
-      const discount = this.amountDiscount || (this.subtotal * this.percentageDiscount) / 100;
-      return this.subtotal - discount;
-    },
-  },
-  mounted() {
-    this.orderDate = this.date;
-    this.searchVendors();
-  },
-  methods: {
-    setAmountDiscount() {
-      this.$nextTick(() => {
-        this.amountDiscount = ((this.subtotal * this.percentageDiscount) / 100).toFixed(2);
-      });
-    },
-    setPercentageDiscount() {
-      this.$nextTick(() => {
-        this.percentageDiscount = ((this.amountDiscount / this.subtotal) * 100).toFixed(2);
-      });
-    },
-    fetchProductByVendor(event) {
-      if (event.query.trim().length) {
-        const vendorId = this.selectedVendor.id;
-        axios
-          .get(
-            route("api.vendors.variants", {
-              vendor: vendorId,
-              per_page: 10,
-              includes: "product,vendors",
-              order_by: "name",
-              order_direction: "asc",
-            }),
-          )
-          .then((response) => {
-            this.availableProducts = response.data.data;
-          });
-      }
-    },
-    searchVendors(event = null) {
-      if (event !== null && event.query.trim().length) {
-        this.vendorsLoading = true;
-        const body = {
-          params: {
-            per_page: 10,
-            page: 1,
-            order_by: "fullname",
-            order_direction: "asc",
-            filter: event.query.toLowerCase(),
-          },
-        };
-
-        axios
-          .get(route("api.vendors"), body)
-          .then((response) => {
-            this.vendors = response.data.data;
-          })
-          .catch((error) => {
-            this.$toast.add({
-              severity: "error",
-              summary: this.$t("Error"),
-              detail: error.response.data.message,
-              life: 3000,
-            });
-          })
-          .finally(() => {
-            this.vendorsLoading = false;
-          });
-      }
-    },
-    toggleVendorInfo(event) {
-      this.$refs.vendorInfo.toggle(event);
-    },
-    openVendor(id) {
-      // open vendor in a new tab
-      window.open(route("vendors.edit", id), "_blank");
-    },
-    addProduct(event) {
-      const item = event.value;
-
-      // check if the product is already in the list
-      const index = this.items.findIndex((i) => i.product.id === item.id);
-
-      if (index === -1) {
-        this.items.push({
-          id: Math.random().toString(36).substring(2, 11),
-          product: item,
-          quantity: 1,
-          unit_price: item.price,
-          subtotal: item.price,
-        });
-      } else {
-        this.$toast.add({
-          severity: "warn",
-          summary: this.$t("Warning"),
-          detail: this.$t("Product already added"),
-          life: 3000,
-        });
-      }
-
-      this.$nextTick(() => {
-        this.selectedProduct = null;
-      });
-    },
-    productSubTotal(quantity, price) {
-      if (!quantity || !price) {
-        return 0;
-      }
-
-      return quantity * price;
-    },
-  },
-  validations() {
-    const { t } = i18n.global;
-
-    const withI18nMessage = createI18nMessage({
-      t,
-      messagesPath: "validations",
-    });
-
-    return {
-      vendor: {
-        required: withI18nMessage(required),
-      },
-    };
-  },
-};
-</script>

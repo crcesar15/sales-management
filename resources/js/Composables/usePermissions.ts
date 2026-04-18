@@ -118,7 +118,7 @@ function buildMatrix(raw: RawPermission[], enabledNames: string[]): PermissionCa
       grouped.set(p.category, []);
     }
 
-    grouped.get(p.category)!.push({
+    grouped.get(p.category)?.push({
       id: p.id,
       name: p.name,
       displayName: action,

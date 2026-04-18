@@ -1,3 +1,71 @@
+<script setup lang="ts">
+import { Button, Card, InputText, Select, useToast } from "primevue";
+
+import { router } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string } from "yup";
+import { route } from "ziggy-js";
+import AppLayout from "@layouts/admin.vue";
+
+// Layout
+defineOptions({ layout: AppLayout });
+// Set composables
+const toast = useToast();
+const { t } = useI18n();
+
+// Schema
+const schema = toTypedSchema(
+  object({
+    name: string().required().max(100),
+    code: string().required().max(20),
+    address: string().nullable().optional().max(255),
+    city: string().nullable().optional().max(100),
+    state: string().nullable().optional().max(100),
+    zip_code: string().nullable().optional().max(20),
+    phone: string().nullable().optional().max(30),
+    email: string().nullable().optional().email().max(150),
+    status: string().required().oneOf(["active", "inactive"]),
+  }),
+);
+
+const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    status: "active",
+  },
+});
+
+const [name, nameAttrs] = defineField("name");
+const [code, codeAttrs] = defineField("code");
+const [address, addressAttrs] = defineField("address");
+const [city, cityAttrs] = defineField("city");
+const [state, stateAttrs] = defineField("state");
+const [zipCode, zipCodeAttrs] = defineField("zip_code");
+const [phone, phoneAttrs] = defineField("phone");
+const [email, emailAttrs] = defineField("email");
+const [status, statusAttrs] = defineField("status");
+
+// Submit
+const submit = handleSubmit((values) => {
+  router.post(route("stores.store"), values, {
+    onSuccess: () => {
+      router.visit(route("stores"));
+    },
+    onError: (errs) => {
+      setErrors(errs);
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: t(Object.values(errs)[0] ?? "An error occurred"),
+        life: 3000,
+      });
+    },
+  });
+});
+</script>
+
 <template>
   <div>
     <div class="flex justify-between mb-3">
@@ -116,72 +184,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { Button, Card, InputText, Select, useToast } from "primevue";
-
-import { router } from "@inertiajs/vue3";
-import { useI18n } from "vue-i18n";
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/yup";
-import { object, string } from "yup";
-import { route } from "ziggy-js";
-import AppLayout from "@layouts/admin.vue";
-
-// Set composables
-const toast = useToast();
-const { t } = useI18n();
-
-// Layout
-defineOptions({ layout: AppLayout });
-
-// Schema
-const schema = toTypedSchema(
-  object({
-    name: string().required().max(100),
-    code: string().required().max(20),
-    address: string().nullable().optional().max(255),
-    city: string().nullable().optional().max(100),
-    state: string().nullable().optional().max(100),
-    zip_code: string().nullable().optional().max(20),
-    phone: string().nullable().optional().max(30),
-    email: string().nullable().optional().email().max(150),
-    status: string().required().oneOf(["active", "inactive"]),
-  }),
-);
-
-const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
-  validationSchema: schema,
-  initialValues: {
-    status: "active",
-  },
-});
-
-const [name, nameAttrs] = defineField("name");
-const [code, codeAttrs] = defineField("code");
-const [address, addressAttrs] = defineField("address");
-const [city, cityAttrs] = defineField("city");
-const [state, stateAttrs] = defineField("state");
-const [zipCode, zipCodeAttrs] = defineField("zip_code");
-const [phone, phoneAttrs] = defineField("phone");
-const [email, emailAttrs] = defineField("email");
-const [status, statusAttrs] = defineField("status");
-
-// Submit
-const submit = handleSubmit((values) => {
-  router.post(route("stores.store"), values, {
-    onSuccess: () => {
-      router.visit(route("stores"));
-    },
-    onError: (errs) => {
-      setErrors(errs);
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: t(Object.values(errs)[0] ?? "An error occurred"),
-        life: 3000,
-      });
-    },
-  });
-});
-</script>

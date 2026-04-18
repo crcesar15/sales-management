@@ -1,3 +1,45 @@
+<script>
+import { InputNumber } from "primevue";
+
+export default {
+  components: {
+    InputNumber,
+  },
+  props: {
+    modelValue: {
+      type: Array,
+      default: () => [],
+    },
+  },
+  data() {
+    return {
+      items: this.modelValue,
+    };
+  },
+  watch: {
+    items: {
+      handler(value) {
+        this.$emit("update:modelValue", value);
+      },
+      deep: true,
+    },
+  },
+  methods: {
+    getSubtotal(item) {
+      return item.quantity * item.unit_price;
+    },
+    removeItem(index) {
+      this.items.splice(index, 1);
+    },
+    refocus($event) {
+      const { target } = $event.originalEvent;
+      target.blur();
+      target.focus();
+    },
+  },
+};
+</script>
+
 <template>
   <div>
     <div v-if="items.length > 0">
@@ -75,45 +117,3 @@
     </div>
   </div>
 </template>
-
-<script>
-import { InputNumber } from "primevue";
-
-export default {
-  components: {
-    InputNumber,
-  },
-  props: {
-    modelValue: {
-      type: Array,
-      default: () => [],
-    },
-  },
-  data() {
-    return {
-      items: this.modelValue,
-    };
-  },
-  watch: {
-    items: {
-      handler(value) {
-        this.$emit("update:modelValue", value);
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    getSubtotal(item) {
-      return item.quantity * item.unit_price;
-    },
-    removeItem(index) {
-      this.items.splice(index, 1);
-    },
-    refocus($event) {
-      const { target } = $event.originalEvent;
-      target.blur();
-      target.focus();
-    },
-  },
-};
-</script>

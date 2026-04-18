@@ -1,4 +1,4 @@
-import { type Permission } from "./permission-types";
+import type { Permission } from "./permission-types";
 
 interface RoleBase {
   name: string;

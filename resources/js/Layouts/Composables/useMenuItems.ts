@@ -209,7 +209,7 @@ export function useMenuItems() {
     if (!permissionCache.has(cacheKey)) {
       permissionCache.set(cacheKey, permissionSet.value.has(permission));
     }
-    return permissionCache.get(cacheKey)!;
+    return permissionCache.get(cacheKey) ?? false;
   }
 
   const filteredMenuItems = computed<SidebarMenuItem[]>(() => {

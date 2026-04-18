@@ -1,5 +1,5 @@
-import { type PurchaseOrder } from "./purchase-order-types";
-import { type RoleResponse } from "./role-types";
+import type { PurchaseOrder } from "./purchase-order-types";
+import type { RoleResponse } from "./role-types";
 
 interface User {
   // columns
@@ -50,4 +50,4 @@ interface UserResponse extends User {
   purchase_orders?: PurchaseOrder[];
 }
 
-export { User, UserPayload, UserResponse, UserAuth };
+export type { User, UserPayload, UserResponse, UserAuth };

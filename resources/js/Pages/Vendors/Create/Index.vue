@@ -1,3 +1,128 @@
+<script>
+import Card from "primevue/card";
+import InputText from "primevue/inputtext";
+import Textarea from "primevue/textarea";
+import Select from "primevue/select";
+import PButton from "primevue/button";
+import ToggleSwitch from "primevue/toggleswitch";
+
+import { useVuelidate } from "@vuelidate/core";
+import { required, requiredIf, email, createI18nMessage, helpers } from "@vuelidate/validators";
+import axios from "axios";
+import AppLayout from "../../../Layouts/admin.vue";
+import i18n from "../../../app";
+
+export default {
+  components: {
+    Card,
+    InputText,
+    Select,
+    PButton,
+    Textarea,
+    ToggleSwitch,
+  },
+  layout: AppLayout,
+  setup() {
+    return {
+      v$: useVuelidate(),
+    };
+  },
+  data() {
+    return {
+      fullname: "",
+      address: "",
+      details: "",
+      email: "",
+      phone: "",
+      status: "active",
+      hasAdditionalContacts: false,
+      additionalContacts: [],
+    };
+  },
+  validations() {
+    const { t } = i18n.global;
+
+    const withI18nMessage = createI18nMessage({
+      t,
+      messagesPath: "validations",
+    });
+
+    return {
+      fullname: {
+        required: withI18nMessage(required),
+      },
+      phone: {
+        required: withI18nMessage(required),
+      },
+      email: {
+        email: withI18nMessage(email),
+      },
+      additionalContacts: {
+        required: withI18nMessage(requiredIf(() => this.hasAdditionalContacts)),
+        $each: helpers.forEach({
+          fullname: {
+            required: withI18nMessage(required, { messagePath: () => "validations.required" }),
+          },
+          phone: {
+            required: withI18nMessage(required, { messagePath: () => "validations.required" }),
+          },
+          email: {
+            email: withI18nMessage(email, { messagePath: () => "validations.email" }),
+          },
+        }),
+      },
+    };
+  },
+  methods: {
+    submit() {
+      this.v$.$touch();
+      if (!this.v$.$invalid) {
+        const vendor = {
+          fullname: this.fullname,
+          phone: this.phone,
+          email: this.email,
+          address: this.address,
+          details: this.details,
+          status: this.status,
+        };
+
+        if (this.hasAdditionalContacts) {
+          vendor.additional_contacts = this.additionalContacts;
+        }
+
+        axios
+          .post(route("api.vendors.store"), vendor)
+          .then(() => {
+            this.$toast.add({
+              severity: "success",
+              summary: this.$t("Success"),
+              detail: this.$t("Vendor has been created successfully"),
+              life: 3000,
+            });
+
+            this.$inertia.visit(route("vendors"));
+          })
+          .catch((error) => {
+            this.$toast.add({
+              severity: "error",
+              summary: this.$t("Error"),
+              detail: this.$t(error.response.data.message),
+              life: 3000,
+            });
+          });
+      } else {
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("Error"),
+          detail: this.$t("Please review the errors in the form"),
+          life: 3000,
+        });
+      }
+    },
+  },
+};
+</script>
+
 <template>
   <div>
     <div class="flex justify-between mb-3">
@@ -194,128 +319,3 @@
     </div>
   </div>
 </template>
-
-<script>
-import Card from "primevue/card";
-import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
-import Select from "primevue/select";
-import PButton from "primevue/button";
-import ToggleSwitch from "primevue/toggleswitch";
-
-import { useVuelidate } from "@vuelidate/core";
-import { required, requiredIf, email, createI18nMessage, helpers } from "@vuelidate/validators";
-import axios from "axios";
-import AppLayout from "../../../Layouts/admin.vue";
-import i18n from "../../../app";
-
-export default {
-  components: {
-    Card,
-    InputText,
-    Select,
-    PButton,
-    Textarea,
-    ToggleSwitch,
-  },
-  layout: AppLayout,
-  setup() {
-    return {
-      v$: useVuelidate(),
-    };
-  },
-  data() {
-    return {
-      fullname: "",
-      address: "",
-      details: "",
-      email: "",
-      phone: "",
-      status: "active",
-      hasAdditionalContacts: false,
-      additionalContacts: [],
-    };
-  },
-  validations() {
-    const { t } = i18n.global;
-
-    const withI18nMessage = createI18nMessage({
-      t,
-      messagesPath: "validations",
-    });
-
-    return {
-      fullname: {
-        required: withI18nMessage(required),
-      },
-      phone: {
-        required: withI18nMessage(required),
-      },
-      email: {
-        email: withI18nMessage(email),
-      },
-      additionalContacts: {
-        required: withI18nMessage(requiredIf(() => this.hasAdditionalContacts)),
-        $each: helpers.forEach({
-          fullname: {
-            required: withI18nMessage(required, { messagePath: () => "validations.required" }),
-          },
-          phone: {
-            required: withI18nMessage(required, { messagePath: () => "validations.required" }),
-          },
-          email: {
-            email: withI18nMessage(email, { messagePath: () => "validations.email" }),
-          },
-        }),
-      },
-    };
-  },
-  methods: {
-    submit() {
-      this.v$.$touch();
-      if (!this.v$.$invalid) {
-        const vendor = {
-          fullname: this.fullname,
-          phone: this.phone,
-          email: this.email,
-          address: this.address,
-          details: this.details,
-          status: this.status,
-        };
-
-        if (this.hasAdditionalContacts) {
-          vendor.additional_contacts = this.additionalContacts;
-        }
-
-        axios
-          .post(route("api.vendors.store"), vendor)
-          .then(() => {
-            this.$toast.add({
-              severity: "success",
-              summary: this.$t("Success"),
-              detail: this.$t("Vendor has been created successfully"),
-              life: 3000,
-            });
-
-            this.$inertia.visit(route("vendors"));
-          })
-          .catch((error) => {
-            this.$toast.add({
-              severity: "error",
-              summary: this.$t("Error"),
-              detail: this.$t(error.response.data.message),
-              life: 3000,
-            });
-          });
-      } else {
-        this.$toast.add({
-          severity: "error",
-          summary: this.$t("Error"),
-          detail: this.$t("Please review the errors in the form"),
-          life: 3000,
-        });
-      }
-    },
-  },
-};
-</script>

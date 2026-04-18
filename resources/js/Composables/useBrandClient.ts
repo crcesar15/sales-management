@@ -1,12 +1,12 @@
-import { type Brand } from "@app-types/brand-types";
+import type { Brand } from "@app-types/brand-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
-import { type AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 
 export function useBrandClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchBrandsApi = async <T = any>(queryParameters?: string): Promise<AxiosResponse<T>> => {
+  const fetchBrandsApi = async <T = unknown>(queryParameters?: string): Promise<AxiosResponse<T>> => {
     let url: string = route("api.v1.brands");
 
     if (queryParameters) {

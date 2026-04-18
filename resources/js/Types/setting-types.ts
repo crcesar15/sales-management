@@ -12,7 +12,7 @@ export interface SettingResponse extends SettingBase {
   updated_at: string;
 }
 
-export interface SettingPayload extends SettingBase {}
+export type SettingPayload = SettingBase;
 
 export interface SettingGrouped {
   [group: string]: Record<string, string>;

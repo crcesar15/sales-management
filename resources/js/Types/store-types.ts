@@ -1,4 +1,4 @@
-import { type UserResponse } from "./user-types";
+import type { UserResponse } from "./user-types";
 
 interface Store {
   name: string;

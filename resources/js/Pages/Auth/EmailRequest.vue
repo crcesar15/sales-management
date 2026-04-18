@@ -1,3 +1,47 @@
+<script setup lang="ts">
+import { InputText, Button, IconField, InputIcon, Toast, useToast } from "primevue";
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import { useAuthClient } from "@/Composables/useAuthClient";
+
+// Set composables
+const { t } = useI18n();
+const { requestResetPasswordApi } = useAuthClient();
+const toast = useToast();
+
+// Form Variables
+const email = ref("");
+const btnLoading = ref(false);
+
+// Methods
+const sentResetLink = async () => {
+  btnLoading.value = true;
+  try {
+    await requestResetPasswordApi({
+      email: email.value,
+    });
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: t("A password reset link has been sent to your email address."),
+      life: 5000,
+    });
+    email.value = "";
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: error.response?.data?.message || t("An error occurred while sending the password reset link."),
+      life: 5000,
+    });
+  } finally {
+    btnLoading.value = false;
+  }
+};
+</script>
+
 <template>
   <div class="flex min-h-screen">
     <!-- Left Panel: Branding (hidden on mobile) -->
@@ -90,47 +134,3 @@
     <Toast />
   </div>
 </template>
-
-<script setup lang="ts">
-import { InputText, Button, IconField, InputIcon, Toast, useToast } from "primevue";
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-import { router } from "@inertiajs/vue3";
-import { route } from "ziggy-js";
-import { useAuthClient } from "@/Composables/useAuthClient";
-
-// Set composables
-const { t } = useI18n();
-const { requestResetPasswordApi } = useAuthClient();
-const toast = useToast();
-
-// Form Variables
-const email = ref("");
-const btnLoading = ref(false);
-
-// Methods
-const sentResetLink = async () => {
-  btnLoading.value = true;
-  try {
-    await requestResetPasswordApi({
-      email: email.value,
-    });
-    toast.add({
-      severity: "success",
-      summary: t("Success"),
-      detail: t("A password reset link has been sent to your email address."),
-      life: 5000,
-    });
-    email.value = "";
-  } catch (error: any) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: error.response?.data?.message || t("An error occurred while sending the password reset link."),
-      life: 5000,
-    });
-  } finally {
-    btnLoading.value = false;
-  }
-};
-</script>

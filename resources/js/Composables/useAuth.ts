@@ -8,11 +8,13 @@ type UserWithPermissions = UserResponse & { permissions: string[] };
 export function useAuth() {
   const page = usePage();
 
-  const user = computed<UserWithPermissions | null>(() => (page.props.auth as any)?.user ?? null);
+  const user = computed<UserWithPermissions | null>(
+    () => (page.props.auth as unknown as { user: UserWithPermissions | null })?.user ?? null,
+  );
 
   const permissions = computed<string[]>(() => user.value?.permissions ?? []);
 
-  const settings = computed<SettingGrouped>(() => (page.props.auth as any)?.settings ?? {});
+  const settings = computed<SettingGrouped>(() => (page.props.auth as unknown as { settings: SettingGrouped })?.settings ?? {});
 
   const isAuthenticated = computed(() => user.value !== null);
   const isGuest = computed(() => user.value === null);

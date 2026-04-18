@@ -1,12 +1,12 @@
-import { type MeasurementUnit } from "@app-types/measurement-unit-types";
+import type { MeasurementUnit } from "@app-types/measurement-unit-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
-import { type AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 
 export function useMeasurementUnitClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchMeasurementUnitsApi = async <T = any>(queryParameters?: string): Promise<AxiosResponse<T>> => {
+  const fetchMeasurementUnitsApi = async <T = unknown>(queryParameters?: string): Promise<AxiosResponse<T>> => {
     let url: string = route("api.v1.measurement-units");
 
     if (queryParameters) {

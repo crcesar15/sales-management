@@ -1,72 +1,3 @@
-<template>
-  <div>
-    <Dialog
-      v-model:visible="showModal"
-      modal
-      :header="$t('Vendors')"
-      :style="{ width: '50rem' }"
-      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-      :close-on-escape="true"
-      @hide="close"
-    >
-      <template #header>
-        <h3 class="text-2xl">
-          {{ $t(modalTitle) }}
-        </h3>
-      </template>
-      <template #default>
-        <div class="grid grid-cols-12 gap-4">
-          <div class="col-span-12">
-            <label for="product-name">{{ $t("Product") }}</label>
-            <Select
-              id="product-name"
-              v-model="productId"
-              class="w-full"
-              :options="products"
-              :placeholder="$t('Product')"
-              option-value="id"
-              option-label="label"
-              filter
-              :loading="productsLoading"
-              :fluid="true"
-              @filter="searchProducts"
-            >
-              <template #option="slotProps">
-                <div class="flex flex-row gap-2 h-6">
-                  <p>{{ slotProps.option.name }}</p>
-                  <span v-if="slotProps.option.variant" class="font-bold italic w-fit">({{ slotProps.option.variant }})</span>
-                </div>
-              </template>
-            </Select>
-          </div>
-          <div class="col-span-12 flex flex-col">
-            <label for="product-price">{{ $t("Price") }}</label>
-            <InputNumber id="product-price" v-model="price" mode="currency" currency="BOB" :readonly="false" />
-          </div>
-          <div class="col-span-12 flex flex-col">
-            <label for="product-payment-term">{{ $t("Payment Term") }}</label>
-            <Select id="product-payment-term" v-model="paymentTerm" :options="payment_terms" option-value="value" option-label="label" />
-          </div>
-          <div class="col-span-12 flex flex-col">
-            <label for="product-status">{{ $t("Status") }}</label>
-            <Select id="product-status" v-model="status" :options="statusOptions" option-value="value" option-label="label" />
-          </div>
-          <div class="col-span-12 flex flex-col">
-            <label for="product-details">{{ $t("Details") }}</label>
-            <Textarea id="product-details" v-model="details" :readonly="false" />
-          </div>
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <PButton :label="$t('Cancel')" icon="fa fa-times" outlined @click="close" />
-          <PButton :label="$t('Save')" icon="fa fa-save" @click="save" />
-        </div>
-      </template>
-    </Dialog>
-  </div>
-</template>
-
 <script>
 import Select from "primevue/select";
 import Dialog from "primevue/dialog";
@@ -191,3 +122,72 @@ export default {
   },
 };
 </script>
+
+<template>
+  <div>
+    <Dialog
+      v-model:visible="showModal"
+      modal
+      :header="$t('Vendors')"
+      :style="{ width: '50rem' }"
+      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+      :close-on-escape="true"
+      @hide="close"
+    >
+      <template #header>
+        <h3 class="text-2xl">
+          {{ $t(modalTitle) }}
+        </h3>
+      </template>
+      <template #default>
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-12">
+            <label for="product-name">{{ $t("Product") }}</label>
+            <Select
+              id="product-name"
+              v-model="productId"
+              class="w-full"
+              :options="products"
+              :placeholder="$t('Product')"
+              option-value="id"
+              option-label="label"
+              filter
+              :loading="productsLoading"
+              :fluid="true"
+              @filter="searchProducts"
+            >
+              <template #option="slotProps">
+                <div class="flex flex-row gap-2 h-6">
+                  <p>{{ slotProps.option.name }}</p>
+                  <span v-if="slotProps.option.variant" class="font-bold italic w-fit">({{ slotProps.option.variant }})</span>
+                </div>
+              </template>
+            </Select>
+          </div>
+          <div class="col-span-12 flex flex-col">
+            <label for="product-price">{{ $t("Price") }}</label>
+            <InputNumber id="product-price" v-model="price" mode="currency" currency="BOB" :readonly="false" />
+          </div>
+          <div class="col-span-12 flex flex-col">
+            <label for="product-payment-term">{{ $t("Payment Term") }}</label>
+            <Select id="product-payment-term" v-model="paymentTerm" :options="payment_terms" option-value="value" option-label="label" />
+          </div>
+          <div class="col-span-12 flex flex-col">
+            <label for="product-status">{{ $t("Status") }}</label>
+            <Select id="product-status" v-model="status" :options="statusOptions" option-value="value" option-label="label" />
+          </div>
+          <div class="col-span-12 flex flex-col">
+            <label for="product-details">{{ $t("Details") }}</label>
+            <Textarea id="product-details" v-model="details" :readonly="false" />
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <PButton :label="$t('Cancel')" icon="fa fa-times" outlined @click="close" />
+          <PButton :label="$t('Save')" icon="fa fa-save" @click="save" />
+        </div>
+      </template>
+    </Dialog>
+  </div>
+</template>

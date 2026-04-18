@@ -1,117 +1,3 @@
-<template>
-  <div>
-    <div class="flex flex-row justify-between mb-3">
-      <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ t("Brands") }}
-      </h2>
-      <Button v-can="'brand.create'" :label="t('Add Brand')" icon="fa fa-add" raised class="ml-2 uppercase" @click="addBrand" />
-    </div>
-    <ConfirmDialog />
-    <Toast />
-    <Card>
-      <template #content>
-        <DataTable
-          :value="brands"
-          resizable-columns
-          lazy
-          :total-records="props.brands.meta.total"
-          :rows="props.brands.meta.per_page"
-          :first="(props.brands.meta.current_page - 1) * props.brands.meta.per_page"
-          paginator
-          sort-field="name"
-          :sort-order="1"
-          @page="onPage($event)"
-          @sort="onSort($event)"
-        >
-          <template #empty>
-            <div class="flex flex-col items-center py-8 text-surface-400">
-              <i class="fa fa-folder-open text-4xl mb-3"></i>
-              <span>{{ t("No brands found") }}</span>
-            </div>
-          </template>
-          <template #header>
-            <div class="grid grid-cols-12">
-              <div class="md:col-span-6 col-span-12 flex md:justify-start justify-center">
-                <SelectButton
-                  v-model="status"
-                  :allow-empty="false"
-                  :options="[
-                    {
-                      label: t('Active'),
-                      value: 'active',
-                    },
-                    {
-                      label: t('Archived'),
-                      value: 'archived',
-                    },
-                  ]"
-                  option-label="label"
-                  option-value="value"
-                />
-              </div>
-              <div
-                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
-              >
-                <IconField icon-position="left" class="w-full">
-                  <InputIcon class="fa fa-search" />
-                  <InputText v-model="filter" :placeholder="t('Search')" fluid />
-                </IconField>
-              </div>
-            </div>
-          </template>
-          <Column field="name" :header="t('Name')" sortable />
-          <Column field="products_count" :header="t('Products')" :pt="{ columnHeaderContent: 'justify-center' }">
-            <template #body="row">
-              <div class="flex justify-center">
-                <Tag rounded severity="secondary" :value="row.data.products_count" />
-              </div>
-            </template>
-          </Column>
-          <Column field="created_at" :header="t('Created At')" sortable />
-          <Column field="updated_at" :header="t('Updated At')" sortable />
-          <Column field="actions" :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
-            <template #body="row">
-              <div class="flex justify-center gap-2">
-                <Button
-                  v-if="status !== 'archived'"
-                  v-can="'brand.edit'"
-                  v-tooltip.top="t('Edit')"
-                  icon="fa fa-edit"
-                  text
-                  size="large"
-                  rounded
-                  @click="editBrand(row.data)"
-                />
-                <Button
-                  v-if="status === 'archived'"
-                  v-can="'brand.restore'"
-                  v-tooltip.top="t('Restore')"
-                  icon="fa fa-trash-arrow-up"
-                  text
-                  size="large"
-                  rounded
-                  @click="restoreBrand(row.data.id)"
-                />
-                <Button
-                  v-if="status !== 'archived'"
-                  v-can="'brand.delete'"
-                  v-tooltip.top="t('Delete')"
-                  icon="fa fa-trash"
-                  text
-                  size="large"
-                  rounded
-                  @click="deleteBrand(row.data.id)"
-                />
-              </div>
-            </template>
-          </Column>
-        </DataTable>
-      </template>
-    </Card>
-    <BrandEditor v-model:show-modal="showModal" :brand="selectedBrand" />
-  </div>
-</template>
-
 <script setup lang="ts">
 import {
   DataTable,
@@ -137,17 +23,11 @@ import useDatetimeFormatter from "@composables/useDatetimeFormatter";
 import { computed, ref, watch } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { type BrandResponse } from "@/Types/brand-types";
+import type { BrandResponse } from "@/Types/brand-types";
 import { useI18n } from "vue-i18n";
-
-// Set composables
-const toast = useToast();
-const confirm = useConfirm();
-const { t } = useI18n();
 
 // Set Layout
 defineOptions({ layout: AppLayout });
-
 // Props from Inertia
 const props = defineProps<{
   brands: {
@@ -167,6 +47,10 @@ const props = defineProps<{
     per_page?: number;
   };
 }>();
+// Set composables
+const toast = useToast();
+const confirm = useConfirm();
+const { t } = useI18n();
 
 // Local filter/sort state
 const filter = ref(props.filters.filter ?? "");
@@ -304,3 +188,117 @@ const restoreBrand = (id: number) => {
   });
 };
 </script>
+
+<template>
+  <div>
+    <div class="flex flex-row justify-between mb-3">
+      <h2 class="text-2xl font-bold flex items-end m-0">
+        {{ t("Brands") }}
+      </h2>
+      <Button v-can="'brand.create'" :label="t('Add Brand')" icon="fa fa-add" raised class="ml-2 uppercase" @click="addBrand" />
+    </div>
+    <ConfirmDialog />
+    <Toast />
+    <Card>
+      <template #content>
+        <DataTable
+          :value="brands"
+          resizable-columns
+          lazy
+          :total-records="props.brands.meta.total"
+          :rows="props.brands.meta.per_page"
+          :first="(props.brands.meta.current_page - 1) * props.brands.meta.per_page"
+          paginator
+          sort-field="name"
+          :sort-order="1"
+          @page="onPage($event)"
+          @sort="onSort($event)"
+        >
+          <template #empty>
+            <div class="flex flex-col items-center py-8 text-surface-400">
+              <i class="fa fa-folder-open text-4xl mb-3"></i>
+              <span>{{ t("No brands found") }}</span>
+            </div>
+          </template>
+          <template #header>
+            <div class="grid grid-cols-12">
+              <div class="md:col-span-6 col-span-12 flex md:justify-start justify-center">
+                <SelectButton
+                  v-model="status"
+                  :allow-empty="false"
+                  :options="[
+                    {
+                      label: t('Active'),
+                      value: 'active',
+                    },
+                    {
+                      label: t('Archived'),
+                      value: 'archived',
+                    },
+                  ]"
+                  option-label="label"
+                  option-value="value"
+                />
+              </div>
+              <div
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
+              >
+                <IconField icon-position="left" class="w-full">
+                  <InputIcon class="fa fa-search" />
+                  <InputText v-model="filter" :placeholder="t('Search')" fluid />
+                </IconField>
+              </div>
+            </div>
+          </template>
+          <Column field="name" :header="t('Name')" sortable />
+          <Column field="products_count" :header="t('Products')" :pt="{ columnHeaderContent: 'justify-center' }">
+            <template #body="row">
+              <div class="flex justify-center">
+                <Tag rounded severity="secondary" :value="row.data.products_count" />
+              </div>
+            </template>
+          </Column>
+          <Column field="created_at" :header="t('Created At')" sortable />
+          <Column field="updated_at" :header="t('Updated At')" sortable />
+          <Column field="actions" :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
+            <template #body="row">
+              <div class="flex justify-center gap-2">
+                <Button
+                  v-if="status !== 'archived'"
+                  v-can="'brand.edit'"
+                  v-tooltip.top="t('Edit')"
+                  icon="fa fa-edit"
+                  text
+                  size="large"
+                  rounded
+                  @click="editBrand(row.data)"
+                />
+                <Button
+                  v-if="status === 'archived'"
+                  v-can="'brand.restore'"
+                  v-tooltip.top="t('Restore')"
+                  icon="fa fa-trash-arrow-up"
+                  text
+                  size="large"
+                  rounded
+                  @click="restoreBrand(row.data.id)"
+                />
+                <Button
+                  v-if="status !== 'archived'"
+                  v-can="'brand.delete'"
+                  v-tooltip.top="t('Delete')"
+                  icon="fa fa-trash"
+                  text
+                  size="large"
+                  rounded
+                  @click="deleteBrand(row.data.id)"
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </template>
+    </Card>
+    <BrandEditor v-model:show-modal="showModal" :brand="selectedBrand" />
+  </div>
+</template>

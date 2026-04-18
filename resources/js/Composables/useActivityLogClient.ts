@@ -1,11 +1,11 @@
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
-import { AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 
 export function useActivityLogClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchActivityLogsApi = async <T = any>(queryParameters?: string): Promise<AxiosResponse<T>> => {
+  const fetchActivityLogsApi = async <T = unknown>(queryParameters?: string): Promise<AxiosResponse<T>> => {
     let url: string = route("api.v1.activity-logs");
 
     if (queryParameters) {

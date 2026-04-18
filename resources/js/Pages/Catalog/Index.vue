@@ -1,3 +1,202 @@
+<script>
+import DataTable from "primevue/datatable";
+import Card from "primevue/card";
+import Column from "primevue/column";
+import PButton from "primevue/button";
+import InputText from "primevue/inputtext";
+import IconField from "primevue/iconfield";
+import InputIcon from "primevue/inputicon";
+import ConfirmDialog from "primevue/confirmdialog";
+import SelectButton from "primevue/selectbutton";
+import Select from "primevue/select";
+import Popover from "primevue/popover";
+import Dialog from "primevue/dialog";
+import Tag from "primevue/tag";
+import AppLayout from "../../Layouts/admin.vue";
+
+export default {
+  components: {
+    DataTable,
+    Column,
+    Card,
+    PButton,
+    InputText,
+    IconField,
+    InputIcon,
+    ConfirmDialog,
+    SelectButton,
+    Tag,
+    Select,
+    Popover,
+    Dialog,
+  },
+  layout: AppLayout,
+  data() {
+    return {
+      variants: [],
+      pagination: {
+        total: 0,
+        first: 0,
+        rows: 10,
+        page: 1,
+        sortField: "name",
+        sortOrder: 1,
+        filter: "",
+      },
+      loading: false,
+      status: "all",
+      selectedVendor: null,
+      selectedVariantId: null,
+      vendors: [],
+      vendorsLoading: false,
+      showVendors: false,
+      productVendors: [],
+    };
+  },
+  watch: {
+    "pagination.filter": {
+      handler() {
+        this.pagination.page = 1;
+        this.fetchVariants();
+      },
+    },
+    status() {
+      this.pagination.page = 1;
+      this.fetchVariants();
+    },
+    selectedVendor() {
+      this.pagination.page = 1;
+      this.fetchVariants();
+    },
+  },
+  mounted() {
+    this.fetchVariants();
+    this.searchVendors();
+  },
+  methods: {
+    fetchVariants() {
+      this.loading = true;
+
+      const params = {
+        per_page: this.pagination.rows,
+        page: this.pagination.page,
+        order_by: this.pagination.sortField,
+        status: this.status,
+        includes: "product,vendors",
+      };
+
+      if (this.pagination.filter) {
+        params.filter = this.pagination.filter;
+      }
+
+      if (this.selectedVendor) {
+        params.vendor = this.selectedVendor;
+      }
+
+      if (this.pagination.sortOrder === -1) {
+        params.order_direction = "desc";
+      } else {
+        params.order_direction = "asc";
+      }
+
+      axios
+        .get(route("api.variants"), { params })
+        .then((response) => {
+          this.variants = response.data.data;
+          this.pagination.total = response.data.meta.total;
+        })
+        .catch((error) => {
+          this.$toast.add({
+            severity: "error",
+            summary: this.$t("Error"),
+            detail: error.response.data.message,
+            life: 3000,
+          });
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
+    searchVendors(event = null) {
+      this.vendorsLoading = true;
+
+      const body = {
+        params: {
+          per_page: 10,
+          page: 1,
+          order_by: "fullname",
+          order_direction: "asc",
+        },
+      };
+
+      if (event) {
+        body.params.filter = event.value.toLowerCase();
+      }
+
+      axios
+        .get(route("api.vendors"), body)
+        .then((response) => {
+          this.vendors = response.data.data;
+        })
+        .catch((error) => {
+          this.$toast.add({
+            severity: "error",
+            summary: this.$t("Error"),
+            detail: error.response.data.message,
+            life: 3000,
+          });
+        })
+        .finally(() => {
+          this.vendorsLoading = false;
+        });
+    },
+    onPage(event) {
+      this.pagination.page = event.page + 1;
+      this.pagination.per_page = event.rows;
+      this.fetchVariants();
+    },
+    onSort(event) {
+      this.pagination.sortField = event.sortField;
+      this.pagination.sortOrder = event.sortOrder;
+      this.fetchVariants();
+    },
+    editVendors(id) {
+      this.$inertia.visit(route("catalog.edit", id));
+    },
+    toggleFilter(event) {
+      this.$refs.filters.toggle(event);
+    },
+    viewVendors(id) {
+      this.selectedVariantId = id;
+      this.showVendors = true;
+      this.productVendors = [];
+
+      axios
+        .get(route("api.variants.vendors", id))
+        .then((response) => {
+          this.productVendors = response.data.data.map((vendor) => ({
+            id: vendor.id,
+            fullname: vendor.fullname,
+            email: vendor.email,
+            phone: vendor.phone,
+            price: vendor.pivot.price,
+            payment_terms: vendor.pivot.payment_terms,
+            status: vendor.status,
+          }));
+        })
+        .catch((error) => {
+          this.$toast.add({
+            severity: "error",
+            summary: this.$t("Error"),
+            detail: error.response.data.message,
+            life: 3000,
+          });
+        });
+    },
+  },
+};
+</script>
+
 <template>
   <div>
     <div class="flex justify-between my-3">
@@ -215,202 +414,3 @@
     </Dialog>
   </div>
 </template>
-
-<script>
-import DataTable from "primevue/datatable";
-import Card from "primevue/card";
-import Column from "primevue/column";
-import PButton from "primevue/button";
-import InputText from "primevue/inputtext";
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
-import ConfirmDialog from "primevue/confirmdialog";
-import SelectButton from "primevue/selectbutton";
-import Select from "primevue/select";
-import Popover from "primevue/popover";
-import Dialog from "primevue/dialog";
-import Tag from "primevue/tag";
-import AppLayout from "../../Layouts/admin.vue";
-
-export default {
-  components: {
-    DataTable,
-    Column,
-    Card,
-    PButton,
-    InputText,
-    IconField,
-    InputIcon,
-    ConfirmDialog,
-    SelectButton,
-    Tag,
-    Select,
-    Popover,
-    Dialog,
-  },
-  layout: AppLayout,
-  data() {
-    return {
-      variants: [],
-      pagination: {
-        total: 0,
-        first: 0,
-        rows: 10,
-        page: 1,
-        sortField: "name",
-        sortOrder: 1,
-        filter: "",
-      },
-      loading: false,
-      status: "all",
-      selectedVendor: null,
-      selectedVariantId: null,
-      vendors: [],
-      vendorsLoading: false,
-      showVendors: false,
-      productVendors: [],
-    };
-  },
-  watch: {
-    "pagination.filter": {
-      handler() {
-        this.pagination.page = 1;
-        this.fetchVariants();
-      },
-    },
-    status() {
-      this.pagination.page = 1;
-      this.fetchVariants();
-    },
-    selectedVendor() {
-      this.pagination.page = 1;
-      this.fetchVariants();
-    },
-  },
-  mounted() {
-    this.fetchVariants();
-    this.searchVendors();
-  },
-  methods: {
-    fetchVariants() {
-      this.loading = true;
-
-      const params = {
-        per_page: this.pagination.rows,
-        page: this.pagination.page,
-        order_by: this.pagination.sortField,
-        status: this.status,
-        includes: "product,vendors",
-      };
-
-      if (this.pagination.filter) {
-        params.filter = this.pagination.filter;
-      }
-
-      if (this.selectedVendor) {
-        params.vendor = this.selectedVendor;
-      }
-
-      if (this.pagination.sortOrder === -1) {
-        params.order_direction = "desc";
-      } else {
-        params.order_direction = "asc";
-      }
-
-      axios
-        .get(route("api.variants"), { params })
-        .then((response) => {
-          this.variants = response.data.data;
-          this.pagination.total = response.data.meta.total;
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        })
-        .finally(() => {
-          this.loading = false;
-        });
-    },
-    searchVendors(event = null) {
-      this.vendorsLoading = true;
-
-      const body = {
-        params: {
-          per_page: 10,
-          page: 1,
-          order_by: "fullname",
-          order_direction: "asc",
-        },
-      };
-
-      if (event) {
-        body.params.filter = event.value.toLowerCase();
-      }
-
-      axios
-        .get(route("api.vendors"), body)
-        .then((response) => {
-          this.vendors = response.data.data;
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        })
-        .finally(() => {
-          this.vendorsLoading = false;
-        });
-    },
-    onPage(event) {
-      this.pagination.page = event.page + 1;
-      this.pagination.per_page = event.rows;
-      this.fetchVariants();
-    },
-    onSort(event) {
-      this.pagination.sortField = event.sortField;
-      this.pagination.sortOrder = event.sortOrder;
-      this.fetchVariants();
-    },
-    editVendors(id) {
-      this.$inertia.visit(route("catalog.edit", id));
-    },
-    toggleFilter(event) {
-      this.$refs.filters.toggle(event);
-    },
-    viewVendors(id) {
-      this.selectedVariantId = id;
-      this.showVendors = true;
-      this.productVendors = [];
-
-      axios
-        .get(route("api.variants.vendors", id))
-        .then((response) => {
-          this.productVendors = response.data.data.map((vendor) => ({
-            id: vendor.id,
-            fullname: vendor.fullname,
-            email: vendor.email,
-            phone: vendor.phone,
-            price: vendor.pivot.price,
-            payment_terms: vendor.pivot.payment_terms,
-            status: vendor.status,
-          }));
-        })
-        .catch((error) => {
-          this.$toast.add({
-            severity: "error",
-            summary: this.$t("Error"),
-            detail: error.response.data.message,
-            life: 3000,
-          });
-        });
-    },
-  },
-};
-</script>

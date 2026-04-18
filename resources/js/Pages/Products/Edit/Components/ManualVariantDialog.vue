@@ -69,7 +69,7 @@ const onSubmit = () => {
 
   if (isEditing.value) {
     router.put(
-      route("variant.update", { product: props.productId, variant: props.variant!.id }),
+      route("variant.update", { product: props.productId, variant: props.variant?.id }),
       {
         price: form.price,
         status: form.status,

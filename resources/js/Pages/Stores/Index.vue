@@ -1,3 +1,176 @@
+<script setup lang="ts">
+import {
+  DataTable,
+  Card,
+  Column,
+  Button,
+  InputText,
+  IconField,
+  InputIcon,
+  ConfirmDialog,
+  SelectButton,
+  Tag,
+  useToast,
+  useConfirm,
+  type DataTablePageEvent,
+  type DataTableSortEvent,
+} from "primevue";
+
+import AppLayout from "@layouts/admin.vue";
+import { useI18n } from "vue-i18n";
+import { computed, ref, watch } from "vue";
+import { router, useForm } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import type { StoreResponse } from "@/Types/store-types";
+
+// Layout
+defineOptions({ layout: AppLayout });
+// Props from Inertia
+const props = defineProps<{
+  stores: {
+    data: StoreResponse[];
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  };
+  filters: {
+    filter?: string | null;
+    status?: string;
+    order_by?: string;
+    order_direction?: string;
+    per_page?: number;
+  };
+}>();
+// Set composables
+const toast = useToast();
+const confirm = useConfirm();
+const { t } = useI18n();
+
+// Local filter/sort state
+const filter = ref(props.filters.filter ?? "");
+const status = ref(props.filters.status ?? "active");
+const sortField = ref(props.filters.order_by ?? "name");
+const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
+
+const statusOptions = computed(() => [
+  { label: t("Active"), value: "active" },
+  { label: t("Inactive"), value: "inactive" },
+  { label: t("Archived"), value: "archived" },
+]);
+
+// Formatted rows
+const stores = computed(() => props.stores.data);
+
+// Debounced filter watch
+let filterTimer: ReturnType<typeof setTimeout>;
+watch(filter, (val) => {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => {
+    router.visit(route("stores"), {
+      data: {
+        filter: val,
+        status: status.value,
+        order_by: sortField.value,
+        order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      },
+      preserveState: true,
+      replace: true,
+    });
+  }, 300);
+});
+
+watch(status, (val) => {
+  router.visit(route("stores"), {
+    data: {
+      status: val,
+      filter: filter.value,
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+    },
+    preserveState: true,
+    replace: true,
+  });
+});
+
+const onPage = (event: DataTablePageEvent) => {
+  router.visit(route("stores"), {
+    data: {
+      page: event.page + 1,
+      per_page: event.rows,
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      filter: filter.value,
+      status: status.value,
+    },
+    preserveState: true,
+    replace: true,
+  });
+};
+
+const onSort = (event: DataTableSortEvent) => {
+  sortField.value = typeof event.sortField === "string" ? event.sortField : "name";
+  sortOrder.value = event.sortOrder ?? 1;
+  router.visit(route("stores"), {
+    data: {
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      filter: filter.value,
+      status: status.value,
+    },
+    preserveState: true,
+    replace: true,
+  });
+};
+
+// Row actions
+const deleteStore = (id: number) => {
+  confirm.require({
+    message: t("Are you sure you want to delete this store?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Delete"),
+    rejectClass: "p-button-secondary",
+    accept: () => {
+      const form = useForm({});
+      form.delete(route("stores.destroy", id), {
+        onSuccess: () => {
+          toast.add({ severity: "success", summary: t("Success"), detail: t("Store deleted successfully"), life: 3000 });
+        },
+        onError: () => {
+          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not delete store"), life: 3000 });
+        },
+      });
+    },
+  });
+};
+
+const restoreStore = (id: number) => {
+  confirm.require({
+    message: t("Are you sure you want to restore this store?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Restore"),
+    rejectClass: "p-button-secondary",
+    accept: () => {
+      const form = useForm({});
+      form.put(route("stores.restore", id), {
+        onSuccess: () => {
+          toast.add({ severity: "success", summary: t("Success"), detail: t("Store restored successfully"), life: 3000 });
+        },
+        onError: () => {
+          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not restore store"), life: 3000 });
+        },
+      });
+    },
+  });
+};
+</script>
+
 <template>
   <div>
     <div class="flex justify-between mb-3">
@@ -122,178 +295,3 @@
     </Card>
   </div>
 </template>
-
-<script setup lang="ts">
-import {
-  DataTable,
-  Card,
-  Column,
-  Button,
-  InputText,
-  IconField,
-  InputIcon,
-  ConfirmDialog,
-  SelectButton,
-  Tag,
-  useToast,
-  useConfirm,
-  type DataTablePageEvent,
-  type DataTableSortEvent,
-} from "primevue";
-
-import AppLayout from "@layouts/admin.vue";
-import { useI18n } from "vue-i18n";
-import { computed, ref, watch } from "vue";
-import { router, useForm } from "@inertiajs/vue3";
-import { route } from "ziggy-js";
-import { type StoreResponse } from "@/Types/store-types";
-
-// Set composables
-const toast = useToast();
-const confirm = useConfirm();
-const { t } = useI18n();
-
-// Layout
-defineOptions({ layout: AppLayout });
-
-// Props from Inertia
-const props = defineProps<{
-  stores: {
-    data: StoreResponse[];
-    meta: {
-      current_page: number;
-      last_page: number;
-      per_page: number;
-      total: number;
-    };
-  };
-  filters: {
-    filter?: string | null;
-    status?: string;
-    order_by?: string;
-    order_direction?: string;
-    per_page?: number;
-  };
-}>();
-
-// Local filter/sort state
-const filter = ref(props.filters.filter ?? "");
-const status = ref(props.filters.status ?? "active");
-const sortField = ref(props.filters.order_by ?? "name");
-const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
-
-const statusOptions = computed(() => [
-  { label: t("Active"), value: "active" },
-  { label: t("Inactive"), value: "inactive" },
-  { label: t("Archived"), value: "archived" },
-]);
-
-// Formatted rows
-const stores = computed(() => props.stores.data);
-
-// Debounced filter watch
-let filterTimer: ReturnType<typeof setTimeout>;
-watch(filter, (val) => {
-  clearTimeout(filterTimer);
-  filterTimer = setTimeout(() => {
-    router.visit(route("stores"), {
-      data: {
-        filter: val,
-        status: status.value,
-        order_by: sortField.value,
-        order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      },
-      preserveState: true,
-      replace: true,
-    });
-  }, 300);
-});
-
-watch(status, (val) => {
-  router.visit(route("stores"), {
-    data: {
-      status: val,
-      filter: filter.value,
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-    },
-    preserveState: true,
-    replace: true,
-  });
-});
-
-const onPage = (event: DataTablePageEvent) => {
-  router.visit(route("stores"), {
-    data: {
-      page: event.page + 1,
-      per_page: event.rows,
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      filter: filter.value,
-      status: status.value,
-    },
-    preserveState: true,
-    replace: true,
-  });
-};
-
-const onSort = (event: DataTableSortEvent) => {
-  sortField.value = typeof event.sortField === "string" ? event.sortField : "name";
-  sortOrder.value = event.sortOrder ?? 1;
-  router.visit(route("stores"), {
-    data: {
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      filter: filter.value,
-      status: status.value,
-    },
-    preserveState: true,
-    replace: true,
-  });
-};
-
-// Row actions
-const deleteStore = (id: number) => {
-  confirm.require({
-    message: t("Are you sure you want to delete this store?"),
-    header: t("Confirm"),
-    icon: "fas fa-exclamation-triangle",
-    rejectLabel: t("Cancel"),
-    acceptLabel: t("Delete"),
-    rejectClass: "p-button-secondary",
-    accept: () => {
-      const form = useForm({});
-      form.delete(route("stores.destroy", id), {
-        onSuccess: () => {
-          toast.add({ severity: "success", summary: t("Success"), detail: t("Store deleted successfully"), life: 3000 });
-        },
-        onError: () => {
-          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not delete store"), life: 3000 });
-        },
-      });
-    },
-  });
-};
-
-const restoreStore = (id: number) => {
-  confirm.require({
-    message: t("Are you sure you want to restore this store?"),
-    header: t("Confirm"),
-    icon: "fas fa-exclamation-triangle",
-    rejectLabel: t("Cancel"),
-    acceptLabel: t("Restore"),
-    rejectClass: "p-button-secondary",
-    accept: () => {
-      const form = useForm({});
-      form.put(route("stores.restore", id), {
-        onSuccess: () => {
-          toast.add({ severity: "success", summary: t("Success"), detail: t("Store restored successfully"), life: 3000 });
-        },
-        onError: () => {
-          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not restore store"), life: 3000 });
-        },
-      });
-    },
-  });
-};
-</script>

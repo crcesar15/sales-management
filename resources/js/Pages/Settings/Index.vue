@@ -1,3 +1,192 @@
+<script setup lang="ts">
+import { Button, Card, InputText, InputNumber, Select, TabView, TabPanel, useToast } from "primevue";
+
+import { router } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string, number } from "yup";
+import { route } from "ziggy-js";
+import AppLayout from "@layouts/admin.vue";
+
+// Layout
+defineOptions({ layout: AppLayout });
+// Props from Inertia
+const props = defineProps<{
+  settings: Record<string, Record<string, string>>;
+}>();
+// Set composables
+const toast = useToast();
+const { t } = useI18n();
+
+// Timezone options
+const timezoneOptions = Intl.supportedValuesOf("timeZone").map((tz) => ({
+  label: tz.replace(/_/g, " "),
+  value: tz,
+}));
+
+// ─── General Form ──────────────────────────────────────────────────────────
+
+const generalSchema = toTypedSchema(
+  object({
+    business_name: string().required().max(100),
+    business_address: string().nullable().optional().max(500),
+    business_phone: string().nullable().optional().max(30),
+    timezone: string().required(),
+  }),
+);
+
+const {
+  handleSubmit: handleSubmitGeneral,
+  errors: generalErrors,
+  defineField: generalDefineField,
+  isSubmitting: generalIsSubmitting,
+  setErrors: generalSetErrors,
+} = useForm({
+  validationSchema: generalSchema,
+  initialValues: {
+    business_name: props.settings.general?.business_name ?? "My Store",
+    business_address: props.settings.general?.business_address ?? "",
+    business_phone: props.settings.general?.business_phone ?? "",
+    timezone: props.settings.general?.timezone ?? "UTC",
+  },
+});
+
+const [generalBusinessName, generalBusinessNameAttrs] = generalDefineField("business_name");
+const [generalBusinessAddress, generalBusinessAddressAttrs] = generalDefineField("business_address");
+const [generalBusinessPhone, generalBusinessPhoneAttrs] = generalDefineField("business_phone");
+const [generalTimezone, generalTimezoneAttrs] = generalDefineField("timezone");
+
+const onSubmitGeneral = handleSubmitGeneral((values) => {
+  router.put(route("settings.general.update"), values, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.add({
+        severity: "success",
+        summary: t("Saved"),
+        detail: t("Settings updated successfully"),
+        life: 3000,
+      });
+    },
+    onError: (errors) => {
+      generalSetErrors(errors);
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: t("An unexpected error occurred."),
+        life: 3000,
+      });
+    },
+  });
+});
+
+// ─── Tax Form ──────────────────────────────────────────────────────────────
+
+const taxSchema = toTypedSchema(
+  object({
+    tax_rate: number().required().min(0).max(100),
+  }),
+);
+
+const {
+  handleSubmit: handleSubmitTax,
+  errors: taxErrors,
+  defineField: taxDefineField,
+  isSubmitting: taxIsSubmitting,
+  setErrors: taxSetErrors,
+} = useForm({
+  validationSchema: taxSchema,
+  initialValues: {
+    tax_rate: parseFloat(props.settings.tax?.tax_rate ?? "0") || 0,
+  },
+});
+
+const [taxTaxRate, taxTaxRateAttrs] = taxDefineField("tax_rate");
+
+const onSubmitTax = handleSubmitTax((values) => {
+  router.put(route("settings.tax.update"), values, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.add({
+        severity: "success",
+        summary: t("Saved"),
+        detail: t("Settings updated successfully"),
+        life: 3000,
+      });
+    },
+    onError: (errors) => {
+      taxSetErrors(errors);
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: t("An unexpected error occurred."),
+        life: 3000,
+      });
+    },
+  });
+});
+
+// ─── Finance Form ──────────────────────────────────────────────────────────
+
+const currencyOptions = [
+  { label: "USD ($)", value: "USD" },
+  { label: "EUR (€)", value: "EUR" },
+  { label: "MXN ($)", value: "MXN" },
+  { label: "COP ($)", value: "COP" },
+  { label: "BOB (Bs)", value: "BOB" },
+];
+
+const financeSchema = toTypedSchema(
+  object({
+    currency: string().required(),
+    currency_symbol: string().required().max(5),
+    decimal_precision: number().required().min(0).max(6),
+  }),
+);
+
+const {
+  handleSubmit: handleSubmitFinance,
+  errors: financeErrors,
+  defineField: financeDefineField,
+  isSubmitting: financeIsSubmitting,
+  setErrors: financeSetErrors,
+} = useForm({
+  validationSchema: financeSchema,
+  initialValues: {
+    currency: props.settings.finance?.currency ?? "USD",
+    currency_symbol: props.settings.finance?.currency_symbol ?? "$",
+    decimal_precision: parseInt(props.settings.finance?.decimal_precision ?? "2") || 2,
+  },
+});
+
+const [financeCurrency, financeCurrencyAttrs] = financeDefineField("currency");
+const [financeCurrencySymbol, financeCurrencySymbolAttrs] = financeDefineField("currency_symbol");
+const [financeDecimalPrecision, financeDecimalPrecisionAttrs] = financeDefineField("decimal_precision");
+
+const onSubmitFinance = handleSubmitFinance((values) => {
+  router.put(route("settings.finance.update"), values, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.add({
+        severity: "success",
+        summary: t("Saved"),
+        detail: t("Settings updated successfully"),
+        life: 3000,
+      });
+    },
+    onError: (errors) => {
+      financeSetErrors(errors);
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: t("An unexpected error occurred."),
+        life: 3000,
+      });
+    },
+  });
+});
+</script>
+
 <template>
   <div class="max-w-5xl mx-auto">
     <div class="flex justify-between mb-3">
@@ -188,194 +377,3 @@
     </Card>
   </div>
 </template>
-
-<script setup lang="ts">
-import { Button, Card, InputText, InputNumber, Select, TabView, TabPanel, useToast } from "primevue";
-
-import { router } from "@inertiajs/vue3";
-import { useI18n } from "vue-i18n";
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/yup";
-import { object, string, number } from "yup";
-import { route } from "ziggy-js";
-import AppLayout from "@layouts/admin.vue";
-
-// Set composables
-const toast = useToast();
-const { t } = useI18n();
-
-// Layout
-defineOptions({ layout: AppLayout });
-
-// Props from Inertia
-const props = defineProps<{
-  settings: Record<string, Record<string, string>>;
-}>();
-
-// Timezone options
-const timezoneOptions = Intl.supportedValuesOf("timeZone").map((tz) => ({
-  label: tz.replace(/_/g, " "),
-  value: tz,
-}));
-
-// ─── General Form ──────────────────────────────────────────────────────────
-
-const generalSchema = toTypedSchema(
-  object({
-    business_name: string().required().max(100),
-    business_address: string().nullable().optional().max(500),
-    business_phone: string().nullable().optional().max(30),
-    timezone: string().required(),
-  }),
-);
-
-const {
-  handleSubmit: handleSubmitGeneral,
-  errors: generalErrors,
-  defineField: generalDefineField,
-  isSubmitting: generalIsSubmitting,
-  setErrors: generalSetErrors,
-} = useForm({
-  validationSchema: generalSchema,
-  initialValues: {
-    business_name: props.settings.general?.business_name ?? "My Store",
-    business_address: props.settings.general?.business_address ?? "",
-    business_phone: props.settings.general?.business_phone ?? "",
-    timezone: props.settings.general?.timezone ?? "UTC",
-  },
-});
-
-const [generalBusinessName, generalBusinessNameAttrs] = generalDefineField("business_name");
-const [generalBusinessAddress, generalBusinessAddressAttrs] = generalDefineField("business_address");
-const [generalBusinessPhone, generalBusinessPhoneAttrs] = generalDefineField("business_phone");
-const [generalTimezone, generalTimezoneAttrs] = generalDefineField("timezone");
-
-const onSubmitGeneral = handleSubmitGeneral((values) => {
-  router.put(route("settings.general.update"), values, {
-    preserveScroll: true,
-    onSuccess: () => {
-      toast.add({
-        severity: "success",
-        summary: t("Saved"),
-        detail: t("Settings updated successfully"),
-        life: 3000,
-      });
-    },
-    onError: (errors) => {
-      generalSetErrors(errors);
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: t("An unexpected error occurred."),
-        life: 3000,
-      });
-    },
-  });
-});
-
-// ─── Tax Form ──────────────────────────────────────────────────────────────
-
-const taxSchema = toTypedSchema(
-  object({
-    tax_rate: number().required().min(0).max(100),
-  }),
-);
-
-const {
-  handleSubmit: handleSubmitTax,
-  errors: taxErrors,
-  defineField: taxDefineField,
-  isSubmitting: taxIsSubmitting,
-  setErrors: taxSetErrors,
-} = useForm({
-  validationSchema: taxSchema,
-  initialValues: {
-    tax_rate: parseFloat(props.settings.tax?.tax_rate ?? "0") || 0,
-  },
-});
-
-const [taxTaxRate, taxTaxRateAttrs] = taxDefineField("tax_rate");
-
-const onSubmitTax = handleSubmitTax((values) => {
-  router.put(route("settings.tax.update"), values, {
-    preserveScroll: true,
-    onSuccess: () => {
-      toast.add({
-        severity: "success",
-        summary: t("Saved"),
-        detail: t("Settings updated successfully"),
-        life: 3000,
-      });
-    },
-    onError: (errors) => {
-      taxSetErrors(errors);
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: t("An unexpected error occurred."),
-        life: 3000,
-      });
-    },
-  });
-});
-
-// ─── Finance Form ──────────────────────────────────────────────────────────
-
-const currencyOptions = [
-  { label: "USD ($)", value: "USD" },
-  { label: "EUR (€)", value: "EUR" },
-  { label: "MXN ($)", value: "MXN" },
-  { label: "COP ($)", value: "COP" },
-  { label: "BOB (Bs)", value: "BOB" },
-];
-
-const financeSchema = toTypedSchema(
-  object({
-    currency: string().required(),
-    currency_symbol: string().required().max(5),
-    decimal_precision: number().required().min(0).max(6),
-  }),
-);
-
-const {
-  handleSubmit: handleSubmitFinance,
-  errors: financeErrors,
-  defineField: financeDefineField,
-  isSubmitting: financeIsSubmitting,
-  setErrors: financeSetErrors,
-} = useForm({
-  validationSchema: financeSchema,
-  initialValues: {
-    currency: props.settings.finance?.currency ?? "USD",
-    currency_symbol: props.settings.finance?.currency_symbol ?? "$",
-    decimal_precision: parseInt(props.settings.finance?.decimal_precision ?? "2") || 2,
-  },
-});
-
-const [financeCurrency, financeCurrencyAttrs] = financeDefineField("currency");
-const [financeCurrencySymbol, financeCurrencySymbolAttrs] = financeDefineField("currency_symbol");
-const [financeDecimalPrecision, financeDecimalPrecisionAttrs] = financeDefineField("decimal_precision");
-
-const onSubmitFinance = handleSubmitFinance((values) => {
-  router.put(route("settings.finance.update"), values, {
-    preserveScroll: true,
-    onSuccess: () => {
-      toast.add({
-        severity: "success",
-        summary: t("Saved"),
-        detail: t("Settings updated successfully"),
-        life: 3000,
-      });
-    },
-    onError: (errors) => {
-      financeSetErrors(errors);
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: t("An unexpected error occurred."),
-        life: 3000,
-      });
-    },
-  });
-});
-</script>

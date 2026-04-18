@@ -1,3 +1,96 @@
+<script setup lang="ts">
+import { Button, MultiSelect, Card, InputText, Select, DatePicker, Password, useToast } from "primevue";
+
+import { router } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string, array, number, date, ref as yupRef } from "yup";
+import { route } from "ziggy-js";
+import type { RoleResponse } from "@/Types/role-types";
+import AppLayout from "@layouts/admin.vue";
+
+// Layout
+defineOptions({ layout: AppLayout });
+// Props from Inertia
+const props = defineProps<{
+  availableRoles: RoleResponse[];
+}>();
+// Set composables
+const toast = useToast();
+const { t } = useI18n();
+
+// Schema
+const schema = toTypedSchema(
+  object({
+    first_name: string().required().max(50),
+    last_name: string().required().max(50),
+    email: string().required().email().max(100),
+    username: string()
+      .required()
+      .min(6)
+      .max(50)
+      .matches(/^[a-zA-Z0-9_.-]*$/, t("Username can only contain letters, numbers, dots, dashes and underscores")),
+    phone: string().nullable().optional(),
+    status: string().required().oneOf(["active", "inactive"]),
+    date_of_birth: date().nullable().optional(),
+    roles: array().of(number().required()).required().min(1, t("At least one role is required")),
+    password: string().required().min(8),
+    password_confirmation: string()
+      .required()
+      .min(8)
+      .oneOf([yupRef("password")], t("Passwords must match")),
+  }),
+);
+
+const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    status: "active",
+    roles: [],
+  },
+});
+
+const [firstName, firstNameAttrs] = defineField("first_name");
+const [lastName, lastNameAttrs] = defineField("last_name");
+const [email, emailAttrs] = defineField("email");
+const [username, usernameAttrs] = defineField("username");
+const [phone, phoneAttrs] = defineField("phone");
+const [status, statusAttrs] = defineField("status");
+const [dateOfBirth, dateOfBirthAttrs] = defineField("date_of_birth");
+const [roles, rolesAttrs] = defineField("roles");
+const [password, passwordAttrs] = defineField("password");
+const [passwordConfirmation, passwordConfirmationAttrs] = defineField("password_confirmation");
+
+// Submit
+const submit = handleSubmit((values) => {
+  const dateValue =
+    values.date_of_birth instanceof Date ? values.date_of_birth.toISOString().split("T")[0] : (values.date_of_birth ?? null);
+
+  router.post(
+    route("users.store"),
+    {
+      ...values,
+      date_of_birth: dateValue,
+    },
+    {
+      onSuccess: () => {
+        router.visit(route("users"));
+      },
+      onError: (errs) => {
+        setErrors(errs);
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: t(Object.values(errs)[0] ?? "An error occurred"),
+          life: 3000,
+        });
+      },
+    },
+  );
+});
+</script>
+
 <template>
   <div>
     <div class="flex justify-between mb-3">
@@ -179,98 +272,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { Button, MultiSelect, Card, InputText, Select, DatePicker, Password, useToast } from "primevue";
-
-import { router } from "@inertiajs/vue3";
-import { useI18n } from "vue-i18n";
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/yup";
-import { object, string, array, number, date, ref as yupRef } from "yup";
-import { route } from "ziggy-js";
-import { type RoleResponse } from "@/Types/role-types";
-import AppLayout from "@layouts/admin.vue";
-
-// Set composables
-const toast = useToast();
-const { t } = useI18n();
-
-// Layout
-defineOptions({ layout: AppLayout });
-
-// Props from Inertia
-const props = defineProps<{
-  availableRoles: RoleResponse[];
-}>();
-
-// Schema
-const schema = toTypedSchema(
-  object({
-    first_name: string().required().max(50),
-    last_name: string().required().max(50),
-    email: string().required().email().max(100),
-    username: string()
-      .required()
-      .min(6)
-      .max(50)
-      .matches(/^[a-zA-Z0-9_.-]*$/, t("Username can only contain letters, numbers, dots, dashes and underscores")),
-    phone: string().nullable().optional(),
-    status: string().required().oneOf(["active", "inactive"]),
-    date_of_birth: date().nullable().optional(),
-    roles: array().of(number().required()).required().min(1, t("At least one role is required")),
-    password: string().required().min(8),
-    password_confirmation: string()
-      .required()
-      .min(8)
-      .oneOf([yupRef("password")], t("Passwords must match")),
-  }),
-);
-
-const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
-  validationSchema: schema,
-  initialValues: {
-    status: "active",
-    roles: [],
-  },
-});
-
-const [firstName, firstNameAttrs] = defineField("first_name");
-const [lastName, lastNameAttrs] = defineField("last_name");
-const [email, emailAttrs] = defineField("email");
-const [username, usernameAttrs] = defineField("username");
-const [phone, phoneAttrs] = defineField("phone");
-const [status, statusAttrs] = defineField("status");
-const [dateOfBirth, dateOfBirthAttrs] = defineField("date_of_birth");
-const [roles, rolesAttrs] = defineField("roles");
-const [password, passwordAttrs] = defineField("password");
-const [passwordConfirmation, passwordConfirmationAttrs] = defineField("password_confirmation");
-
-// Submit
-const submit = handleSubmit((values) => {
-  const dateValue =
-    values.date_of_birth instanceof Date ? values.date_of_birth.toISOString().split("T")[0] : (values.date_of_birth ?? null);
-
-  router.post(
-    route("users.store"),
-    {
-      ...values,
-      date_of_birth: dateValue,
-    },
-    {
-      onSuccess: () => {
-        router.visit(route("users"));
-      },
-      onError: (errs) => {
-        setErrors(errs);
-        toast.add({
-          severity: "error",
-          summary: t("Error"),
-          detail: t(Object.values(errs)[0] ?? "An error occurred"),
-          life: 3000,
-        });
-      },
-    },
-  );
-});
-</script>

@@ -1,141 +1,3 @@
-<template>
-  <div>
-    <div class="flex justify-between mb-3">
-      <div class="flex">
-        <PButton
-          icon="fa fa-arrow-left"
-          text
-          severity="secondary"
-          class="hover:shadow-md mr-2 uppercase"
-          @click="$inertia.visit(route('vendors'))"
-        />
-        <h4 class="text-2xl font-bold flex items-center m-0">{{ $t("Product Catalog") }} - {{ vendor.fullname }}</h4>
-      </div>
-      <div class="flex flex-col justify-center">
-        <PButton :label="$t('Add Product')" icon="fa fa-plus" class="uppercase" raised @click="addProduct()" />
-      </div>
-    </div>
-    <ConfirmDialog />
-    <div class="grid grid-cols-12 gap-4">
-      <div class="col-span-12">
-        <Card class="mb-4">
-          <template #content>
-            <DataTable
-              :value="products"
-              resizable-columns
-              lazy
-              :total-records="pagination.total"
-              :rows="pagination.rows"
-              :first="pagination.first"
-              :loading="loading"
-              paginator
-              sort-field="name"
-              :sort-order="1"
-              @page="onPage($event)"
-              @sort="onSort($event)"
-            >
-              <template #empty>
-                {{ $t("No products found") }}
-              </template>
-              <template #header>
-                <div class="grid grid-cols-12">
-                  <div class="xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12 flex md:justify-start justify-center">
-                    <SelectButton
-                      v-model="status"
-                      :allow-empty="false"
-                      :options="[
-                        {
-                          label: $t('All'),
-                          value: 'all',
-                        },
-                        {
-                          label: $t('Active'),
-                          value: 'active',
-                        },
-                        {
-                          label: $t('Inactive'),
-                          value: 'inactive',
-                        },
-                        {
-                          label: $t('Archived'),
-                          value: 'archived',
-                        },
-                      ]"
-                      option-label="label"
-                      option-value="value"
-                      aria-labelledby="basic"
-                    />
-                  </div>
-                  <div
-                    class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
-                  >
-                    <IconField icon-position="left" class="w-full">
-                      <InputIcon class="fa fa-search" />
-                      <InputText v-model="pagination.filter" :placeholder="$t('Search')" class="w-full" />
-                    </IconField>
-                  </div>
-                </div>
-              </template>
-              <Column field="name" :header="$t('Name')" sortable>
-                <template #body="{ data }">
-                  <div class="flex flex-col">
-                    <span class="font-bold">{{ data.name }}</span>
-                    <span v-if="data.variant" class="p-tag p-component p-tag-secondary font-bold w-fit">
-                      {{ data.variant }}
-                    </span>
-                  </div>
-                </template>
-              </Column>
-              <Column field="status" :header="$t('Status')" header-class="flex justify-center" class="flex justify-center">
-                <template #body="{ data }">
-                  <div style="height: 55px" class="flex items-center">
-                    <Tag v-if="data.status === 'active'" severity="success" :value="$t('Active')" />
-                    <Tag v-else-if="data.status === 'inactive'" severity="warn" :value="$t('Inactive')" />
-                    <Tag v-else severity="danger" :value="$t('Archived')" />
-                  </div>
-                </template>
-              </Column>
-              <Column field="price" :header="$t('Price')" />
-              <Column field="payment_terms" :header="$t('Payment Terms')">
-                <template #body="slotProps">
-                  <span v-if="slotProps.data.payment_terms === 'debit'">
-                    {{ $t("Cash") }}
-                  </span>
-                  <span v-else-if="slotProps.data.payment_terms === 'credit'">
-                    {{ $t("Credit") }}
-                  </span>
-                  <span v-else>
-                    {{ $t("Both") }}
-                  </span>
-                </template>
-              </Column>
-              <Column field="details" :header="$t('Details')" />
-              <Column :header="$t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
-                <template #body="{ data }">
-                  <span class="flex justify-center gap-2">
-                    <p-button v-tooltip.top="$t('Edit')" icon="fa fa-edit" text rounded raised size="sm" @click="editProduct(data.id)" />
-                    <p-button
-                      v-tooltip.top="$t('Delete')"
-                      icon="fa fa-trash"
-                      text
-                      rounded
-                      raised
-                      size="sm"
-                      class="btn-danger"
-                      @click="deleteProduct(data.id)"
-                    />
-                  </span>
-                </template>
-              </Column>
-            </DataTable>
-          </template>
-        </Card>
-      </div>
-    </div>
-    <ProductEditor :product="selectedProduct" :show="showProductEditor" @save="saveRecord" @close="closeProductEditor" />
-  </div>
-</template>
-
 <script>
 import Card from "primevue/card";
 import DataTable from "primevue/datatable";
@@ -310,3 +172,141 @@ export default {
   },
 };
 </script>
+
+<template>
+  <div>
+    <div class="flex justify-between mb-3">
+      <div class="flex">
+        <PButton
+          icon="fa fa-arrow-left"
+          text
+          severity="secondary"
+          class="hover:shadow-md mr-2 uppercase"
+          @click="$inertia.visit(route('vendors'))"
+        />
+        <h4 class="text-2xl font-bold flex items-center m-0">{{ $t("Product Catalog") }} - {{ vendor.fullname }}</h4>
+      </div>
+      <div class="flex flex-col justify-center">
+        <PButton :label="$t('Add Product')" icon="fa fa-plus" class="uppercase" raised @click="addProduct()" />
+      </div>
+    </div>
+    <ConfirmDialog />
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12">
+        <Card class="mb-4">
+          <template #content>
+            <DataTable
+              :value="products"
+              resizable-columns
+              lazy
+              :total-records="pagination.total"
+              :rows="pagination.rows"
+              :first="pagination.first"
+              :loading="loading"
+              paginator
+              sort-field="name"
+              :sort-order="1"
+              @page="onPage($event)"
+              @sort="onSort($event)"
+            >
+              <template #empty>
+                {{ $t("No products found") }}
+              </template>
+              <template #header>
+                <div class="grid grid-cols-12">
+                  <div class="xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12 flex md:justify-start justify-center">
+                    <SelectButton
+                      v-model="status"
+                      :allow-empty="false"
+                      :options="[
+                        {
+                          label: $t('All'),
+                          value: 'all',
+                        },
+                        {
+                          label: $t('Active'),
+                          value: 'active',
+                        },
+                        {
+                          label: $t('Inactive'),
+                          value: 'inactive',
+                        },
+                        {
+                          label: $t('Archived'),
+                          value: 'archived',
+                        },
+                      ]"
+                      option-label="label"
+                      option-value="value"
+                      aria-labelledby="basic"
+                    />
+                  </div>
+                  <div
+                    class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
+                  >
+                    <IconField icon-position="left" class="w-full">
+                      <InputIcon class="fa fa-search" />
+                      <InputText v-model="pagination.filter" :placeholder="$t('Search')" class="w-full" />
+                    </IconField>
+                  </div>
+                </div>
+              </template>
+              <Column field="name" :header="$t('Name')" sortable>
+                <template #body="{ data }">
+                  <div class="flex flex-col">
+                    <span class="font-bold">{{ data.name }}</span>
+                    <span v-if="data.variant" class="p-tag p-component p-tag-secondary font-bold w-fit">
+                      {{ data.variant }}
+                    </span>
+                  </div>
+                </template>
+              </Column>
+              <Column field="status" :header="$t('Status')" header-class="flex justify-center" class="flex justify-center">
+                <template #body="{ data }">
+                  <div style="height: 55px" class="flex items-center">
+                    <Tag v-if="data.status === 'active'" severity="success" :value="$t('Active')" />
+                    <Tag v-else-if="data.status === 'inactive'" severity="warn" :value="$t('Inactive')" />
+                    <Tag v-else severity="danger" :value="$t('Archived')" />
+                  </div>
+                </template>
+              </Column>
+              <Column field="price" :header="$t('Price')" />
+              <Column field="payment_terms" :header="$t('Payment Terms')">
+                <template #body="slotProps">
+                  <span v-if="slotProps.data.payment_terms === 'debit'">
+                    {{ $t("Cash") }}
+                  </span>
+                  <span v-else-if="slotProps.data.payment_terms === 'credit'">
+                    {{ $t("Credit") }}
+                  </span>
+                  <span v-else>
+                    {{ $t("Both") }}
+                  </span>
+                </template>
+              </Column>
+              <Column field="details" :header="$t('Details')" />
+              <Column :header="$t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
+                <template #body="{ data }">
+                  <span class="flex justify-center gap-2">
+                    <p-button v-tooltip.top="$t('Edit')" icon="fa fa-edit" text rounded raised size="sm" @click="editProduct(data.id)" />
+                    <p-button
+                      v-tooltip.top="$t('Delete')"
+                      icon="fa fa-trash"
+                      text
+                      rounded
+                      raised
+                      size="sm"
+                      class="btn-danger"
+                      @click="deleteProduct(data.id)"
+                    />
+                  </span>
+                </template>
+              </Column>
+            </DataTable>
+          </template>
+        </Card>
+      </div>
+    </div>
+    <ProductEditor :product="selectedProduct" :show="showProductEditor" @save="saveRecord" @close="closeProductEditor" />
+  </div>
+</template>

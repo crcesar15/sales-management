@@ -1,3 +1,44 @@
+<script setup lang="ts">
+import { InputText, Password, Button, Checkbox, IconField, InputIcon, useToast, Toast } from "primevue";
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import { useAuthClient } from "@/Composables/useAuthClient";
+
+// Set composables
+const { t } = useI18n();
+const { loginApi } = useAuthClient();
+const toast = useToast();
+
+// Form Variables
+const username = ref("");
+const password = ref("");
+const remember = ref(false);
+const btnLoading = ref(false);
+
+// Methods
+const login = async () => {
+  btnLoading.value = true;
+  try {
+    await loginApi({
+      username: username.value,
+      password: password.value,
+      remember: remember.value,
+    });
+    router.visit(route("home"));
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t(error.response?.data?.message ?? "An unexpected error occurred."),
+    });
+  } finally {
+    btnLoading.value = false;
+  }
+};
+</script>
+
 <template>
   <div class="flex min-h-screen">
     <!-- Left Panel: Branding (hidden on mobile) -->
@@ -113,44 +154,3 @@
     <Toast />
   </div>
 </template>
-
-<script setup lang="ts">
-import { InputText, Password, Button, Checkbox, IconField, InputIcon, useToast, Toast } from "primevue";
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-import { router } from "@inertiajs/vue3";
-import { route } from "ziggy-js";
-import { useAuthClient } from "@/Composables/useAuthClient";
-
-// Set composables
-const { t } = useI18n();
-const { loginApi } = useAuthClient();
-const toast = useToast();
-
-// Form Variables
-const username = ref("");
-const password = ref("");
-const remember = ref(false);
-const btnLoading = ref(false);
-
-// Methods
-const login = async () => {
-  btnLoading.value = true;
-  try {
-    await loginApi({
-      username: username.value,
-      password: password.value,
-      remember: remember.value,
-    });
-    router.visit(route("home"));
-  } catch (error: any) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: t(error.response?.data?.message ?? "An unexpected error occurred."),
-    });
-  } finally {
-    btnLoading.value = false;
-  }
-};
-</script>

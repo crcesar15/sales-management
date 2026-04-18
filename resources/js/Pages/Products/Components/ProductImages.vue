@@ -1,224 +1,3 @@
-<template>
-  <div>
-    <!-- Drop Zone (empty state) -->
-    <div
-      v-if="displayFiles.length === 0"
-      class="relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 transition-colors duration-150 cursor-pointer"
-      :class="
-        isDragOver
-          ? 'border-primary-400 bg-primary-50 dark:border-primary-300 dark:bg-primary-500/10'
-          : 'border-slate-300 bg-slate-50 hover:border-primary-300 hover:bg-primary-50/50 dark:border-slate-600 dark:bg-slate-800/50 dark:hover:border-primary-400 dark:hover:bg-primary-500/5'
-      "
-      @click="openFileUpload()"
-      @dragenter.prevent="isDragOver = true"
-      @dragover.prevent="isDragOver = true"
-      @dragleave.prevent="isDragOver = false"
-      @drop.prevent="onDrop"
-    >
-      <div
-        class="flex h-14 w-14 items-center justify-center rounded-full transition-colors duration-150"
-        :class="
-          isDragOver
-            ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300'
-            : 'bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500'
-        "
-      >
-        <i class="fa-solid fa-cloud-arrow-up text-2xl" />
-      </div>
-      <div class="text-center">
-        <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
-          {{ t("Drop images here or click to browse") }}
-        </p>
-        <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">
-          {{ t("WebP, PNG, JPG up to 10MB") }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Image Grid (has images) -->
-    <div v-else>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <!-- Image Cards -->
-        <div
-          v-for="(file, index) in displayFiles"
-          :key="file.id"
-          class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
-        >
-          <!-- Image -->
-          <img :src="file.thumb_url || file.full_url" :alt="t('Product image')" class="h-full w-full object-cover" />
-
-          <!-- Hover Overlay -->
-          <div
-            class="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity duration-150 group-hover:opacity-100"
-          >
-            <Button
-              v-tooltip.top="t('Preview')"
-              icon="fa-solid fa-eye"
-              rounded
-              severity="secondary"
-              size="small"
-              class="!bg-white/90 !text-slate-700 hover:!bg-white dark:!bg-slate-800/90 dark:!text-slate-200 dark:hover:!bg-slate-800"
-              @click="openLightbox(index)"
-            />
-            <Button
-              v-tooltip.top="t('Remove image')"
-              icon="fa-solid fa-trash"
-              rounded
-              severity="secondary"
-              size="small"
-              class="!bg-white/90 !text-slate-700 hover:!bg-white dark:!bg-slate-800/90 dark:!text-slate-200 dark:hover:!bg-slate-800"
-              @click="removeFile(file)"
-            />
-          </div>
-        </div>
-
-        <!-- Add Card -->
-        <div
-          class="flex aspect-square cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 transition-colors duration-150 hover:border-primary-400 hover:bg-primary-50/50 dark:border-slate-600 dark:bg-slate-800/50 dark:hover:border-primary-400 dark:hover:bg-primary-500/5"
-          @click="openFileUpload()"
-          @dragenter.prevent="isDragOver = true"
-          @dragover.prevent="isDragOver = true"
-          @dragleave.prevent="isDragOver = false"
-          @drop.prevent="onDrop"
-        >
-          <div class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
-            <i class="fa-solid fa-plus text-xl" />
-            <span class="text-xs">{{ t("Add") }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Hidden FileUpload -->
-    <FileUpload
-      ref="fileUploadRef"
-      v-show="false"
-      mode="basic"
-      :auto="true"
-      accept="image/*"
-      :max-file-size="10000000"
-      :multiple="false"
-      :custom-upload="true"
-      @uploader="onUploader"
-    />
-
-    <!-- Cropper Dialog -->
-    <Dialog
-      v-model:visible="cropperVisible"
-      modal
-      :closable="false"
-      :style="{ width: '50rem' }"
-      :breakpoints="{ '1199px': '80vw', '575px': '95vw' }"
-      :pt="{
-        header: { class: '!pb-0 !pt-4 !px-5' },
-        content: { class: '!pt-2 !pb-4' },
-      }"
-    >
-      <template #header>
-        <div class="flex w-full items-center gap-2">
-          <i class="fa-solid fa-crop-simple text-lg text-primary-500" />
-          <span class="text-lg font-semibold">{{ t("Crop Image") }}</span>
-        </div>
-      </template>
-
-      <div class="relative">
-        <Cropper
-          ref="cropperRef"
-          class="h-[400px] w-full rounded-md"
-          :stencil-props="{
-            movable: true,
-            resizable: true,
-            aspectRatio: 1,
-          }"
-          :src="cropperImageSrc"
-        />
-
-        <!-- Cropper Toolbar -->
-        <div
-          class="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/20 bg-black/50 px-3 py-1.5 backdrop-blur-md"
-        >
-          <Button
-            v-tooltip.top="t('Flip Vertical')"
-            icon="fa-solid fa-up-down"
-            text
-            rounded
-            size="small"
-            class="!text-white hover:!bg-white/20"
-            @click="flip(0, 1)"
-          />
-          <Button
-            v-tooltip.top="t('Flip Horizontal')"
-            icon="fa-solid fa-left-right"
-            text
-            rounded
-            size="small"
-            class="!text-white hover:!bg-white/20"
-            @click="flip(1, 0)"
-          />
-          <div class="mx-1 h-5 w-px bg-white/30" />
-          <Button
-            v-tooltip.top="t('Rotate Left')"
-            icon="fa-solid fa-rotate-left"
-            text
-            rounded
-            size="small"
-            class="!text-white hover:!bg-white/20"
-            @click="rotate(-90)"
-          />
-          <Button
-            v-tooltip.top="t('Rotate Right')"
-            icon="fa-solid fa-rotate-right"
-            text
-            rounded
-            size="small"
-            class="!text-white hover:!bg-white/20"
-            @click="rotate(90)"
-          />
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <Button :label="t('Cancel')" icon="fa-solid fa-xmark" outlined @click="cropperVisible = false" />
-          <Button :label="t('Crop & Save')" icon="fa-solid fa-check" @click="saveCropped" />
-        </div>
-      </template>
-    </Dialog>
-
-    <!-- Lightbox -->
-    <Galleria
-      v-model:visible="lightboxVisible"
-      v-model:active-index="lightboxActiveIndex"
-      :value="galleriaItems"
-      :full-screen="true"
-      :show-item-navigators="true"
-      :show-thumbnails="true"
-      :circular="true"
-      :num-visible="5"
-      container-style="max-width: 100%"
-    >
-      <template #item="slotProps">
-        <div class="flex h-[40vh] w-[100vh] md:h-[50vh] md:w-[35vw] items-center justify-center bg-slate-900">
-          <img
-            v-if="slotProps.item"
-            :src="slotProps.item.itemImageSrc"
-            :alt="slotProps.item.alt"
-            class="h-[40vh] w-[100vh] md:h-[50vh] md:w-[35vw] object-contain"
-          />
-        </div>
-      </template>
-      <template #thumbnail="slotProps">
-        <img
-          v-if="slotProps.item"
-          :src="slotProps.item.thumbnailImageSrc"
-          :alt="slotProps.item.alt"
-          class="h-16 w-16 rounded object-cover"
-        />
-      </template>
-    </Galleria>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { Button, Dialog, FileUpload, Galleria, useToast } from "primevue";
 import { ref, computed } from "vue";
@@ -229,6 +8,15 @@ import "vue-advanced-cropper/dist/style.css";
 import { Cropper } from "vue-advanced-cropper";
 import type { PendingMediaResponse } from "@app-types/product-types";
 
+const props = defineProps<{
+  pendingMedia: MediaItem[];
+  existingMedia?: MediaItem[];
+  removeMediaIds: number[];
+}>();
+const emit = defineEmits<{
+  "update:pendingMedia": [value: MediaItem[]];
+  "update:removeMediaIds": [value: number[]];
+}>();
 const toast = useToast();
 const { t } = useI18n();
 
@@ -237,17 +25,6 @@ interface MediaItem {
   thumb_url: string;
   full_url: string;
 }
-
-const props = defineProps<{
-  pendingMedia: MediaItem[];
-  existingMedia?: MediaItem[];
-  removeMediaIds: number[];
-}>();
-
-const emit = defineEmits<{
-  "update:pendingMedia": [value: MediaItem[]];
-  "update:removeMediaIds": [value: number[]];
-}>();
 
 // Combined display list
 const displayFiles = computed(() => [...(props.existingMedia ?? []), ...props.pendingMedia]);
@@ -386,6 +163,227 @@ const removeFile = (file: MediaItem) => {
   }
 };
 </script>
+
+<template>
+  <div>
+    <!-- Drop Zone (empty state) -->
+    <div
+      v-if="displayFiles.length === 0"
+      class="relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 transition-colors duration-150 cursor-pointer"
+      :class="
+        isDragOver
+          ? 'border-primary-400 bg-primary-50 dark:border-primary-300 dark:bg-primary-500/10'
+          : 'border-slate-300 bg-slate-50 hover:border-primary-300 hover:bg-primary-50/50 dark:border-slate-600 dark:bg-slate-800/50 dark:hover:border-primary-400 dark:hover:bg-primary-500/5'
+      "
+      @click="openFileUpload()"
+      @dragenter.prevent="isDragOver = true"
+      @dragover.prevent="isDragOver = true"
+      @dragleave.prevent="isDragOver = false"
+      @drop.prevent="onDrop"
+    >
+      <div
+        class="flex h-14 w-14 items-center justify-center rounded-full transition-colors duration-150"
+        :class="
+          isDragOver
+            ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300'
+            : 'bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500'
+        "
+      >
+        <i class="fa-solid fa-cloud-arrow-up text-2xl" />
+      </div>
+      <div class="text-center">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+          {{ t("Drop images here or click to browse") }}
+        </p>
+        <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">
+          {{ t("WebP, PNG, JPG up to 10MB") }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Image Grid (has images) -->
+    <div v-else>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <!-- Image Cards -->
+        <div
+          v-for="(file, index) in displayFiles"
+          :key="file.id"
+          class="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
+        >
+          <!-- Image -->
+          <img :src="file.thumb_url || file.full_url" :alt="t('Product image')" class="h-full w-full object-cover" />
+
+          <!-- Hover Overlay -->
+          <div
+            class="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity duration-150 group-hover:opacity-100"
+          >
+            <Button
+              v-tooltip.top="t('Preview')"
+              icon="fa-solid fa-eye"
+              rounded
+              severity="secondary"
+              size="small"
+              class="!bg-white/90 !text-slate-700 hover:!bg-white dark:!bg-slate-800/90 dark:!text-slate-200 dark:hover:!bg-slate-800"
+              @click="openLightbox(index)"
+            />
+            <Button
+              v-tooltip.top="t('Remove image')"
+              icon="fa-solid fa-trash"
+              rounded
+              severity="secondary"
+              size="small"
+              class="!bg-white/90 !text-slate-700 hover:!bg-white dark:!bg-slate-800/90 dark:!text-slate-200 dark:hover:!bg-slate-800"
+              @click="removeFile(file)"
+            />
+          </div>
+        </div>
+
+        <!-- Add Card -->
+        <div
+          class="flex aspect-square cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 transition-colors duration-150 hover:border-primary-400 hover:bg-primary-50/50 dark:border-slate-600 dark:bg-slate-800/50 dark:hover:border-primary-400 dark:hover:bg-primary-500/5"
+          @click="openFileUpload()"
+          @dragenter.prevent="isDragOver = true"
+          @dragover.prevent="isDragOver = true"
+          @dragleave.prevent="isDragOver = false"
+          @drop.prevent="onDrop"
+        >
+          <div class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
+            <i class="fa-solid fa-plus text-xl" />
+            <span class="text-xs">{{ t("Add") }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden FileUpload -->
+    <FileUpload
+      ref="fileUploadRef"
+      class="hidden"
+      mode="basic"
+      :auto="true"
+      accept="image/*"
+      :max-file-size="10000000"
+      :multiple="false"
+      :custom-upload="true"
+      @uploader="onUploader"
+    />
+
+    <!-- Cropper Dialog -->
+    <Dialog
+      v-model:visible="cropperVisible"
+      modal
+      :closable="false"
+      :style="{ width: '50rem' }"
+      :breakpoints="{ '1199px': '80vw', '575px': '95vw' }"
+      :pt="{
+        header: { class: '!pb-0 !pt-4 !px-5' },
+        content: { class: '!pt-2 !pb-4' },
+      }"
+    >
+      <template #header>
+        <div class="flex w-full items-center gap-2">
+          <i class="fa-solid fa-crop-simple text-lg text-primary-500" />
+          <span class="text-lg font-semibold">{{ t("Crop Image") }}</span>
+        </div>
+      </template>
+
+      <div class="relative">
+        <Cropper
+          ref="cropperRef"
+          class="h-[400px] w-full rounded-md"
+          :stencil-props="{
+            movable: true,
+            resizable: true,
+            aspectRatio: 1,
+          }"
+          :src="cropperImageSrc"
+        />
+
+        <!-- Cropper Toolbar -->
+        <div
+          class="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/20 bg-black/50 px-3 py-1.5 backdrop-blur-md"
+        >
+          <Button
+            v-tooltip.top="t('Flip Vertical')"
+            icon="fa-solid fa-up-down"
+            text
+            rounded
+            size="small"
+            class="!text-white hover:!bg-white/20"
+            @click="flip(0, 1)"
+          />
+          <Button
+            v-tooltip.top="t('Flip Horizontal')"
+            icon="fa-solid fa-left-right"
+            text
+            rounded
+            size="small"
+            class="!text-white hover:!bg-white/20"
+            @click="flip(1, 0)"
+          />
+          <div class="mx-1 h-5 w-px bg-white/30" />
+          <Button
+            v-tooltip.top="t('Rotate Left')"
+            icon="fa-solid fa-rotate-left"
+            text
+            rounded
+            size="small"
+            class="!text-white hover:!bg-white/20"
+            @click="rotate(-90)"
+          />
+          <Button
+            v-tooltip.top="t('Rotate Right')"
+            icon="fa-solid fa-rotate-right"
+            text
+            rounded
+            size="small"
+            class="!text-white hover:!bg-white/20"
+            @click="rotate(90)"
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <Button :label="t('Cancel')" icon="fa-solid fa-xmark" outlined @click="cropperVisible = false" />
+          <Button :label="t('Crop & Save')" icon="fa-solid fa-check" @click="saveCropped" />
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- Lightbox -->
+    <Galleria
+      v-model:visible="lightboxVisible"
+      v-model:active-index="lightboxActiveIndex"
+      :value="galleriaItems"
+      :full-screen="true"
+      :show-item-navigators="true"
+      :show-thumbnails="true"
+      :circular="true"
+      :num-visible="5"
+      container-style="max-width: 100%"
+    >
+      <template #item="slotProps">
+        <div class="flex h-[40vh] w-[100vh] md:h-[50vh] md:w-[35vw] items-center justify-center bg-slate-900">
+          <img
+            v-if="slotProps.item"
+            :src="slotProps.item.itemImageSrc"
+            :alt="slotProps.item.alt"
+            class="h-[40vh] w-[100vh] md:h-[50vh] md:w-[35vw] object-contain"
+          />
+        </div>
+      </template>
+      <template #thumbnail="slotProps">
+        <img
+          v-if="slotProps.item"
+          :src="slotProps.item.thumbnailImageSrc"
+          :alt="slotProps.item.alt"
+          class="h-16 w-16 rounded object-cover"
+        />
+      </template>
+    </Galleria>
+  </div>
+</template>
 
 <style>
 .p-galleria-item {

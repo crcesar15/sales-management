@@ -1,5 +1,5 @@
-import { type SettingGrouped } from "./setting-types";
-import { type User } from "./user-types";
+import type { SettingGrouped } from "./setting-types";
+import type { User } from "./user-types";
 import type { DefineComponent } from "vue";
 
 // Extend the Inertia PageProps interface
@@ -16,6 +16,6 @@ declare module "@inertiajs/core" {
 }
 
 declare module "*.vue" {
-  const component: DefineComponent<{}, {}, any>;
+  const component: DefineComponent<unknown, unknown, unknown>;
   export default component;
 }

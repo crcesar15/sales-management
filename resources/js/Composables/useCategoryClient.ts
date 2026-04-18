@@ -1,12 +1,12 @@
-import { type Category } from "@app-types/category-types";
+import type { Category } from "@app-types/category-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
-import { type AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 
 export function useCategoryClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchCategoriesApi = async <T = any>(queryParameters?: string): Promise<AxiosResponse<T>> => {
+  const fetchCategoriesApi = async <T = unknown>(queryParameters?: string): Promise<AxiosResponse<T>> => {
     let url: string = route("api.v1.categories");
 
     if (queryParameters) {

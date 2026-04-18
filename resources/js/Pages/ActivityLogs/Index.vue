@@ -1,81 +1,3 @@
-<template>
-  <div>
-    <div class="flex flex-row justify-between mb-3">
-      <h2 class="text-2xl font-bold flex items-end m-0">
-        {{ t("Activity Log") }}
-      </h2>
-    </div>
-    <Card>
-      <template #content>
-        <DataTable
-          :value="activities"
-          resizable-columns
-          lazy
-          :total-records="pagination.total"
-          :rows="pagination.perPage"
-          :first="pagination.first"
-          :loading="loading"
-          paginator
-          sort-field="created_at"
-          :sort-order="-1"
-          @page="onPage($event)"
-          @sort="onSort($event)"
-        >
-          <template #empty>
-            {{ t("No activity found") }}
-          </template>
-          <template #header>
-            <div class="grid grid-cols-12 gap-4">
-              <div class="lg:col-span-3 md:col-span-4 col-span-12">
-                <Select v-model="eventFilter" :options="eventOptions" option-label="label" option-value="value" class="w-full" />
-              </div>
-              <div class="flex lg:col-span-3 lg:col-start-10 md:col-span-4 md:col-start-9 col-span-12 md:justify-end justify-center">
-                <IconField icon-position="left" class="w-full">
-                  <InputIcon class="fa fa-search" />
-                  <InputText v-model="pagination.filter" :placeholder="t('Search')" class="w-full" />
-                </IconField>
-              </div>
-            </div>
-          </template>
-          <Column field="event" :header="t('Event')">
-            <template #body="{ data }">
-              <Tag :severity="eventSeverity(data.event)">
-                {{ t(eventLabel(data.event)) }}
-              </Tag>
-            </template>
-          </Column>
-          <Column field="subject_type" :header="t('Subject')">
-            <template #body="{ data }">
-              <span v-if="data.subject_type">{{ t(data.subject_type) }} #{{ data.subject_id }}</span>
-              <span v-else>—</span>
-            </template>
-          </Column>
-          <Column field="causer" :header="t('Caused By')">
-            <template #body="{ data }">
-              {{ data.causer?.full_name ?? t("System") }}
-            </template>
-          </Column>
-          <Column field="properties" :header="t('Changes')">
-            <template #body="{ data }">
-              <div v-if="data.event === 'updated' && data.properties?.attributes">
-                <div v-for="(value, key) in data.properties.attributes" :key="key" class="mb-1">
-                  <span class="font-semibold">{{ t(formatFieldName(key as string)) }}:</span>
-                  <span v-if="data.properties.old && data.properties.old[key] !== undefined" class="text-red-500 line-through mr-2">
-                    {{ data.properties.old[key] }}
-                  </span>
-                  <span class="text-green-600">{{ value }}</span>
-                </div>
-              </div>
-              <span v-else>—</span>
-            </template>
-          </Column>
-          <Column field="created_at" :header="t('Date')" sortable />
-        </DataTable>
-      </template>
-    </Card>
-  </div>
-</template>
-
 <script setup lang="ts">
 import AppLayout from "@layouts/admin.vue";
 
@@ -85,15 +7,15 @@ import { DataTable, Card, Column, InputText, IconField, InputIcon, Tag, Select, 
 
 import { useI18n } from "vue-i18n";
 import { useActivityLogClient } from "@composables/useActivityLogClient";
-import { type ActivityLog } from "@app-types/activity-log-types";
-
-// Set composables
-const { t } = useI18n();
+import type { ActivityLog } from "@app-types/activity-log-types";
 
 // Layout
 defineOptions({
   layout: AppLayout,
 });
+
+// Set composables
+const { t } = useI18n();
 
 // Pagination
 const pagination = ref({
@@ -203,3 +125,81 @@ watch(eventFilter, () => {
   fetchActivityLogs();
 });
 </script>
+
+<template>
+  <div>
+    <div class="flex flex-row justify-between mb-3">
+      <h2 class="text-2xl font-bold flex items-end m-0">
+        {{ t("Activity Log") }}
+      </h2>
+    </div>
+    <Card>
+      <template #content>
+        <DataTable
+          :value="activities"
+          resizable-columns
+          lazy
+          :total-records="pagination.total"
+          :rows="pagination.perPage"
+          :first="pagination.first"
+          :loading="loading"
+          paginator
+          sort-field="created_at"
+          :sort-order="-1"
+          @page="onPage($event)"
+          @sort="onSort($event)"
+        >
+          <template #empty>
+            {{ t("No activity found") }}
+          </template>
+          <template #header>
+            <div class="grid grid-cols-12 gap-4">
+              <div class="lg:col-span-3 md:col-span-4 col-span-12">
+                <Select v-model="eventFilter" :options="eventOptions" option-label="label" option-value="value" class="w-full" />
+              </div>
+              <div class="flex lg:col-span-3 lg:col-start-10 md:col-span-4 md:col-start-9 col-span-12 md:justify-end justify-center">
+                <IconField icon-position="left" class="w-full">
+                  <InputIcon class="fa fa-search" />
+                  <InputText v-model="pagination.filter" :placeholder="t('Search')" class="w-full" />
+                </IconField>
+              </div>
+            </div>
+          </template>
+          <Column field="event" :header="t('Event')">
+            <template #body="{ data }">
+              <Tag :severity="eventSeverity(data.event)">
+                {{ t(eventLabel(data.event)) }}
+              </Tag>
+            </template>
+          </Column>
+          <Column field="subject_type" :header="t('Subject')">
+            <template #body="{ data }">
+              <span v-if="data.subject_type">{{ t(data.subject_type) }} #{{ data.subject_id }}</span>
+              <span v-else>—</span>
+            </template>
+          </Column>
+          <Column field="causer" :header="t('Caused By')">
+            <template #body="{ data }">
+              {{ data.causer?.full_name ?? t("System") }}
+            </template>
+          </Column>
+          <Column field="properties" :header="t('Changes')">
+            <template #body="{ data }">
+              <div v-if="data.event === 'updated' && data.properties?.attributes">
+                <div v-for="(value, key) in data.properties.attributes" :key="key" class="mb-1">
+                  <span class="font-semibold">{{ t(formatFieldName(key as string)) }}:</span>
+                  <span v-if="data.properties.old && data.properties.old[key] !== undefined" class="text-red-500 line-through mr-2">
+                    {{ data.properties.old[key] }}
+                  </span>
+                  <span class="text-green-600">{{ value }}</span>
+                </div>
+              </div>
+              <span v-else>—</span>
+            </template>
+          </Column>
+          <Column field="created_at" :header="t('Date')" sortable />
+        </DataTable>
+      </template>
+    </Card>
+  </div>
+</template>

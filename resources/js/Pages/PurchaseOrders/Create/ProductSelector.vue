@@ -1,86 +1,3 @@
-<template>
-  <div>
-    <Dialog
-      v-model:visible="showProductModal"
-      modal
-      position="top"
-      class="!mt-8"
-      :style="{ width: '50rem' }"
-      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-      :closable="false"
-    >
-      <template #default>
-        <div class="flex flex-col">
-          <div class="form-group mt-2">
-            <label for="product">Product</label>
-            <Select
-              id="product"
-              v-model="product"
-              class="w-full"
-              :options="products"
-              option-label="name"
-              filter
-              :invalid="productState === false"
-            />
-            <small v-if="productState === false" class="text-red-400 dark:text-red-300">
-              {{ $t("validations.required") }}
-            </small>
-          </div>
-          <div class="flex flex-col md:flex-row justify-around items-center gap-2 mt-2">
-            <div class="w-full">
-              <div class="form-group">
-                <label for="quantity">Quantity</label>
-                <InputNumber
-                  id="quantity"
-                  v-model="quantity"
-                  class="w-full"
-                  show-buttons
-                  :step="1"
-                  :min="1"
-                  :invalid="quantityState === false"
-                />
-                <small v-if="quantityState === false" class="text-red-400 dark:text-red-300">
-                  {{ $t("validations.required") }}
-                </small>
-              </div>
-            </div>
-            <div class="w-full">
-              <div class="form-group">
-                <label for="price">Unit Price</label>
-                <InputNumber
-                  id="price"
-                  v-model="price"
-                  class="w-full"
-                  mode="currency"
-                  currency="BOB"
-                  show-buttons
-                  :invalid="priceState === false"
-                  :step="0.5"
-                />
-                <small v-if="priceState === false" class="text-red-400 dark:text-red-300">
-                  {{ $t("validations.required") }}
-                </small>
-              </div>
-            </div>
-            <div class="w-full">
-              <div class="form-group">
-                <label for="total">Total</label>
-                <InputNumber id="total" v-model="total" class="w-full" disabled mode="currency" currency="BOB" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <PButton label="Cancel" icon="fa fa-times" outlined @click="closeProductModal" />
-          <PButton label="Save" icon="fa fa-save" @click="saveProduct" />
-        </div>
-      </template>
-    </Dialog>
-  </div>
-</template>
-
 <script>
 import { Dialog, Select, InputNumber, InputText, Button as PButton } from "primevue";
 
@@ -191,3 +108,86 @@ export default {
   },
 };
 </script>
+
+<template>
+  <div>
+    <Dialog
+      v-model:visible="showProductModal"
+      modal
+      position="top"
+      class="!mt-8"
+      :style="{ width: '50rem' }"
+      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+      :closable="false"
+    >
+      <template #default>
+        <div class="flex flex-col">
+          <div class="form-group mt-2">
+            <label for="product">Product</label>
+            <Select
+              id="product"
+              v-model="product"
+              class="w-full"
+              :options="products"
+              option-label="name"
+              filter
+              :invalid="productState === false"
+            />
+            <small v-if="productState === false" class="text-red-400 dark:text-red-300">
+              {{ $t("validations.required") }}
+            </small>
+          </div>
+          <div class="flex flex-col md:flex-row justify-around items-center gap-2 mt-2">
+            <div class="w-full">
+              <div class="form-group">
+                <label for="quantity">Quantity</label>
+                <InputNumber
+                  id="quantity"
+                  v-model="quantity"
+                  class="w-full"
+                  show-buttons
+                  :step="1"
+                  :min="1"
+                  :invalid="quantityState === false"
+                />
+                <small v-if="quantityState === false" class="text-red-400 dark:text-red-300">
+                  {{ $t("validations.required") }}
+                </small>
+              </div>
+            </div>
+            <div class="w-full">
+              <div class="form-group">
+                <label for="price">Unit Price</label>
+                <InputNumber
+                  id="price"
+                  v-model="price"
+                  class="w-full"
+                  mode="currency"
+                  currency="BOB"
+                  show-buttons
+                  :invalid="priceState === false"
+                  :step="0.5"
+                />
+                <small v-if="priceState === false" class="text-red-400 dark:text-red-300">
+                  {{ $t("validations.required") }}
+                </small>
+              </div>
+            </div>
+            <div class="w-full">
+              <div class="form-group">
+                <label for="total">Total</label>
+                <InputNumber id="total" v-model="total" class="w-full" disabled mode="currency" currency="BOB" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <PButton label="Cancel" icon="fa fa-times" outlined @click="closeProductModal" />
+          <PButton label="Save" icon="fa fa-save" @click="saveProduct" />
+        </div>
+      </template>
+    </Dialog>
+  </div>
+</template>

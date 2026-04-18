@@ -1,3 +1,135 @@
+<script setup lang="ts">
+import { Button, Card, InputText, Select, AutoComplete, Avatar, Badge, useToast } from "primevue";
+
+import { router } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/yup";
+import { object, string } from "yup";
+import { route } from "ziggy-js";
+import { ref, nextTick } from "vue";
+import AppLayout from "@layouts/admin.vue";
+
+interface SimpleUser {
+  id: number;
+  full_name: string;
+  email: string;
+}
+
+// Layout
+defineOptions({ layout: AppLayout });
+// Props from Inertia
+const props = defineProps<{
+  store: {
+    id: number;
+    name: string;
+    code: string;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    zip_code: string | null;
+    phone: string | null;
+    email: string | null;
+    status: string;
+    deleted_at: string | null;
+    users?: SimpleUser[];
+  };
+  availableUsers: SimpleUser[];
+}>();
+// Set composables
+const toast = useToast();
+const { t } = useI18n();
+
+// Schema
+const schema = toTypedSchema(
+  object({
+    name: string().required().max(100),
+    code: string().required().max(20),
+    address: string().nullable().optional().max(255),
+    city: string().nullable().optional().max(100),
+    state: string().nullable().optional().max(100),
+    zip_code: string().nullable().optional().max(20),
+    phone: string().nullable().optional().max(30),
+    email: string().nullable().optional().email().max(150),
+    status: string().required().oneOf(["active", "inactive"]),
+  }),
+);
+
+const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    name: props.store.name,
+    code: props.store.code,
+    address: props.store.address ?? "",
+    city: props.store.city ?? "",
+    state: props.store.state ?? "",
+    zip_code: props.store.zip_code ?? "",
+    phone: props.store.phone ?? "",
+    email: props.store.email ?? "",
+    status: props.store.status,
+  },
+});
+
+const [name, nameAttrs] = defineField("name");
+const [code, codeAttrs] = defineField("code");
+const [address, addressAttrs] = defineField("address");
+const [city, cityAttrs] = defineField("city");
+const [state, stateAttrs] = defineField("state");
+const [zipCode, zipCodeAttrs] = defineField("zip_code");
+const [phone, phoneAttrs] = defineField("phone");
+const [email, emailAttrs] = defineField("email");
+const [status, statusAttrs] = defineField("status");
+
+// User assignment (local state, submitted with form — same pattern as Roles Edit)
+const assignedUsers = ref<SimpleUser[]>([...(props.store.users ?? [])]);
+const userSearch = ref<SimpleUser | null>(null);
+const filteredUsers = ref<SimpleUser[]>([]);
+
+const onSearchUsers = (event: { query: string }) => {
+  const q = event.query.toLowerCase();
+  filteredUsers.value = props.availableUsers.filter(
+    (u) => !assignedUsers.value.find((a) => a.id === u.id) && (u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)),
+  );
+};
+
+const onAddUser = async (event: { value: SimpleUser }) => {
+  if (!assignedUsers.value.find((u) => u.id === event.value.id)) {
+    assignedUsers.value.push(event.value);
+  }
+  await nextTick();
+  userSearch.value = null;
+};
+
+const removeUser = (id: number) => {
+  assignedUsers.value = assignedUsers.value.filter((u) => u.id !== id);
+};
+
+// Submit — sends user IDs along with store data (same as Roles Edit)
+const submit = handleSubmit((values) => {
+  router.put(
+    route("stores.update", props.store.id),
+    {
+      ...values,
+      users: assignedUsers.value.map((u) => u.id),
+    },
+    {
+      onSuccess: () => {
+        router.visit(route("stores"));
+      },
+      onError: (errs) => {
+        setErrors(errs);
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: t(Object.values(errs)[0] ?? "An error occurred"),
+          life: 3000,
+        });
+      },
+    },
+  );
+});
+</script>
+
 <template>
   <div>
     <div class="flex justify-between mb-3">
@@ -160,137 +292,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { Button, Card, InputText, Select, AutoComplete, Avatar, Badge, useToast } from "primevue";
-
-import { router } from "@inertiajs/vue3";
-import { useI18n } from "vue-i18n";
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/yup";
-import { object, string } from "yup";
-import { route } from "ziggy-js";
-import { ref, nextTick } from "vue";
-import AppLayout from "@layouts/admin.vue";
-
-interface SimpleUser {
-  id: number;
-  full_name: string;
-  email: string;
-}
-
-// Set composables
-const toast = useToast();
-const { t } = useI18n();
-
-// Layout
-defineOptions({ layout: AppLayout });
-
-// Props from Inertia
-const props = defineProps<{
-  store: {
-    id: number;
-    name: string;
-    code: string;
-    address: string | null;
-    city: string | null;
-    state: string | null;
-    zip_code: string | null;
-    phone: string | null;
-    email: string | null;
-    status: string;
-    deleted_at: string | null;
-    users?: SimpleUser[];
-  };
-  availableUsers: SimpleUser[];
-}>();
-
-// Schema
-const schema = toTypedSchema(
-  object({
-    name: string().required().max(100),
-    code: string().required().max(20),
-    address: string().nullable().optional().max(255),
-    city: string().nullable().optional().max(100),
-    state: string().nullable().optional().max(100),
-    zip_code: string().nullable().optional().max(20),
-    phone: string().nullable().optional().max(30),
-    email: string().nullable().optional().email().max(150),
-    status: string().required().oneOf(["active", "inactive"]),
-  }),
-);
-
-const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
-  validationSchema: schema,
-  initialValues: {
-    name: props.store.name,
-    code: props.store.code,
-    address: props.store.address ?? "",
-    city: props.store.city ?? "",
-    state: props.store.state ?? "",
-    zip_code: props.store.zip_code ?? "",
-    phone: props.store.phone ?? "",
-    email: props.store.email ?? "",
-    status: props.store.status,
-  },
-});
-
-const [name, nameAttrs] = defineField("name");
-const [code, codeAttrs] = defineField("code");
-const [address, addressAttrs] = defineField("address");
-const [city, cityAttrs] = defineField("city");
-const [state, stateAttrs] = defineField("state");
-const [zipCode, zipCodeAttrs] = defineField("zip_code");
-const [phone, phoneAttrs] = defineField("phone");
-const [email, emailAttrs] = defineField("email");
-const [status, statusAttrs] = defineField("status");
-
-// User assignment (local state, submitted with form — same pattern as Roles Edit)
-const assignedUsers = ref<SimpleUser[]>([...(props.store.users ?? [])]);
-const userSearch = ref<SimpleUser | null>(null);
-const filteredUsers = ref<SimpleUser[]>([]);
-
-const onSearchUsers = (event: { query: string }) => {
-  const q = event.query.toLowerCase();
-  filteredUsers.value = props.availableUsers.filter(
-    (u) => !assignedUsers.value.find((a) => a.id === u.id) && (u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)),
-  );
-};
-
-const onAddUser = async (event: { value: SimpleUser }) => {
-  if (!assignedUsers.value.find((u) => u.id === event.value.id)) {
-    assignedUsers.value.push(event.value);
-  }
-  await nextTick();
-  userSearch.value = null;
-};
-
-const removeUser = (id: number) => {
-  assignedUsers.value = assignedUsers.value.filter((u) => u.id !== id);
-};
-
-// Submit — sends user IDs along with store data (same as Roles Edit)
-const submit = handleSubmit((values) => {
-  router.put(
-    route("stores.update", props.store.id),
-    {
-      ...values,
-      users: assignedUsers.value.map((u) => u.id),
-    },
-    {
-      onSuccess: () => {
-        router.visit(route("stores"));
-      },
-      onError: (errs) => {
-        setErrors(errs);
-        toast.add({
-          severity: "error",
-          summary: t("Error"),
-          detail: t(Object.values(errs)[0] ?? "An error occurred"),
-          life: 3000,
-        });
-      },
-    },
-  );
-});
-</script>

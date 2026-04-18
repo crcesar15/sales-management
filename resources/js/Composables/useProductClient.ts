@@ -1,12 +1,12 @@
-import { type Product } from "@app-types/product-types";
+import type { Product } from "@app-types/product-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
-import { type AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 
 export function useProductClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchProductsApi = async <T = any>(queryParameters?: string): Promise<AxiosResponse<T>> => {
+  const fetchProductsApi = async <T = unknown>(queryParameters?: string): Promise<AxiosResponse<T>> => {
     let url: string = route("api.v1.products");
 
     if (queryParameters) {

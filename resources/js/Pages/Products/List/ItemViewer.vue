@@ -1,3 +1,50 @@
+<script setup lang="ts">
+import { Dialog, Galleria, Button, Tag, Badge, DataTable, Column, Divider } from "primevue";
+import { computed } from "vue";
+import type { ProductListResponse } from "@/Types/product-types";
+import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
+import { useI18n } from "vue-i18n";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+
+const props = defineProps<{
+  product: ProductListResponse | null;
+}>();
+
+const showDialog = defineModel<boolean>("showDialog", {
+  default: false,
+});
+
+const { t } = useI18n();
+const { formatCurrency } = useCurrencyFormatter();
+
+const productMedia = computed(() => props.product?.media ?? []);
+
+const galleriaResponsiveOptions = [
+  { breakpoint: "850px", numVisible: 3 },
+  { breakpoint: "500px", numVisible: 2 },
+];
+
+const formatDate = (dateStr?: string): string => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const goToEdit = () => {
+  if (props.product) {
+    router.visit(route("products.edit", { product: props.product.id }));
+  }
+};
+
+const closeModal = () => {
+  showDialog.value = false;
+};
+</script>
+
 <template>
   <Dialog
     v-model:visible="showDialog"
@@ -175,50 +222,3 @@
     </template>
   </Dialog>
 </template>
-
-<script setup lang="ts">
-import { Dialog, Galleria, Button, Tag, Badge, DataTable, Column, Divider } from "primevue";
-import { computed } from "vue";
-import { type ProductListResponse } from "@/Types/product-types";
-import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import { useI18n } from "vue-i18n";
-import { router } from "@inertiajs/vue3";
-import { route } from "ziggy-js";
-
-const props = defineProps<{
-  product: ProductListResponse | null;
-}>();
-
-const showDialog = defineModel<boolean>("showDialog", {
-  default: false,
-});
-
-const { t } = useI18n();
-const { formatCurrency } = useCurrencyFormatter();
-
-const productMedia = computed(() => props.product?.media ?? []);
-
-const galleriaResponsiveOptions = [
-  { breakpoint: "850px", numVisible: 3 },
-  { breakpoint: "500px", numVisible: 2 },
-];
-
-const formatDate = (dateStr?: string): string => {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const goToEdit = () => {
-  if (props.product) {
-    router.visit(route("products.edit", { product: props.product.id }));
-  }
-};
-
-const closeModal = () => {
-  showDialog.value = false;
-};
-</script>

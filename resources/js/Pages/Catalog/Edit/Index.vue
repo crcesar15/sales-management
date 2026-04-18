@@ -1,163 +1,3 @@
-<template>
-  <div>
-    <div class="flex justify-between mb-3">
-      <div class="flex">
-        <PButton icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="$inertia.visit(route('catalog'))" />
-        <h4 class="text-2xl font-bold flex items-center m-0">
-          {{ $t("Edit Vendors") }}
-        </h4>
-      </div>
-      <div class="flex flex-col justify-center">
-        <PButton icon="fa fa-save" :label="$t('Save')" style="text-transform: uppercase" raised @click="submit()" />
-      </div>
-    </div>
-    <div class="grid grid-cols-12 gap-4">
-      <div class="col-span-12">
-        <Card class="mb-4">
-          <template #title>
-            {{ $t("Product") }}
-          </template>
-          <template #content>
-            <div class="grid grid-cols-12 gap-4">
-              <div class="flex flex-col md:col-span-6 col-span-12">
-                <label for="name">{{ $t("Name") }}</label>
-                <InputText
-                  id="name"
-                  :value="variant.name === variant.product.name ? variant.name : `${variant.product.name} - ${variant.name}`"
-                  disabled
-                />
-              </div>
-              <div class="flex flex-col md:col-span-6 col-span-12">
-                <label for="description">{{ $t("Description") }}</label>
-                <Textarea id="description" rows="1" :value="variant.product.description" disabled />
-              </div>
-              <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
-                <label for="brand">{{ $t("Brand") }}</label>
-                <InputText id="brand" :value="variant.product.brand.name" disabled />
-              </div>
-              <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
-                <label for="categories">{{ $t("Categories") }}</label>
-                <InputText id="categories" :value="variant.product.categories.map((category) => category.name).join(', ')" disabled />
-              </div>
-              <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
-                <label for="identifier">{{ $t("Bar Code or Identifier") }}</label>
-                <InputText id="identifier" :value="variant.identifier" disabled />
-              </div>
-            </div>
-          </template>
-        </Card>
-        <Card>
-          <template #title>
-            <div class="flex justify-between mb-3">
-              <div>
-                {{ $t("Vendors") }}
-              </div>
-              <div>
-                <PButton icon="fa fa-plus" class="uppercase" :label="$t('Add Vendor')" @click="addVendor()" />
-              </div>
-            </div>
-          </template>
-          <template #content>
-            <DataTable :value="catalog" table-class="border-t" resizable-columns>
-              <template #empty>
-                <p class="text-red-400 dark:text-red-300">
-                  {{ $t("At least one provided must be added") }}
-                </p>
-              </template>
-              <Column field="vendor" :header="$t('Name')">
-                <template #body="slotProps">
-                  <div class="flex flex-col">
-                    <Select
-                      v-model="slotProps.data.vendor"
-                      class="w-full"
-                      :options="vendors"
-                      :placeholder="$t('Vendor')"
-                      option-label="fullname"
-                      option-value="id"
-                      filter
-                      :loading="slotProps.data.vendorsLoading"
-                      :fluid="true"
-                      :invalid="v$.catalog.$each.$response.$errors[slotProps.index].vendor.length > 0"
-                      @filter="searchVendors"
-                    />
-                    <small
-                      v-if="v$.catalog.$each.$response.$errors[slotProps.index].vendor.length > 0"
-                      class="text-red-400 dark:text-red-300"
-                    >
-                      {{ v$.catalog.$each.$response.$errors[slotProps.index].vendor[0].$message }}
-                    </small>
-                  </div>
-                </template>
-              </Column>
-              <Column field="price" :header="$t('Price')">
-                <template #body="slotProps">
-                  <div class="flex flex-col">
-                    <InputNumber
-                      v-model="slotProps.data.price"
-                      class="w-full"
-                      mode="currency"
-                      currency="BOB"
-                      :invalid="v$.catalog.$each.$response.$errors[slotProps.index].price.length > 0"
-                    />
-                    <small
-                      v-if="v$.catalog.$each.$response.$errors[slotProps.index].price.length > 0"
-                      class="text-red-400 dark:text-red-300"
-                    >
-                      {{ v$.catalog.$each.$response.$errors[slotProps.index].price[0].$message }}
-                    </small>
-                  </div>
-                </template>
-              </Column>
-              <Column field="payment_terms" :header="$t('Payment Term')">
-                <template #body="slotProps">
-                  <div class="flex flex-col">
-                    <Select
-                      v-model="slotProps.data.payment_terms"
-                      class="w-full"
-                      option-label="label"
-                      option-value="value"
-                      :options="[
-                        { label: $t('Cash'), value: 'debit' },
-                        { label: $t('Credit'), value: 'credit' },
-                        { label: $t('Both'), value: 'both' },
-                      ]"
-                      :invalid="v$.catalog.$each.$response.$errors[slotProps.index].payment_terms.length > 0"
-                    />
-                    <small
-                      v-if="v$.catalog.$each.$response.$errors[slotProps.index].payment_terms.length > 0"
-                      class="text-red-400 dark:text-red-300"
-                    >
-                      {{ v$.catalog.$each.$response.$errors[slotProps.index].payment_terms[0].$message }}
-                    </small>
-                  </div>
-                </template>
-              </Column>
-              <Column field="details" :header="$t('Details')">
-                <template #body="slotProps">
-                  <Textarea v-model="slotProps.data.details" class="w-full" rows="1" />
-                </template>
-              </Column>
-              <Column field="actions" :header="$t('Actions')" header-class="flex justify-center" class="flex justify-center">
-                <template #body="slotProps">
-                  <PButton
-                    v-tooltip.top="$t('Delete')"
-                    icon="fa fa-trash"
-                    text
-                    raised
-                    rounded
-                    class="mb-2"
-                    @click="removeVendor(slotProps.data)"
-                  />
-                </template>
-              </Column>
-            </DataTable>
-          </template>
-        </Card>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script>
 import Card from "primevue/card";
 import PButton from "primevue/button";
@@ -353,3 +193,163 @@ export default {
   },
 };
 </script>
+
+<template>
+  <div>
+    <div class="flex justify-between mb-3">
+      <div class="flex">
+        <PButton icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="$inertia.visit(route('catalog'))" />
+        <h4 class="text-2xl font-bold flex items-center m-0">
+          {{ $t("Edit Vendors") }}
+        </h4>
+      </div>
+      <div class="flex flex-col justify-center">
+        <PButton icon="fa fa-save" :label="$t('Save')" style="text-transform: uppercase" raised @click="submit()" />
+      </div>
+    </div>
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12">
+        <Card class="mb-4">
+          <template #title>
+            {{ $t("Product") }}
+          </template>
+          <template #content>
+            <div class="grid grid-cols-12 gap-4">
+              <div class="flex flex-col md:col-span-6 col-span-12">
+                <label for="name">{{ $t("Name") }}</label>
+                <InputText
+                  id="name"
+                  :value="variant.name === variant.product.name ? variant.name : `${variant.product.name} - ${variant.name}`"
+                  disabled
+                />
+              </div>
+              <div class="flex flex-col md:col-span-6 col-span-12">
+                <label for="description">{{ $t("Description") }}</label>
+                <Textarea id="description" rows="1" :value="variant.product.description" disabled />
+              </div>
+              <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
+                <label for="brand">{{ $t("Brand") }}</label>
+                <InputText id="brand" :value="variant.product.brand.name" disabled />
+              </div>
+              <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
+                <label for="categories">{{ $t("Categories") }}</label>
+                <InputText id="categories" :value="variant.product.categories.map((category) => category.name).join(', ')" disabled />
+              </div>
+              <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12">
+                <label for="identifier">{{ $t("Bar Code or Identifier") }}</label>
+                <InputText id="identifier" :value="variant.identifier" disabled />
+              </div>
+            </div>
+          </template>
+        </Card>
+        <Card>
+          <template #title>
+            <div class="flex justify-between mb-3">
+              <div>
+                {{ $t("Vendors") }}
+              </div>
+              <div>
+                <PButton icon="fa fa-plus" class="uppercase" :label="$t('Add Vendor')" @click="addVendor()" />
+              </div>
+            </div>
+          </template>
+          <template #content>
+            <DataTable :value="catalog" table-class="border-t" resizable-columns>
+              <template #empty>
+                <p class="text-red-400 dark:text-red-300">
+                  {{ $t("At least one provided must be added") }}
+                </p>
+              </template>
+              <Column field="vendor" :header="$t('Name')">
+                <template #body="slotProps">
+                  <div class="flex flex-col">
+                    <Select
+                      v-model="slotProps.data.vendor"
+                      class="w-full"
+                      :options="vendors"
+                      :placeholder="$t('Vendor')"
+                      option-label="fullname"
+                      option-value="id"
+                      filter
+                      :loading="slotProps.data.vendorsLoading"
+                      :fluid="true"
+                      :invalid="v$.catalog.$each.$response.$errors[slotProps.index].vendor.length > 0"
+                      @filter="searchVendors"
+                    />
+                    <small
+                      v-if="v$.catalog.$each.$response.$errors[slotProps.index].vendor.length > 0"
+                      class="text-red-400 dark:text-red-300"
+                    >
+                      {{ v$.catalog.$each.$response.$errors[slotProps.index].vendor[0].$message }}
+                    </small>
+                  </div>
+                </template>
+              </Column>
+              <Column field="price" :header="$t('Price')">
+                <template #body="slotProps">
+                  <div class="flex flex-col">
+                    <InputNumber
+                      v-model="slotProps.data.price"
+                      class="w-full"
+                      mode="currency"
+                      currency="BOB"
+                      :invalid="v$.catalog.$each.$response.$errors[slotProps.index].price.length > 0"
+                    />
+                    <small
+                      v-if="v$.catalog.$each.$response.$errors[slotProps.index].price.length > 0"
+                      class="text-red-400 dark:text-red-300"
+                    >
+                      {{ v$.catalog.$each.$response.$errors[slotProps.index].price[0].$message }}
+                    </small>
+                  </div>
+                </template>
+              </Column>
+              <Column field="payment_terms" :header="$t('Payment Term')">
+                <template #body="slotProps">
+                  <div class="flex flex-col">
+                    <Select
+                      v-model="slotProps.data.payment_terms"
+                      class="w-full"
+                      option-label="label"
+                      option-value="value"
+                      :options="[
+                        { label: $t('Cash'), value: 'debit' },
+                        { label: $t('Credit'), value: 'credit' },
+                        { label: $t('Both'), value: 'both' },
+                      ]"
+                      :invalid="v$.catalog.$each.$response.$errors[slotProps.index].payment_terms.length > 0"
+                    />
+                    <small
+                      v-if="v$.catalog.$each.$response.$errors[slotProps.index].payment_terms.length > 0"
+                      class="text-red-400 dark:text-red-300"
+                    >
+                      {{ v$.catalog.$each.$response.$errors[slotProps.index].payment_terms[0].$message }}
+                    </small>
+                  </div>
+                </template>
+              </Column>
+              <Column field="details" :header="$t('Details')">
+                <template #body="slotProps">
+                  <Textarea v-model="slotProps.data.details" class="w-full" rows="1" />
+                </template>
+              </Column>
+              <Column field="actions" :header="$t('Actions')" header-class="flex justify-center" class="flex justify-center">
+                <template #body="slotProps">
+                  <PButton
+                    v-tooltip.top="$t('Delete')"
+                    icon="fa fa-trash"
+                    text
+                    raised
+                    rounded
+                    class="mb-2"
+                    @click="removeVendor(slotProps.data)"
+                  />
+                </template>
+              </Column>
+            </DataTable>
+          </template>
+        </Card>
+      </div>
+    </div>
+  </div>
+</template>

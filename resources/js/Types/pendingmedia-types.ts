@@ -1,4 +1,4 @@
-import { type Media } from "./media-types";
+import type { Media } from "./media-types";
 
 export interface PendingMedia {
   // columns

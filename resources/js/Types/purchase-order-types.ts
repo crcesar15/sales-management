@@ -1,6 +1,6 @@
-import { type User } from "./user-types";
-import { type Vendor } from "./vendor-types";
-import { type Product } from "./product-types";
+import type { User } from "./user-types";
+import type { Vendor } from "./vendor-types";
+import type { Product } from "./product-types";
 
 export interface PurchaseOrder {
   // columns

@@ -1,12 +1,12 @@
-import { type SettingPayload } from "@app-types/setting-types";
+import type { SettingPayload } from "@app-types/setting-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
-import { type AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 
 export function useSettingClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchSettingsApi = async <T = any>(queryParameters?: string): Promise<AxiosResponse<T>> => {
+  const fetchSettingsApi = async <T = unknown>(queryParameters?: string): Promise<AxiosResponse<T>> => {
     let url: string = route("api.v1.settings");
 
     if (queryParameters) {

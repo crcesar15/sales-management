@@ -1,3 +1,57 @@
+<script setup lang="ts">
+import { InputText, Password, Button, IconField, InputIcon, Toast, useToast } from "primevue";
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import { useAuthClient } from "@/Composables/useAuthClient";
+
+// Define props
+const props = defineProps<{
+  token: string;
+  email: string;
+}>();
+// Set composables
+const { t } = useI18n();
+const { resetPasswordApi } = useAuthClient();
+const toast = useToast();
+
+// Form variables
+const email = ref(props.email);
+const password = ref("");
+const passwordConfirmation = ref("");
+const btnLoading = ref(false);
+
+// Reset Password function
+const resetPassword = async () => {
+  btnLoading.value = true;
+  try {
+    await resetPasswordApi({
+      email: email.value,
+      password: password.value,
+      password_confirmation: passwordConfirmation.value,
+      token: props.token,
+    });
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: t("Your password has been reset successfully."),
+      life: 3000,
+    });
+    router.visit(route("login"));
+  } catch (error: any) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: error.response?.data?.message || t("An error occurred while resetting your password."),
+      life: 5000,
+    });
+  } finally {
+    btnLoading.value = false;
+  }
+};
+</script>
+
 <template>
   <div class="flex min-h-screen">
     <!-- Left Panel: Branding (hidden on mobile) -->
@@ -120,58 +174,3 @@
     <Toast />
   </div>
 </template>
-
-<script setup lang="ts">
-import { InputText, Password, Button, IconField, InputIcon, Toast, useToast } from "primevue";
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-import { router } from "@inertiajs/vue3";
-import { route } from "ziggy-js";
-import { useAuthClient } from "@/Composables/useAuthClient";
-
-// Set composables
-const { t } = useI18n();
-const { resetPasswordApi } = useAuthClient();
-const toast = useToast();
-
-// Define props
-const props = defineProps<{
-  token: string;
-  email: string;
-}>();
-
-// Form variables
-const email = ref(props.email);
-const password = ref("");
-const passwordConfirmation = ref("");
-const btnLoading = ref(false);
-
-// Reset Password function
-const resetPassword = async () => {
-  btnLoading.value = true;
-  try {
-    await resetPasswordApi({
-      email: email.value,
-      password: password.value,
-      password_confirmation: passwordConfirmation.value,
-      token: props.token,
-    });
-    toast.add({
-      severity: "success",
-      summary: t("Success"),
-      detail: t("Your password has been reset successfully."),
-      life: 3000,
-    });
-    router.visit(route("login"));
-  } catch (error: any) {
-    toast.add({
-      severity: "error",
-      summary: t("Error"),
-      detail: error.response?.data?.message || t("An error occurred while resetting your password."),
-      life: 5000,
-    });
-  } finally {
-    btnLoading.value = false;
-  }
-};
-</script>
