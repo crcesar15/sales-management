@@ -1,3 +1,199 @@
+<script setup lang="ts">
+import {
+  DataTable,
+  Card,
+  Column,
+  Button,
+  InputText,
+  ConfirmDialog,
+  IconField,
+  InputIcon,
+  SelectButton,
+  Tag,
+  useToast,
+  useConfirm,
+  type DataTablePageEvent,
+  type DataTableSortEvent,
+} from "primevue";
+
+import AppLayout from "@layouts/admin.vue";
+import ItemViewer from "@pages/Products/List/ItemViewer.vue";
+import { useI18n } from "vue-i18n";
+import { computed, ref, watch } from "vue";
+import { router, useForm } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import type { ProductListResponse, ProductFilters } from "@/Types/product-types";
+import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
+
+defineOptions({ layout: AppLayout });
+const props = defineProps<{
+  products: {
+    data: ProductListResponse[];
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  };
+  filters: ProductFilters;
+}>();
+const toast = useToast();
+const confirm = useConfirm();
+const { t } = useI18n();
+const { formatCurrency } = useCurrencyFormatter();
+
+// Local filter/sort state
+const filter = ref(props.filters.filter ?? "");
+const status = ref(props.filters.status ?? "active");
+const sortField = ref(props.filters.order_by ?? "name");
+const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
+
+const statusOptions = computed(() => [
+  { label: t("Active"), value: "active" },
+  { label: t("Inactive"), value: "inactive" },
+  { label: t("Archived"), value: "archived" },
+]);
+
+// Formatted rows
+const products = computed(() => props.products.data);
+const expandedRows = ref<ProductListResponse[]>([]);
+
+// Debounced filter watch
+let filterTimer: ReturnType<typeof setTimeout>;
+watch(filter, (val) => {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => {
+    router.visit(route("products"), {
+      data: {
+        filter: val,
+        status: status.value,
+        order_by: sortField.value,
+        order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      },
+      preserveState: true,
+      replace: true,
+    });
+  }, 300);
+});
+
+watch(status, (val) => {
+  expandedRows.value = [];
+  router.visit(route("products"), {
+    data: {
+      status: val,
+      filter: filter.value,
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+    },
+    preserveState: true,
+    replace: true,
+  });
+});
+
+// Pagination & sorting
+const onPage = (event: DataTablePageEvent) => {
+  router.visit(route("products"), {
+    data: {
+      page: event.page + 1,
+      per_page: event.rows,
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      filter: filter.value,
+      status: status.value,
+    },
+    preserveState: true,
+    replace: true,
+  });
+};
+
+const onSort = (event: DataTableSortEvent) => {
+  sortField.value = typeof event.sortField === "string" ? event.sortField : "name";
+  sortOrder.value = event.sortOrder ?? 1;
+  router.visit(route("products"), {
+    data: {
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      filter: filter.value,
+      status: status.value,
+    },
+    preserveState: true,
+    replace: true,
+  });
+};
+
+// Expandable rows
+const isExpanded = (id: number) => expandedRows.value.some((p) => p.id === id);
+
+const toggleExpand = (product: ProductListResponse) => {
+  if (isExpanded(product.id)) {
+    expandedRows.value = expandedRows.value.filter((p) => p.id !== product.id);
+  } else {
+    expandedRows.value.push(product);
+  }
+};
+
+// Viewer
+const viewerToggle = ref(false);
+const selectedProduct = ref<ProductListResponse | null>(null);
+
+const viewProduct = (product: ProductListResponse) => {
+  selectedProduct.value = product;
+  viewerToggle.value = true;
+};
+
+// Edit
+const editProduct = (id: number) => {
+  router.visit(route("products.edit", { product: id }));
+};
+
+// Delete
+const deleteProduct = (id: number) => {
+  confirm.require({
+    message: t("Are you sure you want to delete this product?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Delete"),
+    rejectClass: "p-button-secondary",
+    accept: () => {
+      const form = useForm({});
+      form.delete(route("products.destroy", { product: id }), {
+        onSuccess: () => {
+          toast.add({ severity: "success", summary: t("Success"), detail: t("Product deleted successfully"), life: 3000 });
+        },
+        onError: () => {
+          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not delete product"), life: 3000 });
+        },
+      });
+    },
+  });
+};
+
+// Restore
+const restoreProduct = (id: number) => {
+  confirm.require({
+    message: t("Are you sure you want to restore this product?"),
+    header: t("Confirm"),
+    icon: "fas fa-exclamation-triangle",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Restore"),
+    rejectClass: "p-button-secondary",
+    accept: () => {
+      const form = useForm({});
+      form.put(route("products.restore", { id }), {
+        onSuccess: () => {
+          toast.add({ severity: "success", summary: t("Success"), detail: t("Product restored successfully"), life: 3000 });
+        },
+        onError: () => {
+          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not restore product"), life: 3000 });
+        },
+      });
+    },
+  });
+};
+</script>
+
 <template>
   <div>
     <div class="flex justify-between mb-3">
@@ -195,201 +391,3 @@
     <ItemViewer v-model:show-dialog="viewerToggle" :product="selectedProduct" />
   </div>
 </template>
-
-<script setup lang="ts">
-import {
-  DataTable,
-  Card,
-  Column,
-  Button,
-  InputText,
-  ConfirmDialog,
-  IconField,
-  InputIcon,
-  SelectButton,
-  Tag,
-  useToast,
-  useConfirm,
-  type DataTablePageEvent,
-  type DataTableSortEvent,
-} from "primevue";
-
-import AppLayout from "@layouts/admin.vue";
-import ItemViewer from "@pages/Products/List/ItemViewer.vue";
-import { useI18n } from "vue-i18n";
-import { computed, ref, watch } from "vue";
-import { router, useForm } from "@inertiajs/vue3";
-import { route } from "ziggy-js";
-import { type ProductListResponse, type ProductFilters } from "@/Types/product-types";
-import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-
-const toast = useToast();
-const confirm = useConfirm();
-const { t } = useI18n();
-const { formatCurrency } = useCurrencyFormatter();
-
-defineOptions({ layout: AppLayout });
-
-const props = defineProps<{
-  products: {
-    data: ProductListResponse[];
-    meta: {
-      current_page: number;
-      last_page: number;
-      per_page: number;
-      total: number;
-    };
-  };
-  filters: ProductFilters;
-}>();
-
-// Local filter/sort state
-const filter = ref(props.filters.filter ?? "");
-const status = ref(props.filters.status ?? "active");
-const sortField = ref(props.filters.order_by ?? "name");
-const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
-
-const statusOptions = computed(() => [
-  { label: t("Active"), value: "active" },
-  { label: t("Inactive"), value: "inactive" },
-  { label: t("Archived"), value: "archived" },
-]);
-
-// Formatted rows
-const products = computed(() => props.products.data);
-const expandedRows = ref<ProductListResponse[]>([]);
-
-// Debounced filter watch
-let filterTimer: ReturnType<typeof setTimeout>;
-watch(filter, (val) => {
-  clearTimeout(filterTimer);
-  filterTimer = setTimeout(() => {
-    router.visit(route("products"), {
-      data: {
-        filter: val,
-        status: status.value,
-        order_by: sortField.value,
-        order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      },
-      preserveState: true,
-      replace: true,
-    });
-  }, 300);
-});
-
-watch(status, (val) => {
-  expandedRows.value = [];
-  router.visit(route("products"), {
-    data: {
-      status: val,
-      filter: filter.value,
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-    },
-    preserveState: true,
-    replace: true,
-  });
-});
-
-// Pagination & sorting
-const onPage = (event: DataTablePageEvent) => {
-  router.visit(route("products"), {
-    data: {
-      page: event.page + 1,
-      per_page: event.rows,
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      filter: filter.value,
-      status: status.value,
-    },
-    preserveState: true,
-    replace: true,
-  });
-};
-
-const onSort = (event: DataTableSortEvent) => {
-  sortField.value = typeof event.sortField === "string" ? event.sortField : "name";
-  sortOrder.value = event.sortOrder ?? 1;
-  router.visit(route("products"), {
-    data: {
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      filter: filter.value,
-      status: status.value,
-    },
-    preserveState: true,
-    replace: true,
-  });
-};
-
-// Expandable rows
-const isExpanded = (id: number) => expandedRows.value.some((p) => p.id === id);
-
-const toggleExpand = (product: ProductListResponse) => {
-  if (isExpanded(product.id)) {
-    expandedRows.value = expandedRows.value.filter((p) => p.id !== product.id);
-  } else {
-    expandedRows.value.push(product);
-  }
-};
-
-// Viewer
-const viewerToggle = ref(false);
-const selectedProduct = ref<ProductListResponse | null>(null);
-
-const viewProduct = (product: ProductListResponse) => {
-  selectedProduct.value = product;
-  viewerToggle.value = true;
-};
-
-// Edit
-const editProduct = (id: number) => {
-  router.visit(route("products.edit", { product: id }));
-};
-
-// Delete
-const deleteProduct = (id: number) => {
-  confirm.require({
-    message: t("Are you sure you want to delete this product?"),
-    header: t("Confirm"),
-    icon: "fas fa-exclamation-triangle",
-    rejectLabel: t("Cancel"),
-    acceptLabel: t("Delete"),
-    rejectClass: "p-button-secondary",
-    accept: () => {
-      const form = useForm({});
-      form.delete(route("products.destroy", { product: id }), {
-        onSuccess: () => {
-          toast.add({ severity: "success", summary: t("Success"), detail: t("Product deleted successfully"), life: 3000 });
-        },
-        onError: () => {
-          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not delete product"), life: 3000 });
-        },
-      });
-    },
-  });
-};
-
-// Restore
-const restoreProduct = (id: number) => {
-  confirm.require({
-    message: t("Are you sure you want to restore this product?"),
-    header: t("Confirm"),
-    icon: "fas fa-exclamation-triangle",
-    rejectLabel: t("Cancel"),
-    acceptLabel: t("Restore"),
-    rejectClass: "p-button-secondary",
-    accept: () => {
-      const form = useForm({});
-      form.put(route("products.restore", { id }), {
-        onSuccess: () => {
-          toast.add({ severity: "success", summary: t("Success"), detail: t("Product restored successfully"), life: 3000 });
-        },
-        onError: () => {
-          toast.add({ severity: "error", summary: t("Error"), detail: t("Could not restore product"), life: 3000 });
-        },
-      });
-    },
-  });
-};
-</script>
