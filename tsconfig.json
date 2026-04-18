@@ -25,9 +25,9 @@
   },
   "include": [
     "resources/js/**/*",
-    "resources/js/**/*.d.ts",
-    "resources/**/*.vue",
-    "resources/**/**/*.vue"
+    "resources/js/**/*.vue",
+    "eslint.config.js",
+    "tests/**/*"
   ],
   "exclude": ["node_modules", "vendor"]
 }
