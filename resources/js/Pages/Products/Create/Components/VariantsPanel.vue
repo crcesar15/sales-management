@@ -6,6 +6,7 @@ import { ref } from "vue";
 import type { CreateVariant } from "@app-types/product-types";
 import ManualVariantDialog from "./ManualVariantDialog.vue";
 import VariantImageDialog from "./VariantImageDialog.vue";
+import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 
 const props = withDefaults(
   defineProps<{
@@ -36,9 +37,7 @@ const imageDialogVisible = ref(false);
 const editingImageVariant = ref<CreateVariant | null>(null);
 const selectedImageIds = ref<number[]>([]);
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("es-BO", { style: "currency", currency: "BOB" }).format(value);
-};
+const { formatCurrency } = useCurrencyFormatter();
 
 const getMediaThumb = (mediaId: number) => {
   return props.pendingMedia.find((m) => m.id === mediaId)?.thumb_url ?? "";
@@ -214,7 +213,7 @@ const onDeleteVariant = (data: CreateVariant) => {
         <!-- Price Column -->
         <Column field="price" :header="t('Price')">
           <template #body="{ data }">
-            {{ formatCurrency(data.price) }}
+            {{ formatCurrency(String(data.price)) }}
           </template>
         </Column>
 

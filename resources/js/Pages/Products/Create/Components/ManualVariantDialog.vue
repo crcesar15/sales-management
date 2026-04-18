@@ -4,6 +4,7 @@ import { Button, Dialog, InputNumber, InputText, Select, useToast } from "primev
 import { useI18n } from "vue-i18n";
 import { reactive, watch, computed } from "vue";
 import type { CreateVariant } from "@app-types/product-types";
+import { useAuth } from "@/Composables/useAuth";
 
 const props = defineProps<{
   options: Array<{ name: string; values: string[] }>;
@@ -18,6 +19,8 @@ const emit = defineEmits<{
 }>();
 const toast = useToast();
 const { t } = useI18n();
+const { getSetting } = useAuth();
+const currency = getSetting("finance", "currency") ?? "USD";
 
 const isEditing = computed(() => !!props.variant);
 
@@ -130,7 +133,7 @@ const onSubmit = () => {
           {{ t("Price") }}
           <span class="text-red-400">*</span>
         </label>
-        <InputNumber id="variant-price" v-model="form.price" mode="currency" currency="BOB" :min="0" fluid />
+        <InputNumber id="variant-price" v-model="form.price" mode="currency" :currency="currency" :min="0" fluid />
       </div>
 
       <!-- Stock -->

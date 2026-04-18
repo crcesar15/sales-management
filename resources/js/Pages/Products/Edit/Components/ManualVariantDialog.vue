@@ -6,6 +6,7 @@ import { useI18n } from "vue-i18n";
 import { reactive, ref, computed, watch } from "vue";
 import { route } from "ziggy-js";
 import type { ProductOption, ProductVariantInline } from "@app-types/product-types";
+import { useAuth } from "@/Composables/useAuth";
 
 const props = defineProps<{
   productId: number;
@@ -18,6 +19,8 @@ const emit = defineEmits<{
 }>();
 const toast = useToast();
 const { t } = useI18n();
+const { getSetting } = useAuth();
+const currency = getSetting("finance", "currency") ?? "USD";
 
 const form = reactive({
   price: 0,
@@ -156,7 +159,7 @@ const onSubmit = () => {
           {{ t("Price") }}
           <span class="text-red-400">*</span>
         </label>
-        <InputNumber id="variant-price" v-model="form.price" mode="currency" currency="BOB" :min="0" fluid />
+        <InputNumber id="variant-price" v-model="form.price" mode="currency" :currency="currency" :min="0" fluid />
       </div>
 
       <!-- Stock -->

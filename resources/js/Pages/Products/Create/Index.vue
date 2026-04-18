@@ -29,6 +29,7 @@ import AppLayout from "@layouts/admin.vue";
 import ProductImages from "@pages/Products/Components/ProductImages.vue";
 import OptionsEditor from "@pages/Products/Create/Components/OptionsEditor.vue";
 import VariantsPanel from "@pages/Products/Create/Components/VariantsPanel.vue";
+import { useAuth } from "@/Composables/useAuth";
 
 defineOptions({ layout: AppLayout });
 const props = defineProps<{
@@ -39,6 +40,8 @@ const props = defineProps<{
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
+const { getSetting } = useAuth();
+const currency = getSetting("finance", "currency") ?? "USD";
 configureYupLocale(t);
 
 // Product type selector
@@ -272,7 +275,7 @@ const onSubmit = handleSubmit((values) => {
                   v-model="price"
                   v-bind="priceAttrs"
                   mode="currency"
-                  currency="BOB"
+                  :currency="currency"
                   :class="{ 'p-invalid': errors.price }"
                 />
                 <small v-if="errors.price" class="text-red-400 dark:text-red-300">

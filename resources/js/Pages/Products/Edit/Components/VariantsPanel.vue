@@ -8,6 +8,7 @@ import { route } from "ziggy-js";
 import type { ProductMedia, ProductOption, ProductVariantInline } from "@app-types/product-types";
 import ManualVariantDialog from "./ManualVariantDialog.vue";
 import EditVariantImageDialog from "./EditVariantImageDialog.vue";
+import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 
 const props = withDefaults(
   defineProps<{
@@ -45,9 +46,7 @@ const rowClass = (data: ProductVariantInline) => {
   return isDefaultVariant(data) ? "bg-blue-50 dark:bg-blue-900/20" : "";
 };
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("es-BO", { style: "currency", currency: "BOB" }).format(value);
-};
+const { formatCurrency } = useCurrencyFormatter();
 
 const statusLabel = (status: string) => {
   const map: Record<string, string> = {
@@ -190,7 +189,7 @@ const onDeleteVariant = (data: ProductVariantInline) => {
         <!-- Price Column -->
         <Column field="price" :header="t('Price')">
           <template #body="{ data }">
-            {{ formatCurrency(data.price) }}
+            {{ formatCurrency(String(data.price)) }}
           </template>
         </Column>
 
