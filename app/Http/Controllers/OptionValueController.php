@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Products;
+namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Products\StoreOptionValueRequest;
 use App\Models\Product;
 use App\Models\ProductOption;
