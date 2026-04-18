@@ -85,6 +85,7 @@ final class ProductController extends Controller
             'measurementUnit',
             'media',
             'variants.values.option',
+            'variants.images',
             'options.values',
         ]);
 
@@ -105,8 +106,28 @@ final class ProductController extends Controller
                     'price' => (float) $v->price,
                     'stock' => $v->stock,
                     'barcode' => $v->barcode,
+                    'identifier' => $v->identifier,
                     'status' => $v->status,
+                    'values' => $v->values->map(fn ($val) => [
+                        'id' => $val->id,
+                        'value' => $val->value,
+                        'option_name' => $val->option?->name,
+                    ]),
+                    'images' => $v->images->map(fn ($img) => [
+                        'id' => $img->id,
+                        'thumb_url' => $img->getUrl('thumb'),
+                        'full_url' => $img->getUrl(),
+                    ]),
                 ]),
+                'options' => $product->options->map(fn ($o) => [
+                    'id' => $o->id,
+                    'name' => $o->name,
+                    'values' => $o->values->map(fn ($v) => [
+                        'id' => $v->id,
+                        'value' => $v->value,
+                    ]),
+                ]),
+                'has_variants' => $product->options()->exists(),
             ],
             'brands' => Brand::orderBy('name')->get(),
             'categories' => Category::orderBy('name')->get(),
@@ -128,7 +149,7 @@ final class ProductController extends Controller
         try {
             $this->productService->delete($product);
         } catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->withErrors($e->getMessage());
         }
 
         return redirect()->route('products');

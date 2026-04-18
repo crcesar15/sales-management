@@ -37,7 +37,7 @@ final class OptionValueController extends Controller
         try {
             $this->variantService->destroyOptionValue($value);
         } catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->withErrors($e->getMessage());
         }
 
         return redirect()->route('products.edit', $product);

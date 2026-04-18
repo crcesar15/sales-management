@@ -30,7 +30,7 @@ final class ProductVariantController extends Controller
         try {
             $this->variantService->generateVariants($product, $request->validated()['options']);
         } catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->withErrors($e->getMessage());
         }
 
         return redirect()->route('products.edit', $product);
@@ -41,7 +41,7 @@ final class ProductVariantController extends Controller
         try {
             $this->variantService->storeManual($product, $request->validated());
         } catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->withErrors($e->getMessage());
         }
 
         return redirect()->route('products.edit', $product);
