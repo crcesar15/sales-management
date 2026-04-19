@@ -9,11 +9,11 @@ Before a purchase order can be created, the system must know which variants a ve
 ## Requirements
 - Link a vendor to a product variant with pricing and purchasing terms
 - New columns added to existing `catalog` table via migration
-- `purchase_unit_id` — the unit in which the vendor sells (e.g., "box")
-- `conversion_factor` — how many base stock units are in one purchase unit (e.g., 1 box = 12 units)
+- `unit_id` — FK to `product_variant_units` (where type='purchase'), the packaging in which the vendor supplies (e.g., "Small Box", "Big Box")
+- `conversion_factor` is derived from the referenced `product_variant_units.conversion_factor` — no separate field on catalog
 - `minimum_order_quantity` — minimum units that must be ordered
 - `lead_time_days` — typical delivery lead time in days
-- Unique constraint: one entry per `vendor_id` + `product_variant_id`
+- Unique constraint: one entry per `vendor_id` + `product_variant_id` + `unit_id` (allows multiple packaging options per vendor-variant)
 - Status `active/inactive` controls visibility when creating purchase orders
 - Admin-only; requires `vendors.manage` permission
 
@@ -22,16 +22,19 @@ Before a purchase order can be created, the system must know which variants a ve
 - [ ] Catalog entries can be created, edited, and deactivated
 - [ ] Only `active` catalog entries appear when building a purchase order
 - [ ] Unique constraint prevents duplicate vendor+variant combinations
-- [ ] `conversion_factor` defaults to 1 when no purchase unit is set
+- [ ] `conversion_factor` defaults to 1 when no purchase unit is set (base unit)
+- [ ] `unit_id` references `product_variant_units` where type='purchase' — allows multiple catalog entries per vendor-variant (one per packaging option)
+- [ ] Vendor pricing (`price` on catalog) is per packaging option, independent of purchase unit
 - [ ] Deleting a product variant or vendor is blocked if catalog entries exist
 
 ## Dependencies
 - `vendors` table (Task 01)
 - `product_variants` table (Phase 1)
-- `measurement_units` table (Phase 1)
+- `product_variant_units` table (Phase 2, Task 05) — purchase unit definitions
 - Phase 4 Task 03 (Purchase Orders) reads this table for line item data
 
 ## Notes
-- Price in catalog = default price; PO snapshots the price at creation time
-- `conversion_factor` must be a positive integer ≥ 1
+- Price in catalog = default vendor price per packaging option; PO snapshots the price at creation time
+- `conversion_factor` comes from the referenced `product_variant_unit` — no separate field on catalog
+- A vendor can have multiple catalog entries for the same variant (one per purchase unit), e.g., "Small Box" and "Big Box" at different prices
 - Deactivating an entry does not affect existing POs

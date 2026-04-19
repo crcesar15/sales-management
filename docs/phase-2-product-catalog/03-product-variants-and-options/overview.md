@@ -124,7 +124,7 @@ When a user adds options to a product that currently has only the default varian
 | Dependency | Reason |
 |---|---|
 | Task 02 (Products) | Variants scoped to a product; default variant created there; `HasMedia` on Product; `media_product_variant` pivot |
-| Task 04 (Sale Units) | Sale units reference `product_variant_id` |
+| Task 05 (Product Units) | Variant units reference `product_variant_id` |
 | Task 01 (Measurement Units) | Base unit label derived from `product.measurement_unit` |
 | Phase 3 (Inventory) | Stock column written by inventory adjustments |
 
