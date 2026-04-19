@@ -71,4 +71,26 @@ final class VariantService
 
         return $query->paginate($perPage, ['*'], 'page', $page);
     }
+
+    /**
+     * @return LengthAwarePaginator<int, ProductVariant>
+     */
+    public function listAllVariants(
+        string $status = 'all',
+        string $filter = '',
+        string $orderBy = 'created_at',
+        string $orderDirection = 'desc',
+        int $perPage = 15,
+    ): LengthAwarePaginator {
+        return ProductVariant::query()
+            ->with(['product.brand', 'product.categories', 'values.option', 'images'])
+            ->when($status !== 'all', fn ($q) => $q->where('status', $status))
+            ->when($filter, fn ($q) => $q->whereHas(
+                'product',
+                fn ($pq) => $pq->where('name', 'like', "%{$filter}%")
+            ))
+            ->orderBy($orderBy, $orderDirection)
+            ->paginate($perPage)
+            ->withQueryString();
+    }
 }

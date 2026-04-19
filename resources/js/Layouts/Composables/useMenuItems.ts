@@ -48,6 +48,14 @@ export function useMenuItems() {
           to: "home",
         },
         {
+          key: "inventory-variants",
+          label: t("Variants"),
+          icon: "fa fa-boxes-stacked",
+          to: "inventory.variants",
+          can: "inventory.view",
+          routeUrl: route("inventory.variants"),
+        },
+        {
           key: "inventory-adjustments",
           label: t("Adjustments"),
           icon: "fa fa-sliders",

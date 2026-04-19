@@ -68,6 +68,10 @@ final class PermissionSeeder extends Seeder
             'activity logs' => [
                 PermissionsEnum::ACTIVITY_LOGS_VIEW->value,
             ],
+            'inventory' => [
+                PermissionsEnum::INVENTORY_VIEW->value,
+                PermissionsEnum::INVENTORY_EDIT->value,
+            ],
             'settings' => [
                 PermissionsEnum::SETTINGS_MANAGE->value,
             ],
@@ -77,7 +81,7 @@ final class PermissionSeeder extends Seeder
 
         foreach ($categories as $category => $permissions) {
             foreach ($permissions as $permission) {
-                Permission::create(['name' => $permission, 'category' => $category]);
+                Permission::firstOrCreate(['name' => $permission], ['category' => $category]);
             }
 
             $role->givePermissionTo($permissions);

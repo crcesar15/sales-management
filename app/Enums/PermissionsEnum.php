@@ -46,6 +46,9 @@ enum PermissionsEnum: string
     case STORE_DELETE = 'store.delete';
     case STORE_RESTORE = 'store.restore';
 
+    case INVENTORY_VIEW = 'inventory.view';
+    case INVENTORY_EDIT = 'inventory.edit';
+
     case SETTINGS_MANAGE = 'setting.manage';
 
     case ACTIVITY_LOGS_VIEW = 'activity_log.view';

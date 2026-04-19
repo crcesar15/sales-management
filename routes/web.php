@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\OptionValueController;
 use App\Http\Controllers\ProductController;
@@ -104,6 +105,10 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::put('/products/{product}/variants/{variant}/images', [ProductVariantController::class, 'syncImages'])->name('variant.images.sync');
 
     Route::get('/gallery', fn () => Inertia::render('Gallery/Index'))->name('gallery');
+
+    // Inventory Routes
+    Route::get('/inventory/variants', [InventoryController::class, 'index'])->name('inventory.variants');
+    Route::get('/products/{product}/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
 
     // Category Routes
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
