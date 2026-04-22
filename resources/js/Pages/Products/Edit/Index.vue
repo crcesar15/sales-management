@@ -248,7 +248,16 @@ const onSubmit = handleSubmit((values) => {
         <!-- Details Card (Simple Product mode) -->
         <Card v-if="!hasVariants" class="mb-4">
           <template #title>
-            {{ t("Details") }}
+            <div class="flex justify-between">
+              {{ t("Details") }}
+              <Button
+                :label="t('Manage Inventory')"
+                icon="fa fa-warehouse"
+                text
+                size="small"
+                @click="router.visit(route('inventory.variants.show', { product: props.product.id, variant: defaultVariant?.id }))"
+              />
+            </div>
           </template>
           <template #content>
             <div class="grid grid-cols-12 gap-4">

@@ -211,6 +211,16 @@ const onDeleteVariant = (data: ProductVariantInline) => {
         <Column :header="t('Actions')" class="w-24">
           <template #body="{ data }">
             <div class="flex gap-1">
+              <Button
+                icon="fa fa-arrow-up-right-from-square"
+                text
+                rounded
+                v-tooltip.top="t('Manage')"
+                :aria-label="t('Manage variant')"
+                @click="
+                  router.visit(route('inventory.variants.show', { product: productId, variant: data.id }), { data: { from: 'product' } })
+                "
+              />
               <Button icon="fa fa-pen" text rounded v-tooltip.top="t('Edit')" :disabled="disabled" @click="openEditDialog(data)" />
               <Button
                 icon="fa fa-trash"

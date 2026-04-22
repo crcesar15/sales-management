@@ -28,41 +28,6 @@ export function useMenuItems() {
       icon: "fa fa-cash-register",
       to: "home",
     },
-    {
-      key: "inventory",
-      label: t("Inventory"),
-      icon: "fa fa-warehouse",
-      items: [
-        {
-          key: "inventory-stores",
-          label: t("Stores"),
-          icon: "fa fa-store",
-          to: "stores",
-          can: "store.view",
-          routeUrl: route("stores"),
-        },
-        {
-          key: "inventory-stock-levels",
-          label: t("Stock Levels"),
-          icon: "fa fa-boxes-stacked",
-          to: "home",
-        },
-        {
-          key: "inventory-variants",
-          label: t("Variants"),
-          icon: "fa fa-boxes-stacked",
-          to: "inventory.variants",
-          can: "inventory.view",
-          routeUrl: route("inventory.variants"),
-        },
-        {
-          key: "inventory-adjustments",
-          label: t("Adjustments"),
-          icon: "fa fa-sliders",
-          to: "home",
-        },
-      ],
-    },
     // ========== MANAGEMENT ==========
     {
       key: "products",
@@ -100,6 +65,41 @@ export function useMenuItems() {
           to: "measurement-units",
           can: "measurement_unit.view",
           routeUrl: route("measurement-units"),
+        },
+      ],
+    },
+    {
+      key: "inventory",
+      label: t("Inventory"),
+      icon: "fa fa-warehouse",
+      items: [
+        {
+          key: "inventory-variants",
+          label: t("Inventory"),
+          icon: "fa fa-boxes-stacked",
+          to: "inventory.variants",
+          can: "inventory.view",
+          routeUrl: route("inventory.variants"),
+        },
+        {
+          key: "inventory-stores",
+          label: t("Stores"),
+          icon: "fa fa-store",
+          to: "stores",
+          can: "store.view",
+          routeUrl: route("stores"),
+        },
+        {
+          key: "inventory-stock-levels",
+          label: t("Stock Levels"),
+          icon: "fa fa-boxes-stacked",
+          to: "home",
+        },
+        {
+          key: "inventory-adjustments",
+          label: t("Adjustments"),
+          icon: "fa fa-sliders",
+          to: "home",
         },
       ],
     },

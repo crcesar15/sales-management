@@ -50,7 +50,7 @@ final class ProductVariantController extends Controller
     {
         $this->variantService->update($variant, $request->validated());
 
-        return redirect()->route('products.edit', $product);
+        return redirect()->back();
     }
 
     public function destroy(Product $product, ProductVariant $variant): RedirectResponse
@@ -66,6 +66,6 @@ final class ProductVariantController extends Controller
     {
         $this->variantService->syncVariantImages($variant, $request->validated()['media_ids']);
 
-        return redirect()->route('products.edit', $product);
+        return redirect()->back();
     }
 }
