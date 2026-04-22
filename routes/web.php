@@ -107,7 +107,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/gallery', fn () => Inertia::render('Gallery/Index'))->name('gallery');
 
     // Inventory Routes
-    Route::get('/inventory/variants', [InventoryController::class, 'index'])->name('inventory.variants');
+    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.variants');
     Route::get('/products/{product}/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
 
     // Category Routes
