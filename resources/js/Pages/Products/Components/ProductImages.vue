@@ -258,7 +258,7 @@ const removeFile = (file: MediaItem) => {
     <!-- Hidden FileUpload -->
     <FileUpload
       ref="fileUploadRef"
-      class="hidden"
+      :pt="{ root: { class: 'hidden' } }"
       mode="basic"
       :auto="true"
       accept="image/*"

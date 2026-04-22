@@ -38,7 +38,7 @@ final class ProfileController extends Controller
 
         $request->user()->save(); // @phpstan-ignore-line
 
-        return Redirect::route('profile.edit');
+        return Redirect::back();
     }
 
     /**
