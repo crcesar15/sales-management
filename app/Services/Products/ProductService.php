@@ -88,6 +88,13 @@ final class ProductService
                     'stock' => $data['stock'] ?? 0,
                     'status' => 'active',
                 ]);
+
+                if (! empty($pendingMediaMap)) {
+                    $defaultVariant = $product->variants()->first();
+                    if ($defaultVariant) {
+                        app(ProductVariantService::class)->syncVariantImages($defaultVariant, array_values($pendingMediaMap));
+                    }
+                }
             }
 
             return $product->load(['brand', 'measurementUnit', 'categories', 'media', 'variants']);
@@ -119,6 +126,15 @@ final class ProductService
             if (! empty($data['remove_media_ids'])) {
                 foreach ($data['remove_media_ids'] as $mediaId) {
                     $product->deleteMedia($mediaId);
+                }
+            }
+
+            if (empty($data['has_variants'])) {
+                $defaultVariant = $product->variants()->first();
+                $freshProduct = $product->fresh();
+                if ($defaultVariant && $freshProduct) {
+                    $currentMediaIds = $freshProduct->getMedia('images')->pluck('id')->toArray();
+                    app(ProductVariantService::class)->syncVariantImages($defaultVariant, $currentMediaIds);
                 }
             }
 

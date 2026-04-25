@@ -89,44 +89,52 @@ final class ProductController extends Controller
             'options.values',
         ]);
 
+        $categories = $product->categories->map(fn ($c) => ['id' => $c->id, 'name' => $c->name]);
+
+        $media = $product->getMedia('images')->map(fn ($m) => [
+            'id' => $m->id,
+            'thumb_url' => $m->getUrl('thumb'),
+            'full_url' => $m->getUrl(),
+        ]);
+
+        $variants = $product->variants->map(fn ($v) => [
+            'id' => $v->id,
+            'name' => $v->name,
+            'price' => (float) $v->price,
+            'stock' => $v->stock,
+            'barcode' => $v->barcode,
+            'identifier' => $v->identifier,
+            'status' => $v->status,
+            'values' => $v->values->map(fn ($val) => [
+                'id' => $val->id,
+                'value' => $val->value,
+                'option_name' => $val->option?->name,
+            ]),
+            'images' => $v->images->map(fn ($img) => [
+                'id' => $img->id,
+                'thumb_url' => $img->getUrl('thumb'),
+                'full_url' => $img->getUrl(),
+            ]),
+        ]);
+
+        $options = $product->options->map(fn ($o) => [
+            'id' => $o->id,
+            'name' => $o->name,
+            'values' => $o->values->map(fn ($v) => [
+                'id' => $v->id,
+                'value' => $v->value,
+            ]),
+        ]);
+
         return Inertia::render('Products/Edit/Index', [
             'product' => [
                 ...$product->toArray(),
                 'brand_id' => $product->brand_id,
                 'measurement_unit_id' => $product->measurement_unit_id,
-                'categories' => $product->categories->map(fn ($c) => ['id' => $c->id, 'name' => $c->name]),
-                'media' => $product->getMedia('images')->map(fn ($m) => [
-                    'id' => $m->id,
-                    'thumb_url' => $m->getUrl('thumb'),
-                    'full_url' => $m->getUrl(),
-                ]),
-                'variants' => $product->variants->map(fn ($v) => [
-                    'id' => $v->id,
-                    'name' => $v->name,
-                    'price' => (float) $v->price,
-                    'stock' => $v->stock,
-                    'barcode' => $v->barcode,
-                    'identifier' => $v->identifier,
-                    'status' => $v->status,
-                    'values' => $v->values->map(fn ($val) => [
-                        'id' => $val->id,
-                        'value' => $val->value,
-                        'option_name' => $val->option?->name,
-                    ]),
-                    'images' => $v->images->map(fn ($img) => [
-                        'id' => $img->id,
-                        'thumb_url' => $img->getUrl('thumb'),
-                        'full_url' => $img->getUrl(),
-                    ]),
-                ]),
-                'options' => $product->options->map(fn ($o) => [
-                    'id' => $o->id,
-                    'name' => $o->name,
-                    'values' => $o->values->map(fn ($v) => [
-                        'id' => $v->id,
-                        'value' => $v->value,
-                    ]),
-                ]),
+                'categories' => $categories,
+                'media' => $media,
+                'variants' => $variants,
+                'options' => $options,
                 'has_variants' => $product->options()->exists(),
             ],
             'brands' => Brand::orderBy('name')->get(),
@@ -139,7 +147,7 @@ final class ProductController extends Controller
     {
         $this->productService->update($product, $request->validated());
 
-        return redirect()->route('products');
+        return redirect()->back();
     }
 
     public function destroy(Product $product): RedirectResponse
