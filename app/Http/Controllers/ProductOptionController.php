@@ -8,7 +8,7 @@ use App\Enums\PermissionsEnum;
 use App\Http\Requests\Products\StoreProductOptionRequest;
 use App\Models\Product;
 use App\Models\ProductOption;
-use App\Services\Products\ProductVariantService;
+use App\Services\ProductVariantService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

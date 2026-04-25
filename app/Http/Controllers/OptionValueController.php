@@ -9,7 +9,7 @@ use App\Http\Requests\Products\StoreOptionValueRequest;
 use App\Models\Product;
 use App\Models\ProductOption;
 use App\Models\ProductOptionValue;
-use App\Services\Products\ProductVariantService;
+use App\Services\ProductVariantService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 

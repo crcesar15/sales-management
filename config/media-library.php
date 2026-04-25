@@ -76,7 +76,7 @@ return [
     /*
      * The class that contains the strategy for determining a media file's path.
      */
-    'path_generator' => App\Services\MediaLibrary\CustomPathGeneratorService::class,
+    'path_generator' => App\Services\CustomPathGeneratorService::class,
 
     /*
      * The class that contains the strategy for determining how to remove files.

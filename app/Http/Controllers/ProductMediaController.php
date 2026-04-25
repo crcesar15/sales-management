@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\PendingMediaUpload;
-use App\Services\Products\PendingMediaService;
+use App\Services\PendingMediaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 

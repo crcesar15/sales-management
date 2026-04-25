@@ -12,7 +12,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\MeasurementUnit;
 use App\Models\Product;
-use App\Services\Products\ProductService;
+use App\Services\ProductService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;

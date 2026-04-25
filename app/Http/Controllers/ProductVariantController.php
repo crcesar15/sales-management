@@ -11,7 +11,7 @@ use App\Http\Requests\Products\SyncVariantImagesRequest;
 use App\Http\Requests\Products\UpdateVariantRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Services\Products\ProductVariantService;
+use App\Services\ProductVariantService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 
