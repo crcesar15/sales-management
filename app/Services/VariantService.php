@@ -9,6 +9,11 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 final class VariantService
 {
+    private const SORT_COLUMN_MAP = [
+        'product_name' => 'products.name',
+        'brand_name' => 'brands.name',
+    ];
+
     /**
      * @param  array{
      *      includes:array<string>,
@@ -82,14 +87,25 @@ final class VariantService
         string $orderDirection = 'desc',
         int $perPage = 15,
     ): LengthAwarePaginator {
+        $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? "product_variants.{$orderBy}";
+        $needsProductJoin = $orderBy === 'product_name' || $orderBy === 'brand_name';
+        $needsBrandJoin = $orderBy === 'brand_name';
+
         return ProductVariant::query()
+            ->select('product_variants.*')
+            ->when($needsProductJoin, fn ($q) => $q->join(
+                'products', 'product_variants.product_id', '=', 'products.id'
+            ))
+            ->when($needsBrandJoin, fn ($q) => $q->leftJoin(
+                'brands', 'products.brand_id', '=', 'brands.id'
+            ))
             ->with(['product.brand', 'product.categories', 'values.option', 'images'])
-            ->when($status !== 'all', fn ($q) => $q->where('status', $status))
+            ->when($status !== 'all', fn ($q) => $q->where('product_variants.status', $status))
             ->when($filter, fn ($q) => $q->whereHas(
                 'product',
                 fn ($pq) => $pq->where('name', 'like', "%{$filter}%")
             ))
-            ->orderBy($orderBy, $orderDirection)
+            ->orderBy($sortColumn, $orderDirection)
             ->paginate($perPage)
             ->withQueryString();
     }

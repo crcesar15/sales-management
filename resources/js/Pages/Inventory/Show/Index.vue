@@ -7,7 +7,6 @@ import { useI18n } from "vue-i18n";
 import { computed } from "vue";
 import { route } from "ziggy-js";
 import type { InventoryVariantDetail, InventoryProductDetail } from "@/Types/inventory-variant-types";
-import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import VariantDetails from "./Components/VariantDetails.vue";
 import ImagesTab from "./Components/ImagesTab.vue";
 import UnitsTab from "./Components/UnitsTab.vue";
@@ -19,7 +18,6 @@ const props = defineProps<{
 }>();
 const { t } = useI18n();
 const page = usePage();
-const { formatCurrency } = useCurrencyFormatter();
 
 const from = computed(() => (page.url.includes("from=product") ? "product" : "inventory"));
 
@@ -97,7 +95,7 @@ const variantDisplayName = computed(() => {
         </template>
       </Card>
 
-      <Card>
+      <Card v-if="variant.values?.length">
         <template #title>{{ t("Images") }}</template>
         <template #content>
           <ImagesTab :product="product" :variant="variant" />

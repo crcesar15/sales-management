@@ -32,8 +32,8 @@ const { formatCurrency } = useCurrencyFormatter();
 
 const filter = ref(props.filters.filter ?? "");
 const status = ref(props.filters.status ?? "all");
-const sortField = ref("created_at");
-const sortOrder = ref(-1);
+const sortField = ref("product_name");
+const sortOrder = ref(1);
 
 const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
@@ -126,8 +126,8 @@ const onSort = (event: DataTableSortEvent) => {
           :rows="variants.meta.per_page"
           :first="(variants.meta.current_page - 1) * variants.meta.per_page"
           paginator
-          sort-field="created_at"
-          :sort-order="-1"
+          sort-field="product_name"
+          :sort-order="1"
           :page-link-size="3"
           @page="onPage($event)"
           @sort="onSort($event)"

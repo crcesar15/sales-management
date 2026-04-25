@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Resources\Inventory\InventoryCollection;
-use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\VariantService;
 use Inertia\Inertia;
@@ -28,8 +27,8 @@ final class InventoryController extends Controller
         $variants = $this->variantService->listAllVariants(
             status: request()->string('status', 'all')->toString(),
             filter: request()->string('filter')->toString(),
-            orderBy: request()->string('order_by', 'created_at')->toString(),
-            orderDirection: request()->string('order_direction', 'desc')->toString(),
+            orderBy: request()->string('order_by', 'product_name')->toString(),
+            orderDirection: request()->string('order_direction', 'asc')->toString(),
             perPage: request()->integer('per_page', 15),
         );
 
@@ -42,9 +41,9 @@ final class InventoryController extends Controller
         ]);
     }
 
-    public function show(Product $product, ProductVariant $variant): InertiaResponse
+    public function show(ProductVariant $variant): InertiaResponse
     {
-        $this->authorize(PermissionsEnum::INVENTORY_EDIT, auth()->user());
+        $this->authorize(PermissionsEnum::INVENTORY_EDIT, auth());
 
         $variant->load([
             'values.option',

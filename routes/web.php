@@ -108,7 +108,7 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.variants');
-    Route::get('/products/{product}/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
+    Route::get('/inventory/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
 
     // Category Routes
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
