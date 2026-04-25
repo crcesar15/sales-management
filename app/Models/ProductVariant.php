@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -68,6 +69,44 @@ final class ProductVariant extends Model
             'product_variant_id',
             'product_option_value_id'
         );
+    }
+
+    /** @return HasMany<ProductVariantUnit, $this> */
+    public function units(): HasMany
+    {
+        return $this->hasMany(ProductVariantUnit::class, 'product_variant_id');
+    }
+
+    /** @return HasMany<ProductVariantUnit, $this> */
+    public function saleUnits(): HasMany
+    {
+        return $this->hasMany(ProductVariantUnit::class, 'product_variant_id')
+            ->where('type', 'sale');
+    }
+
+    /** @return HasMany<ProductVariantUnit, $this> */
+    public function activeSaleUnits(): HasMany
+    {
+        return $this->hasMany(ProductVariantUnit::class, 'product_variant_id')
+            ->where('type', 'sale')
+            ->where('status', 'active')
+            ->orderBy('sort_order');
+    }
+
+    /** @return HasMany<ProductVariantUnit, $this> */
+    public function purchaseUnits(): HasMany
+    {
+        return $this->hasMany(ProductVariantUnit::class, 'product_variant_id')
+            ->where('type', 'purchase');
+    }
+
+    /** @return HasMany<ProductVariantUnit, $this> */
+    public function activePurchaseUnits(): HasMany
+    {
+        return $this->hasMany(ProductVariantUnit::class, 'product_variant_id')
+            ->where('type', 'purchase')
+            ->where('status', 'active')
+            ->orderBy('sort_order');
     }
 
     public function getActivitylogOptions(): LogOptions
