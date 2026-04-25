@@ -16,6 +16,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductMediaController;
 use App\Http\Controllers\ProductOptionController;
 use App\Http\Controllers\ProductVariantController;
+use App\Http\Controllers\ProductVariantUnitController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
@@ -103,6 +104,13 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::put('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])->name('variant.update');
     Route::delete('/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variant.destroy');
     Route::put('/products/{product}/variants/{variant}/images', [ProductVariantController::class, 'syncImages'])->name('variant.images.sync');
+
+    // Product Variant Units
+    Route::scopeBindings()->group(function (): void {
+        Route::post('/products/{product}/variants/{variant}/units', [ProductVariantUnitController::class, 'store'])->name('variant.units.store');
+        Route::put('/products/{product}/variants/{variant}/units/{unit}', [ProductVariantUnitController::class, 'update'])->name('variant.units.update');
+        Route::delete('/products/{product}/variants/{variant}/units/{unit}', [ProductVariantUnitController::class, 'destroy'])->name('variant.units.destroy');
+    });
 
     Route::get('/gallery', fn () => Inertia::render('Gallery/Index'))->name('gallery');
 

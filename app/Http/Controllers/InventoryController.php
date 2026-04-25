@@ -52,6 +52,8 @@ final class InventoryController extends Controller
             'product.categories',
             'product.measurementUnit',
             'product.media',
+            'saleUnits',
+            'purchaseUnits',
         ]);
 
         return Inertia::render('Inventory/Show/Index', [
@@ -99,6 +101,22 @@ final class InventoryController extends Controller
                     'id' => $img->id,
                     'thumb_url' => $img->getUrl('thumb'),
                     'full_url' => $img->getUrl(),
+                ]),
+                'sale_units' => $variant->saleUnits->map(fn ($u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'conversion_factor' => $u->conversion_factor,
+                    'price' => (float) $u->price,
+                    'status' => $u->status,
+                    'sort_order' => $u->sort_order,
+                ]),
+                'purchase_units' => $variant->purchaseUnits->map(fn ($u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'conversion_factor' => $u->conversion_factor,
+                    'price' => $u->price,
+                    'status' => $u->status,
+                    'sort_order' => $u->sort_order,
                 ]),
                 'created_at' => $variant->created_at?->toISOString(),
                 'updated_at' => $variant->updated_at?->toISOString(),
