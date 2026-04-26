@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Inventory\StockOverviewController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\OptionValueController;
@@ -117,6 +118,8 @@ Route::group(['middleware' => ['auth']], function (): void {
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.variants');
     Route::get('/inventory/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
+    Route::get('/inventory/stock', [StockOverviewController::class, 'index'])->name('inventory.stock');
+    Route::get('/inventory/stock/{variant}', [StockOverviewController::class, 'show'])->name('inventory.stock.show');
 
     // Category Routes
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');

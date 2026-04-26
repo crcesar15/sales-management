@@ -71,6 +71,12 @@ final class ProductVariant extends Model
         );
     }
 
+    /** @return HasMany<Batch, $this> */
+    public function batches(): HasMany
+    {
+        return $this->hasMany(Batch::class);
+    }
+
     /** @return HasMany<ProductVariantUnit, $this> */
     public function units(): HasMany
     {

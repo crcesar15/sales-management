@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\PurchaseOrder;
 use App\Models\ReceptionOrder;
+use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,6 +23,9 @@ final class ReceptionOrderFactory extends Factory
     public function definition(): array
     {
         return [
+            'purchase_order_id' => PurchaseOrder::factory(),
+            'user_id' => User::factory(),
+            'vendor_id' => Vendor::factory(),
             'reception_date' => fake()->date(),
             'status' => fake()->randomElement(['pending', 'completed', 'cancelled']),
         ];

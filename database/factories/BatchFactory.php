@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Models\Batch;
+use App\Models\ProductVariant;
+use App\Models\ReceptionOrder;
+use App\Models\Store;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,12 +23,15 @@ final class BatchFactory extends Factory
     public function definition(): array
     {
         return [
-            'expiry_date' => fake()->date(),
+            'product_variant_id' => ProductVariant::factory(),
+            'reception_order_id' => ReceptionOrder::factory(),
+            'store_id' => Store::factory(),
+            'expiry_date' => fake()->dateTimeBetween('now', '+1 year')->format('Y-m-d'),
             'initial_quantity' => fake()->numberBetween(1, 100),
             'remaining_quantity' => fake()->numberBetween(1, 100),
-            'missing_quantity' => fake()->numberBetween(1, 100),
-            'sold_quantity' => fake()->numberBetween(1, 100),
-            'transferred_quantity' => fake()->numberBetween(1, 100),
+            'missing_quantity' => fake()->numberBetween(0, 10),
+            'sold_quantity' => fake()->numberBetween(0, 50),
+            'transferred_quantity' => fake()->numberBetween(0, 5),
             'status' => fake()->randomElement(['queued', 'active', 'closed']),
         ];
     }

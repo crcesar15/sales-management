@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
             $table->foreignId('reception_order_id')->constrained()->onDelete('cascade');
+            $table->foreignId('store_id')->constrained()->onDelete('cascade');
             $table->date('expiry_date')->nullable();
             $table->integer('initial_quantity');
             $table->integer('remaining_quantity');
