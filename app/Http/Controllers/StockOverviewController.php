@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Inventory;
+namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
-use App\Http\Controllers\Controller;
 use App\Models\ProductVariant;
 use App\Services\StockService;
 use Inertia\Inertia;
