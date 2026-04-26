@@ -34,6 +34,7 @@ final class StockService
         string $orderBy = 'product_name',
         string $orderDirection = 'asc',
         int $perPage = 15,
+        ?string $status = null,
     ): LengthAwarePaginator {
         $globalStockSubquery = Batch::query()
             ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as global_stock'))
@@ -73,6 +74,7 @@ final class StockService
                 'product', fn ($pq) => $pq->where('name', 'like', "%{$search}%")
                     ->orWhere('products.name', 'like', "%{$search}%")
             ))
+            ->when($status && $status !== 'all', fn ($q) => $q->where('product_variants.status', $status))
             ->orderBy($sortColumn, $orderDirection)
             ->paginate($perPage)
             ->withQueryString();

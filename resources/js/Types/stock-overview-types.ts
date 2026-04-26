@@ -35,6 +35,7 @@ export interface StockOverviewFilters {
   search: string;
   order_by: string;
   order_direction: string;
+  status: string;
 }
 
 export interface StockStoreBreakdown {

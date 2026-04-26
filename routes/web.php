@@ -118,7 +118,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.variants');
     Route::get('/inventory/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
-    Route::get('/inventory/stock', [StockOverviewController::class, 'index'])->name('inventory.stock');
+    Route::get('/inventory/stock', fn () => redirect()->route('inventory.variants', request()->query()))->name('inventory.stock');
     Route::get('/inventory/stock/{variant}', [StockOverviewController::class, 'show'])->name('inventory.stock.show');
 
     // Category Routes

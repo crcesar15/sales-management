@@ -90,14 +90,6 @@ export function useMenuItems() {
           routeUrl: route("stores"),
         },
         {
-          key: "inventory-stock-levels",
-          label: t("Stock Levels"),
-          icon: "fa fa-boxes-stacked",
-          to: "inventory.stock",
-          can: "inventory.view",
-          routeUrl: route("inventory.stock"),
-        },
-        {
           key: "inventory-adjustments",
           label: t("Adjustments"),
           icon: "fa fa-sliders",

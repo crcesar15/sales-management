@@ -5,39 +5,52 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
-use App\Http\Resources\Inventory\InventoryCollection;
+use App\Http\Resources\Inventory\StockOverviewCollection;
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\ProductVariant;
-use App\Services\VariantService;
+use App\Models\Store;
+use App\Services\StockService;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
 final class InventoryController extends Controller
 {
-    public readonly VariantService $variantService;
-
-    public function __construct(VariantService $variantService)
-    {
-        $this->variantService = $variantService;
-    }
+    public function __construct(
+        private readonly StockService $stockService,
+    ) {}
 
     public function index(): InertiaResponse
     {
         $this->authorize(PermissionsEnum::INVENTORY_VIEW, auth()->user());
 
-        $variants = $this->variantService->listAllVariants(
-            status: request()->string('status', 'all')->toString(),
-            filter: request()->string('filter')->toString(),
+        $variants = $this->stockService->listStockOverview(
+            storeId: request()->integer('store_id') ?: null,
+            categoryId: request()->integer('category_id') ?: null,
+            brandId: request()->integer('brand_id') ?: null,
+            lowStockOnly: request()->boolean('low_stock'),
+            search: request()->string('search', '')->toString(),
             orderBy: request()->string('order_by', 'product_name')->toString(),
             orderDirection: request()->string('order_direction', 'asc')->toString(),
             perPage: request()->integer('per_page', 15),
+            status: request()->string('status', 'active')->toString(),
         );
 
         return Inertia::render('Inventory/Index', [
-            'variants' => new InventoryCollection($variants),
+            'variants' => new StockOverviewCollection($variants),
             'filters' => [
-                'status' => request()->string('status', 'all')->toString(),
-                'filter' => request()->string('filter')->toString(),
+                'store_id' => request()->integer('store_id') ?: null,
+                'category_id' => request()->integer('category_id') ?: null,
+                'brand_id' => request()->integer('brand_id') ?: null,
+                'low_stock' => request()->boolean('low_stock'),
+                'search' => request()->string('search', '')->toString(),
+                'order_by' => request()->string('order_by', 'product_name')->toString(),
+                'order_direction' => request()->string('order_direction', 'asc')->toString(),
+                'status' => request()->string('status', 'active')->toString(),
             ],
+            'stores' => Store::query()->where('status', 'active')->get(['id', 'name', 'code']),
+            'categories' => Category::query()->get(['id', 'name']),
+            'brands' => Brand::query()->get(['id', 'name']),
         ]);
     }
 
