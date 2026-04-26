@@ -109,6 +109,7 @@ final class InventoryController extends Controller
                     'price' => (float) $u->price,
                     'status' => $u->status,
                     'sort_order' => $u->sort_order,
+                    'type' => $u->type,
                 ]),
                 'purchase_units' => $variant->purchaseUnits->map(fn ($u) => [
                     'id' => $u->id,
@@ -117,6 +118,7 @@ final class InventoryController extends Controller
                     'price' => $u->price,
                     'status' => $u->status,
                     'sort_order' => $u->sort_order,
+                    'type' => $u->type,
                 ]),
                 'created_at' => $variant->created_at?->toISOString(),
                 'updated_at' => $variant->updated_at?->toISOString(),

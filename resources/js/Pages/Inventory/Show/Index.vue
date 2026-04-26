@@ -68,6 +68,16 @@ const variantDisplayName = computed(() => {
             </div>
             <div class="flex items-center gap-2">
               <div class="flex items-center gap-2">
+                <Badge size="large" v-tooltip.top="t('Measurement Unit')">
+                  <template #default>
+                    <div class="flex items-center gap-2">
+                      <i class="fa fa-weight-hanging"></i>
+                      <span>{{ product.measurement_unit?.name }}</span>
+                    </div>
+                  </template>
+                </Badge>
+              </div>
+              <div class="flex items-center gap-2">
                 <Badge size="large" v-tooltip.top="t('Brand')">
                   <template #default>
                     <div class="flex items-center gap-2">
