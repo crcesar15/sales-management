@@ -3,6 +3,7 @@ export interface Batch {
   id: number;
   product_variant_id: number;
   reception_order_id: number;
+  store_id: number;
   expiry_date: string | null;
   initial_quantity: number;
   remaining_quantity: number;

@@ -93,7 +93,9 @@ export function useMenuItems() {
           key: "inventory-stock-levels",
           label: t("Stock Levels"),
           icon: "fa fa-boxes-stacked",
-          to: "home",
+          to: "inventory.stock",
+          can: "inventory.view",
+          routeUrl: route("inventory.stock"),
         },
         {
           key: "inventory-adjustments",
