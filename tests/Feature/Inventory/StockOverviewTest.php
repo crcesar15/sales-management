@@ -30,15 +30,15 @@ function createVariant(?array $overrides = []): ProductVariant
 |--------------------------------------------------------------------------
 */
 
-it('admin can view stock overview', function () {
+it('admin can view inventory', function () {
     $admin = User::factory()->create();
     $admin->assignRole(RolesEnum::ADMIN);
 
     actingAs($admin)
-        ->get(route('inventory.stock'))
+        ->get(route('inventory.variants'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('Inventory/Stock/Index')
+            ->component('Inventory/Index')
             ->has('variants')
             ->has('stores')
             ->has('categories')
@@ -46,18 +46,27 @@ it('admin can view stock overview', function () {
         );
 });
 
-it('salesman is denied stock overview', function () {
+it('salesman is denied inventory', function () {
     $salesman = User::factory()->create();
     $salesman->assignRole(RolesEnum::SALESMAN);
 
     actingAs($salesman)
-        ->getJson(route('inventory.stock'))
+        ->getJson(route('inventory.variants'))
         ->assertForbidden();
 });
 
-it('guest is redirected from stock overview', function () {
-    get(route('inventory.stock'))
+it('guest is redirected from inventory', function () {
+    get(route('inventory.variants'))
         ->assertRedirect(route('login'));
+});
+
+it('old stock overview URL redirects to inventory', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    actingAs($admin)
+        ->get(route('inventory.stock'))
+        ->assertRedirect(route('inventory.variants'));
 });
 
 it('admin can view stock variant detail', function () {
@@ -108,7 +117,7 @@ it('aggregates stock from active and queued batches only', function () {
     ]);
 
     actingAs($admin)
-        ->get(route('inventory.stock'))
+        ->get(route('inventory.variants'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('variants.data.0.total_stock', 30)
@@ -122,7 +131,7 @@ it('shows zero stock when no batches exist', function () {
     createVariant();
 
     actingAs($admin)
-        ->get(route('inventory.stock'))
+        ->get(route('inventory.variants'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('variants.data.0.total_stock', 0)
@@ -166,6 +175,22 @@ it('shows per-store breakdown for a variant', function () {
 |--------------------------------------------------------------------------
 */
 
+it('filters by variant status', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    createVariant(['status' => 'active']);
+    createVariant(['status' => 'inactive']);
+
+    actingAs($admin)
+        ->get(route('inventory.variants', ['status' => 'active']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('variants.meta.total', 1)
+            ->where('variants.data.0.status', 'active')
+        );
+});
+
 it('filters by store', function () {
     $admin = User::factory()->create();
     $admin->assignRole(RolesEnum::ADMIN);
@@ -188,7 +213,7 @@ it('filters by store', function () {
     ]);
 
     actingAs($admin)
-        ->get(route('inventory.stock', ['store_id' => $store1->id]))
+        ->get(route('inventory.variants', ['store_id' => $store1->id]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('variants.data.0.total_stock', 20)
@@ -206,7 +231,7 @@ it('filters by category', function () {
     createVariant();
 
     actingAs($admin)
-        ->get(route('inventory.stock', ['category_id' => $category->id]))
+        ->get(route('inventory.variants', ['category_id' => $category->id]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('variants.meta.total', 1)
@@ -223,7 +248,7 @@ it('filters by brand', function () {
     createVariant();
 
     actingAs($admin)
-        ->get(route('inventory.stock', ['brand_id' => $brand->id]))
+        ->get(route('inventory.variants', ['brand_id' => $brand->id]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('variants.meta.total', 1)
@@ -246,7 +271,7 @@ it('filters by low stock only', function () {
     ]);
 
     actingAs($admin)
-        ->get(route('inventory.stock', ['low_stock' => true]))
+        ->get(route('inventory.variants', ['low_stock' => true]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('variants.meta.total', 1)
@@ -265,11 +290,36 @@ it('searches by product name', function () {
     createVariant(['product_id' => $otherProduct->id]);
 
     actingAs($admin)
-        ->get(route('inventory.stock', ['search' => 'Running']))
+        ->get(route('inventory.variants', ['search' => 'Running']))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('variants.meta.total', 1)
             ->where('variants.data.0.product_name', 'Running Shoe')
+        );
+});
+
+it('applies status and low_stock filters together', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $store = Store::factory()->create();
+    $activeWithStock = createVariant(['status' => 'active']);
+    Batch::factory()->create([
+        'product_variant_id' => $activeWithStock->id,
+        'store_id' => $store->id,
+        'remaining_quantity' => 10,
+        'status' => 'active',
+    ]);
+
+    $activeNoStock = createVariant(['status' => 'active']);
+    createVariant(['status' => 'inactive']);
+
+    actingAs($admin)
+        ->get(route('inventory.variants', ['status' => 'active', 'low_stock' => true]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('variants.meta.total', 1)
+            ->where('variants.data.0.id', $activeNoStock->id)
         );
 });
 
@@ -288,7 +338,7 @@ it('paginates results', function () {
     }
 
     actingAs($admin)
-        ->get(route('inventory.stock', ['per_page' => 5]))
+        ->get(route('inventory.variants', ['per_page' => 5]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('variants.meta.per_page', 5)
