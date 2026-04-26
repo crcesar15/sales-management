@@ -36,6 +36,11 @@ final class SettingsSeeder extends Seeder
                     'value' => 'UTC',
                     'name' => 'Timezone',
                 ],
+                [
+                    'key' => 'expiry_alert_days',
+                    'value' => '30',
+                    'name' => 'Expiry Alert Days',
+                ],
             ],
             'tax' => [
                 [

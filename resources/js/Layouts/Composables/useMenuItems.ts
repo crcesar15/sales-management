@@ -82,6 +82,14 @@ export function useMenuItems() {
           routeUrl: route("inventory.variants"),
         },
         {
+          key: "inventory-batches",
+          label: t("Batches"),
+          icon: "fa fa-layer-group",
+          to: "batches",
+          can: "batch.view",
+          routeUrl: route("batches"),
+        },
+        {
           key: "inventory-stores",
           label: t("Stores"),
           icon: "fa fa-store",

@@ -6,10 +6,10 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\BatchController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\Inventory\StockOverviewController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\OptionValueController;
@@ -21,6 +21,7 @@ use App\Http\Controllers\ProductVariantUnitController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\StockOverviewController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendorsController;
@@ -120,6 +121,11 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/inventory/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
     Route::get('/inventory/stock', fn () => redirect()->route('inventory.variants', request()->query()))->name('inventory.stock');
     Route::get('/inventory/stock/{variant}', [StockOverviewController::class, 'show'])->name('inventory.stock.show');
+
+    // Batch Routes
+    Route::get('/batches', [BatchController::class, 'index'])->name('batches');
+    Route::get('/batches/{batch}', [BatchController::class, 'show'])->name('batches.show');
+    Route::patch('/batches/{batch}/close', [BatchController::class, 'close'])->name('batches.close');
 
     // Category Routes
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');

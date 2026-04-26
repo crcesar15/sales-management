@@ -26,6 +26,10 @@ return new class extends Migration
             $table->integer('transferred_quantity')->default(0);
             $table->enum('status', ['queued', 'active', 'closed'])->default('queued');
             $table->timestamps();
+
+            $table->index(['store_id', 'status']);
+            $table->index(['product_variant_id', 'status', 'created_at']);
+            $table->index(['expiry_date', 'status']);
         });
     }
 

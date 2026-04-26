@@ -25,6 +25,9 @@ final class Setting extends Model
     /** @var array<int, string> */
     private static array $floatKeys = ['tax_rate'];
 
+    /** @var array<int, string> */
+    private static array $intKeys = ['expiry_alert_days'];
+
     // ─── Static Helper Methods ────────────────────────────────────────────────
 
     /**
@@ -84,6 +87,10 @@ final class Setting extends Model
     {
         if (in_array($key, self::$floatKeys)) {
             return (float) $value;
+        }
+
+        if (in_array($key, self::$intKeys)) {
+            return (int) $value;
         }
 
         return $value;
