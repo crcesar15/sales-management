@@ -90,6 +90,14 @@ export function useMenuItems() {
           routeUrl: route("batches"),
         },
         {
+          key: "inventory-stock-transfers",
+          label: t("Stock Transfers"),
+          icon: "fa fa-truck-ramp-box",
+          to: "stock-transfers",
+          can: "stock_transfer.view",
+          routeUrl: route("stock-transfers"),
+        },
+        {
           key: "inventory-stores",
           label: t("Stores"),
           icon: "fa fa-store",

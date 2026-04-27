@@ -22,6 +22,7 @@ use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StockOverviewController;
+use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendorsController;
@@ -126,6 +127,14 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/batches', [BatchController::class, 'index'])->name('batches');
     Route::get('/batches/{batch}', [BatchController::class, 'show'])->name('batches.show');
     Route::patch('/batches/{batch}/close', [BatchController::class, 'close'])->name('batches.close');
+
+    // Stock Transfer Routes
+    Route::get('/stock-transfers', [StockTransferController::class, 'index'])->name('stock-transfers');
+    Route::get('/stock-transfers/create', [StockTransferController::class, 'create'])->name('stock-transfers.create');
+    Route::post('/stock-transfers', [StockTransferController::class, 'store'])->name('stock-transfers.store');
+    Route::get('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('stock-transfers.show');
+    Route::patch('/stock-transfers/{stockTransfer}/status', [StockTransferController::class, 'updateStatus'])->name('stock-transfers.update-status');
+    Route::patch('/stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel'])->name('stock-transfers.cancel');
 
     // Category Routes
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
