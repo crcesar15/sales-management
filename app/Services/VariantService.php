@@ -33,6 +33,11 @@ final class VariantService
         $query = ProductVariant::query();
         $query->select(['product_variants.*']);
 
+        $needsProductJoin = false;
+
+        // Always eager-load product for the resource
+        $query->with('product.brand');
+
         // Includes
         foreach ($config['includes'] as $include) {
             switch ($include) {
@@ -47,26 +52,39 @@ final class VariantService
 
                     break;
                 case 'product':
-                    $query->join('products', 'product_variants.product_id', '=', 'products.id');
+                    $needsProductJoin = true;
                     $query->with('product.categories', 'product.brand');
                     break;
             }
         }
 
+        // Determine if we need the products join for filtering/ordering
+        $needsFilter = ! empty($config['filter']) && $config['filter_by'] === 'name';
+        $needsStatusFilter = $config['status'] !== 'all';
+        $needsOrderOnProduct = in_array($config['order_by'], ['name', 'product_name'], true);
+
+        if ($needsProductJoin || $needsFilter || $needsStatusFilter || $needsOrderOnProduct) {
+            $query->join('products', 'product_variants.product_id', '=', 'products.id');
+        }
+
         // Filter by status
-        if ($config['status'] !== 'all') {
+        if ($needsStatusFilter) {
             $query->where('products.status', $config['status']);
         }
 
         // Filter by name or other fields
-        if (! empty($config['filter'])) {
+        if ($needsFilter) {
             $filter = '%' . $config['filter'] . '%';
-            $filterBy = $config['filter_by'] === 'name' ? 'products.name' : $config['filter_by'];
-            $query->where($filterBy, 'like', $filter);
+            $query->where('products.name', 'like', $filter);
+        } elseif (! empty($config['filter'])) {
+            $filter = '%' . $config['filter'] . '%';
+            $query->where($config['filter_by'], 'like', $filter);
         }
 
         // Order by
-        $orderBy = $config['order_by'] === 'name' ? 'products.name' : $config['order_by'];
+        $orderBy = in_array($config['order_by'], ['name', 'product_name'], true)
+            ? 'products.name'
+            : $config['order_by'];
         $orderDirection = $config['order_direction'] ?? 'ASC';
         $query->orderBy($orderBy, $orderDirection);
 

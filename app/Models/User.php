@@ -73,6 +73,12 @@ final class User extends Authenticatable
             ->withTimestamps();
     }
 
+    /** @return HasMany<StockTransfer, $this> */
+    public function requestedTransfers(): HasMany
+    {
+        return $this->hasMany(StockTransfer::class, 'requested_by');
+    }
+
     protected static function boot(): void
     {
         parent::boot();

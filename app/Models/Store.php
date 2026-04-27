@@ -57,6 +57,18 @@ final class Store extends Model
         return $this->hasMany(Batch::class);
     }
 
+    /** @return HasMany<StockTransfer, $this> */
+    public function stockTransfersFrom(): HasMany
+    {
+        return $this->hasMany(StockTransfer::class, 'from_store_id');
+    }
+
+    /** @return HasMany<StockTransfer, $this> */
+    public function stockTransfersTo(): HasMany
+    {
+        return $this->hasMany(StockTransfer::class, 'to_store_id');
+    }
+
     protected static function boot(): void
     {
         parent::boot();

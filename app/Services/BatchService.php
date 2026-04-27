@@ -68,10 +68,7 @@ final class BatchService
         DB::transaction(function () use ($variantId, $storeId, $quantity): void {
             $remaining = $quantity;
 
-            $batches = Batch::query()
-                ->available($variantId, $storeId)
-                ->lockForUpdate()
-                ->get();
+            $batches = $this->getAvailableBatches($variantId, $storeId);
 
             $totalAvailable = $batches->sum('remaining_quantity');
 
@@ -99,10 +96,53 @@ final class BatchService
         });
     }
 
+    public function deductFIFOForTransfer(int $variantId, int $storeId, int $quantity): void
+    {
+        DB::transaction(function () use ($variantId, $storeId, $quantity): void {
+            $remaining = $quantity;
+
+            $batches = $this->getAvailableBatches($variantId, $storeId);
+            $totalAvailable = $batches->sum('remaining_quantity');
+
+            if ($totalAvailable < $quantity) {
+                throw new RuntimeException("Insufficient stock. Available: {$totalAvailable}, requested: {$quantity}.");
+            }
+
+            foreach ($batches as $batch) {
+                if ($remaining <= 0) {
+                    break;
+                }
+
+                $this->activateIfQueued($batch);
+
+                $deduct = min($batch->remaining_quantity, $remaining);
+                $batch->increment('transferred_quantity', $deduct);
+                $batch->decrement('remaining_quantity', $deduct);
+                $remaining -= $deduct;
+
+                $batch->refresh();
+                if ($batch->remaining_quantity === 0) {
+                    $batch->update(['status' => 'closed']);
+                }
+            }
+        });
+    }
+
     public function activateIfQueued(Batch $batch): void
     {
         if ($batch->status === 'queued') {
             $batch->update(['status' => 'active']);
         }
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, Batch>
+     */
+    private function getAvailableBatches(int $variantId, int $storeId): \Illuminate\Database\Eloquent\Collection
+    {
+        return Batch::query()
+            ->available($variantId, $storeId)
+            ->lockForUpdate()
+            ->get();
     }
 }

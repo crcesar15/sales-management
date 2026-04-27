@@ -24,6 +24,18 @@ final class ProductVariantResource extends JsonResource
             'stock' => $this->stock,
             'status' => $this->status,
             'name' => $this->name,
+            'product' => $this->whenLoaded('product', fn () => [
+                'id' => $this->product?->id,
+                'name' => $this->product?->name,
+                'brand' => $this->product?->brand ? [
+                    'id' => $this->product->brand->id,
+                    'name' => $this->product->brand->name,
+                ] : null,
+                'categories' => $this->product?->categories?->map(fn ($c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                ]),
+            ]),
             'values' => $this->whenLoaded('values') ? $this->values->map(fn ($v) => [
                 'id' => $v->id,
                 'value' => $v->value,

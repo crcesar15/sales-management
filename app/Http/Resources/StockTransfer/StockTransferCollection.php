@@ -2,19 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Resources\Product;
+namespace App\Http\Resources\StockTransfer;
 
-use App\Http\Resources\ProductVariantResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-final class ProductVariantCollection extends ResourceCollection
+final class StockTransferCollection extends ResourceCollection
 {
-    public $collects = ProductVariantResource::class;
-
     /**
-     * Transform the resource collection into an array.
-     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

@@ -77,6 +77,12 @@ final class ProductVariant extends Model
         return $this->hasMany(Batch::class);
     }
 
+    /** @return HasMany<StockTransferItem, $this> */
+    public function stockTransferItems(): HasMany
+    {
+        return $this->hasMany(StockTransferItem::class);
+    }
+
     /** @return HasMany<ProductVariantUnit, $this> */
     public function units(): HasMany
     {
