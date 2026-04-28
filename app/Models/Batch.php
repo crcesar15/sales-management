@@ -53,6 +53,12 @@ final class Batch extends Model
         return $this->belongsTo(Store::class);
     }
 
+    /** @return HasMany<StockAdjustment, $this> */
+    public function stockAdjustments(): HasMany
+    {
+        return $this->hasMany(StockAdjustment::class);
+    }
+
     // ─── Scopes ──────────────────────────────────────────────────────────────────
 
     /** @param  Builder<self>  $query */
