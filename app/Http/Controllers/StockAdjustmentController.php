@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\AdjustmentReason;
 use App\Enums\PermissionsEnum;
 use App\Http\Requests\Inventory\CreateAdjustmentRequest;
 use App\Http\Resources\StockAdjustment\StockAdjustmentCollection;
@@ -62,6 +63,10 @@ final class StockAdjustmentController extends Controller
 
         return Inertia::render('StockAdjustments/Create/Index', [
             'stores' => Store::query()->where('status', 'active')->get(['id', 'name', 'code']),
+            'reasons' => collect(AdjustmentReason::cases())->map(fn ($case) => [
+                'value' => $case->value,
+                'label' => $case->value,
+            ]),
         ]);
     }
 

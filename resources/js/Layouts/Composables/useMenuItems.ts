@@ -109,7 +109,7 @@ export function useMenuItems() {
           key: "inventory-adjustments",
           label: t("Adjustments"),
           icon: "fa fa-sliders",
-          to: "home",
+          to: "stock-adjustments",
         },
       ],
     },
