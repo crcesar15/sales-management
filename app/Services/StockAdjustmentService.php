@@ -67,7 +67,10 @@ final class StockAdjustmentService
             }
 
             $this->batchService->activateIfQueued($batch);
-            $batch->increment('remaining_quantity', $delta);
+
+            if (! $batch->wasRecentlyCreated) {
+                $batch->increment('remaining_quantity', $delta);
+            }
 
             $batch->refresh();
             if ($batch->remaining_quantity === 0) {

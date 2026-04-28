@@ -87,7 +87,7 @@ final class StockAdjustmentController extends Controller
 
     public function show(StockAdjustment $stockAdjustment): InertiaResponse
     {
-        $this->authorize(PermissionsEnum::STOCK_ADJUST);
+        $this->authorize('view', $stockAdjustment);
 
         $stockAdjustment->load(['productVariant.product.brand', 'store', 'user', 'batch']);
 

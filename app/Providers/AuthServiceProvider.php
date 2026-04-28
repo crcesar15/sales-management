@@ -28,6 +28,7 @@ final class AuthServiceProvider extends ServiceProvider
         Category::class => CategoryPolicy::class,
         MeasurementUnit::class => MeasurementUnitPolicy::class,
         Product::class => ProductPolicy::class,
+        StockAdjustment::class => StockAdjustmentPolicy::class,
         User::class => UserPolicy::class,
     ];
 
