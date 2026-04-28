@@ -21,6 +21,7 @@ use App\Http\Controllers\ProductVariantUnitController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockOverviewController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StoreController;
@@ -135,6 +136,12 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('stock-transfers.show');
     Route::patch('/stock-transfers/{stockTransfer}/status', [StockTransferController::class, 'updateStatus'])->name('stock-transfers.update-status');
     Route::patch('/stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel'])->name('stock-transfers.cancel');
+
+    // Stock Adjustments Routes
+    Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock-adjustments');
+    Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock-adjustments.create');
+    Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock-adjustments.store');
+    Route::get('/stock-adjustments/{stockAdjustment}', [StockAdjustmentController::class, 'show'])->name('stock-adjustments.show');
 
     // Category Routes
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');

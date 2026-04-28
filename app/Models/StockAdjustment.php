@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AdjustmentReason;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
@@ -12,6 +13,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 final class StockAdjustment extends Model
 {
+    /** @use HasFactory<\Database\Factories\StockAdjustmentFactory> */
+    use HasFactory;
+
     use LogsActivity;
 
     protected $fillable = [
