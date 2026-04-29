@@ -524,5 +524,17 @@
   "Completed At": "Completado En",
   "Cancelled At": "Cancelado En",
   "No items": "Sin articulos",
-  "Are you sure you want to advance this transfer?": "Esta seguro de que desea avanzar esta transferencia?"
+  "Are you sure you want to advance this transfer?": "Esta seguro de que desea avanzar esta transferencia?",
+  "Stock Alerts": "Alertas de Stock",
+  "Low Stock": "Stock Bajo",
+  "Minimum Stock": "Stock Minimo",
+  "Current Stock": "Stock Actual",
+  "Stock Level": "Nivel de Stock",
+  "Days Remaining": "Dias Restantes",
+  "Out of Stock": "Sin Stock",
+  "No low stock alerts": "Sin alertas de stock bajo — todas las variantes estan sobre los niveles minimos",
+  "No expiry alerts": "Sin alertas de vencimiento — todos los lotes estan dentro de fechas seguras",
+  "Remaining": "Restante",
+  ":days days": ":days dias",
+  "1 day": "1 dia"
 }

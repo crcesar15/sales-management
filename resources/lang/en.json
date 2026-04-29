@@ -523,5 +523,19 @@
   "Completed At": "Completed At",
   "Cancelled At": "Cancelled At",
   "No items": "No items",
-  "Are you sure you want to advance this transfer?": "Are you sure you want to advance this transfer?"
+  "Are you sure you want to advance this transfer?": "Are you sure you want to advance this transfer?",
+  "Stock Alerts": "Stock Alerts",
+  "Low Stock": "Low Stock",
+  "Minimum Stock": "Minimum Stock",
+  "Current Stock": "Current Stock",
+  "Stock Level": "Stock Level",
+  "Days Remaining": "Days Remaining",
+  "Expiry Date": "Expiry Date",
+  "Out of Stock": "Out of Stock",
+  "No low stock alerts": "No low stock alerts — all variants are above minimum levels",
+  "No expiry alerts": "No expiry alerts — all batches are within safe dates",
+  "Remaining": "Remaining",
+  ":days days": ":days days",
+  "1 day": "1 day",
+  "Expired": "Expired"
 }

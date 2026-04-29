@@ -111,6 +111,14 @@ export function useMenuItems() {
           icon: "fa fa-sliders",
           to: "stock-adjustments",
         },
+        {
+          key: "inventory-alerts",
+          label: t("Stock Alerts"),
+          icon: "fa fa-bell",
+          to: "inventory.alerts",
+          can: "stock_alert.view",
+          routeUrl: route("inventory.alerts"),
+        },
       ],
     },
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
+use App\Models\Store;
 use App\Services\StockAlertService;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -25,6 +26,7 @@ final class StockAlertController extends Controller
             'lowStockAlerts' => $this->stockAlertService->getLowStockAlerts($storeId),
             'expiryAlerts' => $this->stockAlertService->getExpiryAlerts($storeId),
             'summary' => $this->stockAlertService->getSummary($storeId),
+            'stores' => Store::query()->where('status', 'active')->get(['id', 'name', 'code']),
             'filters' => [
                 'store_id' => $storeId,
             ],

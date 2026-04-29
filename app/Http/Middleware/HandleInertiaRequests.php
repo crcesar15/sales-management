@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\Setting;
+use App\Services\StockAlertService;
 use Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -56,17 +57,27 @@ final class HandleInertiaRequests extends Middleware
                 }
             }
 
+            $user = $request->user();
+            $alertsSummary = $user?->can('stock_alert.view')
+                ? Cache::remember('alerts_summary_user_' . $user->id, 300, function () use ($user) {
+                    $storeId = $user->hasRole('Salesman') ? $user->stores()->first()?->id : null;
+
+                    return app(StockAlertService::class)->getSummary($storeId);
+                })
+                : ['low_stock_count' => 0, 'expiry_count' => 0, 'total' => 0];
+
             $shared = [
                 'auth' => [
-                    'user' => $request->user() ? [
-                        'id' => $request->user()->id,
-                        'name' => $request->user()->full_name,
-                        'email' => $request->user()->email,
-                        'roles' => $request->user()->getRoleNames(),
-                        'permissions' => $request->user()->getAllPermissions()->pluck('name'),
+                    'user' => $user ? [
+                        'id' => $user->id,
+                        'name' => $user->full_name,
+                        'email' => $user->email,
+                        'roles' => $user->getRoleNames(),
+                        'permissions' => $user->getAllPermissions()->pluck('name'),
                     ] : null,
                     'settings' => $formattedSettings,
                 ],
+                'alertsSummary' => $alertsSummary,
             ];
         }
 
