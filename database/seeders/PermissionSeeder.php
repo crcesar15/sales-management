@@ -72,6 +72,9 @@ final class PermissionSeeder extends Seeder
                 PermissionsEnum::INVENTORY_VIEW->value,
                 PermissionsEnum::INVENTORY_EDIT->value,
             ],
+            'stock alerts' => [
+                PermissionsEnum::STOCK_ALERTS_VIEW->value,
+            ],
             'batches' => [
                 PermissionsEnum::BATCHES_VIEW->value,
                 PermissionsEnum::STOCK_ADJUST->value,

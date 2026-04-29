@@ -4,27 +4,24 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Illuminate\Contracts\Support\Renderable;
+use App\Services\StockAlertService;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 final class HomeController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
+    public function __construct(
+        private readonly StockAlertService $stockAlertService,
+    ) {
         $this->middleware('auth');
     }
 
-    /**
-     * Show the application dashboard.
-     *
-     * @return Renderable
-     */
-    public function index()
+    public function index(): InertiaResponse
     {
-        return view('layouts.app');
+        $alertSummary = $this->stockAlertService->getSummary();
+
+        return Inertia::render('Dashboard/Index', [
+            'alertSummary' => $alertSummary,
+        ]);
     }
 }

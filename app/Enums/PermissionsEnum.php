@@ -52,6 +52,8 @@ enum PermissionsEnum: string
     case BATCHES_VIEW = 'batch.view';
     case STOCK_ADJUST = 'stock.adjust';
 
+    case STOCK_ALERTS_VIEW = 'stock_alert.view';
+
     case STOCK_TRANSFERS_VIEW = 'stock_transfer.view';
     case STOCK_TRANSFERS_CREATE = 'stock_transfer.create';
     case STOCK_TRANSFERS_EDIT = 'stock_transfer.edit';

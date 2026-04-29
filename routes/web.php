@@ -10,6 +10,7 @@ use App\Http\Controllers\BatchController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\OptionValueController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StockAdjustmentController;
+use App\Http\Controllers\StockAlertController;
 use App\Http\Controllers\StockOverviewController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StoreController;
@@ -84,7 +86,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
     // Home Routes
-    Route::get('/home', fn () => Inertia::render('Dashboard/Index'))->name('home');
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
 
     // Products Routes
     Route::post('/products/media/pending', [ProductMediaController::class, 'store'])->name('products.media.store');
@@ -123,6 +125,10 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/inventory/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
     Route::get('/inventory/stock', fn () => redirect()->route('inventory.variants', request()->query()))->name('inventory.stock');
     Route::get('/inventory/stock/{variant}', [StockOverviewController::class, 'show'])->name('inventory.stock.show');
+
+    // Stock Alert Routes
+    Route::get('/inventory/alerts', [StockAlertController::class, 'index'])->name('inventory.alerts');
+    Route::get('/inventory/alerts/summary', [StockAlertController::class, 'summary'])->name('inventory.alerts.summary');
 
     // Batch Routes
     Route::get('/batches', [BatchController::class, 'index'])->name('batches');
