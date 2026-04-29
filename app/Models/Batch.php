@@ -92,7 +92,7 @@ final class Batch extends Model
     public function scopeExpiringSoon(Builder $query, int $days): Builder
     {
         return $query->whereNotNull('expiry_date')
-            ->where('expiry_date', '<=', now()->addDays($days)->toDateString())
+            ->where('expiry_date', '<=', now()->addDays($days)->endOfDay()->toDateTimeString())
             ->activeOrQueued();
     }
 
