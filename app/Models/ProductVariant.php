@@ -29,6 +29,7 @@ final class ProductVariant extends Model
         'barcode',
         'price',
         'stock',
+        'minimum_stock_level',
         'status',
     ];
 
