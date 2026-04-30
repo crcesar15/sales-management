@@ -10,11 +10,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 final class Vendor extends Model
 {
     /** @use HasFactory<VendorFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     protected $fillable = [
         'fullname',
@@ -39,6 +43,25 @@ final class Vendor extends Model
     public function purchaseOrders(): HasMany
     {
         return $this->hasMany(PurchaseOrder::class);
+    }
+
+    public function hasPurchaseOrders(): bool
+    {
+        return $this->purchaseOrders()->exists();
+    }
+
+    public function hasCatalogEntries(): bool
+    {
+        return $this->variants()->exists();
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('vendor')
+            ->dontSubmitEmptyLogs();
     }
 
     /**

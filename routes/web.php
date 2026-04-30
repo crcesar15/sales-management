@@ -200,7 +200,10 @@ Route::group(['middleware' => ['auth']], function (): void {
     // Vendors Routes
     Route::get('/vendors', [VendorsController::class, 'index'])->name('vendors');
     Route::get('/vendors/create', [VendorsController::class, 'create'])->name('vendors.create');
+    Route::post('/vendors', [VendorsController::class, 'store'])->name('vendors.store');
     Route::get('/vendors/{vendor}/edit', [VendorsController::class, 'edit'])->name('vendors.edit');
+    Route::put('/vendors/{vendor}', [VendorsController::class, 'update'])->name('vendors.update');
+    Route::delete('/vendors/{vendor}', [VendorsController::class, 'destroy'])->name('vendors.destroy');
     Route::get('/vendors/{vendor}/products', [VendorsController::class, 'products'])->name('vendors.products');
 
     // Catalog Routes
