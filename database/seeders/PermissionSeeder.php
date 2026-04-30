@@ -88,6 +88,12 @@ final class PermissionSeeder extends Seeder
             'settings' => [
                 PermissionsEnum::SETTINGS_MANAGE->value,
             ],
+            'vendors' => [
+                PermissionsEnum::VENDORS_VIEW->value,
+                PermissionsEnum::VENDORS_CREATE->value,
+                PermissionsEnum::VENDORS_EDIT->value,
+                PermissionsEnum::VENDORS_DELETE->value,
+            ],
         ];
 
         $role = Role::query()->where('name', RolesEnum::ADMIN->value)->firstOrFail();

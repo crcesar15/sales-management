@@ -23,6 +23,8 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->json('additional_contacts')->nullable();
             $table->json('meta')->nullable();
+            $table->index('status');
+            $table->index('fullname');
             $table->timestamps();
         });
     }

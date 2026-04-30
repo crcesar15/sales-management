@@ -62,4 +62,9 @@ enum PermissionsEnum: string
     case SETTINGS_MANAGE = 'setting.manage';
 
     case ACTIVITY_LOGS_VIEW = 'activity_log.view';
+
+    case VENDORS_VIEW = 'vendor.view';
+    case VENDORS_CREATE = 'vendor.create';
+    case VENDORS_EDIT = 'vendor.edit';
+    case VENDORS_DELETE = 'vendor.delete';
 }

@@ -26,6 +26,14 @@ final class VendorFactory extends Factory
             'address' => fake()->address,
             'details' => fake()->sentence,
             'status' => 'active',
+            'additional_contacts' => [
+                [
+                    'name' => fake()->name,
+                    'phone' => fake()->phoneNumber,
+                    'email' => fake()->safeEmail,
+                    'role' => fake()->randomElement(['Billing', 'Sales', 'Support']),
+                ],
+            ],
         ];
     }
 }

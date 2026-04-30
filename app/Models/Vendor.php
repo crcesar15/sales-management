@@ -24,6 +24,7 @@ final class Vendor extends Model
         'details',
         'status',
         'additional_contacts',
+        'meta',
     ];
 
     /** @return BelongsToMany<ProductVariant, $this, Pivot>*/
@@ -41,12 +42,13 @@ final class Vendor extends Model
     }
 
     /**
-     * @return array{additional_contacts: string, created_at: string, updated_at: string}
+     * @return array{additional_contacts: string, created_at: string, meta: string, updated_at: string}
      */
     protected function casts(): array
     {
         return [
             'additional_contacts' => 'array',
+            'meta' => 'array',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',
         ];

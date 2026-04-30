@@ -164,6 +164,7 @@ export function useMenuItems() {
           label: t("Vendors"),
           icon: "fa fa-truck-field",
           to: "vendors",
+          can: "vendor.view",
           routeUrl: route("vendors"),
         },
       ],
