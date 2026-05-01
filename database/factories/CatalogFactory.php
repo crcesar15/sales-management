@@ -23,6 +23,9 @@ final class CatalogFactory extends Factory
             'price' => fake()->randomFloat(2, 1, 1000),
             'payment_terms' => fake()->randomElement(['debit', 'credit']),
             'details' => fake()->text(100),
+            'unit_id' => null,
+            'minimum_order_quantity' => null,
+            'lead_time_days' => null,
         ];
     }
 }
