@@ -157,6 +157,7 @@ export function useMenuItems() {
           label: t("Supplier Catalog"),
           icon: "fa fa-tags",
           to: "catalog",
+          can: "catalog.view",
           routeUrl: route("catalog"),
         },
         {

@@ -187,10 +187,14 @@ final class ProductVariantService
     }
 
     /**
-     * Hard delete a variant. CASCADE handles pivot cleanup.
+     * Hard delete a variant. Blocked if catalog entries exist.
      */
     public function destroy(ProductVariant $variant): void
     {
+        if ($variant->vendors()->exists()) {
+            throw new Exception('Cannot delete variant: it has associated catalog entries.');
+        }
+
         DB::transaction(fn () => $variant->delete());
     }
 

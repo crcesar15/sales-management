@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\CatalogFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -44,5 +45,20 @@ final class Catalog extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(ProductVariantUnit::class, 'unit_id');
+    }
+
+    /** @return BelongsTo<ProductVariantUnit, $this> */
+    public function purchaseUnit(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariantUnit::class, 'unit_id');
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', 'active');
     }
 }

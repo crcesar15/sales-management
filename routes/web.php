@@ -208,7 +208,11 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // Catalog Routes
     Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
-    Route::get('/catalog/{variant}/edit', [CatalogController::class, 'edit'])->name('catalog.edit');
+    Route::get('/catalog/create', [CatalogController::class, 'create'])->name('catalog.create');
+    Route::post('/catalog', [CatalogController::class, 'store'])->name('catalog.store');
+    Route::get('/catalog/{catalog}/edit', [CatalogController::class, 'edit'])->name('catalog.edit');
+    Route::put('/catalog/{catalog}', [CatalogController::class, 'update'])->name('catalog.update');
+    Route::delete('/catalog/{catalog}', [CatalogController::class, 'destroy'])->name('catalog.destroy');
 
     // Purchase Orders Routes
     Route::get('/purchase-orders', [PurchaseOrdersController::class, 'index'])->name('purchase-orders');

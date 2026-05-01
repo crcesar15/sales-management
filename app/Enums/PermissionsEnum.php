@@ -67,4 +67,9 @@ enum PermissionsEnum: string
     case VENDORS_CREATE = 'vendor.create';
     case VENDORS_EDIT = 'vendor.edit';
     case VENDORS_DELETE = 'vendor.delete';
+
+    case CATALOG_VIEW = 'catalog.view';
+    case CATALOG_CREATE = 'catalog.create';
+    case CATALOG_EDIT = 'catalog.edit';
+    case CATALOG_DELETE = 'catalog.delete';
 }
