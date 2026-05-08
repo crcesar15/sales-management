@@ -204,7 +204,15 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/vendors/{vendor}/edit', [VendorsController::class, 'edit'])->name('vendors.edit');
     Route::put('/vendors/{vendor}', [VendorsController::class, 'update'])->name('vendors.update');
     Route::delete('/vendors/{vendor}', [VendorsController::class, 'destroy'])->name('vendors.destroy');
-    Route::get('/vendors/{vendor}/products', [VendorsController::class, 'products'])->name('vendors.products');
+    Route::get('/vendors/{vendor}/products', fn ($vendor) => redirect()->route('vendors.catalog', $vendor))->name('vendors.products');
+
+    // Vendor Catalog Routes
+    Route::get('/vendors/{vendor}/catalog', [CatalogController::class, 'vendorIndex'])->name('vendors.catalog');
+    Route::get('/vendors/{vendor}/catalog/create', [CatalogController::class, 'vendorCreate'])->name('vendors.catalog.create');
+    Route::post('/vendors/{vendor}/catalog', [CatalogController::class, 'vendorStore'])->name('vendors.catalog.store');
+    Route::get('/vendors/{vendor}/catalog/{catalog}/edit', [CatalogController::class, 'vendorEdit'])->name('vendors.catalog.edit');
+    Route::put('/vendors/{vendor}/catalog/{catalog}', [CatalogController::class, 'vendorUpdate'])->name('vendors.catalog.update');
+    Route::delete('/vendors/{vendor}/catalog/{catalog}', [CatalogController::class, 'vendorDestroy'])->name('vendors.catalog.destroy');
 
     // Catalog Routes
     Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');

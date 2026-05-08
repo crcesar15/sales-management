@@ -34,3 +34,9 @@ export interface ProductVariantPayload extends ProductVariantBase {
   vendors_ids?: number[];
   media?: { id: number }[];
 }
+
+export interface PurchaseUnitResponse {
+  id: number;
+  name: string;
+  conversion_factor: number;
+}

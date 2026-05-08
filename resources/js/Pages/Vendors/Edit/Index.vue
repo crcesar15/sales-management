@@ -1,14 +1,5 @@
 <script setup lang="ts">
-import {
-  Card,
-  InputText,
-  Textarea,
-  Select,
-  Button,
-  ToggleSwitch,
-  Toast,
-  useToast,
-} from "primevue";
+import { Card, InputText, Textarea, Select, Button, ToggleSwitch, Toast, useToast } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import AdditionalContactsEditor from "@components/Vendors/AdditionalContactsEditor.vue";
 import { useForm } from "vee-validate";
@@ -29,12 +20,8 @@ const props = defineProps<{
 const toast = useToast();
 const { t } = useI18n();
 
-const hasAdditionalContacts = ref(
-  props.vendor.additional_contacts ? props.vendor.additional_contacts.length > 0 : false,
-);
-const additionalContacts = ref<AdditionalContact[]>(
-  props.vendor.additional_contacts ?? [],
-);
+const hasAdditionalContacts = ref(props.vendor.additional_contacts ? props.vendor.additional_contacts.length > 0 : false);
+const additionalContacts = ref<AdditionalContact[]>(props.vendor.additional_contacts ?? []);
 
 const statusOptions = [
   { name: t("Active"), value: "active" },
@@ -53,13 +40,7 @@ const schema = toTypedSchema(
   }),
 );
 
-const {
-  handleSubmit,
-  errors,
-  defineField,
-  isSubmitting,
-  setErrors,
-} = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
   validationSchema: schema,
   initialValues: {
     fullname: props.vendor.fullname,
@@ -120,19 +101,22 @@ const submit = handleSubmit((formValues) => {
   <div>
     <div class="flex flex-row justify-between mb-3">
       <div class="flex">
-        <Button
-          icon="fa fa-arrow-left"
-          text
-          severity="secondary"
-          class="hover:shadow-md mr-2"
-          @click="goBack"
-        />
+        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="goBack" />
         <h2 class="text-2xl font-bold flex items-center m-0">
           {{ t("Edit Vendor") }}
         </h2>
       </div>
-      <div class="flex flex-col justify-center">
-        <Button icon="fa fa-save" :label="t('Save')" class="uppercase" raised :loading="isSubmitting" @click="submit" />
+      <div class="flex flex-col justify-center gap-2">
+        <div class="flex justify-end gap-2">
+          <Button
+            icon="fa fa-table-list"
+            :label="t('View Catalog')"
+            outlined
+            class="uppercase"
+            @click="router.visit(route('vendors.catalog', props.vendor.id))"
+          />
+          <Button icon="fa fa-save" :label="t('Save')" class="uppercase" raised :loading="isSubmitting" @click="submit" />
+        </div>
       </div>
     </div>
     <Toast />
@@ -144,7 +128,10 @@ const submit = handleSubmit((formValues) => {
             <div class="grid grid-cols-12 gap-4">
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-1">
-                  <label for="fullname">{{ t("Full Name") }} <span class="text-red-500">*</span></label>
+                  <label for="fullname">
+                    {{ t("Full Name") }}
+                    <span class="text-red-500">*</span>
+                  </label>
                   <InputText
                     id="fullname"
                     v-model="fullname"
@@ -160,13 +147,7 @@ const submit = handleSubmit((formValues) => {
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-1">
                   <label for="phone">{{ t("Phone") }}</label>
-                  <InputText
-                    id="phone"
-                    v-model="phone"
-                    v-bind="phoneAttrs"
-                    autocomplete="off"
-                    :class="{ 'p-invalid': errors.phone }"
-                  />
+                  <InputText id="phone" v-model="phone" v-bind="phoneAttrs" autocomplete="off" :class="{ 'p-invalid': errors.phone }" />
                   <small v-if="errors.phone" class="text-red-400 dark:text-red-300">
                     {{ errors.phone }}
                   </small>
@@ -175,39 +156,21 @@ const submit = handleSubmit((formValues) => {
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label for="email">{{ t("Email") }}</label>
-              <InputText
-                id="email"
-                v-model="email"
-                v-bind="emailAttrs"
-                autocomplete="off"
-                :class="{ 'p-invalid': errors.email }"
-              />
+              <InputText id="email" v-model="email" v-bind="emailAttrs" autocomplete="off" :class="{ 'p-invalid': errors.email }" />
               <small v-if="errors.email" class="text-red-400 dark:text-red-300">
                 {{ errors.email }}
               </small>
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label for="address">{{ t("Address") }}</label>
-              <InputText
-                id="address"
-                v-model="address"
-                v-bind="addressAttrs"
-                autocomplete="off"
-                :class="{ 'p-invalid': errors.address }"
-              />
+              <InputText id="address" v-model="address" v-bind="addressAttrs" autocomplete="off" :class="{ 'p-invalid': errors.address }" />
               <small v-if="errors.address" class="text-red-400 dark:text-red-300">
                 {{ errors.address }}
               </small>
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label for="details">{{ t("Details") }}</label>
-              <Textarea
-                id="details"
-                v-model="details"
-                v-bind="detailsAttrs"
-                rows="3"
-                :class="{ 'p-invalid': errors.details }"
-              />
+              <Textarea id="details" v-model="details" v-bind="detailsAttrs" rows="3" :class="{ 'p-invalid': errors.details }" />
               <small v-if="errors.details" class="text-red-400 dark:text-red-300">
                 {{ errors.details }}
               </small>
@@ -243,7 +206,10 @@ const submit = handleSubmit((formValues) => {
           </template>
           <template #content>
             <div class="flex flex-col gap-1">
-              <label for="status">{{ t("Status") }} <span class="text-red-500">*</span></label>
+              <label for="status">
+                {{ t("Status") }}
+                <span class="text-red-500">*</span>
+              </label>
               <Select
                 id="status"
                 v-model="status"

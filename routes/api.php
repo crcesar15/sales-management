@@ -84,6 +84,8 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
 
     // Routes for Product Variants
     Route::get('variants', [VariantsController::class, 'index'])->name('variants');
+    Route::get('variants/search', [VariantsController::class, 'search'])->name('variants.search');
+    Route::get('variants/{variant}/purchase-units', [VariantsController::class, 'purchaseUnits'])->name('variants.purchase-units');
 
     // Routes for Variant Vendors
     Route::get('variants/{variant}/vendors', [VariantsController::class, 'getVendors'])->name('variants.vendors');

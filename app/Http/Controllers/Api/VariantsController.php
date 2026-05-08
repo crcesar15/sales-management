@@ -86,4 +86,46 @@ final class VariantsController extends Controller
 
         return response()->json(['data' => $variant], 200);
     }
+
+    public function search(Request $request): JsonResponse
+    {
+        $filter = $request->string('filter', '')->value();
+
+        $query = ProductVariant::query()
+            ->with(['product'])
+            ->whereHas('product', function ($q) use ($filter): void {
+                $q->where('name', 'like', "%{$filter}%");
+            })
+            ->orWhere('identifier', 'like', "%{$filter}%")
+            ->where('status', '!=', 'archived');
+
+        $variants = $query->orderBy('identifier')
+            ->limit(20)
+            ->get()
+            ->map(function ($variant) {
+                $productName = $variant->product !== null ? $variant->product->name : '';
+
+                return [
+                    'id' => $variant->id,
+                    'name' => $productName,
+                    'identifier' => $variant->identifier,
+                    'label' => $productName . ' - ' . $variant->identifier,
+                ];
+            });
+
+        return response()->json(['data' => $variants], 200);
+    }
+
+    public function purchaseUnits(ProductVariant $variant): JsonResponse
+    {
+        $units = $variant->activePurchaseUnits()
+            ->get()
+            ->map(fn ($unit) => [
+                'id' => $unit->id,
+                'name' => $unit->name,
+                'conversion_factor' => $unit->conversion_factor,
+            ]);
+
+        return response()->json(['data' => $units], 200);
+    }
 }
