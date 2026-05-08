@@ -7,7 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\PermissionsEnum;
 use App\Http\Requests\Catalog\StoreCatalogRequest;
 use App\Http\Requests\Catalog\UpdateCatalogRequest;
-use App\Http\Resources\CatalogCollection;
+use App\Http\Resources\Catalog\CatalogCollection;
 use App\Models\Catalog;
 use App\Models\Vendor;
 use App\Services\CatalogService;
