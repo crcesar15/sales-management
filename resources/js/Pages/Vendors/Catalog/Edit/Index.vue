@@ -4,7 +4,7 @@ import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
 import AppLayout from "@layouts/admin.vue";
-import CatalogEntryForm from "@components/Catalog/CatalogEntryForm.vue";
+import CatalogEntryForm from "../Components/CatalogEntryForm.vue";
 import type { VendorResponse } from "@/Types/vendor-types";
 import type { CatalogResponse, CatalogPayload } from "@/Types/catalog-types";
 

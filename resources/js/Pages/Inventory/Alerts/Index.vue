@@ -6,8 +6,8 @@ import { computed, ref } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import type { LowStockAlertItem, ExpiryAlertItem, AlertsSummary, AlertsFilters } from "@/Types/stock-alert-types";
-import LowStockAlertList from "@components/Inventory/LowStockAlertList.vue";
-import ExpiryAlertList from "@components/Inventory/ExpiryAlertList.vue";
+import LowStockAlertList from "./Components/LowStockAlertList.vue";
+import ExpiryAlertList from "./Components/ExpiryAlertList.vue";
 
 defineOptions({ layout: AppLayout });
 

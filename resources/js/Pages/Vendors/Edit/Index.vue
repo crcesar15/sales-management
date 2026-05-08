@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Card, InputText, Textarea, Select, Button, ToggleSwitch, Toast, useToast } from "primevue";
 import AppLayout from "@layouts/admin.vue";
-import AdditionalContactsEditor from "@components/Vendors/AdditionalContactsEditor.vue";
+import AdditionalContactsEditor from "../Components/AdditionalContactsEditor.vue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string } from "yup";

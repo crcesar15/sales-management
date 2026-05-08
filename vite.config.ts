@@ -40,7 +40,6 @@ export default defineConfig({
       "vue": "vue/dist/vue.esm-bundler.js",
       "ziggy-js": path.resolve("vendor/tightenco/ziggy"),
       "@": path.resolve(__dirname, "resources/js"),
-      "@components": path.resolve(__dirname, "resources/js/Components"),
       "@pages": path.resolve(__dirname, "resources/js/Pages"),
       "@composables": path.resolve(__dirname, "resources/js/Composables"),
       "@app-types": path.resolve(__dirname, "resources/js/Types"),
