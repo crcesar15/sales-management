@@ -21,10 +21,16 @@ final class CatalogService
         ?string $filter = null,
         ?int $vendorId = null,
     ): LengthAwarePaginator {
+        $needsProductJoin = $orderBy === 'product_name';
+
         return Catalog::query()
-            ->with(['vendor', 'productVariant.product', 'unit'])
-            ->when($vendorId, fn ($q) => $q->where('vendor_id', $vendorId))
-            ->when($status !== 'all', fn ($q) => $q->where('status', $status))
+            ->select('catalog.*')
+            ->when($needsProductJoin, fn ($q) => $q
+                ->join('product_variants', 'catalog.product_variant_id', '=', 'product_variants.id')
+                ->join('products', 'product_variants.product_id', '=', 'products.id'))
+            ->with(['vendor', 'productVariant.product', 'productVariant.values.option', 'unit'])
+            ->when($vendorId, fn ($q) => $q->where('catalog.vendor_id', $vendorId))
+            ->when($status !== 'all', fn ($q) => $q->where('catalog.status', $status))
             ->when(
                 $filter !== null && $filter !== '',
                 fn ($q) => $q->where(function ($q) use ($filter): void {
@@ -32,7 +38,7 @@ final class CatalogService
                         ->orWhereHas('productVariant', fn ($vq) => $vq->where('identifier', 'like', "%{$filter}%"));
                 })
             )
-            ->orderBy($orderBy, $orderDirection)
+            ->orderBy($needsProductJoin ? 'products.name' : $orderBy, $orderDirection)
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -45,7 +51,7 @@ final class CatalogService
         return DB::transaction(function () use ($data): Catalog {
             $catalog = Catalog::create($data);
 
-            return $catalog->load(['vendor', 'productVariant.product', 'unit']);
+            return $catalog->load(['vendor', 'productVariant.product', 'productVariant.values.option', 'unit']);
         });
     }
 
@@ -57,7 +63,7 @@ final class CatalogService
         return DB::transaction(function () use ($catalog, $data): Catalog {
             $catalog->update($data);
 
-            return $catalog->load(['vendor', 'productVariant.product', 'unit']);
+            return $catalog->load(['vendor', 'productVariant.product', 'productVariant.values.option', 'unit']);
         });
     }
 

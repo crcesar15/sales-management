@@ -34,6 +34,14 @@ final class CatalogResource extends JsonResource
                 'id' => $this->productVariant?->id,
                 'name' => $this->productVariant?->name,
                 'identifier' => $this->productVariant?->identifier,
+                'product' => $this->productVariant?->product ? [
+                    'id' => $this->productVariant?->product?->id,
+                    'name' => $this->productVariant?->product?->name,
+                ] : null,
+                'values' => $this->productVariant?->values->map(fn ($value) => [
+                    'option_name' => $value->option?->name,
+                    'value' => $value->value,
+                ])->toArray(),
             ]),
             'purchase_unit' => $this->whenLoaded('unit', fn () => [
                 'id' => $this->unit?->id,
