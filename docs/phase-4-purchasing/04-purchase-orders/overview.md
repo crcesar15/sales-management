@@ -1,4 +1,4 @@
-# Task 03: Purchase Orders — Overview
+# Task 04: Purchase Orders — Overview
 
 ## What
 Global purchase orders raised against vendors, with a multi-step approval/fulfillment workflow.
@@ -28,7 +28,8 @@ Formalizes the purchasing process with approval gates, audit trail, and a clear 
 - `vendors` table (Task 01)
 - `catalog` table (Task 02) — for line item selection and price snapshot
 - `product_variants` table (Phase 1)
-- Phase 4 Task 04 (Reception Orders) creates receptions against a PO
+- Task 03 (Catalog) — product-centric view of vendor offerings
+- Task 05 (Reception Orders) creates receptions against a PO
 - `spatie/laravel-activitylog`
 - `spatie/laravel-permission`
 

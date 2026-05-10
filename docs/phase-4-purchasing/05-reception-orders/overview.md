@@ -1,4 +1,4 @@
-# Task 04: Reception Orders — Overview
+# Task 05: Reception Orders — Overview
 
 ## What
 Records actual goods received against a purchase order and updates stock + batch inventory.
@@ -29,7 +29,7 @@ Receiving closes the loop between what was ordered and what physically arrived. 
 - [ ] Activity log records completion event with user and timestamp
 
 ## Dependencies
-- `purchase_orders` table (Task 03)
+- `purchase_orders` table (Task 04)
 - `vendors` table (Task 01)
 - `stores` table (Phase 1)
 - `product_variants` table (Phase 1)

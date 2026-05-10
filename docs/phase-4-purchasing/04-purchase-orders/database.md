@@ -1,4 +1,4 @@
-# Task 03: Purchase Orders — Database
+# Task 04: Purchase Orders — Database
 
 ## Table: `purchase_orders`
 
@@ -45,7 +45,7 @@ $table->index('order_date');
 | purchase_orders         | users                 | belongsTo | created by                      |
 | purchase_orders         | purchase_order_product| hasMany   | line items                      |
 | purchase_order_product  | product_variants      | belongsTo |                                 |
-| purchase_orders         | reception_orders      | hasMany   | Task 04                         |
+| purchase_orders         | reception_orders      | hasMany   | Task 05                         |
 
 ## Notable Patterns
 - Status transitions enforced in a `PurchaseOrderService`; never updated directly
