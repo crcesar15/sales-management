@@ -42,3 +42,20 @@ export interface CatalogPayload {
   minimum_order_quantity?: number | null;
   lead_time_days?: number | null;
 }
+
+export interface CatalogGroupedEntry {
+  product_variant_id: number;
+  product_name: string;
+  variant_name: string;
+  catalog_entries: CatalogResponse[];
+  lowest_price: number;
+}
+
+export interface CatalogFilters {
+  filter?: string | null;
+  status?: string;
+  sort_field?: string;
+  sort_direction?: string;
+  per_page?: number;
+  vendor_id?: number | null;
+}

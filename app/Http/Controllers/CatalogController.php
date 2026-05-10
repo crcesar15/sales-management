@@ -25,6 +25,7 @@ final class CatalogController extends Controller
         $this->authorize(PermissionsEnum::CATALOG_VIEW);
 
         $status = request()->string('status', 'active')->value();
+        $vendorId = request()->integer('vendor_id') ?: null;
 
         $catalogEntries = $this->catalogService->listGroupedByProduct(
             status: $status,
@@ -32,7 +33,7 @@ final class CatalogController extends Controller
             orderDirection: request()->string('sort_direction', 'asc')->value(),
             perPage: request()->integer('per_page', 10),
             filter: request()->string('filter')->value() ?: null,
-            vendorId: request()->integer('vendor_id') ?: null,
+            vendorId: $vendorId,
         );
 
         return Inertia::render('Catalog/Index', [
@@ -40,7 +41,13 @@ final class CatalogController extends Controller
             'filters' => [
                 'filter' => request()->string('filter')->value() ?: null,
                 'status' => $status,
+                'sort_field' => request()->string('sort_field', 'product_name')->value(),
+                'sort_direction' => request()->string('sort_direction', 'asc')->value(),
+                'vendor_id' => $vendorId,
             ],
+            'vendors' => Vendor::where('status', 'active')
+                ->orderBy('fullname')
+                ->get(['id', 'fullname']),
         ]);
     }
 
