@@ -8,7 +8,10 @@ use App\Enums\PermissionsEnum;
 use App\Http\Requests\Catalog\StoreCatalogRequest;
 use App\Http\Requests\Catalog\UpdateCatalogRequest;
 use App\Http\Resources\Catalog\CatalogCollection;
+use App\Http\Resources\Catalog\CatalogResource;
+use App\Http\Resources\Product\ProductVariantResource;
 use App\Models\Catalog;
+use App\Models\ProductVariant;
 use App\Models\Vendor;
 use App\Services\CatalogService;
 use Exception;
@@ -48,6 +51,18 @@ final class CatalogController extends Controller
             'vendors' => Vendor::where('status', 'active')
                 ->orderBy('fullname')
                 ->get(['id', 'fullname']),
+        ]);
+    }
+
+    public function show(ProductVariant $productVariant): InertiaResponse
+    {
+        $this->authorize(PermissionsEnum::CATALOG_VIEW);
+
+        $variant = $this->catalogService->getVariantWithCatalogEntries($productVariant->id);
+
+        return Inertia::render('Catalog/Show/Index', [
+            'productVariant' => (new ProductVariantResource($variant))->resolve(),
+            'catalogEntries' => CatalogResource::collection($variant->catalogEntries)->resolve(),
         ]);
     }
 

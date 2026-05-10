@@ -31,16 +31,29 @@ final class CatalogResource extends JsonResource
                 'fullname' => $this->vendor?->fullname,
             ]),
             'product_variant' => $this->whenLoaded('productVariant', fn () => [
-                'id' => $this->productVariant?->id,
-                'name' => $this->productVariant?->name,
-                'identifier' => $this->productVariant?->identifier,
-                'product' => $this->productVariant?->product ? [
-                    'id' => $this->productVariant?->product?->id,
-                    'name' => $this->productVariant?->product?->name,
+                'id' => $this->productVariant->id,
+                'name' => $this->productVariant->name,
+                'identifier' => $this->productVariant->identifier,
+                'product' => $this->productVariant->product ? [
+                    'id' => $this->productVariant->product->id,
+                    'name' => $this->productVariant->product->name,
+                    'brand' => $this->productVariant->product->brand ? [
+                        'id' => $this->productVariant->product->brand->id,
+                        'name' => $this->productVariant->product->brand->name,
+                    ] : null,
+                    'measurement_unit' => $this->productVariant->product->measurementUnit ? [
+                        'id' => $this->productVariant->product->measurementUnit->id,
+                        'name' => $this->productVariant->product->measurementUnit->name,
+                        'abbreviation' => $this->productVariant->product->measurementUnit->abbreviation,
+                    ] : null,
                 ] : null,
-                'values' => $this->productVariant?->values->map(fn ($value) => [
+                'values' => $this->productVariant->values->map(fn ($value) => [
                     'option_name' => $value->option?->name,
                     'value' => $value->value,
+                ])->toArray(),
+                'purchase_units' => $this->productVariant->activePurchaseUnits->map(fn ($unit) => [
+                    'id' => $unit->id,
+                    'name' => $unit->name,
                 ])->toArray(),
             ]),
             'purchase_unit' => $this->whenLoaded('unit', fn () => [

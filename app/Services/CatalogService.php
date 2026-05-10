@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Catalog;
+use App\Models\ProductVariant;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -28,7 +29,7 @@ final class CatalogService
             ->when($needsProductJoin, fn ($q) => $q
                 ->join('product_variants', 'catalog.product_variant_id', '=', 'product_variants.id')
                 ->join('products', 'product_variants.product_id', '=', 'products.id'))
-            ->with(['vendor', 'productVariant.product', 'productVariant.values.option', 'unit'])
+            ->with(['vendor', 'productVariant.product.brand', 'productVariant.product.measurementUnit', 'productVariant.values.option', 'productVariant.activePurchaseUnits', 'unit'])
             ->when($vendorId, fn ($q) => $q->where('catalog.vendor_id', $vendorId))
             ->when($status !== 'all', fn ($q) => $q->where('catalog.status', $status))
             ->when(
@@ -61,7 +62,7 @@ final class CatalogService
             ->when($needsProductJoin, fn ($q) => $q
                 ->join('product_variants', 'catalog.product_variant_id', '=', 'product_variants.id')
                 ->join('products', 'product_variants.product_id', '=', 'products.id'))
-            ->with(['vendor', 'productVariant.product', 'productVariant.values.option', 'unit'])
+            ->with(['vendor', 'productVariant.product.brand', 'productVariant.product.measurementUnit', 'productVariant.values.option', 'productVariant.activePurchaseUnits', 'unit'])
             ->when($vendorId, fn ($q) => $q->where('catalog.vendor_id', $vendorId))
             ->when($status !== 'all', fn ($q) => $q->where('catalog.status', $status))
             ->when(
@@ -98,6 +99,18 @@ final class CatalogService
 
             return $catalog->load(['vendor', 'productVariant.product', 'productVariant.values.option', 'unit']);
         });
+    }
+
+    public function getVariantWithCatalogEntries(int $productVariantId): ProductVariant
+    {
+        return ProductVariant::query()
+            ->with([
+                'product.brand',
+                'values.option',
+                'catalogEntries.vendor',
+                'catalogEntries.unit',
+            ])
+            ->findOrFail($productVariantId);
     }
 
     public function delete(Catalog $catalog): void

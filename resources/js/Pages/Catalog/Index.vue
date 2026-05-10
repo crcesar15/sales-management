@@ -8,7 +8,6 @@ import {
   InputText,
   IconField,
   InputIcon,
-  ConfirmDialog,
   SelectButton,
   Select,
   Badge,
@@ -21,8 +20,6 @@ import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
 import type { CatalogResponse, CatalogGroupedEntry } from "@/Types/catalog-types";
-import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import VendorComparisonRow from "./Components/VendorComparisonRow.vue";
 
 defineOptions({ layout: AppLayout });
 
@@ -47,14 +44,12 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const { formatCurrency } = useCurrencyFormatter();
 
 const filter = ref(props.filters.filter ?? "");
 const status = ref(props.filters.status ?? "active");
 const vendorId = ref<number | null>(props.filters.vendor_id ?? null);
 const sortField = ref(props.filters.sort_field ?? "product_name");
 const sortOrder = ref(props.filters.sort_direction === "desc" ? -1 : 1);
-const expandedRows = ref<Record<number, boolean>>({});
 
 const groupedEntries = computed<CatalogGroupedEntry[]>(() => {
   const groups = new Map<number, CatalogGroupedEntry>();
@@ -66,16 +61,15 @@ const groupedEntries = computed<CatalogGroupedEntry[]>(() => {
         product_variant_id: key,
         product_name: entry.product_variant?.product?.name ?? "",
         variant_name: entry.product_variant?.name ?? "",
+        brand_name: entry.product_variant?.product?.brand?.name ?? null,
+        purchase_units: entry.product_variant?.purchase_units?.map((u) => u.name) ?? [],
+        measurement_unit: entry.product_variant?.product?.measurement_unit?.name ?? null,
         catalog_entries: [],
-        lowest_price: Infinity,
       });
     }
     const group = groups.get(key);
     if (group) {
       group.catalog_entries.push(entry);
-      if (entry.price < group.lowest_price) {
-        group.lowest_price = entry.price;
-      }
     }
   }
 
@@ -132,8 +126,8 @@ const onSort = (event: DataTableSortEvent) => {
   visitCatalog();
 };
 
-const goToVendors = () => {
-  router.visit(route("vendors"));
+const viewDetails = (productVariantId: number) => {
+  router.visit(route("catalog.show", { productVariant: productVariantId }));
 };
 </script>
 
@@ -153,13 +147,11 @@ const goToVendors = () => {
       </div>
     </div>
 
-    <ConfirmDialog />
     <Toast />
 
     <Card>
       <template #content>
         <DataTable
-          v-model:expanded-rows="expandedRows"
           :value="groupedEntries"
           data-key="product_variant_id"
           lazy
@@ -182,13 +174,7 @@ const goToVendors = () => {
           <template #header>
             <div class="grid grid-cols-12 gap-2">
               <div class="md:col-span-4 col-span-12 flex md:justify-start justify-center">
-                <SelectButton
-                  v-model="status"
-                  :allow-empty="false"
-                  :options="statusOptions"
-                  option-label="label"
-                  option-value="value"
-                />
+                <SelectButton v-model="status" :allow-empty="false" :options="statusOptions" option-label="label" option-value="value" />
               </div>
               <div class="xl:col-span-2 lg:col-span-3 md:col-span-4 col-span-12">
                 <Select
@@ -200,7 +186,9 @@ const goToVendors = () => {
                   class="w-full"
                 />
               </div>
-              <div class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-8 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center">
+              <div
+                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-8 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
+              >
                 <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
                   <InputText v-model="filter" :placeholder="t('Search')" fluid />
@@ -209,26 +197,38 @@ const goToVendors = () => {
             </div>
           </template>
 
-          <Column expander style="width: 3rem" />
-
           <Column field="product_name" :header="t('Product')" sortable>
             <template #body="{ data }">
-              <div class="flex flex-col">
-                <span class="font-bold">{{ data.product_name }}</span>
-                <div v-if="data.catalog_entries[0]?.product_variant?.values?.length" class="flex flex-wrap gap-1 mt-1">
-                  <Badge
-                    v-for="opt in data.catalog_entries[0].product_variant.values"
-                    :key="opt.option_name"
-                    :value="opt.value"
-                  />
-                </div>
+              <button
+                class="text-left hover:text-primary-500 transition-colors cursor-pointer bg-transparent border-0 p-0 font-bold"
+                @click="viewDetails(data.product_variant_id)"
+              >
+                {{ data.product_name }}
+              </button>
+              <div v-if="data.catalog_entries[0]?.product_variant?.values?.length" class="flex flex-wrap gap-1 mt-1">
+                <Badge v-for="opt in data.catalog_entries[0].product_variant.values" :key="opt.option_name" :value="opt.value" />
               </div>
             </template>
           </Column>
 
-          <Column field="variant_name" :header="t('Variant')">
+          <Column field="brand_name" :header="t('Brand')">
             <template #body="{ data }">
-              <span>{{ data.variant_name }}</span>
+              <span>{{ data.brand_name ?? "\u2014" }}</span>
+            </template>
+          </Column>
+
+          <Column field="measurement_unit" :header="t('Base Unit')">
+            <template #body="{ data }">
+              <Badge severity="secondary" :value="data.measurement_unit ?? '&mdash;'" />
+            </template>
+          </Column>
+
+          <Column field="purchase_units" :header="t('Purchase Units')">
+            <template #body="{ data }">
+              <div v-if="data.purchase_units.length" class="flex flex-wrap gap-1">
+                <Badge v-for="unit in data.purchase_units" :key="unit" :value="unit" severity="secondary" />
+              </div>
+              <span v-else class="text-surface-400">&mdash;</span>
             </template>
           </Column>
 
@@ -240,33 +240,20 @@ const goToVendors = () => {
             </template>
           </Column>
 
-          <Column field="lowest_price" :header="t('Best Price')" sortable>
-            <template #body="{ data }">
-              <span class="font-bold text-green-600 dark:text-green-400">
-                {{ formatCurrency(String(data.lowest_price)) }}
-              </span>
-            </template>
-          </Column>
-
           <Column :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
-            <template #body>
+            <template #body="{ data }">
               <div class="flex justify-center">
                 <Button
-                  v-can="'catalog.create'"
-                  v-tooltip.top="t('Add Vendor')"
-                  icon="fa fa-plus"
+                  v-tooltip.top="t('View Details')"
+                  icon="fa fa-eye"
                   text
                   rounded
                   size="large"
-                  @click="goToVendors"
+                  @click="viewDetails(data.product_variant_id)"
                 />
               </div>
             </template>
           </Column>
-
-          <template #expansion="{ data }">
-            <VendorComparisonRow :entries="data.catalog_entries" :lowest-price="data.lowest_price" />
-          </template>
         </DataTable>
       </template>
     </Card>

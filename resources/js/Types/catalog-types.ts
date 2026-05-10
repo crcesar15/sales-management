@@ -20,8 +20,12 @@ export interface Catalog {
     id: number;
     name: string;
     identifier: string;
-    product: ProductResponse;
+    product: ProductResponse & {
+      brand: { id: number; name: string } | null;
+      measurement_unit: { id: number; name: string; abbreviation: string } | null;
+    };
     values: { option_name: string; value: string }[];
+    purchase_units: { id: number; name: string }[];
   };
   purchase_unit?: { id: number; name: string; conversion_factor: number };
 }
@@ -47,8 +51,34 @@ export interface CatalogGroupedEntry {
   product_variant_id: number;
   product_name: string;
   variant_name: string;
+  brand_name: string | null;
+  purchase_units: string[];
+  measurement_unit: string | null;
   catalog_entries: CatalogResponse[];
-  lowest_price: number;
+}
+
+export interface CatalogShowProductVariant {
+  id: number;
+  product_id: number;
+  identifier: string | null;
+  barcode: string | null;
+  price: number;
+  stock: number;
+  status: string;
+  name: string;
+  product: {
+    id: number;
+    name: string;
+    brand: { id: number; name: string } | null;
+  } | null;
+  values: { id: number; value: string; option_name: string | null }[];
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface CatalogShowProps {
+  productVariant: CatalogShowProductVariant;
+  catalogEntries: CatalogResponse[];
 }
 
 export interface CatalogFilters {

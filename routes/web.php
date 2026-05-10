@@ -216,6 +216,7 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // Catalog Routes
     Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
+    Route::get('/catalog/{productVariant}', [CatalogController::class, 'show'])->name('catalog.show');
 
     // Purchase Orders Routes
     Route::get('/purchase-orders', [PurchaseOrdersController::class, 'index'])->name('purchase-orders');

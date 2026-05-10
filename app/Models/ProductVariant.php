@@ -72,6 +72,12 @@ final class ProductVariant extends Model
         );
     }
 
+    /** @return HasMany<Catalog, $this> */
+    public function catalogEntries(): HasMany
+    {
+        return $this->hasMany(Catalog::class, 'product_variant_id');
+    }
+
     /** @return HasMany<Batch, $this> */
     public function batches(): HasMany
     {
