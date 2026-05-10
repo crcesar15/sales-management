@@ -9,11 +9,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 final class Catalog extends Model
 {
     /** @use HasFactory<CatalogFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     protected $table = 'catalog';
 
@@ -60,5 +64,24 @@ final class Catalog extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('catalog')
+            ->dontSubmitEmptyLogs();
+    }
+
+    /** @return array{price: string, minimum_order_quantity: string, lead_time_days: string} */
+    protected function casts(): array
+    {
+        return [
+            'price' => 'decimal:2',
+            'minimum_order_quantity' => 'integer',
+            'lead_time_days' => 'integer',
+        ];
     }
 }

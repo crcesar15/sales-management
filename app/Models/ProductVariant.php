@@ -47,7 +47,7 @@ final class ProductVariant extends Model
     public function vendors(): BelongsToMany
     {
         return $this->belongsToMany(Vendor::class, 'catalog', 'product_variant_id', 'vendor_id')
-            ->withPivot('price', 'payment_terms', 'details', 'status');
+            ->withPivot('price', 'payment_terms', 'details', 'status', 'unit_id', 'minimum_order_quantity', 'lead_time_days');
     }
 
     /** @return BelongsToMany<Media, $this, Pivot> */

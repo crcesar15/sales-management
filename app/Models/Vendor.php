@@ -36,7 +36,7 @@ final class Vendor extends Model
     {
         return $this->belongsToMany(ProductVariant::class, 'catalog', 'vendor_id', 'product_variant_id')
             ->withTimestamps()
-            ->withPivot('price', 'payment_terms', 'details');
+            ->withPivot('price', 'payment_terms', 'details', 'status', 'unit_id', 'minimum_order_quantity', 'lead_time_days');
     }
 
     /** @return HasMany<PurchaseOrder, $this>*/
