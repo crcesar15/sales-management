@@ -8,9 +8,9 @@ import {
   InputText,
   IconField,
   InputIcon,
-  SelectButton,
   Select,
   Badge,
+  Popover,
   type DataTablePageEvent,
   type DataTableSortEvent,
 } from "primevue";
@@ -19,20 +19,12 @@ import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
-import type { CatalogResponse, CatalogGroupedEntry } from "@/Types/catalog-types";
+import type { CatalogVariantCollection } from "@/Types/catalog-types";
 
 defineOptions({ layout: AppLayout });
 
 const props = defineProps<{
-  catalogEntries: {
-    data: CatalogResponse[];
-    meta: {
-      current_page: number;
-      last_page: number;
-      per_page: number;
-      total: number;
-    };
-  };
+  variants: CatalogVariantCollection;
   filters: {
     filter?: string | null;
     status?: string;
@@ -50,44 +42,36 @@ const status = ref(props.filters.status ?? "active");
 const vendorId = ref<number | null>(props.filters.vendor_id ?? null);
 const sortField = ref(props.filters.sort_field ?? "product_name");
 const sortOrder = ref(props.filters.sort_direction === "desc" ? -1 : 1);
+const filterPopover = ref();
 
-const groupedEntries = computed<CatalogGroupedEntry[]>(() => {
-  const groups = new Map<number, CatalogGroupedEntry>();
-
-  for (const entry of props.catalogEntries.data) {
-    const key = entry.product_variant_id;
-    if (!groups.has(key)) {
-      groups.set(key, {
-        product_variant_id: key,
-        product_name: entry.product_variant?.product?.name ?? "",
-        variant_name: entry.product_variant?.name ?? "",
-        brand_name: entry.product_variant?.product?.brand?.name ?? null,
-        purchase_units: entry.product_variant?.purchase_units?.map((u) => u.name) ?? [],
-        measurement_unit: entry.product_variant?.product?.measurement_unit?.name ?? null,
-        catalog_entries: [],
-      });
-    }
-    const group = groups.get(key);
-    if (group) {
-      group.catalog_entries.push(entry);
-    }
-  }
-
-  return Array.from(groups.values());
-});
-
-const statusOptions = [
+const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
   { label: t("Active"), value: "active" },
   { label: t("Inactive"), value: "inactive" },
-];
+  { label: t("Archived"), value: "archived" },
+]);
 
 const vendorOptions = computed(() => [
   { label: t("All Vendors"), value: null },
   ...props.vendors.map((v) => ({ label: v.fullname, value: v.id })),
 ]);
 
-function visitCatalog(params: Record<string, unknown> = {}) {
+const hasActiveFilters = computed(() => status.value !== "active" || vendorId.value !== null);
+
+const activeFilterCount = computed(() => {
+  let count = 0;
+  if (status.value !== "active") count++;
+  if (vendorId.value !== null) count++;
+  return count;
+});
+
+function resetFilters() {
+  status.value = "active";
+  vendorId.value = null;
+  applyFilters();
+}
+
+function applyFilters(overrides: Record<string, unknown> = {}) {
   router.visit(route("catalog"), {
     data: {
       filter: filter.value,
@@ -95,7 +79,7 @@ function visitCatalog(params: Record<string, unknown> = {}) {
       sort_field: sortField.value,
       sort_direction: sortOrder.value === -1 ? "desc" : "asc",
       vendor_id: vendorId.value,
-      ...params,
+      ...overrides,
     },
     preserveState: true,
     replace: true,
@@ -103,18 +87,16 @@ function visitCatalog(params: Record<string, unknown> = {}) {
 }
 
 let filterTimer: ReturnType<typeof setTimeout>;
-watch(filter, (_val) => {
+watch(filter, () => {
   clearTimeout(filterTimer);
-  filterTimer = setTimeout(() => {
-    visitCatalog();
-  }, 300);
+  filterTimer = setTimeout(() => applyFilters(), 300);
 });
 
-watch(status, () => visitCatalog());
-watch(vendorId, () => visitCatalog());
+watch(status, () => applyFilters());
+watch(vendorId, () => applyFilters());
 
 const onPage = (event: DataTablePageEvent) => {
-  visitCatalog({
+  applyFilters({
     page: event.page + 1,
     per_page: event.rows,
   });
@@ -123,7 +105,7 @@ const onPage = (event: DataTablePageEvent) => {
 const onSort = (event: DataTableSortEvent) => {
   sortField.value = typeof event.sortField === "string" ? event.sortField : "product_name";
   sortOrder.value = event.sortOrder ?? 1;
-  visitCatalog();
+  applyFilters();
 };
 
 const viewDetails = (productVariantId: number) => {
@@ -134,17 +116,7 @@ const viewDetails = (productVariantId: number) => {
 <template>
   <div>
     <div class="flex flex-row justify-between mb-3">
-      <h2 class="text-2xl font-bold flex items-center m-0">{{ t("Product Catalog") }}</h2>
-      <div class="flex flex-col justify-center">
-        <Button
-          v-can="'catalog.create'"
-          :label="t('Add Entry')"
-          icon="fa fa-plus"
-          raised
-          class="uppercase"
-          @click="router.visit(route('vendors'))"
-        />
-      </div>
+      <h2 class="text-2xl font-bold flex items-center m-0">{{ t("Catalog") }}</h2>
     </div>
 
     <Toast />
@@ -152,12 +124,12 @@ const viewDetails = (productVariantId: number) => {
     <Card>
       <template #content>
         <DataTable
-          :value="groupedEntries"
-          data-key="product_variant_id"
+          :value="props.variants.data"
+          data-key="id"
           lazy
-          :total-records="props.catalogEntries.meta.total"
-          :rows="props.catalogEntries.meta.per_page"
-          :first="(props.catalogEntries.meta.current_page - 1) * props.catalogEntries.meta.per_page"
+          :total-records="props.variants.meta.total"
+          :rows="props.variants.meta.per_page"
+          :first="(props.variants.meta.current_page - 1) * props.variants.meta.per_page"
           paginator
           sort-field="product_name"
           :sort-order="1"
@@ -173,60 +145,90 @@ const viewDetails = (productVariantId: number) => {
 
           <template #header>
             <div class="grid grid-cols-12 gap-2">
-              <div class="md:col-span-4 col-span-12 flex md:justify-start justify-center">
-                <SelectButton v-model="status" :allow-empty="false" :options="statusOptions" option-label="label" option-value="value" />
-              </div>
-              <div class="xl:col-span-2 lg:col-span-3 md:col-span-4 col-span-12">
-                <Select
-                  v-model="vendorId"
-                  :options="vendorOptions"
-                  option-label="label"
-                  option-value="value"
-                  :placeholder="t('All Vendors')"
-                  class="w-full"
+              <div class="lg:col-span-4 lg:col-start-1 md:col-span-6 col-span-12 flex gap-2 items-center">
+                <Button
+                  type="button"
+                  icon="fa fa-filter"
+                  :label="t('Filters')"
+                  :severity="hasActiveFilters ? 'primary' : 'secondary'"
+                  outlined
+                  @click="filterPopover.toggle($event)"
                 />
+                <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
               </div>
-              <div
-                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-8 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
-              >
+              <div class="lg:col-span-4 lg:col-start-9 md:col-start-7 col-start-1 col-span-12 flex items-end">
                 <IconField icon-position="left" class="w-full">
                   <InputIcon class="fa fa-search" />
                   <InputText v-model="filter" :placeholder="t('Search')" fluid />
                 </IconField>
               </div>
             </div>
+
+            <Popover ref="filterPopover">
+              <div class="flex flex-col gap-4 p-4" style="width: 320px">
+                <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
+                  <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Vendor") }}</label>
+                  <Select
+                    v-model="vendorId"
+                    :options="vendorOptions"
+                    option-label="label"
+                    option-value="value"
+                    :placeholder="t('All Vendors')"
+                    class="w-full"
+                  />
+                </div>
+                <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                  <Button
+                    type="button"
+                    :label="t('Clear')"
+                    icon="fa fa-times"
+                    severity="secondary"
+                    text
+                    size="small"
+                    :disabled="!hasActiveFilters"
+                    @click="resetFilters"
+                  />
+                </div>
+              </div>
+            </Popover>
           </template>
 
           <Column field="product_name" :header="t('Product')" sortable>
             <template #body="{ data }">
-              <button
-                class="text-left hover:text-primary-500 transition-colors cursor-pointer bg-transparent border-0 p-0 font-bold"
-                @click="viewDetails(data.product_variant_id)"
-              >
-                {{ data.product_name }}
-              </button>
-              <div v-if="data.catalog_entries[0]?.product_variant?.values?.length" class="flex flex-wrap gap-1 mt-1">
-                <Badge v-for="opt in data.catalog_entries[0].product_variant.values" :key="opt.option_name" :value="opt.value" />
+              <div class="text-left font-bold">{{ data.product?.name ?? "\u2014" }}</div>
+              <div v-if="data.values?.length" class="flex flex-wrap gap-1 mt-1">
+                <Badge v-for="opt in data.values" :key="opt.option_name" :value="opt.value" />
               </div>
             </template>
           </Column>
 
           <Column field="brand_name" :header="t('Brand')">
             <template #body="{ data }">
-              <span>{{ data.brand_name ?? "\u2014" }}</span>
+              <span>{{ data.product?.brand?.name ?? "\u2014" }}</span>
             </template>
           </Column>
 
           <Column field="measurement_unit" :header="t('Base Unit')">
             <template #body="{ data }">
-              <Badge severity="secondary" :value="data.measurement_unit ?? '&mdash;'" />
+              <Badge class="capitalize" severity="secondary" size="xlarge" :value="data.product?.measurement_unit?.name ?? '&mdash;'" />
             </template>
           </Column>
 
           <Column field="purchase_units" :header="t('Purchase Units')">
             <template #body="{ data }">
-              <div v-if="data.purchase_units.length" class="flex flex-wrap gap-1">
-                <Badge v-for="unit in data.purchase_units" :key="unit" :value="unit" severity="secondary" />
+              <div v-if="data.purchase_units?.length" class="flex flex-wrap gap-1">
+                <Badge
+                  v-for="unit in data.purchase_units"
+                  size="xlarge"
+                  class="capitalize"
+                  :key="unit.id"
+                  :value="unit.name"
+                  severity="secondary"
+                />
               </div>
               <span v-else class="text-surface-400">&mdash;</span>
             </template>
@@ -235,7 +237,7 @@ const viewDetails = (productVariantId: number) => {
           <Column field="vendor_count" :header="t('Vendors')" :pt="{ columnHeaderContent: 'justify-center' }">
             <template #body="{ data }">
               <div class="flex justify-center">
-                <Badge :value="data.catalog_entries.length" severity="info" />
+                <Badge size="large" :value="data.vendor_count" />
               </div>
             </template>
           </Column>
@@ -243,14 +245,7 @@ const viewDetails = (productVariantId: number) => {
           <Column :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
             <template #body="{ data }">
               <div class="flex justify-center">
-                <Button
-                  v-tooltip.top="t('View Details')"
-                  icon="fa fa-eye"
-                  text
-                  rounded
-                  size="large"
-                  @click="viewDetails(data.product_variant_id)"
-                />
+                <Button v-tooltip.top="t('View Details')" icon="fa fa-eye" text rounded size="large" @click="viewDetails(data.id)" />
               </div>
             </template>
           </Column>

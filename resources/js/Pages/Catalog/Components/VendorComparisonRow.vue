@@ -4,7 +4,6 @@ import { router, useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
 import type { CatalogResponse } from "@/Types/catalog-types";
-import CatalogStatusTag from "./CatalogStatusTag.vue";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 
 const props = defineProps<{
@@ -108,7 +107,7 @@ const formatPaymentTerms = (terms: string | null): string => {
 
       <Column field="status" :header="t('Status')">
         <template #body="{ data }">
-          <CatalogStatusTag :status="data.status" />
+          <Tag :value="t(data.status === 'active' ? 'Active' : 'Inactive')" :severity="data.status === 'active' ? 'success' : 'warn'" rounded />
         </template>
       </Column>
 

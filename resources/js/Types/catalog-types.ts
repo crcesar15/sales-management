@@ -57,6 +57,47 @@ export interface CatalogGroupedEntry {
   catalog_entries: CatalogResponse[];
 }
 
+export interface CatalogVariantVendor {
+  id: number;
+  vendor: { id: number; fullname: string } | null;
+  price: number;
+  unit: { id: number; name: string; conversion_factor: number } | null;
+  payment_terms: string | null;
+  minimum_order_quantity: number | null;
+  lead_time_days: number | null;
+  status: "active" | "inactive";
+}
+
+export interface CatalogVariantResponse {
+  id: number;
+  identifier: string | null;
+  barcode: string | null;
+  price: number;
+  stock: number;
+  status: "active" | "inactive" | "archived";
+  name: string;
+  product: {
+    id: number;
+    name: string;
+    brand: { id: number; name: string } | null;
+    measurement_unit: { id: number; name: string; abbreviation: string } | null;
+  } | null;
+  values: { option_name: string; value: string }[];
+  purchase_units: { id: number; name: string }[];
+  vendor_count: number;
+  vendors: CatalogVariantVendor[];
+}
+
+export interface CatalogVariantCollection {
+  data: CatalogVariantResponse[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
 export interface CatalogShowProductVariant {
   id: number;
   product_id: number;
@@ -70,6 +111,8 @@ export interface CatalogShowProductVariant {
     id: number;
     name: string;
     brand: { id: number; name: string } | null;
+    measurement_unit: { id: number; name: string; abbreviation: string } | null;
+    categories: { id: number; name: string }[] | null;
   } | null;
   values: { id: number; value: string; option_name: string | null }[];
   created_at: string | null;
