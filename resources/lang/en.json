@@ -576,5 +576,8 @@
   "View Details": "View Details",
   "No vendors found for this product": "No vendors found for this product",
   "Base Unit": "Base Unit",
-  "All Units": "All Units"
+  "All Units": "All Units",
+  "Payment": "Payment",
+  "Cash / Credit": "Cash / Credit",
+  "Equivalence": "Equivalence"
 }
