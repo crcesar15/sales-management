@@ -106,11 +106,70 @@ final class CatalogService
         return ProductVariant::query()
             ->with([
                 'product.brand',
+                'product.measurementUnit',
+                'product.categories',
                 'values.option',
                 'catalogEntries.vendor',
                 'catalogEntries.unit',
             ])
             ->findOrFail($productVariantId);
+    }
+
+    /**
+     * List all product variants with their catalog entries, regardless of
+     * whether they have a vendor. Filters apply to the variant's status.
+     *
+     * @return LengthAwarePaginator<int, ProductVariant>
+     */
+    public function listVariants(
+        string $status = 'active',
+        string $orderBy = 'product_name',
+        string $orderDirection = 'asc',
+        int $perPage = 10,
+        ?string $filter = null,
+        ?int $vendorId = null,
+    ): LengthAwarePaginator {
+        $needsProductJoin = in_array($orderBy, ['product_name', 'brand_name']);
+        $needsBrandJoin = $orderBy === 'brand_name';
+
+        return ProductVariant::query()
+            ->select('product_variants.*')
+            ->when($needsProductJoin, fn ($q) => $q
+                ->join('products', 'product_variants.product_id', '=', 'products.id')
+                ->whereNull('products.deleted_at'))
+            ->when($needsBrandJoin, fn ($q) => $q
+                ->leftJoin('brands', 'products.brand_id', '=', 'brands.id'))
+            ->with([
+                'product.brand',
+                'product.measurementUnit',
+                'values.option',
+                'activePurchaseUnits',
+                'catalogEntries.vendor',
+                'catalogEntries.unit',
+            ])
+            ->addSelect(['vendor_count' => Catalog::selectRaw('count(distinct vendor_id)')
+                ->whereColumn('catalog.product_variant_id', 'product_variants.id'),
+            ])
+            ->when($status !== 'all', fn ($q) => $q
+                ->where('product_variants.status', $status))
+            ->when($vendorId, fn ($q) => $q
+                ->whereHas('catalogEntries', fn ($q) => $q->where('catalog.vendor_id', $vendorId)))
+            ->when(
+                $filter !== null && $filter !== '',
+                fn ($q) => $q->where(function ($q) use ($filter): void {
+                    $q->whereHas('product', fn ($pq) => $pq->where('name', 'like', "%{$filter}%"))
+                        ->orWhere('product_variants.identifier', 'like', "%{$filter}%");
+                })
+            )
+            ->orderBy(match ($orderBy) {
+                'product_name' => 'products.name',
+                'brand_name' => 'brands.name',
+                'identifier' => 'product_variants.identifier',
+                'vendor_count' => 'vendor_count',
+                default => 'product_variants.created_at',
+            }, $orderDirection)
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     public function delete(Catalog $catalog): void

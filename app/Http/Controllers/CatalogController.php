@@ -9,6 +9,7 @@ use App\Http\Requests\Catalog\StoreCatalogRequest;
 use App\Http\Requests\Catalog\UpdateCatalogRequest;
 use App\Http\Resources\Catalog\CatalogCollection;
 use App\Http\Resources\Catalog\CatalogResource;
+use App\Http\Resources\Catalog\CatalogVariantCollection;
 use App\Http\Resources\Product\ProductVariantResource;
 use App\Models\Catalog;
 use App\Models\ProductVariant;
@@ -30,7 +31,7 @@ final class CatalogController extends Controller
         $status = request()->string('status', 'active')->value();
         $vendorId = request()->integer('vendor_id') ?: null;
 
-        $catalogEntries = $this->catalogService->listGroupedByProduct(
+        $variants = $this->catalogService->listVariants(
             status: $status,
             orderBy: request()->string('sort_field', 'product_name')->value(),
             orderDirection: request()->string('sort_direction', 'asc')->value(),
@@ -40,7 +41,7 @@ final class CatalogController extends Controller
         );
 
         return Inertia::render('Catalog/Index', [
-            'catalogEntries' => new CatalogCollection($catalogEntries),
+            'variants' => new CatalogVariantCollection($variants),
             'filters' => [
                 'filter' => request()->string('filter')->value() ?: null,
                 'status' => $status,

@@ -31,6 +31,11 @@ final class ProductVariantResource extends JsonResource
                     'id' => $this->product->brand->id,
                     'name' => $this->product->brand->name,
                 ] : null,
+                'measurement_unit' => $this->product?->measurementUnit ? [
+                    'id' => $this->product->measurementUnit->id,
+                    'name' => $this->product->measurementUnit->name,
+                    'abbreviation' => $this->product->measurementUnit->abbreviation,
+                ] : null,
                 'categories' => $this->product?->categories?->map(fn ($c) => [
                     'id' => $c->id,
                     'name' => $c->name,
@@ -64,8 +69,8 @@ final class ProductVariantResource extends JsonResource
                 'status' => $u->status,
                 'sort_order' => $u->sort_order,
             ]) : [],
-            'created_at' => $this->created_at?->toISOString(),
-            'updated_at' => $this->updated_at?->toISOString(),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }
