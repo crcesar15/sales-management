@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('vendor_id')->constrained();
-            $table->enum('status', ['draft', 'pending', 'paid', 'cancelled'])->default('draft');
-            $table->date('order_date')->nullable();
+            $table->enum('status', ['draft', 'awaiting_approval', 'approved', 'sent', 'paid', 'cancelled'])->default('draft');
+            $table->date('order_date');
             $table->date('expected_arrival_date')->nullable();
             $table->float('sub_total', 8)->nullable();
             $table->float('discount', 8)->nullable();
@@ -27,6 +27,9 @@ return new class extends Migration
             $table->string('proof_of_payment_type')->nullable();
             $table->string('proof_of_payment_number')->nullable();
             $table->timestamps();
+
+            $table->index('status');
+            $table->index('order_date');
         });
     }
 

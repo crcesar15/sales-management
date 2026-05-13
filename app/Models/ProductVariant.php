@@ -90,6 +90,12 @@ final class ProductVariant extends Model
         return $this->hasMany(StockTransferItem::class);
     }
 
+    /** @return HasMany<PurchaseOrderProduct, $this> */
+    public function purchaseOrderItems(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderProduct::class);
+    }
+
     /** @return HasMany<ProductVariantUnit, $this> */
     public function units(): HasMany
     {

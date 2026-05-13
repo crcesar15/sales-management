@@ -27,6 +27,7 @@ final class PurchaseOrderFactory extends Factory
             'order_date' => fake()->date(),
             'expected_arrival_date' => fake()->date(),
             'sub_total' => 0,
+            'discount' => 0,
             'total' => 0,
             'status' => 'draft',
         ];

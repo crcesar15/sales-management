@@ -14,6 +14,7 @@ use App\Models\Product;
 use App\Models\ProductOptionValue;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderProduct;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Database\Seeder;
@@ -215,7 +216,9 @@ final class DatabaseSeeder extends Seeder
                 'vendor_id' => Vendor::all()->random()->id,
             ]
         )->each(function (PurchaseOrder $purchaseOrder): void {
-            $purchaseOrder->products()->attach(Product::all()->random()->id, [
+            PurchaseOrderProduct::create([
+                'purchase_order_id' => $purchaseOrder->id,
+                'product_variant_id' => ProductVariant::all()->random()->id,
                 'quantity' => random_int(1, 10),
                 'price' => random_int(100, 1000),
                 'total' => random_int(100, 1000),

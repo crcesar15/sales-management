@@ -72,4 +72,11 @@ enum PermissionsEnum: string
     case CATALOG_CREATE = 'catalog.create';
     case CATALOG_EDIT = 'catalog.edit';
     case CATALOG_DELETE = 'catalog.delete';
+
+    case PURCHASE_ORDERS_VIEW = 'purchase_order.view';
+    case PURCHASE_ORDERS_CREATE = 'purchase_order.create';
+    case PURCHASE_ORDERS_EDIT = 'purchase_order.edit';
+    case PURCHASE_ORDERS_DELETE = 'purchase_order.delete';
+    case PURCHASE_ORDERS_APPROVE = 'purchase_order.approve';
+    case PURCHASE_ORDERS_RESTORE = 'purchase_order.restore';
 }
