@@ -41,6 +41,16 @@ final class SettingsSeeder extends Seeder
                     'value' => '30',
                     'name' => 'Expiry Alert Days',
                 ],
+                [
+                    'key' => 'date_format',
+                    'value' => 'YYYY-MM-DD',
+                    'name' => 'Date Format',
+                ],
+                [
+                    'key' => 'datetime_format',
+                    'value' => 'YYYY-MM-DD HH:mm',
+                    'name' => 'Datetime Format',
+                ],
             ],
             'tax' => [
                 [

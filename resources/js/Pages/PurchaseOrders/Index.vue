@@ -22,7 +22,7 @@ import { route } from "ziggy-js";
 import type { PurchaseOrderResponse, PurchaseOrderFilters } from "@/Types/purchase-order-types";
 import POStatusBadge from "./Components/POStatusBadge.vue";
 import { useI18n } from "vue-i18n";
-
+import { useAuth } from "@/Composables/useAuth";
 defineOptions({ layout: AppLayout });
 
 const props = defineProps<{
@@ -39,6 +39,7 @@ const props = defineProps<{
   vendors: Array<{ id: number; fullname: string }>;
 }>();
 
+const { getSetting } = useAuth();
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
 
@@ -81,7 +82,7 @@ const activeFilterCount = computed(() => {
 const orders = computed(() =>
   props.purchaseOrders.data.map((item) => ({
     ...item,
-    order_date: useDatetimeFormatter(item.order_date, "DD-MM-YYYY"),
+    order_date: useDatetimeFormatter(item.order_date, getSetting("general", "date_format") || "DD-MM-YYYY"),
   })),
 );
 

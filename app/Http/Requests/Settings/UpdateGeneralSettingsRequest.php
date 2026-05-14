@@ -25,6 +25,8 @@ final class UpdateGeneralSettingsRequest extends FormRequest
             'business_address' => ['nullable', 'string', 'max:500'],
             'business_phone' => ['nullable', 'string', 'max:30'],
             'timezone' => ['required', 'string', Rule::in(timezone_identifiers_list())],
+            'date_format' => ['required', 'string', Rule::in(['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY', 'DD-MM-YYYY'])],
+            'datetime_format' => ['required', 'string', Rule::in(['YYYY-MM-DD HH:mm', 'DD/MM/YYYY HH:mm', 'MM/DD/YYYY HH:mm', 'DD-MM-YYYY HH:mm'])],
         ];
     }
 }

@@ -25,6 +25,21 @@ const timezoneOptions = Intl.supportedValuesOf("timeZone").map((tz) => ({
   value: tz,
 }));
 
+// Format options
+const dateFormatOptions = [
+  { label: "YYYY-MM-DD", value: "YYYY-MM-DD" },
+  { label: "DD/MM/YYYY", value: "DD/MM/YYYY" },
+  { label: "MM/DD/YYYY", value: "MM/DD/YYYY" },
+  { label: "DD-MM-YYYY", value: "DD-MM-YYYY" },
+];
+
+const datetimeFormatOptions = [
+  { label: "YYYY-MM-DD HH:mm", value: "YYYY-MM-DD HH:mm" },
+  { label: "DD/MM/YYYY HH:mm", value: "DD/MM/YYYY HH:mm" },
+  { label: "MM/DD/YYYY HH:mm", value: "MM/DD/YYYY HH:mm" },
+  { label: "DD-MM-YYYY HH:mm", value: "DD-MM-YYYY HH:mm" },
+];
+
 // ─── General Form ──────────────────────────────────────────────────────────
 
 const generalSchema = toTypedSchema(
@@ -33,6 +48,8 @@ const generalSchema = toTypedSchema(
     business_address: string().nullable().optional().max(500),
     business_phone: string().nullable().optional().max(30),
     timezone: string().required(),
+    date_format: string().required(),
+    datetime_format: string().required(),
   }),
 );
 
@@ -49,6 +66,8 @@ const {
     business_address: props.settings.general?.business_address ?? "",
     business_phone: props.settings.general?.business_phone ?? "",
     timezone: props.settings.general?.timezone ?? "UTC",
+    date_format: props.settings.general?.date_format ?? "YYYY-MM-DD",
+    datetime_format: props.settings.general?.datetime_format ?? "YYYY-MM-DD HH:mm",
   },
 });
 
@@ -56,6 +75,8 @@ const [generalBusinessName, generalBusinessNameAttrs] = generalDefineField("busi
 const [generalBusinessAddress, generalBusinessAddressAttrs] = generalDefineField("business_address");
 const [generalBusinessPhone, generalBusinessPhoneAttrs] = generalDefineField("business_phone");
 const [generalTimezone, generalTimezoneAttrs] = generalDefineField("timezone");
+const [generalDateFormat, generalDateFormatAttrs] = generalDefineField("date_format");
+const [generalDatetimeFormat, generalDatetimeFormatAttrs] = generalDefineField("datetime_format");
 
 const onSubmitGeneral = handleSubmitGeneral((values) => {
   router.put(route("settings.general.update"), values, {
@@ -266,6 +287,44 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                     />
                     <small v-if="generalErrors.timezone" class="text-red-400 dark:text-red-300">
                       {{ generalErrors.timezone }}
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="date_format">{{ t("Date Format") }}</label>
+                    <Select
+                      id="date_format"
+                      v-model="generalDateFormat"
+                      v-bind="generalDateFormatAttrs"
+                      :options="dateFormatOptions"
+                      option-label="label"
+                      option-value="value"
+                      :placeholder="t('Select date format')"
+                      :class="{ 'p-invalid': generalErrors.date_format }"
+                    />
+                    <small v-if="generalErrors.date_format" class="text-red-400 dark:text-red-300">
+                      {{ generalErrors.date_format }}
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2 mb-3">
+                    <label for="datetime_format">{{ t("Datetime Format") }}</label>
+                    <Select
+                      id="datetime_format"
+                      v-model="generalDatetimeFormat"
+                      v-bind="generalDatetimeFormatAttrs"
+                      :options="datetimeFormatOptions"
+                      option-label="label"
+                      option-value="value"
+                      :placeholder="t('Select datetime format')"
+                      :class="{ 'p-invalid': generalErrors.datetime_format }"
+                    />
+                    <small v-if="generalErrors.datetime_format" class="text-red-400 dark:text-red-300">
+                      {{ generalErrors.datetime_format }}
                     </small>
                   </div>
                 </div>
