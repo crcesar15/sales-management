@@ -4,11 +4,10 @@ import {
   Card,
   Column,
   Button,
-  InputText,
-  IconField,
-  InputIcon,
-  SelectButton,
   Select,
+  Calendar,
+  Popover,
+  Badge,
   type DataTablePageEvent,
   type DataTableSortEvent,
 } from "primevue";
@@ -43,11 +42,13 @@ const props = defineProps<{
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
 
-const filter = ref(props.filters.filter ?? "");
 const status = ref(props.filters.status || "all");
 const vendorId = ref<number | null>(props.filters.vendor_id ?? null);
+const dateFrom = ref<Date | null>(props.filters.from ? new Date(props.filters.from) : null);
+const dateTo = ref<Date | null>(props.filters.to ? new Date(props.filters.to) : null);
 const sortField = ref(props.filters.order_by ?? "created_at");
 const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
+const filterPopover = ref();
 
 const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
@@ -59,40 +60,60 @@ const statusOptions = computed(() => [
   { label: t("Cancelled"), value: "cancelled" },
 ]);
 
-const vendorOptions = computed(() => [{ id: 0, fullname: t("All Vendors") }, ...props.vendors]);
+const vendorOptions = computed(() => [
+  { label: t("All Vendors"), value: null },
+  ...props.vendors.map((v) => ({ label: v.fullname, value: v.id })),
+]);
+
+const hasActiveFilters = computed(
+  () => status.value !== "all" || vendorId.value !== null || dateFrom.value !== null || dateTo.value !== null,
+);
+
+const activeFilterCount = computed(() => {
+  let count = 0;
+  if (status.value !== "all") count++;
+  if (vendorId.value !== null) count++;
+  if (dateFrom.value !== null) count++;
+  if (dateTo.value !== null) count++;
+  return count;
+});
 
 const orders = computed(() =>
   props.purchaseOrders.data.map((item) => ({
     ...item,
-    created_at: useDatetimeFormatter(item.created_at),
+    order_date: useDatetimeFormatter(item.order_date, "DD-MM-YYYY"),
   })),
 );
 
-function applyFilters(data?: Record<string, unknown>) {
+function applyFilters(overrides: Record<string, unknown> = {}) {
   router.visit(route("purchase-orders"), {
     data: {
-      filter: filter.value,
-      status: status.value,
+      filter: "",
+      status: status.value === "all" ? null : status.value,
       vendor_id: vendorId.value ?? "",
-      from: props.filters.from ?? "",
-      to: props.filters.to ?? "",
+      from: dateFrom.value ? dateFrom.value.toISOString().split("T")[0] : "",
+      to: dateTo.value ? dateTo.value.toISOString().split("T")[0] : "",
       order_by: sortField.value,
       order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      ...data,
+      ...overrides,
     },
     preserveState: true,
     replace: true,
   });
 }
 
-let filterTimer: ReturnType<typeof setTimeout>;
-watch(filter, () => {
-  clearTimeout(filterTimer);
-  filterTimer = setTimeout(() => applyFilters(), 300);
-});
+function resetFilters() {
+  status.value = "all";
+  vendorId.value = null;
+  dateFrom.value = null;
+  dateTo.value = null;
+  applyFilters();
+}
 
-watch(status, () => applyFilters({ page: 1 }));
-watch(vendorId, () => applyFilters({ page: 1 }));
+watch(status, () => applyFilters());
+watch(vendorId, () => applyFilters());
+watch(dateFrom, () => applyFilters());
+watch(dateTo, () => applyFilters());
 
 const onPage = (event: DataTablePageEvent) => {
   applyFilters({ page: event.page + 1, per_page: event.rows });
@@ -150,37 +171,60 @@ const editOrder = (po: PurchaseOrderResponse) => {
             </div>
           </template>
           <template #header>
-            <div class="grid grid-cols-12">
-              <div class="md:col-span-6 col-span-12 flex md:justify-start justify-center">
-                <SelectButton v-model="status" :allow-empty="false" :options="statusOptions" option-label="label" option-value="value" />
-              </div>
-              <div
-                class="flex xl:col-span-3 xl:col-start-7 lg:col-span-4 lg:col-start-7 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center items-center gap-2"
-              >
-                <Select
-                  v-model="vendorId"
-                  :options="vendorOptions"
-                  option-label="fullname"
-                  option-value="id"
-                  :placeholder="t('All Vendors')"
-                  class="w-full"
+            <div class="grid grid-cols-12 gap-2">
+              <div class="lg:col-span-4 lg:col-start-1 col-span-12 flex gap-2 items-center">
+                <Button
+                  type="button"
+                  icon="fa fa-filter"
+                  :label="t('Filters')"
+                  :severity="hasActiveFilters ? 'primary' : 'secondary'"
+                  outlined
+                  @click="filterPopover.toggle($event)"
                 />
-              </div>
-              <div
-                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-10 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
-              >
-                <IconField icon-position="left" class="w-full">
-                  <InputIcon class="fa fa-search" />
-                  <InputText v-model="filter" :placeholder="t('Search')" fluid />
-                </IconField>
+                <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
               </div>
             </div>
+
+            <Popover ref="filterPopover">
+              <div class="flex flex-col gap-4 p-4 min-w-72">
+                <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
+                  <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Vendor") }}</label>
+                  <Select
+                    v-model="vendorId"
+                    :options="vendorOptions"
+                    option-label="label"
+                    option-value="value"
+                    :placeholder="t('All Vendors')"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Date From") }}</label>
+                  <Calendar v-model="dateFrom" :show-icon="true" :placeholder="t('From')" date-format="yy-mm-dd" class="w-full" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Date To") }}</label>
+                  <Calendar v-model="dateTo" :show-icon="true" :placeholder="t('To')" date-format="yy-mm-dd" class="w-full" />
+                </div>
+                <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                  <Button
+                    type="button"
+                    :label="t('Clear')"
+                    icon="fa fa-times"
+                    severity="secondary"
+                    text
+                    size="small"
+                    :disabled="!hasActiveFilters"
+                    @click="resetFilters"
+                  />
+                </div>
+              </div>
+            </Popover>
           </template>
-          <Column field="status" :header="t('Status')" sortable style="width: 140px">
-            <template #body="{ data }">
-              <POStatusBadge :status="data.status" />
-            </template>
-          </Column>
           <Column field="vendor.fullname" :header="t('Vendor')" sortable>
             <template #body="{ data }">
               {{ data.vendor?.fullname ?? "—" }}
@@ -191,19 +235,19 @@ const editOrder = (po: PurchaseOrderResponse) => {
               {{ data.user?.full_name ?? "—" }}
             </template>
           </Column>
-          <Column field="total" :header="t('Total')" sortable>
-            <template #body="{ data }">
-              {{ formatCurrency(String(data.total ?? 0)) }}
-            </template>
-          </Column>
           <Column field="order_date" :header="t('Order Date')" sortable>
             <template #body="{ data }">
               {{ data.order_date ?? "—" }}
             </template>
           </Column>
-          <Column field="created_at" :header="t('Created At')" sortable>
+          <Column field="status" :header="t('Status')" sortable style="width: 140px">
             <template #body="{ data }">
-              {{ data.created_at }}
+              <POStatusBadge :status="data.status" />
+            </template>
+          </Column>
+          <Column field="total" :header="t('Total')" sortable>
+            <template #body="{ data }">
+              {{ formatCurrency(String(data.total ?? 0)) }}
             </template>
           </Column>
           <Column :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
