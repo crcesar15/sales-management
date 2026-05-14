@@ -21,11 +21,13 @@ import AppLayout from "@layouts/admin.vue";
 import { usePurchaseOrderClient } from "@/Composables/usePurchaseOrderClient";
 import POLineItemsTable from "../Components/POLineItemsTable.vue";
 import POTotalsPanel from "../Components/POTotalsPanel.vue";
+import type { PurchaseOrderResponse } from "@/Types/purchase-order-types";
 import type { LineItem } from "../Components/POLineItemsTable.vue";
 
 defineOptions({ layout: AppLayout });
 
-defineProps<{
+const props = defineProps<{
+  purchaseOrder: PurchaseOrderResponse;
   vendors: Array<{ id: number; fullname: string }>;
 }>();
 
@@ -35,7 +37,10 @@ const { searchVendorsApi } = usePurchaseOrderClient();
 
 const vendorSearchResults = ref<Array<{ id: number; fullname: string; email?: string | null; phone?: string | null; address?: string | null }>>([]);
 const vendorSearchLoading = ref(false);
-const selectedVendor = ref<{ id: number; fullname: string; email?: string | null; phone?: string | null; address?: string | null } | null>(null);
+const selectedVendor = ref<{ id: number; fullname: string; email?: string | null; phone?: string | null; address?: string | null } | null>({
+  id: props.purchaseOrder.vendor.id,
+  fullname: props.purchaseOrder.vendor.fullname,
+});
 const vendorInfoPopover = ref();
 
 const schema = toTypedSchema(
@@ -59,21 +64,34 @@ const schema = toTypedSchema(
 const { handleSubmit, errors, setFieldValue, setErrors } = useForm({
   validationSchema: schema,
   initialValues: {
-    vendor_id: undefined as unknown as number,
-    order_date: "",
-    expected_arrival_date: null as string | null,
-    discount: 0,
-    notes: null as string | null,
-    items: [] as Array<{ product_variant_id: number; quantity: number }>,
+    vendor_id: props.purchaseOrder.vendor_id,
+    order_date: props.purchaseOrder.order_date ?? "",
+    expected_arrival_date: props.purchaseOrder.expected_arrival_date,
+    discount: props.purchaseOrder.discount ?? 0,
+    notes: props.purchaseOrder.notes,
+    items: props.purchaseOrder.line_items.map((item) => ({
+      product_variant_id: item.product_variant_id,
+      quantity: item.quantity,
+    })),
   },
 });
 
-const lineItems = ref<LineItem[]>([]);
+const lineItems = ref<LineItem[]>(
+  props.purchaseOrder.line_items.map((item) => ({
+    id: String(item.id),
+    product_variant_id: item.product_variant_id,
+    product_name: item.product_variant?.product?.name ?? "—",
+    variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
+    quantity: item.quantity,
+    price: item.price,
+    total: item.total,
+  })),
+);
 
-const orderDateValue = ref<Date | undefined>(undefined);
-const expectedArrivalDateValue = ref<Date | undefined>(undefined);
-const discountValue = ref<number>(0);
-const notesValue = ref<string | null>(null);
+const orderDateValue = ref<Date | undefined>(props.purchaseOrder.order_date ? new Date(props.purchaseOrder.order_date) : undefined);
+const expectedArrivalDateValue = ref<Date | undefined>(props.purchaseOrder.expected_arrival_date ? new Date(props.purchaseOrder.expected_arrival_date) : undefined);
+const discountValue = ref<number>(props.purchaseOrder.discount ?? 0);
+const notesValue = ref<string | null>(props.purchaseOrder.notes);
 
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.total, 0));
 const total = computed(() => subTotal.value - (discountValue.value ?? 0));
@@ -103,10 +121,10 @@ function toggleVendorInfo(event: Event) {
   vendorInfoPopover.value.toggle(event);
 }
 
-const submit = handleSubmit((formValues) => {
+const submit = handleSubmit(() => {
   const payload = {
-    vendor_id: formValues.vendor_id ?? selectedVendor.value?.id,
-    order_date: orderDateValue.value ? orderDateValue.value.toISOString().split("T")[0] : "",
+    vendor_id: selectedVendor.value?.id ?? props.purchaseOrder.vendor_id,
+    order_date: orderDateValue.value ? orderDateValue.value.toISOString().split("T")[0] : props.purchaseOrder.order_date ?? "",
     expected_arrival_date: expectedArrivalDateValue.value ? expectedArrivalDateValue.value.toISOString().split("T")[0] : null,
     discount: discountValue.value ?? 0,
     notes: notesValue.value || null,
@@ -116,9 +134,9 @@ const submit = handleSubmit((formValues) => {
     })),
   };
 
-  router.post(route("purchase-orders.store"), payload, {
+  router.put(route("purchase-orders.update", props.purchaseOrder.id), payload, {
     onSuccess: () => {
-      toast.add({ severity: "success", summary: t("Success"), detail: t("Purchase order created successfully"), life: 3000 });
+      toast.add({ severity: "success", summary: t("Success"), detail: t("Purchase order updated successfully"), life: 3000 });
     },
     onError: (errs: Record<string, string>) => {
       setErrors(errs);
@@ -131,7 +149,7 @@ const submit = handleSubmit((formValues) => {
 });
 
 function goBack() {
-  router.visit(route("purchase-orders"));
+  router.visit(route("purchase-orders.show", props.purchaseOrder.id));
 }
 </script>
 
@@ -140,9 +158,9 @@ function goBack() {
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
         <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
-        <h2 class="text-2xl font-bold m-0">{{ t("Create Purchase Order") }}</h2>
+        <h2 class="text-2xl font-bold m-0">{{ t("Edit Purchase Order") }}</h2>
       </div>
-      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="false" @click="submit" />
+      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" @click="submit" />
     </div>
 
     <ConfirmDialog />
@@ -188,9 +206,6 @@ function goBack() {
                 <div v-if="selectedVendor" class="p-4">
                   <h4 class="text-lg font-bold mb-2">{{ t("Vendor Information") }}</h4>
                   <p><strong>{{ t("Fullname") }}:</strong> {{ selectedVendor.fullname }}</p>
-                  <p v-if="selectedVendor.email"><strong>{{ t("Email") }}:</strong> {{ selectedVendor.email }}</p>
-                  <p v-if="selectedVendor.phone"><strong>{{ t("Phone") }}:</strong> {{ selectedVendor.phone }}</p>
-                  <p v-if="selectedVendor.address"><strong>{{ t("Address") }}:</strong> {{ selectedVendor.address }}</p>
                 </div>
               </Popover>
             </div>
