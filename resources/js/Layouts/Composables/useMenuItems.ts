@@ -150,6 +150,7 @@ export function useMenuItems() {
           label: t("Purchase Orders"),
           icon: "fa fa-file-invoice",
           to: "purchase-orders",
+          can: "purchase_order.view",
           routeUrl: route("purchase-orders"),
         },
         {
