@@ -39,6 +39,9 @@ final class PurchaseOrderResource extends JsonResource
             'vendor' => $this->whenLoaded('vendor') && $po->vendor !== null ? [
                 'id' => $po->vendor->id,
                 'fullname' => $po->vendor->fullname,
+                'email' => $po->vendor->email,
+                'phone' => $po->vendor->phone,
+                'address' => $po->vendor->address,
             ] : null,
             'line_items' => $this->whenLoaded('lineItems') ? $po->lineItems->map(fn ($item) => [
                 'id' => $item->id,

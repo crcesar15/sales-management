@@ -52,7 +52,10 @@ final class PurchaseOrdersController extends Controller
                 'from' => $request->string('from', '')->toString(),
                 'to' => $request->string('to', '')->toString(),
             ],
-            'vendors' => Vendor::query()->where('status', 'active')->get(['id', 'fullname']),
+            'vendors' => Vendor::query()
+                ->orderBy('fullname')
+                ->where('status', 'active')
+                ->get(['id', 'fullname', 'email', 'phone', 'address']),
         ]);
     }
 
@@ -61,7 +64,10 @@ final class PurchaseOrdersController extends Controller
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_CREATE);
 
         return Inertia::render('PurchaseOrders/Create/Index', [
-            'vendors' => Vendor::query()->where('status', 'active')->get(['id', 'fullname']),
+            'vendors' => Vendor::query()
+                ->orderBy('fullname')
+                ->where('status', 'active')
+                ->get(['id', 'fullname', 'email', 'phone', 'address']),
         ]);
     }
 
@@ -99,7 +105,10 @@ final class PurchaseOrdersController extends Controller
 
         return Inertia::render('PurchaseOrders/Edit', [
             'purchaseOrder' => new PurchaseOrderResource($purchaseOrder),
-            'vendors' => Vendor::query()->where('status', 'active')->get(['id', 'fullname']),
+            'vendors' => Vendor::query()
+                ->orderBy('fullname')
+                ->where('status', 'active')
+                ->get(['id', 'fullname', 'email', 'phone', 'address']),
         ]);
     }
 

@@ -5,18 +5,6 @@ import type { AxiosResponse } from "axios";
 export function usePurchaseOrderClient() {
   const { apiClient, loading } = useApi();
 
-  const searchVendorsApi = async (query: string): Promise<AxiosResponse> => {
-    return await apiClient.get(route("api.v1.vendors"), {
-      params: {
-        filter: query,
-        per_page: 15,
-        status: "active",
-        order_by: "fullname",
-        order_direction: "asc",
-      },
-    });
-  };
-
   const fetchVendorCatalogApi = async (
     vendorId: number,
     query?: string,
@@ -36,7 +24,6 @@ export function usePurchaseOrderClient() {
 
   return {
     loading,
-    searchVendorsApi,
     fetchVendorCatalogApi,
   };
 }

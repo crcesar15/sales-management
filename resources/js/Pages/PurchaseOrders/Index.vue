@@ -36,7 +36,7 @@ const props = defineProps<{
     };
   };
   filters: PurchaseOrderFilters;
-  vendors: Array<{ id: number; fullname: string }>;
+  vendors: Array<{ id: number; fullname: string; email: string | null; phone: string | null; address: string | null }>;
 }>();
 
 const { getSetting } = useAuth();

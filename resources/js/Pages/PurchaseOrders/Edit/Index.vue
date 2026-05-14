@@ -5,7 +5,7 @@ import {
   InputNumber,
   Textarea,
   DatePicker,
-  AutoComplete,
+  Select,
   Popover,
   useToast,
   ConfirmDialog,
@@ -18,7 +18,6 @@ import { object, number, string, array } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
-import { usePurchaseOrderClient } from "@/Composables/usePurchaseOrderClient";
 import POLineItemsTable from "../Components/POLineItemsTable.vue";
 import POTotalsPanel from "../Components/POTotalsPanel.vue";
 import type { PurchaseOrderResponse } from "@/Types/purchase-order-types";
@@ -28,19 +27,13 @@ defineOptions({ layout: AppLayout });
 
 const props = defineProps<{
   purchaseOrder: PurchaseOrderResponse;
-  vendors: Array<{ id: number; fullname: string }>;
+  vendors: Array<{ id: number; fullname: string; email: string | null; phone: string | null; address: string | null }>;
 }>();
 
 const toast = useToast();
 const { t } = useI18n();
-const { searchVendorsApi } = usePurchaseOrderClient();
 
-const vendorSearchResults = ref<Array<{ id: number; fullname: string; email?: string | null; phone?: string | null; address?: string | null }>>([]);
-const vendorSearchLoading = ref(false);
-const selectedVendor = ref<{ id: number; fullname: string; email?: string | null; phone?: string | null; address?: string | null } | null>({
-  id: props.purchaseOrder.vendor.id,
-  fullname: props.purchaseOrder.vendor.fullname,
-});
+const vendorOptions = computed(() => props.vendors.map((v) => ({ name: v.fullname, value: v.id })));
 const vendorInfoPopover = ref();
 
 const schema = toTypedSchema(
@@ -61,7 +54,7 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, setFieldValue, setErrors } = useForm({
+const { handleSubmit, errors, values, setFieldValue, setErrors } = useForm({
   validationSchema: schema,
   initialValues: {
     vendor_id: props.purchaseOrder.vendor_id,
@@ -88,6 +81,8 @@ const lineItems = ref<LineItem[]>(
   })),
 );
 
+const selectedVendor = computed(() => props.vendors.find((v) => v.id === values.vendor_id) ?? null);
+
 const orderDateValue = ref<Date | undefined>(props.purchaseOrder.order_date ? new Date(props.purchaseOrder.order_date) : undefined);
 const expectedArrivalDateValue = ref<Date | undefined>(props.purchaseOrder.expected_arrival_date ? new Date(props.purchaseOrder.expected_arrival_date) : undefined);
 const discountValue = ref<number>(props.purchaseOrder.discount ?? 0);
@@ -96,34 +91,13 @@ const notesValue = ref<string | null>(props.purchaseOrder.notes);
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.total, 0));
 const total = computed(() => subTotal.value - (discountValue.value ?? 0));
 
-async function searchVendors(event: { query: string }) {
-  if (!event.query || event.query.length < 2) {
-    vendorSearchResults.value = [];
-    return;
-  }
-  vendorSearchLoading.value = true;
-  try {
-    const response = await searchVendorsApi(event.query);
-    vendorSearchResults.value = response.data?.data || response.data || [];
-  } catch {
-    vendorSearchResults.value = [];
-  } finally {
-    vendorSearchLoading.value = false;
-  }
-}
-
-function onVendorSelect(event: { value: { id: number; fullname: string } }) {
-  setFieldValue("vendor_id", event.value.id);
-  selectedVendor.value = event.value;
-}
-
 function toggleVendorInfo(event: Event) {
   vendorInfoPopover.value.toggle(event);
 }
 
-const submit = handleSubmit(() => {
+const submit = handleSubmit((formValues) => {
   const payload = {
-    vendor_id: selectedVendor.value?.id ?? props.purchaseOrder.vendor_id,
+    vendor_id: formValues.vendor_id,
     order_date: orderDateValue.value ? orderDateValue.value.toISOString().split("T")[0] : props.purchaseOrder.order_date ?? "",
     expected_arrival_date: expectedArrivalDateValue.value ? expectedArrivalDateValue.value.toISOString().split("T")[0] : null,
     discount: discountValue.value ?? 0,
@@ -177,19 +151,16 @@ function goBack() {
                     {{ t("Vendor") }}
                     <span class="text-red-500">*</span>
                   </label>
-                  <AutoComplete
+                  <Select
                     id="vendor"
-                    v-model="selectedVendor"
-                    class="w-full"
-                    input-class="w-full"
-                    :suggestions="vendorSearchResults"
-                    option-label="fullname"
+                    :model-value="values.vendor_id"
+                    :options="vendorOptions"
+                    option-label="name"
+                    option-value="value"
                     :placeholder="t('Select a Vendor')"
-                    :loading="vendorSearchLoading"
                     :class="{ 'p-invalid': !!errors.vendor_id }"
-                    force-selection
-                    @complete="searchVendors"
-                    @item-select="onVendorSelect"
+                    filter
+                    @update:model-value="setFieldValue('vendor_id', $event)"
                   />
                   <small v-if="errors.vendor_id" class="text-red-400 dark:text-red-300">{{ errors.vendor_id }}</small>
                 </div>
@@ -206,6 +177,9 @@ function goBack() {
                 <div v-if="selectedVendor" class="p-4">
                   <h4 class="text-lg font-bold mb-2">{{ t("Vendor Information") }}</h4>
                   <p><strong>{{ t("Fullname") }}:</strong> {{ selectedVendor.fullname }}</p>
+                  <p v-if="selectedVendor.email"><strong>{{ t("Email") }}:</strong> {{ selectedVendor.email }}</p>
+                  <p v-if="selectedVendor.phone"><strong>{{ t("Phone") }}:</strong> {{ selectedVendor.phone }}</p>
+                  <p v-if="selectedVendor.address"><strong>{{ t("Address") }}:</strong> {{ selectedVendor.address }}</p>
                 </div>
               </Popover>
             </div>

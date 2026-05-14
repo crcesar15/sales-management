@@ -1,15 +1,5 @@
 <script setup lang="ts">
-import {
-  Button,
-  Card,
-  InputNumber,
-  Textarea,
-  DatePicker,
-  AutoComplete,
-  Popover,
-  useToast,
-  ConfirmDialog,
-} from "primevue";
+import { Button, Card, InputNumber, Textarea, DatePicker, Select, Popover, useToast, ConfirmDialog } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -18,24 +8,20 @@ import { object, number, string, array } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
-import { usePurchaseOrderClient } from "@/Composables/usePurchaseOrderClient";
 import POLineItemsTable from "../Components/POLineItemsTable.vue";
 import POTotalsPanel from "../Components/POTotalsPanel.vue";
 import type { LineItem } from "../Components/POLineItemsTable.vue";
 
 defineOptions({ layout: AppLayout });
 
-defineProps<{
-  vendors: Array<{ id: number; fullname: string }>;
+const props = defineProps<{
+  vendors: Array<{ id: number; fullname: string; email: string | null; phone: string | null; address: string | null }>;
 }>();
 
 const toast = useToast();
 const { t } = useI18n();
-const { searchVendorsApi } = usePurchaseOrderClient();
 
-const vendorSearchResults = ref<Array<{ id: number; fullname: string; email?: string | null; phone?: string | null; address?: string | null }>>([]);
-const vendorSearchLoading = ref(false);
-const selectedVendor = ref<{ id: number; fullname: string; email?: string | null; phone?: string | null; address?: string | null } | null>(null);
+const vendorOptions = computed(() => props.vendors.map((v) => ({ name: v.fullname, value: v.id })));
 const vendorInfoPopover = ref();
 
 const schema = toTypedSchema(
@@ -56,7 +42,7 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, setFieldValue, setErrors } = useForm({
+const { handleSubmit, errors, values, setFieldValue, setErrors } = useForm({
   validationSchema: schema,
   initialValues: {
     vendor_id: undefined as unknown as number,
@@ -69,6 +55,7 @@ const { handleSubmit, errors, setFieldValue, setErrors } = useForm({
 });
 
 const lineItems = ref<LineItem[]>([]);
+const selectedVendor = computed(() => props.vendors.find((v) => v.id === values.vendor_id) ?? null);
 
 const orderDateValue = ref<Date | undefined>(undefined);
 const expectedArrivalDateValue = ref<Date | undefined>(undefined);
@@ -78,34 +65,13 @@ const notesValue = ref<string | null>(null);
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.total, 0));
 const total = computed(() => subTotal.value - (discountValue.value ?? 0));
 
-async function searchVendors(event: { query: string }) {
-  if (!event.query || event.query.length < 2) {
-    vendorSearchResults.value = [];
-    return;
-  }
-  vendorSearchLoading.value = true;
-  try {
-    const response = await searchVendorsApi(event.query);
-    vendorSearchResults.value = response.data?.data || response.data || [];
-  } catch {
-    vendorSearchResults.value = [];
-  } finally {
-    vendorSearchLoading.value = false;
-  }
-}
-
-function onVendorSelect(event: { value: { id: number; fullname: string } }) {
-  setFieldValue("vendor_id", event.value.id);
-  selectedVendor.value = event.value;
-}
-
 function toggleVendorInfo(event: Event) {
   vendorInfoPopover.value.toggle(event);
 }
 
 const submit = handleSubmit((formValues) => {
   const payload = {
-    vendor_id: formValues.vendor_id ?? selectedVendor.value?.id,
+    vendor_id: formValues.vendor_id,
     order_date: orderDateValue.value ? orderDateValue.value.toISOString().split("T")[0] : "",
     expected_arrival_date: expectedArrivalDateValue.value ? expectedArrivalDateValue.value.toISOString().split("T")[0] : null,
     discount: discountValue.value ?? 0,
@@ -153,25 +119,19 @@ function goBack() {
           <template #title>{{ t("Vendor") }}</template>
           <template #content>
             <div class="flex flex-col gap-2">
-              <div class="flex items-end gap-2">
+              <div class="flex">
                 <div class="flex-1">
-                  <label for="vendor">
-                    {{ t("Vendor") }}
-                    <span class="text-red-500">*</span>
-                  </label>
-                  <AutoComplete
+                  <Select
                     id="vendor"
-                    v-model="selectedVendor"
-                    class="w-full"
-                    input-class="w-full"
-                    :suggestions="vendorSearchResults"
-                    option-label="fullname"
+                    :model-value="values.vendor_id"
+                    :options="vendorOptions"
+                    option-label="name"
+                    option-value="value"
                     :placeholder="t('Select a Vendor')"
-                    :loading="vendorSearchLoading"
                     :class="{ 'p-invalid': !!errors.vendor_id }"
-                    force-selection
-                    @complete="searchVendors"
-                    @item-select="onVendorSelect"
+                    filter
+                    class="w-full"
+                    @update:model-value="setFieldValue('vendor_id', $event)"
                   />
                   <small v-if="errors.vendor_id" class="text-red-400 dark:text-red-300">{{ errors.vendor_id }}</small>
                 </div>
@@ -187,10 +147,22 @@ function goBack() {
               <Popover ref="vendorInfoPopover">
                 <div v-if="selectedVendor" class="p-4">
                   <h4 class="text-lg font-bold mb-2">{{ t("Vendor Information") }}</h4>
-                  <p><strong>{{ t("Fullname") }}:</strong> {{ selectedVendor.fullname }}</p>
-                  <p v-if="selectedVendor.email"><strong>{{ t("Email") }}:</strong> {{ selectedVendor.email }}</p>
-                  <p v-if="selectedVendor.phone"><strong>{{ t("Phone") }}:</strong> {{ selectedVendor.phone }}</p>
-                  <p v-if="selectedVendor.address"><strong>{{ t("Address") }}:</strong> {{ selectedVendor.address }}</p>
+                  <p>
+                    <strong>{{ t("Fullname") }}:</strong>
+                    {{ selectedVendor.fullname }}
+                  </p>
+                  <p v-if="selectedVendor.email">
+                    <strong>{{ t("Email") }}:</strong>
+                    {{ selectedVendor.email }}
+                  </p>
+                  <p v-if="selectedVendor.phone">
+                    <strong>{{ t("Phone") }}:</strong>
+                    {{ selectedVendor.phone }}
+                  </p>
+                  <p v-if="selectedVendor.address">
+                    <strong>{{ t("Address") }}:</strong>
+                    {{ selectedVendor.address }}
+                  </p>
                 </div>
               </Popover>
             </div>
@@ -219,12 +191,7 @@ function goBack() {
                   {{ t("Order Date") }}
                   <span class="text-red-500">*</span>
                 </label>
-                <DatePicker
-                  id="order-date"
-                  v-model="orderDateValue"
-                  show-icon
-                  :class="{ 'p-invalid': !!errors.order_date }"
-                />
+                <DatePicker id="order-date" v-model="orderDateValue" show-icon :class="{ 'p-invalid': !!errors.order_date }" />
                 <small v-if="errors.order_date" class="text-red-400 dark:text-red-300">{{ errors.order_date }}</small>
               </div>
 
@@ -235,14 +202,7 @@ function goBack() {
 
               <div class="flex flex-col gap-1">
                 <label for="discount">{{ t("Discount") }}</label>
-                <InputNumber
-                  id="discount"
-                  v-model="discountValue"
-                  mode="currency"
-                  currency="BOB"
-                  :min="0"
-                  :max="subTotal"
-                />
+                <InputNumber id="discount" v-model="discountValue" mode="currency" currency="BOB" :min="0" :max="subTotal" />
               </div>
 
               <div class="flex flex-col gap-1">
