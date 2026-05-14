@@ -21,7 +21,7 @@ beforeEach(function () {
 // ─── Seeder ───────────────────────────────────────────────────────────────────
 
 it('seeds all Phase 1 settings with defaults', function () {
-    expect(Setting::count())->toBe(5);
+    expect(Setting::count())->toBe(11);
 });
 
 it('seeds correct default for business_name', function () {
@@ -38,6 +38,14 @@ it('seeds correct default for business_phone', function () {
 
 it('seeds correct default for timezone', function () {
     expect(Setting::where('key', 'timezone')->value('value'))->toBe('UTC');
+});
+
+it('seeds correct default for date_format', function () {
+    expect(Setting::where('key', 'date_format')->value('value'))->toBe('YYYY-MM-DD');
+});
+
+it('seeds correct default for datetime_format', function () {
+    expect(Setting::where('key', 'datetime_format')->value('value'))->toBe('YYYY-MM-DD HH:mm');
 });
 
 it('seeds correct default for tax_rate', function () {
@@ -95,6 +103,8 @@ it('admin can update general settings', function () {
             'business_address' => '456 Commerce Blvd',
             'business_phone' => '+1 555 000 1234',
             'timezone' => 'America/New_York',
+            'date_format' => 'DD/MM/YYYY',
+            'datetime_format' => 'DD/MM/YYYY HH:mm',
         ])
         ->assertRedirect(route('settings'));
 
@@ -102,6 +112,8 @@ it('admin can update general settings', function () {
     expect(Setting::where('key', 'business_address')->value('value'))->toBe('456 Commerce Blvd');
     expect(Setting::where('key', 'business_phone')->value('value'))->toBe('+1 555 000 1234');
     expect(Setting::where('key', 'timezone')->value('value'))->toBe('America/New_York');
+    expect(Setting::where('key', 'date_format')->value('value'))->toBe('DD/MM/YYYY');
+    expect(Setting::where('key', 'datetime_format')->value('value'))->toBe('DD/MM/YYYY HH:mm');
 });
 
 it('validates business_name is required', function () {
@@ -169,6 +181,34 @@ it('validates business_phone max length is 30', function () {
             'business_phone' => str_repeat('1', 31),
         ])
         ->assertSessionHasErrors('business_phone');
+});
+
+it('validates date_format is a supported format', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+    $admin->givePermissionTo(PermissionsEnum::SETTINGS_MANAGE->value);
+
+    actingAs($admin)
+        ->put(route('settings.general.update'), [
+            'business_name' => 'Valid Name',
+            'timezone' => 'UTC',
+            'date_format' => 'INVALID-FORMAT',
+        ])
+        ->assertSessionHasErrors('date_format');
+});
+
+it('validates datetime_format is a supported format', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+    $admin->givePermissionTo(PermissionsEnum::SETTINGS_MANAGE->value);
+
+    actingAs($admin)
+        ->put(route('settings.general.update'), [
+            'business_name' => 'Valid Name',
+            'timezone' => 'UTC',
+            'datetime_format' => 'INVALID-FORMAT',
+        ])
+        ->assertSessionHasErrors('datetime_format');
 });
 
 // ─── Update Tax Settings ──────────────────────────────────────────────────────
