@@ -9,6 +9,8 @@ use App\Http\Requests\PurchaseOrders\CancelPurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\StorePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\TransitionPurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\UpdatePurchaseOrderRequest;
+use App\Http\Resources\PurchaseOrder\PurchaseOrderCollection;
+use App\Http\Resources\PurchaseOrder\PurchaseOrderResource;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
 use App\Services\PurchaseOrderService;
@@ -43,7 +45,7 @@ final class PurchaseOrdersController extends Controller
         );
 
         return Inertia::render('PurchaseOrders/Index', [
-            'purchaseOrders' => $purchaseOrders,
+            'purchaseOrders' => new PurchaseOrderCollection($purchaseOrders),
             'filters' => [
                 'status' => $request->string('status', '')->toString(),
                 'vendor_id' => $request->integer('vendor_id') ?: null,
@@ -85,7 +87,7 @@ final class PurchaseOrdersController extends Controller
         $purchaseOrder->load(['vendor', 'user', 'lineItems.productVariant.product']);
 
         return Inertia::render('PurchaseOrders/Show', [
-            'purchaseOrder' => $purchaseOrder,
+            'purchaseOrder' => new PurchaseOrderResource($purchaseOrder),
         ]);
     }
 
@@ -96,7 +98,7 @@ final class PurchaseOrdersController extends Controller
         $purchaseOrder->load(['vendor', 'lineItems.productVariant.product']);
 
         return Inertia::render('PurchaseOrders/Edit', [
-            'purchaseOrder' => $purchaseOrder,
+            'purchaseOrder' => new PurchaseOrderResource($purchaseOrder),
             'vendors' => Vendor::query()->where('status', 'active')->get(['id', 'fullname']),
         ]);
     }
