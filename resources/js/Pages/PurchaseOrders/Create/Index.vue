@@ -4,7 +4,7 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
-import { object, number, string, array } from "yup";
+import { object, number, string, array, date } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
@@ -27,8 +27,8 @@ const vendorInfoPopover = ref();
 const schema = toTypedSchema(
   object({
     vendor_id: number().required().typeError(t("Vendor is required")),
-    order_date: string().required(t("Order date is required")),
-    expected_arrival_date: string().nullable().optional(),
+    order_date: date().required(t("Order date is required")),
+    expected_arrival_date: date().nullable().optional(),
     discount: number().nullable().optional().min(0, t("Discount must be at least 0")),
     notes: string().nullable().optional().max(1000, t("Notes must not exceed 1000 characters")),
     items: array()
@@ -42,29 +42,29 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, values, setFieldValue, setErrors, submitCount } = useForm({
+const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, submitCount } = useForm({
   validationSchema: schema,
   validateOnMount: false,
   initialValues: {
     vendor_id: undefined as unknown as number,
-    order_date: "",
-    expected_arrival_date: null as string | null,
-    discount: 0,
+    order_date: undefined as Date | undefined,
+    expected_arrival_date: null as Date | null,
+    discount: 0 as number | null,
     notes: null as string | null,
     items: [] as Array<{ product_variant_id: number; quantity: number }>,
   },
 });
 
+const [orderDate, orderDateAttrs] = defineField("order_date");
+const [expectedArrivalDate, expectedArrivalDateAttrs] = defineField("expected_arrival_date");
+const [discount, discountAttrs] = defineField("discount");
+const [notes, notesAttrs] = defineField("notes");
+
 const lineItems = ref<LineItem[]>([]);
 const selectedVendor = computed(() => props.vendors.find((v) => v.id === values.vendor_id) ?? null);
 
-const orderDateValue = ref<Date | undefined>(undefined);
-const expectedArrivalDateValue = ref<Date | undefined>(undefined);
-const discountValue = ref<number>(0);
-const notesValue = ref<string | null>(null);
-
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.total, 0));
-const total = computed(() => subTotal.value - (discountValue.value ?? 0));
+const total = computed(() => subTotal.value - (values.discount ?? 0));
 
 function toggleVendorInfo(event: Event) {
   vendorInfoPopover.value.toggle(event);
@@ -73,10 +73,10 @@ function toggleVendorInfo(event: Event) {
 const submit = handleSubmit((formValues) => {
   const payload = {
     vendor_id: formValues.vendor_id,
-    order_date: orderDateValue.value ? orderDateValue.value.toISOString().split("T")[0] : "",
-    expected_arrival_date: expectedArrivalDateValue.value ? expectedArrivalDateValue.value.toISOString().split("T")[0] : null,
-    discount: discountValue.value ?? 0,
-    notes: notesValue.value || null,
+    order_date: formValues.order_date ? formValues.order_date.toISOString().split("T")[0] : "",
+    expected_arrival_date: formValues.expected_arrival_date ? formValues.expected_arrival_date.toISOString().split("T")[0] : null,
+    discount: formValues.discount ?? 0,
+    notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
       product_variant_id: item.product_variant_id,
       quantity: item.quantity,
@@ -178,7 +178,7 @@ function goBack() {
         </Card>
 
         <div v-if="lineItems.length > 0">
-          <POTotalsPanel :sub-total="subTotal" :discount="discountValue ?? 0" :total="total" />
+          <POTotalsPanel :sub-total="subTotal" :discount="values.discount ?? 0" :total="total" />
         </div>
       </div>
 
@@ -192,23 +192,23 @@ function goBack() {
                   {{ t("Order Date") }}
                   <span class="text-red-500">*</span>
                 </label>
-                <DatePicker id="order-date" v-model="orderDateValue" show-icon :class="{ 'p-invalid': submitCount > 0 && !!errors.order_date }" />
+                <DatePicker id="order-date" v-model="orderDate" v-bind="orderDateAttrs" show-icon :class="{ 'p-invalid': submitCount > 0 && !!errors.order_date }" />
                 <small v-if="submitCount > 0 && errors.order_date" class="text-red-400 dark:text-red-300">{{ errors.order_date }}</small>
               </div>
 
               <div class="flex flex-col gap-1">
                 <label for="expected-arrival-date">{{ t("Expected Arrival Date") }}</label>
-                <DatePicker id="expected-arrival-date" v-model="expectedArrivalDateValue" show-icon />
+                <DatePicker id="expected-arrival-date" v-model="expectedArrivalDate" v-bind="expectedArrivalDateAttrs" show-icon />
               </div>
 
               <div class="flex flex-col gap-1">
                 <label for="discount">{{ t("Discount") }}</label>
-                <InputNumber id="discount" v-model="discountValue" mode="currency" currency="BOB" :min="0" :max="subTotal" />
+                <InputNumber id="discount" v-model="discount" v-bind="discountAttrs" mode="currency" currency="BOB" :min="0" :max="subTotal" />
               </div>
 
               <div class="flex flex-col gap-1">
                 <label for="notes">{{ t("Notes") }}</label>
-                <Textarea id="notes" v-model="notesValue" rows="4" :class="{ 'p-invalid': submitCount > 0 && !!errors.notes }" />
+                <Textarea id="notes" v-model="notes" v-bind="notesAttrs" rows="4" :class="{ 'p-invalid': submitCount > 0 && !!errors.notes }" />
                 <small v-if="submitCount > 0 && errors.notes" class="text-red-400 dark:text-red-300">{{ errors.notes }}</small>
               </div>
             </div>
