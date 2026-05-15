@@ -72,6 +72,7 @@ const { handleSubmit, errors, values, setFieldValue, setErrors } = useForm({
 const lineItems = ref<LineItem[]>(
   props.purchaseOrder.line_items.map((item) => ({
     id: String(item.id),
+    catalog_id: 0,
     product_variant_id: item.product_variant_id,
     product_name: item.product_variant?.product?.name ?? "—",
     variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",

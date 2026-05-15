@@ -170,7 +170,7 @@ function goBack() {
         </Card>
 
         <Card class="mb-4">
-          <template #title>{{ t("Line Items") }}</template>
+          <template #title>{{ t("Products") }}</template>
           <template #content>
             <POLineItemsTable v-model="lineItems" :vendor-id="selectedVendor?.id ?? null" />
           </template>

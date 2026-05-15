@@ -3,6 +3,8 @@ import { useAuth } from "@/Composables/useAuth";
 export function useCurrencyFormatter() {
   const { getSetting } = useAuth();
 
+  const currencyCode = getSetting("finance", "currency") || "BOB";
+
   const formatCurrency = (value: string) => {
     const currency = getSetting("finance", "currency");
     const decimalPrecision = parseInt(getSetting("finance", "decimal_precision") ?? "2");
@@ -20,5 +22,6 @@ export function useCurrencyFormatter() {
   return {
     formatCurrency,
     formatCurrencySymbol,
+    currencyCode,
   };
 }
