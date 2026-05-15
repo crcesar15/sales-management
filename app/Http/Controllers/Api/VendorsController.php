@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
-use App\Http\Resources\Product\ProductVariantCollection;
+use App\Http\Resources\Vendor\VendorCatalogCollection;
 use App\Models\ProductVariant;
 use App\Models\Vendor;
 use App\Services\VariantService;
@@ -16,8 +17,12 @@ use Illuminate\Http\Response;
 
 final class VendorsController extends Controller
 {
+    public function __construct(private readonly VariantService $variantService) {}
+
     public function index(Request $request): ApiCollection
     {
+        $this->authorize(PermissionsEnum::VENDORS_VIEW, auth()->user());
+
         $query = Vendor::query();
 
         $filter = $request->string('filter', '')->value();
@@ -47,11 +52,15 @@ final class VendorsController extends Controller
 
     public function show(Vendor $vendor): JsonResponse
     {
+        $this->authorize(PermissionsEnum::VENDORS_VIEW, auth()->user());
+
         return response()->json($vendor, 200);
     }
 
     public function store(Request $request): JsonResponse
     {
+        $this->authorize(PermissionsEnum::VENDORS_CREATE, auth()->user());
+
         // TODO Develop fromRequest
         // @phpstan-ignore-next-line
         $vendor = Vendor::query()->create($request->all());
@@ -61,6 +70,8 @@ final class VendorsController extends Controller
 
     public function update(Request $request, Vendor $vendor): JsonResponse
     {
+        $this->authorize(PermissionsEnum::VENDORS_EDIT, auth()->user());
+
         // TODO Develop formRequest
         // @phpstan-ignore-next-line
         $vendor->update($request->all());
@@ -70,6 +81,8 @@ final class VendorsController extends Controller
 
     public function destroy(Vendor $vendor): Response
     {
+        $this->authorize(PermissionsEnum::VENDORS_DELETE, auth()->user());
+
         $vendor->delete();
 
         return response()->noContent();
@@ -77,69 +90,44 @@ final class VendorsController extends Controller
 
     public function getProductVariants(
         Request $request,
-        VariantService $variantService,
         Vendor $vendor
-    ): ProductVariantCollection {
-        // TODO: Develop formRequest
-        $includes = $request->string('includes', '')->value();
-        $includes = explode(',', $includes);
+    ): VendorCatalogCollection {
+        $this->authorize(PermissionsEnum::CATALOG_VIEW, auth()->user());
 
-        $page = $request->integer('page', 1);
-        $per_page = $request->integer('per_page', 10);
+        $catalog = $this->variantService->getVendorCatalog(
+            vendorId: $vendor->id,
+            status: $request->string('status', 'active')->value(),
+            filter: $request->filled('filter') ? $request->string('filter')->value() : null,
+            orderBy: $request->string('order_by', 'product_name')->value(),
+            orderDirection: $request->string('order_direction', 'ASC')->value(),
+            page: $request->integer('page', 1),
+            perPage: $request->integer('per_page', 10),
+        );
 
-        $order_by = $request->string('order_by', 'product_name')->value();
-        $order_direction = $request->string('order_direction', 'ASC')->value();
-
-        $filter = $request->string('filter', '')->value();
-        $filterBy = $request->string('filter_by', 'name')->value();
-        $status = $request->string('status', 'all')->value();
-
-        $vendorId = $vendor->id;
-
-        $config = [
-            'includes' => $includes,
-            'order_by' => $order_by,
-            'order_direction' => $order_direction,
-            'filter' => $filter,
-            'filter_by' => $filterBy,
-            'status' => $status,
-            'page' => $page,
-            'per_page' => $per_page,
-            'vendor_id' => $vendorId,
-        ];
-
-        // Fetch variants using the service
-        $response = $variantService->getVariants($config);
-
-        return new ProductVariantCollection($response);
+        return new VendorCatalogCollection($catalog);
     }
 
     public function storeProductVariant(Request $request, Vendor $vendor, ProductVariant $variant): JsonResponse
     {
+        $this->authorize(PermissionsEnum::CATALOG_CREATE, auth()->user());
+
         $product = $request->array('record');
 
-        // Check if the variant already exists for the vendor
-        /** @var ProductVariant $existingVariant */
-        $existingVariant = $vendor->variants()->where('product_variant_id', $variant->id)->first();
-
-        // Remove the existing variant if it exists
-        $vendor->variants()->detach($existingVariant->id);
-
-        // TODO: Refactor logic
+        // If replacing a previous variant, detach it first
         if (isset($product['previous_product_id'])) {
-            // Check if the variant already exists for the vendor
-            /** @var ProductVariant $existingVariant */
-            $existingVariant = $vendor->variants()
-                ->where('product_variant_id', $product['previous_product_id'])
-                ->first();
-
-            $vendor->variants()->detach($existingVariant->id);
+            $vendor->variants()->where('product_variant_id', $product['previous_product_id'])->detach();
         }
+
+        // Detach existing entry for this variant if present, then attach fresh
+        $vendor->variants()->where('product_variant_id', $variant->id)->detach();
 
         $vendor->variants()->attach($variant->id, [
             'price' => $product['price'],
             'details' => $product['details'] ?? null,
             'payment_terms' => $product['payment_terms'],
+            'unit_id' => $product['unit_id'] ?? null,
+            'minimum_order_quantity' => $product['minimum_order_quantity'] ?? null,
+            'lead_time_days' => $product['lead_time_days'] ?? null,
             'status' => $product['status'] ?? 'active',
         ]);
 
@@ -148,6 +136,8 @@ final class VendorsController extends Controller
 
     public function updateProductVariants(Request $request, Vendor $vendor): JsonResponse
     {
+        $this->authorize(PermissionsEnum::CATALOG_EDIT, auth()->user());
+
         /** @var array<array<string,number>>$products */
         $products = $request->array('variants');
 
@@ -158,6 +148,9 @@ final class VendorsController extends Controller
                 'price' => $product['price'],
                 'details' => $product['details'] ?? null,
                 'payment_terms' => $product['payment_terms'],
+                'unit_id' => $product['unit_id'] ?? null,
+                'minimum_order_quantity' => $product['minimum_order_quantity'] ?? null,
+                'lead_time_days' => $product['lead_time_days'] ?? null,
                 'status' => $product['status'] ?? 'active',
             ];
         }
@@ -169,6 +162,8 @@ final class VendorsController extends Controller
 
     public function removeProductVariant(Vendor $vendor, ProductVariant $variant): JsonResponse
     {
+        $this->authorize(PermissionsEnum::CATALOG_DELETE, auth()->user());
+
         $vendor->variants()->detach($variant);
 
         return response()->json(['data' => $vendor], 200);

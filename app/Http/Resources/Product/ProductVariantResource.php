@@ -60,15 +60,35 @@ final class ProductVariantResource extends JsonResource
                 'status' => $u->status,
                 'sort_order' => $u->sort_order,
             ]) : [],
-            'purchase_units' => $this->whenLoaded('purchaseUnits') ? $this->purchaseUnits->map(fn ($u) => [
+            'purchase_units' => $this->whenLoaded('activePurchaseUnits') ? $this->activePurchaseUnits->map(fn ($u) => [
                 'id' => $u->id,
-                'type' => $u->type,
                 'name' => $u->name,
                 'conversion_factor' => $u->conversion_factor,
-                'price' => $u->price,
-                'status' => $u->status,
-                'sort_order' => $u->sort_order,
             ]) : [],
+            'pivot' => $this->when(
+                $this->relationLoaded('vendors') && $this->vendors->isNotEmpty(),
+                function () {
+                    $vendorPivot = $this->vendors->first()->pivot;
+                    $purchaseUnit = $vendorPivot->unit_id
+                        ? $this->activePurchaseUnits?->first(fn ($u) => $u->id === $vendorPivot->unit_id)
+                        : null;
+
+                    return [
+                        'price' => (float) $vendorPivot->price,
+                        'payment_terms' => $vendorPivot->payment_terms,
+                        'details' => $vendorPivot->details,
+                        'status' => $vendorPivot->status,
+                        'unit_id' => $vendorPivot->unit_id,
+                        'minimum_order_quantity' => $vendorPivot->minimum_order_quantity,
+                        'lead_time_days' => $vendorPivot->lead_time_days,
+                        'purchase_unit' => $purchaseUnit ? [
+                            'id' => $purchaseUnit->id,
+                            'name' => $purchaseUnit->name,
+                            'conversion_factor' => $purchaseUnit->conversion_factor,
+                        ] : null,
+                    ];
+                }
+            ),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

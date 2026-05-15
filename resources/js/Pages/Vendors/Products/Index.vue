@@ -75,7 +75,6 @@ export default {
         page: this.pagination.page,
         order_by: this.pagination.sortField,
         status: this.status,
-        includes: "product,vendors",
       };
 
       if (this.pagination.filter) {
@@ -91,18 +90,18 @@ export default {
       axios
         .get(route("api.vendors.variants", this.vendor.id), { params })
         .then((response) => {
-          this.products = response.data.data.map((product) => {
-            const relatedVendor = product.vendors.find((vendor) => vendor.id === this.vendor.id);
+          this.products = response.data.data.map((entry) => {
+            const variant = entry.product_variant;
 
             return {
-              id: product.id,
-              name: product.name,
-              label: product.variant ? `${product.name} - (${product.variant})` : product.name,
-              variant: product.variant,
-              status: relatedVendor.pivot.status,
-              price: relatedVendor.pivot.price,
-              payment_terms: relatedVendor.pivot.payment_terms,
-              details: relatedVendor.pivot.details,
+              id: entry.id,
+              name: variant?.product?.name ?? variant?.name ?? "—",
+              label: variant?.name ?? variant?.identifier ?? "—",
+              variant: variant?.name ?? variant?.identifier,
+              status: entry.status,
+              price: entry.price,
+              payment_terms: entry.payment_terms,
+              details: entry.details,
             };
           });
 

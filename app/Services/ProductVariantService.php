@@ -178,7 +178,7 @@ final class ProductVariantService
     public function update(ProductVariant $variant, array $data): ProductVariant
     {
         return DB::transaction(function () use ($variant, $data): ProductVariant {
-            $updateData = collect($data)->only(['identifier', 'price', 'status'])->toArray();
+            $updateData = collect($data)->only(['identifier', 'price', 'barcode', 'stock', 'status'])->toArray();
 
             $variant->update($updateData);
 
