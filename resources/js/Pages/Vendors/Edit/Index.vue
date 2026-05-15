@@ -40,8 +40,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     fullname: props.vendor.fullname,
     email: props.vendor.email ?? "",
@@ -137,9 +138,9 @@ const submit = handleSubmit((formValues) => {
                     v-model="fullname"
                     v-bind="fullnameAttrs"
                     autocomplete="off"
-                    :class="{ 'p-invalid': errors.fullname }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.fullname }"
                   />
-                  <small v-if="errors.fullname" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.fullname" class="text-red-400 dark:text-red-300">
                     {{ errors.fullname }}
                   </small>
                 </div>
@@ -147,8 +148,8 @@ const submit = handleSubmit((formValues) => {
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-1">
                   <label for="phone">{{ t("Phone") }}</label>
-                  <InputText id="phone" v-model="phone" v-bind="phoneAttrs" autocomplete="off" :class="{ 'p-invalid': errors.phone }" />
-                  <small v-if="errors.phone" class="text-red-400 dark:text-red-300">
+                  <InputText id="phone" v-model="phone" v-bind="phoneAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.phone }" />
+                  <small v-if="submitCount > 0 && errors.phone" class="text-red-400 dark:text-red-300">
                     {{ errors.phone }}
                   </small>
                 </div>
@@ -156,22 +157,22 @@ const submit = handleSubmit((formValues) => {
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label for="email">{{ t("Email") }}</label>
-              <InputText id="email" v-model="email" v-bind="emailAttrs" autocomplete="off" :class="{ 'p-invalid': errors.email }" />
-              <small v-if="errors.email" class="text-red-400 dark:text-red-300">
+              <InputText id="email" v-model="email" v-bind="emailAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.email }" />
+              <small v-if="submitCount > 0 && errors.email" class="text-red-400 dark:text-red-300">
                 {{ errors.email }}
               </small>
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label for="address">{{ t("Address") }}</label>
-              <InputText id="address" v-model="address" v-bind="addressAttrs" autocomplete="off" :class="{ 'p-invalid': errors.address }" />
-              <small v-if="errors.address" class="text-red-400 dark:text-red-300">
+              <InputText id="address" v-model="address" v-bind="addressAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.address }" />
+              <small v-if="submitCount > 0 && errors.address" class="text-red-400 dark:text-red-300">
                 {{ errors.address }}
               </small>
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label for="details">{{ t("Details") }}</label>
-              <Textarea id="details" v-model="details" v-bind="detailsAttrs" rows="3" :class="{ 'p-invalid': errors.details }" />
-              <small v-if="errors.details" class="text-red-400 dark:text-red-300">
+              <Textarea id="details" v-model="details" v-bind="detailsAttrs" rows="3" :class="{ 'p-invalid': submitCount > 0 && !!errors.details }" />
+              <small v-if="submitCount > 0 && errors.details" class="text-red-400 dark:text-red-300">
                 {{ errors.details }}
               </small>
             </div>
@@ -217,9 +218,9 @@ const submit = handleSubmit((formValues) => {
                 :options="statusOptions"
                 option-label="name"
                 option-value="value"
-                :class="{ 'p-invalid': errors.status }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.status }"
               />
-              <small v-if="errors.status" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.status" class="text-red-400 dark:text-red-300">
                 {{ errors.status }}
               </small>
             </div>

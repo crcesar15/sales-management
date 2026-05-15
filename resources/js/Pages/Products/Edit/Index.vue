@@ -111,8 +111,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     name: props.product.name,
     description: props.product.description ?? "",
@@ -204,8 +205,8 @@ const onSubmit = handleSubmit((values) => {
                 {{ t("Name") }}
                 <span class="text-red-400">*</span>
               </label>
-              <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': errors.name }" />
-              <small v-if="errors.name" class="text-red-400 dark:text-red-300">
+              <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.name }" />
+              <small v-if="submitCount > 0 && errors.name" class="text-red-400 dark:text-red-300">
                 {{ errors.name }}
               </small>
             </div>
@@ -216,13 +217,13 @@ const onSubmit = handleSubmit((values) => {
                 v-model="description"
                 v-bind="descriptionAttrs"
                 :auto-resize="true"
-                :class="{ 'p-invalid': errors.description }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.description }"
                 @input="onDescriptionInput"
               />
               <div class="flex justify-end">
                 <small class="text-gray-500">{{ descriptionCharCount }} / 350</small>
               </div>
-              <small v-if="errors.description" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.description" class="text-red-400 dark:text-red-300">
                 {{ errors.description }}
               </small>
             </div>
@@ -271,9 +272,9 @@ const onSubmit = handleSubmit((values) => {
                   v-bind="priceAttrs"
                   mode="currency"
                   :currency="currency"
-                  :class="{ 'p-invalid': errors.price }"
+                  :class="{ 'p-invalid': submitCount > 0 && !!errors.price }"
                 />
-                <small v-if="errors.price" class="text-red-400 dark:text-red-300">
+                <small v-if="submitCount > 0 && errors.price" class="text-red-400 dark:text-red-300">
                   {{ errors.price }}
                 </small>
               </div>
@@ -282,8 +283,8 @@ const onSubmit = handleSubmit((values) => {
                   {{ t("Stock") }}
                   <span class="text-red-400">*</span>
                 </label>
-                <InputNumber id="stock" v-model="stock" v-bind="stockAttrs" :class="{ 'p-invalid': errors.stock }" />
-                <small v-if="errors.stock" class="text-red-400 dark:text-red-300">
+                <InputNumber id="stock" v-model="stock" v-bind="stockAttrs" :class="{ 'p-invalid': submitCount > 0 && !!errors.stock }" />
+                <small v-if="submitCount > 0 && errors.stock" class="text-red-400 dark:text-red-300">
                   {{ errors.stock }}
                 </small>
               </div>
@@ -294,9 +295,9 @@ const onSubmit = handleSubmit((values) => {
                   v-model="barcode"
                   v-bind="barcodeAttrs"
                   autocomplete="off"
-                  :class="{ 'p-invalid': errors.barcode }"
+                  :class="{ 'p-invalid': submitCount > 0 && !!errors.barcode }"
                 />
-                <small v-if="errors.barcode" class="text-red-400 dark:text-red-300">
+                <small v-if="submitCount > 0 && errors.barcode" class="text-red-400 dark:text-red-300">
                   {{ errors.barcode }}
                 </small>
               </div>
@@ -397,9 +398,9 @@ const onSubmit = handleSubmit((values) => {
                 :options="props.categories"
                 option-label="name"
                 option-value="id"
-                :class="{ 'p-invalid': errors.categories_ids }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.categories_ids }"
               />
-              <small v-if="errors.categories_ids" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.categories_ids" class="text-red-400 dark:text-red-300">
                 {{ errors.categories_ids }}
               </small>
             </div>
@@ -414,9 +415,9 @@ const onSubmit = handleSubmit((values) => {
                 :options="props.brands"
                 option-label="name"
                 option-value="id"
-                :class="{ 'p-invalid': errors.brand_id }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.brand_id }"
               />
-              <small v-if="errors.brand_id" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.brand_id" class="text-red-400 dark:text-red-300">
                 {{ errors.brand_id }}
               </small>
             </div>

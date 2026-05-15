@@ -53,8 +53,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     first_name: props.user.first_name,
     last_name: props.user.last_name,
@@ -137,9 +138,9 @@ const submit = handleSubmit((values) => {
                     v-model="firstName"
                     v-bind="firstNameAttrs"
                     autocomplete="off"
-                    :class="{ 'p-invalid': errors.first_name }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.first_name }"
                   />
-                  <small v-if="errors.first_name" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.first_name" class="text-red-400 dark:text-red-300">
                     {{ errors.first_name }}
                   </small>
                 </div>
@@ -152,9 +153,9 @@ const submit = handleSubmit((values) => {
                     v-model="lastName"
                     v-bind="lastNameAttrs"
                     autocomplete="off"
-                    :class="{ 'p-invalid': errors.last_name }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.last_name }"
                   />
-                  <small v-if="errors.last_name" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.last_name" class="text-red-400 dark:text-red-300">
                     {{ errors.last_name }}
                   </small>
                 </div>
@@ -162,8 +163,8 @@ const submit = handleSubmit((values) => {
             </div>
             <div class="flex flex-col gap-2 mb-3">
               <label for="email">{{ t("Email") }}</label>
-              <InputText id="email" v-model="email" v-bind="emailAttrs" autocomplete="off" :class="{ 'p-invalid': errors.email }" />
-              <small v-if="errors.email" class="text-red-400 dark:text-red-300">
+              <InputText id="email" v-model="email" v-bind="emailAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.email }" />
+              <small v-if="submitCount > 0 && errors.email" class="text-red-400 dark:text-red-300">
                 {{ errors.email }}
               </small>
             </div>
@@ -223,9 +224,9 @@ const submit = handleSubmit((values) => {
                 :options="props.availableRoles"
                 option-label="name"
                 option-value="id"
-                :class="{ 'p-invalid': errors.roles }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.roles }"
               />
-              <small v-if="errors.roles" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.roles" class="text-red-400 dark:text-red-300">
                 {{ errors.roles }}
               </small>
             </div>
@@ -243,9 +244,9 @@ const submit = handleSubmit((values) => {
                 v-model="username"
                 v-bind="usernameAttrs"
                 autocomplete="off"
-                :class="{ 'p-invalid': errors.username }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.username }"
               />
-              <small v-if="errors.username" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.username" class="text-red-400 dark:text-red-300">
                 {{ errors.username }}
               </small>
             </div>
@@ -255,7 +256,7 @@ const submit = handleSubmit((values) => {
                 id="password"
                 v-model="password"
                 v-bind="passwordAttrs"
-                :class="{ 'p-invalid': errors.password }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.password }"
                 :prompt-label="t('Choose a password')"
                 :weak-label="t('Weak')"
                 :medium-label="t('Medium')"
@@ -263,7 +264,7 @@ const submit = handleSubmit((values) => {
                 toggle-mask
                 fluid
               />
-              <small v-if="errors.password" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.password" class="text-red-400 dark:text-red-300">
                 {{ errors.password }}
               </small>
             </div>
@@ -273,7 +274,7 @@ const submit = handleSubmit((values) => {
                 id="password-confirmation"
                 v-model="passwordConfirmation"
                 v-bind="passwordConfirmationAttrs"
-                :class="{ 'p-invalid': errors.password_confirmation }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.password_confirmation }"
                 :prompt-label="t('Re-enter password')"
                 :weak-label="t('Weak')"
                 :medium-label="t('Medium')"
@@ -282,7 +283,7 @@ const submit = handleSubmit((values) => {
                 :feedback="false"
                 fluid
               />
-              <small v-if="errors.password_confirmation" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.password_confirmation" class="text-red-400 dark:text-red-300">
                 {{ errors.password_confirmation }}
               </small>
             </div>

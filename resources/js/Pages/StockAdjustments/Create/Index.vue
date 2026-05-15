@@ -39,8 +39,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, setFieldValue, setErrors, values } = useForm({
+const { handleSubmit, errors, setFieldValue, setErrors, values, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     product_variant_id: undefined as unknown as number,
     store_id: undefined as unknown as number,
@@ -142,10 +143,10 @@ const submit = handleSubmit((formValues) => {
                     option-label="name"
                     option-value="value"
                     :placeholder="t('Select store')"
-                    :class="{ 'p-invalid': errors.store_id }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.store_id }"
                     @update:model-value="setFieldValue('store_id', $event)"
                   />
-                  <small v-if="errors.store_id" class="text-red-400 dark:text-red-300">{{ errors.store_id }}</small>
+                  <small v-if="submitCount > 0 && errors.store_id" class="text-red-400 dark:text-red-300">{{ errors.store_id }}</small>
                 </div>
               </div>
 
@@ -159,10 +160,10 @@ const submit = handleSubmit((formValues) => {
                     option-label="name"
                     option-value="value"
                     :placeholder="t('Select reason')"
-                    :class="{ 'p-invalid': errors.reason }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.reason }"
                     @update:model-value="setFieldValue('reason', $event)"
                   />
-                  <small v-if="errors.reason" class="text-red-400 dark:text-red-300">{{ errors.reason }}</small>
+                  <small v-if="submitCount > 0 && errors.reason" class="text-red-400 dark:text-red-300">{{ errors.reason }}</small>
                 </div>
               </div>
 
@@ -187,7 +188,7 @@ const submit = handleSubmit((formValues) => {
                       </div>
                     </template>
                   </AutoComplete>
-                  <small v-if="errors.product_variant_id" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.product_variant_id" class="text-red-400 dark:text-red-300">
                     {{ errors.product_variant_id }}
                   </small>
                 </div>
@@ -201,11 +202,11 @@ const submit = handleSubmit((formValues) => {
                     :model-value="values.quantity_change"
                     :allow-negative="true"
                     placeholder="0"
-                    :class="{ 'p-invalid': errors.quantity_change }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.quantity_change }"
                     @update:model-value="setFieldValue('quantity_change', $event)"
                   />
                   <small class="text-surface-500">{{ t("Use negative for deductions, positive for additions") }}</small>
-                  <small v-if="errors.quantity_change" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.quantity_change" class="text-red-400 dark:text-red-300">
                     {{ errors.quantity_change }}
                   </small>
                 </div>

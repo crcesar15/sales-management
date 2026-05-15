@@ -51,8 +51,10 @@ const {
   defineField,
   isSubmitting,
   setErrors,
+  submitCount,
 } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     fullname: "",
     email: "",
@@ -142,9 +144,9 @@ const submit = handleSubmit((formValues) => {
                     v-model="fullname"
                     v-bind="fullnameAttrs"
                     autocomplete="off"
-                    :class="{ 'p-invalid': errors.fullname }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.fullname }"
                   />
-                  <small v-if="errors.fullname" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.fullname" class="text-red-400 dark:text-red-300">
                     {{ errors.fullname }}
                   </small>
                 </div>
@@ -157,9 +159,9 @@ const submit = handleSubmit((formValues) => {
                     v-model="phone"
                     v-bind="phoneAttrs"
                     autocomplete="off"
-                    :class="{ 'p-invalid': errors.phone }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.phone }"
                   />
-                  <small v-if="errors.phone" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.phone" class="text-red-400 dark:text-red-300">
                     {{ errors.phone }}
                   </small>
                 </div>
@@ -172,9 +174,9 @@ const submit = handleSubmit((formValues) => {
                 v-model="email"
                 v-bind="emailAttrs"
                 autocomplete="off"
-                :class="{ 'p-invalid': errors.email }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.email }"
               />
-              <small v-if="errors.email" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.email" class="text-red-400 dark:text-red-300">
                 {{ errors.email }}
               </small>
             </div>
@@ -185,9 +187,9 @@ const submit = handleSubmit((formValues) => {
                 v-model="address"
                 v-bind="addressAttrs"
                 autocomplete="off"
-                :class="{ 'p-invalid': errors.address }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.address }"
               />
-              <small v-if="errors.address" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.address" class="text-red-400 dark:text-red-300">
                 {{ errors.address }}
               </small>
             </div>
@@ -198,9 +200,9 @@ const submit = handleSubmit((formValues) => {
                 v-model="details"
                 v-bind="detailsAttrs"
                 rows="3"
-                :class="{ 'p-invalid': errors.details }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.details }"
               />
-              <small v-if="errors.details" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.details" class="text-red-400 dark:text-red-300">
                 {{ errors.details }}
               </small>
             </div>
@@ -243,9 +245,9 @@ const submit = handleSubmit((formValues) => {
                 :options="statusOptions"
                 option-label="name"
                 option-value="value"
-                :class="{ 'p-invalid': errors.status }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.status }"
               />
-              <small v-if="errors.status" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.status" class="text-red-400 dark:text-red-300">
                 {{ errors.status }}
               </small>
             </div>

@@ -44,8 +44,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, setFieldValue, setErrors, values } = useForm({
+const { handleSubmit, errors, setFieldValue, setErrors, values, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     from_store_id: undefined as unknown as number,
     to_store_id: undefined as unknown as number,
@@ -178,10 +179,10 @@ const submit = handleSubmit((formValues) => {
                     option-label="name"
                     option-value="value"
                     :placeholder="t('Select source store')"
-                    :class="{ 'p-invalid': errors.from_store_id }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.from_store_id }"
                     @update:model-value="setFieldValue('from_store_id', $event)"
                   />
-                  <small v-if="errors.from_store_id" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.from_store_id" class="text-red-400 dark:text-red-300">
                     {{ errors.from_store_id }}
                   </small>
                 </div>
@@ -196,10 +197,10 @@ const submit = handleSubmit((formValues) => {
                     option-label="name"
                     option-value="value"
                     :placeholder="t('Select destination store')"
-                    :class="{ 'p-invalid': errors.to_store_id }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.to_store_id }"
                     @update:model-value="setFieldValue('to_store_id', $event)"
                   />
-                  <small v-if="errors.to_store_id" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.to_store_id" class="text-red-400 dark:text-red-300">
                     {{ errors.to_store_id }}
                   </small>
                 </div>
@@ -248,7 +249,7 @@ const submit = handleSubmit((formValues) => {
                 <Button :label="t('Add Item')" icon="fa fa-plus" :disabled="!selectedVariant" @click="addItem" />
               </div>
 
-              <small v-if="errors.items" class="text-red-400 dark:text-red-300">{{ errors.items }}</small>
+              <small v-if="submitCount > 0 && errors.items" class="text-red-400 dark:text-red-300">{{ errors.items }}</small>
 
               <div v-if="(values.items ?? []).length > 0" class="overflow-x-auto">
                 <table class="w-full text-sm">

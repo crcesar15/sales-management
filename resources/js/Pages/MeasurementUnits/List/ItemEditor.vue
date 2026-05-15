@@ -27,8 +27,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm } = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     name: "",
     abbreviation: "",
@@ -99,8 +100,8 @@ const submit = handleSubmit((values) => {
           {{ t("Name") }}
           <span class="text-red-500">*</span>
         </label>
-        <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': errors.name }" />
-        <small v-if="errors.name" class="text-red-400 dark:text-red-300">
+        <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.name }" />
+        <small v-if="submitCount > 0 && errors.name" class="text-red-400 dark:text-red-300">
           {{ errors.name }}
         </small>
       </div>
@@ -114,10 +115,10 @@ const submit = handleSubmit((values) => {
           v-model="abbreviation"
           v-bind="abbreviationAttrs"
           autocomplete="off"
-          :class="{ 'p-invalid': errors.abbreviation }"
+          :class="{ 'p-invalid': submitCount > 0 && !!errors.abbreviation }"
         />
         <small class="text-surface-500">{{ t("Short form (e.g., kg, ltr, pcs)") }}</small>
-        <small v-if="errors.abbreviation" class="text-red-400 dark:text-red-300">
+        <small v-if="submitCount > 0 && errors.abbreviation" class="text-red-400 dark:text-red-300">
           {{ errors.abbreviation }}
         </small>
       </div>

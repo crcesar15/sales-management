@@ -29,8 +29,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, defineField, isSubmitting, setErrors } = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     identifier: props.variant.identifier ?? "",
     barcode: props.variant.barcode ?? "",
@@ -83,15 +84,15 @@ const onSubmit = handleSubmit((values) => {
               v-model="identifier"
               v-bind="identifierAttrs"
               autocomplete="off"
-              :class="{ 'p-invalid': errors.identifier }"
+              :class="{ 'p-invalid': submitCount > 0 && !!errors.identifier }"
             />
-            <small v-if="errors.identifier" class="text-red-400 dark:text-red-300">{{ errors.identifier }}</small>
+            <small v-if="submitCount > 0 && errors.identifier" class="text-red-400 dark:text-red-300">{{ errors.identifier }}</small>
           </div>
 
           <div class="md:col-span-6 col-span-12 flex flex-col gap-2">
             <label for="barcode">{{ t("Barcode") }}</label>
-            <InputText id="barcode" v-model="barcode" v-bind="barcodeAttrs" autocomplete="off" :class="{ 'p-invalid': errors.barcode }" />
-            <small v-if="errors.barcode" class="text-red-400 dark:text-red-300">{{ errors.barcode }}</small>
+            <InputText id="barcode" v-model="barcode" v-bind="barcodeAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.barcode }" />
+            <small v-if="submitCount > 0 && errors.barcode" class="text-red-400 dark:text-red-300">{{ errors.barcode }}</small>
           </div>
         </div>
       </div>
@@ -114,9 +115,9 @@ const onSubmit = handleSubmit((values) => {
               mode="currency"
               :currency="currency"
               :min="0"
-              :class="{ 'p-invalid': errors.price }"
+              :class="{ 'p-invalid': submitCount > 0 && !!errors.price }"
             />
-            <small v-if="errors.price" class="text-red-400 dark:text-red-300">{{ errors.price }}</small>
+            <small v-if="submitCount > 0 && errors.price" class="text-red-400 dark:text-red-300">{{ errors.price }}</small>
           </div>
 
           <div class="lg:col-span-4 md:col-span-6 col-span-12 flex flex-col gap-2">
@@ -130,9 +131,9 @@ const onSubmit = handleSubmit((values) => {
               v-bind="stockAttrs"
               :min="0"
               :use-grouping="false"
-              :class="{ 'p-invalid': errors.stock }"
+              :class="{ 'p-invalid': submitCount > 0 && !!errors.stock }"
             />
-            <small v-if="errors.stock" class="text-red-400 dark:text-red-300">{{ errors.stock }}</small>
+            <small v-if="submitCount > 0 && errors.stock" class="text-red-400 dark:text-red-300">{{ errors.stock }}</small>
           </div>
 
           <div class="lg:col-span-4 md:col-span-6 col-span-12 flex flex-col gap-2">
@@ -144,9 +145,9 @@ const onSubmit = handleSubmit((values) => {
               :options="statusOptions"
               option-label="name"
               option-value="value"
-              :class="{ 'p-invalid': errors.status }"
+              :class="{ 'p-invalid': submitCount > 0 && !!errors.status }"
             />
-            <small v-if="errors.status" class="text-red-400 dark:text-red-300">{{ errors.status }}</small>
+            <small v-if="submitCount > 0 && errors.status" class="text-red-400 dark:text-red-300">{{ errors.status }}</small>
           </div>
         </div>
       </div>

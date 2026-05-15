@@ -63,8 +63,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, defineField, setFieldValue, setErrors, values } = useForm({
+const { handleSubmit, errors, defineField, setFieldValue, setErrors, values, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     product_variant_id: props.initialValues?.product_variant_id ?? undefined,
     unit_id: props.initialValues?.unit_id ?? null,
@@ -240,7 +241,7 @@ defineExpose({
                 :placeholder="t('Type to search products...')"
                 :loading="variantSearchLoading"
                 :disabled="isEditing"
-                :invalid="!!errors.product_variant_id"
+                :invalid="submitCount > 0 && !!errors.product_variant_id"
                 dropdown
                 force-selection
                 @complete="searchVariants"
@@ -257,7 +258,7 @@ defineExpose({
                   </div>
                 </template>
               </AutoComplete>
-              <small v-if="errors.product_variant_id" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.product_variant_id" class="text-red-400 dark:text-red-300">
                 {{ errors.product_variant_id }}
               </small>
             </div>
@@ -275,11 +276,11 @@ defineExpose({
                 :placeholder="t('Default')"
                 :loading="unitsLoading"
                 :disabled="!values.product_variant_id || isEditing"
-                :class="{ 'p-invalid': !!errors.unit_id }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.unit_id }"
                 @update:model-value="onUnitSelect"
               />
               <small class="text-surface-500">{{ conversionFactorLabel }}</small>
-              <small v-if="errors.unit_id" class="text-red-400 dark:text-red-300">
+              <small v-if="submitCount > 0 && errors.unit_id" class="text-red-400 dark:text-red-300">
                 {{ errors.unit_id }}
               </small>
             </div>
@@ -297,9 +298,9 @@ defineExpose({
                 mode="currency"
                 currency="BOB"
                 :min="0"
-                :class="{ 'p-invalid': !!errors.price }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.price }"
               />
-              <small v-if="errors.price" class="text-red-400 dark:text-red-300">{{ errors.price }}</small>
+              <small v-if="submitCount > 0 && errors.price" class="text-red-400 dark:text-red-300">{{ errors.price }}</small>
             </div>
 
             <!-- Payment Terms -->
@@ -320,8 +321,8 @@ defineExpose({
             <!-- Details -->
             <div class="flex flex-col gap-1">
               <label for="details">{{ t("Details") }}</label>
-              <Textarea id="details" v-model="details" v-bind="detailsAttrs" rows="3" :class="{ 'p-invalid': !!errors.details }" />
-              <small v-if="errors.details" class="text-red-400 dark:text-red-300">{{ errors.details }}</small>
+              <Textarea id="details" v-model="details" v-bind="detailsAttrs" rows="3" :class="{ 'p-invalid': submitCount > 0 && !!errors.details }" />
+              <small v-if="submitCount > 0 && errors.details" class="text-red-400 dark:text-red-300">{{ errors.details }}</small>
             </div>
           </template>
         </Card>
@@ -344,9 +345,9 @@ defineExpose({
                     v-model="minimumOrderQuantity"
                     v-bind="minimumOrderQuantityAttrs"
                     :min="0"
-                    :class="{ 'p-invalid': !!errors.minimum_order_quantity }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.minimum_order_quantity }"
                   />
-                  <small v-if="errors.minimum_order_quantity" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.minimum_order_quantity" class="text-red-400 dark:text-red-300">
                     {{ errors.minimum_order_quantity }}
                   </small>
                 </div>
@@ -359,9 +360,9 @@ defineExpose({
                     v-model="leadTimeDays"
                     v-bind="leadTimeDaysAttrs"
                     :min="0"
-                    :class="{ 'p-invalid': !!errors.lead_time_days }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.lead_time_days }"
                   />
-                  <small v-if="errors.lead_time_days" class="text-red-400 dark:text-red-300">
+                  <small v-if="submitCount > 0 && errors.lead_time_days" class="text-red-400 dark:text-red-300">
                     {{ errors.lead_time_days }}
                   </small>
                 </div>
@@ -391,9 +392,9 @@ defineExpose({
                 :options="statusOptions"
                 option-label="name"
                 option-value="value"
-                :class="{ 'p-invalid': !!errors.status }"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.status }"
               />
-              <small v-if="errors.status" class="text-red-400 dark:text-red-300">{{ errors.status }}</small>
+              <small v-if="submitCount > 0 && errors.status" class="text-red-400 dark:text-red-300">{{ errors.status }}</small>
             </div>
           </template>
         </Card>

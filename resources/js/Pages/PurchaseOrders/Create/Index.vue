@@ -42,8 +42,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, values, setFieldValue, setErrors } = useForm({
+const { handleSubmit, errors, values, setFieldValue, setErrors, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     vendor_id: undefined as unknown as number,
     order_date: "",
@@ -128,12 +129,12 @@ function goBack() {
                     option-label="name"
                     option-value="value"
                     :placeholder="t('Select a Vendor')"
-                    :class="{ 'p-invalid': !!errors.vendor_id }"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.vendor_id }"
                     filter
                     class="w-full"
                     @update:model-value="setFieldValue('vendor_id', $event)"
                   />
-                  <small v-if="errors.vendor_id" class="text-red-400 dark:text-red-300">{{ errors.vendor_id }}</small>
+                  <small v-if="submitCount > 0 && errors.vendor_id" class="text-red-400 dark:text-red-300">{{ errors.vendor_id }}</small>
                 </div>
                 <Button
                   v-if="selectedVendor?.id"
@@ -191,8 +192,8 @@ function goBack() {
                   {{ t("Order Date") }}
                   <span class="text-red-500">*</span>
                 </label>
-                <DatePicker id="order-date" v-model="orderDateValue" show-icon :class="{ 'p-invalid': !!errors.order_date }" />
-                <small v-if="errors.order_date" class="text-red-400 dark:text-red-300">{{ errors.order_date }}</small>
+                <DatePicker id="order-date" v-model="orderDateValue" show-icon :class="{ 'p-invalid': submitCount > 0 && !!errors.order_date }" />
+                <small v-if="submitCount > 0 && errors.order_date" class="text-red-400 dark:text-red-300">{{ errors.order_date }}</small>
               </div>
 
               <div class="flex flex-col gap-1">
@@ -207,8 +208,8 @@ function goBack() {
 
               <div class="flex flex-col gap-1">
                 <label for="notes">{{ t("Notes") }}</label>
-                <Textarea id="notes" v-model="notesValue" rows="4" :class="{ 'p-invalid': !!errors.notes }" />
-                <small v-if="errors.notes" class="text-red-400 dark:text-red-300">{{ errors.notes }}</small>
+                <Textarea id="notes" v-model="notesValue" rows="4" :class="{ 'p-invalid': submitCount > 0 && !!errors.notes }" />
+                <small v-if="submitCount > 0 && errors.notes" class="text-red-400 dark:text-red-300">{{ errors.notes }}</small>
               </div>
             </div>
           </template>

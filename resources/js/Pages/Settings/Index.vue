@@ -59,8 +59,10 @@ const {
   defineField: generalDefineField,
   isSubmitting: generalIsSubmitting,
   setErrors: generalSetErrors,
+  submitCount: generalSubmitCount,
 } = useForm({
   validationSchema: generalSchema,
+  validateOnMount: false,
   initialValues: {
     business_name: props.settings.general?.business_name ?? "My Store",
     business_address: props.settings.general?.business_address ?? "",
@@ -115,8 +117,10 @@ const {
   defineField: taxDefineField,
   isSubmitting: taxIsSubmitting,
   setErrors: taxSetErrors,
+  submitCount: taxSubmitCount,
 } = useForm({
   validationSchema: taxSchema,
+  validateOnMount: false,
   initialValues: {
     tax_rate: parseFloat(props.settings.tax?.tax_rate ?? "0") || 0,
   },
@@ -171,8 +175,10 @@ const {
   defineField: financeDefineField,
   isSubmitting: financeIsSubmitting,
   setErrors: financeSetErrors,
+  submitCount: financeSubmitCount,
 } = useForm({
   validationSchema: financeSchema,
+  validateOnMount: false,
   initialValues: {
     currency: props.settings.finance?.currency ?? "USD",
     currency_symbol: props.settings.finance?.currency_symbol ?? "$",
@@ -230,9 +236,9 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       v-model="generalBusinessName"
                       v-bind="generalBusinessNameAttrs"
                       autocomplete="off"
-                      :class="{ 'p-invalid': generalErrors.business_name }"
+                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.business_name }"
                     />
-                    <small v-if="generalErrors.business_name" class="text-red-400 dark:text-red-300">
+                    <small v-if="generalSubmitCount > 0 && generalErrors.business_name" class="text-red-400 dark:text-red-300">
                       {{ generalErrors.business_name }}
                     </small>
                   </div>
@@ -247,9 +253,9 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       v-bind="generalBusinessPhoneAttrs"
                       type="tel"
                       autocomplete="off"
-                      :class="{ 'p-invalid': generalErrors.business_phone }"
+                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.business_phone }"
                     />
-                    <small v-if="generalErrors.business_phone" class="text-red-400 dark:text-red-300">
+                    <small v-if="generalSubmitCount > 0 && generalErrors.business_phone" class="text-red-400 dark:text-red-300">
                       {{ generalErrors.business_phone }}
                     </small>
                   </div>
@@ -263,9 +269,9 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       v-model="generalBusinessAddress"
                       v-bind="generalBusinessAddressAttrs"
                       autocomplete="off"
-                      :class="{ 'p-invalid': generalErrors.business_address }"
+                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.business_address }"
                     />
-                    <small v-if="generalErrors.business_address" class="text-red-400 dark:text-red-300">
+                    <small v-if="generalSubmitCount > 0 && generalErrors.business_address" class="text-red-400 dark:text-red-300">
                       {{ generalErrors.business_address }}
                     </small>
                   </div>
@@ -283,9 +289,9 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       option-value="value"
                       filter
                       :placeholder="t('Select timezone')"
-                      :class="{ 'p-invalid': generalErrors.timezone }"
+                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.timezone }"
                     />
-                    <small v-if="generalErrors.timezone" class="text-red-400 dark:text-red-300">
+                    <small v-if="generalSubmitCount > 0 && generalErrors.timezone" class="text-red-400 dark:text-red-300">
                       {{ generalErrors.timezone }}
                     </small>
                   </div>
@@ -302,9 +308,9 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       option-label="label"
                       option-value="value"
                       :placeholder="t('Select date format')"
-                      :class="{ 'p-invalid': generalErrors.date_format }"
+                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.date_format }"
                     />
-                    <small v-if="generalErrors.date_format" class="text-red-400 dark:text-red-300">
+                    <small v-if="generalSubmitCount > 0 && generalErrors.date_format" class="text-red-400 dark:text-red-300">
                       {{ generalErrors.date_format }}
                     </small>
                   </div>
@@ -321,9 +327,9 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       option-label="label"
                       option-value="value"
                       :placeholder="t('Select datetime format')"
-                      :class="{ 'p-invalid': generalErrors.datetime_format }"
+                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.datetime_format }"
                     />
-                    <small v-if="generalErrors.datetime_format" class="text-red-400 dark:text-red-300">
+                    <small v-if="generalSubmitCount > 0 && generalErrors.datetime_format" class="text-red-400 dark:text-red-300">
                       {{ generalErrors.datetime_format }}
                     </small>
                   </div>
@@ -352,10 +358,10 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       :max-fraction-digits="2"
                       suffix=" %"
                       class="w-full"
-                      :class="{ 'p-invalid': taxErrors.tax_rate }"
+                      :class="{ 'p-invalid': taxSubmitCount > 0 && !!taxErrors.tax_rate }"
                     />
                     <small class="text-gray-500">{{ t("Applied to all sales transactions") }}</small>
-                    <small v-if="taxErrors.tax_rate" class="text-red-400 dark:text-red-300">
+                    <small v-if="taxSubmitCount > 0 && taxErrors.tax_rate" class="text-red-400 dark:text-red-300">
                       {{ taxErrors.tax_rate }}
                     </small>
                   </div>
@@ -382,9 +388,9 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       option-label="label"
                       option-value="value"
                       :placeholder="t('Select currency')"
-                      :class="{ 'p-invalid': financeErrors.currency }"
+                      :class="{ 'p-invalid': financeSubmitCount > 0 && !!financeErrors.currency }"
                     />
-                    <small v-if="financeErrors.currency" class="text-red-400 dark:text-red-300">
+                    <small v-if="financeSubmitCount > 0 && financeErrors.currency" class="text-red-400 dark:text-red-300">
                       {{ financeErrors.currency }}
                     </small>
                   </div>
@@ -398,9 +404,9 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       v-model="financeCurrencySymbol"
                       v-bind="financeCurrencySymbolAttrs"
                       autocomplete="off"
-                      :class="{ 'p-invalid': financeErrors.currency_symbol }"
+                      :class="{ 'p-invalid': financeSubmitCount > 0 && !!financeErrors.currency_symbol }"
                     />
-                    <small v-if="financeErrors.currency_symbol" class="text-red-400 dark:text-red-300">
+                    <small v-if="financeSubmitCount > 0 && financeErrors.currency_symbol" class="text-red-400 dark:text-red-300">
                       {{ financeErrors.currency_symbol }}
                     </small>
                   </div>
@@ -416,10 +422,10 @@ const onSubmitFinance = handleSubmitFinance((values) => {
                       :min="0"
                       :max="6"
                       class="w-full"
-                      :class="{ 'p-invalid': financeErrors.decimal_precision }"
+                      :class="{ 'p-invalid': financeSubmitCount > 0 && !!financeErrors.decimal_precision }"
                     />
                     <small class="text-gray-500">{{ t("Applied to all monetary values") }}</small>
-                    <small v-if="financeErrors.decimal_precision" class="text-red-400 dark:text-red-300">
+                    <small v-if="financeSubmitCount > 0 && financeErrors.decimal_precision" class="text-red-400 dark:text-red-300">
                       {{ financeErrors.decimal_precision }}
                     </small>
                   </div>

@@ -26,8 +26,9 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm } = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm, submitCount } = useForm({
   validationSchema: schema,
+  validateOnMount: false,
   initialValues: {
     name: "",
   },
@@ -91,8 +92,8 @@ const submit = handleSubmit((values) => {
           {{ t("Name") }}
           <span class="text-red-500">*</span>
         </label>
-        <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': errors.name }" />
-        <small v-if="errors.name" class="text-red-400 dark:text-red-300">
+        <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.name }" />
+        <small v-if="submitCount > 0 && errors.name" class="text-red-400 dark:text-red-300">
           {{ errors.name }}
         </small>
       </div>
