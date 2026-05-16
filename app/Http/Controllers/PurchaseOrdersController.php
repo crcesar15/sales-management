@@ -92,7 +92,7 @@ final class PurchaseOrdersController extends Controller
 
         $purchaseOrder->load(['vendor', 'user', 'lineItems.productVariant.product']);
 
-        return Inertia::render('PurchaseOrders/Show', [
+        return Inertia::render('PurchaseOrders/Show/Index', [
             'purchaseOrder' => new PurchaseOrderResource($purchaseOrder),
         ]);
     }
@@ -103,7 +103,7 @@ final class PurchaseOrdersController extends Controller
 
         $purchaseOrder->load(['vendor', 'lineItems.productVariant.product']);
 
-        return Inertia::render('PurchaseOrders/Edit', [
+        return Inertia::render('PurchaseOrders/Edit/Index', [
             'purchaseOrder' => new PurchaseOrderResource($purchaseOrder),
             'vendors' => Vendor::query()
                 ->orderBy('fullname')
