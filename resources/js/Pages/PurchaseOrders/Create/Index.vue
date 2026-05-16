@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, InputNumber, Textarea, DatePicker, Select, Popover, useToast, ConfirmDialog } from "primevue";
+import { Button, Card, DatePicker, Select, Popover, useToast, ConfirmDialog } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -9,13 +9,28 @@ import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
 import POLineItemsTable from "../Components/POLineItemsTable.vue";
-import POTotalsPanel from "../Components/POTotalsPanel.vue";
+import POFinancialSummary from "../Components/POFinancialSummary.vue";
 import type { LineItem } from "../Components/POLineItemsTable.vue";
 
 defineOptions({ layout: AppLayout });
 
+interface AdditionalContact {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+}
+
 const props = defineProps<{
-  vendors: Array<{ id: number; fullname: string; email: string | null; phone: string | null; address: string | null }>;
+  vendors: Array<{
+    id: number;
+    fullname: string;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    details: string | null;
+    additional_contacts: AdditionalContact[] | null;
+  }>;
 }>();
 
 const toast = useToast();
@@ -114,57 +129,94 @@ function goBack() {
     <ConfirmDialog />
 
     <div class="grid grid-cols-12 gap-4">
-      <div class="md:col-span-8 col-span-12">
+      <div class="lg:col-span-8 col-span-12">
         <Card class="mb-4">
-          <template #title>{{ t("Vendor") }}</template>
+          <template #title>{{ t("Order Details") }}</template>
           <template #content>
-            <div class="flex flex-col gap-2">
-              <div class="flex">
-                <div class="flex-1">
-                  <Select
-                    id="vendor"
-                    :model-value="values.vendor_id"
-                    :options="vendorOptions"
-                    option-label="name"
-                    option-value="value"
-                    :placeholder="t('Select a Vendor')"
-                    :class="{ 'p-invalid': submitCount > 0 && !!errors.vendor_id }"
-                    filter
-                    class="w-full"
-                    @update:model-value="setFieldValue('vendor_id', $event)"
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-1">
+                <label for="vendor">
+                  {{ t("Vendor") }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <div class="flex">
+                  <div class="flex-1">
+                    <Select
+                      id="vendor"
+                      :model-value="values.vendor_id"
+                      :options="vendorOptions"
+                      option-label="name"
+                      option-value="value"
+                      :placeholder="t('Select a Vendor')"
+                      :class="{ 'p-invalid': submitCount > 0 && !!errors.vendor_id }"
+                      filter
+                      class="w-full"
+                      @update:model-value="setFieldValue('vendor_id', $event)"
+                    />
+                    <small v-if="submitCount > 0 && errors.vendor_id" class="text-red-400 dark:text-red-300">{{ errors.vendor_id }}</small>
+                  </div>
+                  <Button
+                    v-if="selectedVendor?.id"
+                    v-tooltip.top="t('Vendor Information')"
+                    icon="fa fa-eye"
+                    text
+                    size="small"
+                    @click="toggleVendorInfo"
                   />
-                  <small v-if="submitCount > 0 && errors.vendor_id" class="text-red-400 dark:text-red-300">{{ errors.vendor_id }}</small>
                 </div>
-                <Button
-                  v-if="selectedVendor?.id"
-                  v-tooltip.top="t('Vendor Information')"
-                  icon="fa fa-eye"
-                  text
-                  size="small"
-                  @click="toggleVendorInfo"
-                />
+                <Popover ref="vendorInfoPopover">
+                  <div v-if="selectedVendor" class="p-4 w-72">
+                    <h4 class="text-lg font-semibold mb-3">{{ selectedVendor.fullname }}</h4>
+                    <div class="flex flex-col gap-2 text-sm">
+                      <div v-if="selectedVendor.email" class="flex items-center gap-2">
+                        <i class="fa fa-envelope text-surface-400 w-4 text-center" />
+                        <span>{{ selectedVendor.email }}</span>
+                      </div>
+                      <div v-if="selectedVendor.phone" class="flex items-center gap-2">
+                        <i class="fa fa-phone text-surface-400 w-4 text-center" />
+                        <span>{{ selectedVendor.phone }}</span>
+                      </div>
+                      <div v-if="selectedVendor.address" class="flex items-start gap-2">
+                        <i class="fa fa-location-dot text-surface-400 w-4 text-center mt-0.5" />
+                        <span>{{ selectedVendor.address }}</span>
+                      </div>
+                      <div v-if="selectedVendor.details" class="flex items-start gap-2">
+                        <i class="fa fa-circle-info text-surface-400 w-4 text-center mt-0.5" />
+                        <span class="text-surface-500">{{ selectedVendor.details }}</span>
+                      </div>
+                    </div>
+                    <div v-if="selectedVendor.additional_contacts?.length" class="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
+                      <p class="text-xs font-medium text-surface-500 uppercase mb-2">{{ t("Contacts") }}</p>
+                      <div class="flex flex-col gap-2 text-sm">
+                        <div v-for="contact in selectedVendor.additional_contacts" :key="contact.email" class="flex flex-col">
+                          <span class="font-medium">{{ contact.name }} <span class="text-surface-400 font-normal text-xs">{{ contact.role }}</span></span>
+                          <span class="text-surface-500 text-xs">{{ contact.email }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Popover>
               </div>
-              <Popover ref="vendorInfoPopover">
-                <div v-if="selectedVendor" class="p-4">
-                  <h4 class="text-lg font-bold mb-2">{{ t("Vendor Information") }}</h4>
-                  <p>
-                    <strong>{{ t("Fullname") }}:</strong>
-                    {{ selectedVendor.fullname }}
-                  </p>
-                  <p v-if="selectedVendor.email">
-                    <strong>{{ t("Email") }}:</strong>
-                    {{ selectedVendor.email }}
-                  </p>
-                  <p v-if="selectedVendor.phone">
-                    <strong>{{ t("Phone") }}:</strong>
-                    {{ selectedVendor.phone }}
-                  </p>
-                  <p v-if="selectedVendor.address">
-                    <strong>{{ t("Address") }}:</strong>
-                    {{ selectedVendor.address }}
-                  </p>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1">
+                  <label for="order-date">
+                    {{ t("Order Date") }}
+                    <span class="text-red-500">*</span>
+                  </label>
+                  <DatePicker
+                    id="order-date"
+                    v-model="orderDate"
+                    v-bind="orderDateAttrs"
+                    show-icon
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.order_date }"
+                  />
+                  <small v-if="submitCount > 0 && errors.order_date" class="text-red-400 dark:text-red-300">{{ errors.order_date }}</small>
                 </div>
-              </Popover>
+                <div class="flex flex-col gap-1">
+                  <label for="expected-arrival-date">{{ t("Expected Arrival Date") }}</label>
+                  <DatePicker id="expected-arrival-date" v-model="expectedArrivalDate" v-bind="expectedArrivalDateAttrs" show-icon />
+                </div>
+              </div>
             </div>
           </template>
         </Card>
@@ -176,44 +228,22 @@ function goBack() {
             <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
           </template>
         </Card>
-
-        <div v-if="lineItems.length > 0">
-          <POTotalsPanel :sub-total="subTotal" :discount="values.discount ?? 0" :total="total" />
-        </div>
       </div>
 
-      <div class="md:col-span-4 col-span-12">
-        <Card>
-          <template #title>{{ t("Order Details") }}</template>
-          <template #content>
-            <div class="flex flex-col gap-4">
-              <div class="flex flex-col gap-1">
-                <label for="order-date">
-                  {{ t("Order Date") }}
-                  <span class="text-red-500">*</span>
-                </label>
-                <DatePicker id="order-date" v-model="orderDate" v-bind="orderDateAttrs" show-icon :class="{ 'p-invalid': submitCount > 0 && !!errors.order_date }" />
-                <small v-if="submitCount > 0 && errors.order_date" class="text-red-400 dark:text-red-300">{{ errors.order_date }}</small>
-              </div>
-
-              <div class="flex flex-col gap-1">
-                <label for="expected-arrival-date">{{ t("Expected Arrival Date") }}</label>
-                <DatePicker id="expected-arrival-date" v-model="expectedArrivalDate" v-bind="expectedArrivalDateAttrs" show-icon />
-              </div>
-
-              <div class="flex flex-col gap-1">
-                <label for="discount">{{ t("Discount") }}</label>
-                <InputNumber id="discount" v-model="discount" v-bind="discountAttrs" mode="currency" currency="BOB" :min="0" :max="subTotal" />
-              </div>
-
-              <div class="flex flex-col gap-1">
-                <label for="notes">{{ t("Notes") }}</label>
-                <Textarea id="notes" v-model="notes" v-bind="notesAttrs" rows="4" :class="{ 'p-invalid': submitCount > 0 && !!errors.notes }" />
-                <small v-if="submitCount > 0 && errors.notes" class="text-red-400 dark:text-red-300">{{ errors.notes }}</small>
-              </div>
-            </div>
-          </template>
-        </Card>
+      <div class="lg:col-span-4 col-span-12">
+        <POFinancialSummary
+          :sub-total="subTotal"
+          :total="total"
+          :discount="discount"
+          :discount-attrs="discountAttrs"
+          :max-discount="subTotal"
+          :notes="notes"
+          :notes-attrs="notesAttrs"
+          :submit-count="submitCount"
+          :errors="errors"
+          @update:discount="setFieldValue('discount', $event)"
+          @update:notes="setFieldValue('notes', $event)"
+        />
       </div>
     </div>
   </div>
