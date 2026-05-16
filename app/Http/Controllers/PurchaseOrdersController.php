@@ -55,7 +55,7 @@ final class PurchaseOrdersController extends Controller
             'vendors' => Vendor::query()
                 ->orderBy('fullname')
                 ->where('status', 'active')
-                ->get(['id', 'fullname', 'email', 'phone', 'address']),
+                ->get(['id', 'fullname', 'email', 'phone', 'address', 'details', 'additional_contacts']),
         ]);
     }
 
@@ -67,7 +67,7 @@ final class PurchaseOrdersController extends Controller
             'vendors' => Vendor::query()
                 ->orderBy('fullname')
                 ->where('status', 'active')
-                ->get(['id', 'fullname', 'email', 'phone', 'address']),
+                ->get(['id', 'fullname', 'email', 'phone', 'address', 'details', 'additional_contacts']),
         ]);
     }
 
@@ -108,7 +108,7 @@ final class PurchaseOrdersController extends Controller
             'vendors' => Vendor::query()
                 ->orderBy('fullname')
                 ->where('status', 'active')
-                ->get(['id', 'fullname', 'email', 'phone', 'address']),
+                ->get(['id', 'fullname', 'email', 'phone', 'address', 'details', 'additional_contacts']),
         ]);
     }
 
