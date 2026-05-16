@@ -78,6 +78,13 @@ function updateNotes(val: string | null) {
         <div class="flex justify-between items-center gap-2">
           <span class="text-surface-500">{{ t("Discount") }}</span>
           <div class="flex items-center gap-2">
+            <SelectButton
+              :model-value="discountMode"
+              :options="modeOptions"
+              option-label="label"
+              option-value="value"
+              @update:model-value="onModeChange"
+            />
             <InputNumber
               :model-value="discountDisplayValue"
               :mode="discountMode === 'percentage' ? 'decimal' : 'currency'"
@@ -88,13 +95,6 @@ function updateNotes(val: string | null) {
               :min-fraction-digits="2"
               input-class="w-28 text-right"
               @update:model-value="discountDisplayValue = $event"
-            />
-            <SelectButton
-              :model-value="discountMode"
-              :options="modeOptions"
-              option-label="label"
-              option-value="value"
-              @update:model-value="onModeChange"
             />
           </div>
         </div>
