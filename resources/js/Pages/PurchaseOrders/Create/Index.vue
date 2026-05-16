@@ -4,7 +4,7 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
-import { object, number, string, array, date } from "yup";
+import { object, number, string, date } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
@@ -31,14 +31,6 @@ const schema = toTypedSchema(
     expected_arrival_date: date().nullable().optional(),
     discount: number().nullable().optional().min(0, t("Discount must be at least 0")),
     notes: string().nullable().optional().max(1000, t("Notes must not exceed 1000 characters")),
-    items: array()
-      .of(
-        object({
-          product_variant_id: number().required(),
-          quantity: number().required().min(0.01, t("Quantity must be at least 0.01")),
-        }),
-      )
-      .min(1, t("At least one item is required")),
   }),
 );
 
@@ -51,7 +43,6 @@ const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, sub
     expected_arrival_date: null as Date | null,
     discount: 0 as number | null,
     notes: null as string | null,
-    items: [] as Array<{ product_variant_id: number; quantity: number }>,
   },
 });
 
@@ -61,6 +52,8 @@ const [discount, discountAttrs] = defineField("discount");
 const [notes, notesAttrs] = defineField("notes");
 
 const lineItems = ref<LineItem[]>([]);
+const itemsError = ref("");
+
 const selectedVendor = computed(() => props.vendors.find((v) => v.id === values.vendor_id) ?? null);
 
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.total, 0));
@@ -71,6 +64,12 @@ function toggleVendorInfo(event: Event) {
 }
 
 const submit = handleSubmit((formValues) => {
+  itemsError.value = "";
+  if (lineItems.value.length === 0) {
+    itemsError.value = t("At least one item is required");
+    return;
+  }
+
   const payload = {
     vendor_id: formValues.vendor_id,
     order_date: formValues.order_date ? formValues.order_date.toISOString().split("T")[0] : "",
@@ -174,6 +173,7 @@ function goBack() {
           <template #title>{{ t("Products") }}</template>
           <template #content>
             <POLineItemsTable v-model="lineItems" :vendor-id="selectedVendor?.id ?? null" />
+            <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
           </template>
         </Card>
 
