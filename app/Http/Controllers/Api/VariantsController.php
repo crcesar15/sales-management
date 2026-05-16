@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Catalog\VariantVendorResource;
 use App\Http\Resources\Product\ProductVariantCollection;
 use App\Models\ProductVariant;
 use App\Services\VariantService;
@@ -56,13 +58,15 @@ final class VariantsController extends Controller
         return response()->json($variant, 200);
     }
 
-    // Get vendors by product variant
     public function getVendors(ProductVariant $variant): JsonResponse
     {
-        $vendors = $variant->vendors;
+        $this->authorize(PermissionsEnum::CATALOG_VIEW, auth()->user());
 
-        // TODO: Develop resource
-        return response()->json($vendors, 200);
+        $variant->load(['catalogEntries.vendor', 'catalogEntries.unit', 'catalogEntries.productVariant.product.measurementUnit']);
+
+        $vendors = $variant->catalogEntries->map(fn ($entry) => new VariantVendorResource($entry));
+
+        return response()->json(['data' => $vendors], 200);
     }
 
     // Update product variant vendors

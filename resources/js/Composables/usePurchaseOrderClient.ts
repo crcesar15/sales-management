@@ -22,8 +22,17 @@ export function usePurchaseOrderClient() {
     );
   };
 
+  const fetchVariantVendorsApi = async (
+    variantId: number,
+  ): Promise<AxiosResponse> => {
+    return await apiClient.get(
+      route("api.v1.variants.vendors", { variant: variantId }),
+    );
+  };
+
   return {
     loading,
     fetchVendorCatalogApi,
+    fetchVariantVendorsApi,
   };
 }

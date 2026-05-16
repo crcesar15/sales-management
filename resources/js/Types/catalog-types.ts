@@ -63,6 +63,7 @@ export interface CatalogVariantVendor {
   price: number;
   unit: { id: number; name: string; conversion_factor: number } | null;
   payment_terms: string | null;
+  measurement_unit: { id: number; name: string } | null;
   minimum_order_quantity: number | null;
   lead_time_days: number | null;
   status: "active" | "inactive";

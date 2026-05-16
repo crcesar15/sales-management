@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { ref, computed, watch } from "vue";
 import { usePurchaseOrderClient } from "@/Composables/usePurchaseOrderClient";
+import POVariantVendorsDialog from "./POVariantVendorsDialog.vue";
 
 export interface LineItem {
   id: string;
@@ -45,6 +46,18 @@ const searchResults = ref<any[]>([]);
 const searchLoading = ref(false);
 const selectedEntry = ref<Record<string, unknown> | null>(null);
 const expandedRows = ref<LineItem[]>([]);
+
+const vendorsDialogVisible = ref(false);
+const vendorsDialogVariantId = ref<number | null>(null);
+const vendorsDialogProductName = ref("");
+const vendorsDialogVariantLabel = ref("");
+
+function openVendorsDialog(item: LineItem) {
+  vendorsDialogVariantId.value = item.product_variant_id;
+  vendorsDialogProductName.value = item.product_name;
+  vendorsDialogVariantLabel.value = item.variant_label;
+  vendorsDialogVisible.value = true;
+}
 
 const items = computed({
   get: () => props.modelValue,
@@ -394,9 +407,19 @@ watch(
         </template>
       </Column>
 
-      <Column style="min-width: 48px; width: 48px">
-        <template #body="{ index }">
-          <Button v-tooltip.top="t('Delete')" icon="fa fa-trash-can" text rounded size="small" @click="confirmRemoveItem(index)" />
+      <Column style="min-width: 80px; width: 80px">
+        <template #body="{ data, index }">
+          <div class="flex gap-1">
+            <Button
+              v-tooltip.top="t('View Vendors')"
+              icon="fa fa-store"
+              text
+              rounded
+              size="small"
+              @click="openVendorsDialog(data)"
+            />
+            <Button v-tooltip.top="t('Delete')" icon="fa fa-trash-can" text rounded size="small" @click="confirmRemoveItem(index)" />
+          </div>
         </template>
       </Column>
 
@@ -430,5 +453,12 @@ watch(
         </div>
       </template>
     </DataTable>
+
+    <POVariantVendorsDialog
+      v-model:visible="vendorsDialogVisible"
+      :product-variant-id="vendorsDialogVariantId"
+      :product-name="vendorsDialogProductName"
+      :variant-label="vendorsDialogVariantLabel"
+    />
   </div>
 </template>
