@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-  Button,
-  Card,
-  DatePicker,
-  Select,
-  Popover,
-  useToast,
-  ConfirmDialog,
-} from "primevue";
+import { Button, Card, DatePicker, Select, Popover, useToast, ConfirmDialog } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -23,13 +15,6 @@ import type { LineItem } from "../Components/POLineItemsTable.vue";
 
 defineOptions({ layout: AppLayout });
 
-interface AdditionalContact {
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-}
-
 const props = defineProps<{
   purchaseOrder: PurchaseOrderResponse;
   vendors: Array<{
@@ -42,6 +27,13 @@ const props = defineProps<{
     additional_contacts: AdditionalContact[] | null;
   }>;
 }>();
+
+interface AdditionalContact {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+}
 
 const toast = useToast();
 const { t } = useI18n();
@@ -205,11 +197,17 @@ function goBack() {
                         <span class="text-surface-500">{{ selectedVendor.details }}</span>
                       </div>
                     </div>
-                    <div v-if="selectedVendor.additional_contacts?.length" class="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
+                    <div
+                      v-if="selectedVendor.additional_contacts?.length"
+                      class="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700"
+                    >
                       <p class="text-xs font-medium text-surface-500 uppercase mb-2">{{ t("Contacts") }}</p>
                       <div class="flex flex-col gap-2 text-sm">
                         <div v-for="contact in selectedVendor.additional_contacts" :key="contact.email" class="flex flex-col">
-                          <span class="font-medium">{{ contact.name }} <span class="text-surface-400 font-normal text-xs">{{ contact.role }}</span></span>
+                          <span class="font-medium">
+                            {{ contact.name }}
+                            <span class="text-surface-400 font-normal text-xs">{{ contact.role }}</span>
+                          </span>
                           <span class="text-surface-500 text-xs">{{ contact.email }}</span>
                         </div>
                       </div>

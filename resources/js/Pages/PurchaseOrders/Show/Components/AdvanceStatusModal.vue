@@ -52,6 +52,8 @@ function confirmAction() {
     body.status = "approved";
   } else if (props.targetStatus === "paid") {
     body.status = "paid";
+  } else if (props.targetStatus === "sent") {
+    body.status = "sent";
   }
 
   router.patch(route(routeName, { purchaseOrder: props.purchaseOrderId }), body, {
@@ -68,17 +70,11 @@ function confirmAction() {
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    modal
-    :header="t(headerLabel)"
-    :style="{ width: '450px' }"
-    @update:visible="emit('update:visible', $event)"
-  >
+  <Dialog :visible="visible" modal :header="t(headerLabel)" :style="{ width: '450px' }" @update:visible="emit('update:visible', $event)">
     <p>{{ t(confirmMessage) }}</p>
     <template #footer>
-      <Button :label="t('Cancel')" severity="secondary" outlined @click="emit('update:visible', false)" />
-      <Button :label="t('Confirm')" icon="fa fa-check" @click="confirmAction" />
+      <Button :label="t('Cancel')" severity="secondary" @click="emit('update:visible', false)" />
+      <Button :label="t('Confirm')" @click="confirmAction" />
     </template>
   </Dialog>
 </template>

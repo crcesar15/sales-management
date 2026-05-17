@@ -10,7 +10,6 @@ use App\Http\Requests\PurchaseOrders\StorePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\TransitionPurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\UpdatePurchaseOrderRequest;
 use App\Http\Resources\PurchaseOrder\PurchaseOrderCollection;
-use App\Http\Resources\PurchaseOrder\PurchaseOrderResource;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
 use App\Services\PurchaseOrderService;
@@ -93,7 +92,7 @@ final class PurchaseOrdersController extends Controller
         $purchaseOrder->load(['vendor', 'user', 'lineItems.productVariant.product']);
 
         return Inertia::render('PurchaseOrders/Show/Index', [
-            'purchaseOrder' => new PurchaseOrderResource($purchaseOrder),
+            'purchaseOrder' => $purchaseOrder,
         ]);
     }
 
@@ -104,7 +103,7 @@ final class PurchaseOrdersController extends Controller
         $purchaseOrder->load(['vendor', 'lineItems.productVariant.product']);
 
         return Inertia::render('PurchaseOrders/Edit/Index', [
-            'purchaseOrder' => new PurchaseOrderResource($purchaseOrder),
+            'purchaseOrder' => $purchaseOrder,
             'vendors' => Vendor::query()
                 ->orderBy('fullname')
                 ->where('status', 'active')

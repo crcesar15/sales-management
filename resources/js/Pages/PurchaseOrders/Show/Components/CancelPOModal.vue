@@ -19,19 +19,23 @@ const toast = useToast();
 const reason = ref("");
 
 function confirmCancel() {
-  router.patch(route("purchase-orders.cancel", { purchaseOrder: props.purchaseOrderId }), {
-    reason: reason.value || null,
-  }, {
-    preserveScroll: true,
-    onSuccess: () => {
-      toast.add({ severity: "success", summary: t("Success"), detail: t("Purchase order cancelled"), life: 3000 });
-      emit("update:visible", false);
-      reason.value = "";
+  router.patch(
+    route("purchase-orders.cancel", { purchaseOrder: props.purchaseOrderId }),
+    {
+      reason: reason.value || null,
     },
-    onError: () => {
-      toast.add({ severity: "error", summary: t("Error"), detail: t("Could not cancel purchase order"), life: 3000 });
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        toast.add({ severity: "success", summary: t("Success"), detail: t("Purchase order cancelled"), life: 3000 });
+        emit("update:visible", false);
+        reason.value = "";
+      },
+      onError: () => {
+        toast.add({ severity: "error", summary: t("Error"), detail: t("Could not cancel purchase order"), life: 3000 });
+      },
     },
-  });
+  );
 }
 </script>
 
@@ -49,8 +53,8 @@ function confirmCancel() {
       <Textarea id="cancel-reason" v-model="reason" rows="3" :placeholder="t('Optional reason for cancellation')" />
     </div>
     <template #footer>
-      <Button :label="t('No')" severity="secondary" outlined @click="emit('update:visible', false)" />
-      <Button :label="t('Yes, Cancel')" icon="fa fa-ban" severity="danger" @click="confirmCancel" />
+      <Button :label="t('No')" severity="secondary" @click="emit('update:visible', false)" />
+      <Button :label="t('Yes, Cancel')" @click="confirmCancel" />
     </template>
   </Dialog>
 </template>
