@@ -90,7 +90,7 @@ final class PurchaseOrdersController extends Controller
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_VIEW);
 
-        $purchaseOrder->load(['vendor', 'user', 'lineItems.productVariant.product.measurementUnit']);
+        $purchaseOrder->load(['vendor', 'user', 'lineItems.productVariant.product.measurementUnit', 'receptionOrders.vendor', 'receptionOrders.store', 'receptionOrders.user']);
 
         $catalogEntries = Catalog::query()
             ->where('vendor_id', $purchaseOrder->vendor_id)

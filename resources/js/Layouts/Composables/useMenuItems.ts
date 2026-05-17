@@ -154,6 +154,14 @@ export function useMenuItems() {
           routeUrl: route("purchase-orders"),
         },
         {
+          key: "purchases-receptions",
+          label: t("Reception Orders"),
+          icon: "fa fa-truck-ramp-box",
+          to: "reception-orders",
+          can: "reception_order.view",
+          routeUrl: route("reception-orders"),
+        },
+        {
           key: "purchases-catalog",
           label: t("Supplier Catalog"),
           icon: "fa fa-tags",

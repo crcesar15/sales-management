@@ -1,6 +1,7 @@
 import type { UserResponse } from "./user-types";
 import type { VendorResponse } from "./vendor-types";
 import type { ProductVariantResponse } from "./product-variant-types";
+import type { ReceptionOrder } from "./reception-order-types";
 
 export type PurchaseOrderStatus =
   | "draft"
@@ -59,6 +60,13 @@ export interface PurchaseOrderResponse extends PurchaseOrder {
   user: Pick<UserResponse, "id" | "full_name">;
   vendor: Pick<VendorResponse, "id" | "fullname" | "email" | "phone" | "address" | "details" | "additional_contacts">;
   line_items: PurchaseOrderLineItem[];
+  reception_orders?: Array<
+    ReceptionOrder & {
+      vendor: Pick<VendorResponse, "id" | "fullname">;
+      store: { id: number; name: string; code: string };
+      user: Pick<UserResponse, "id" | "full_name">;
+    }
+  >;
 }
 
 export interface PurchaseOrderListResponse {

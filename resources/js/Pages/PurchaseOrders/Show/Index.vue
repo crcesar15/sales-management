@@ -9,9 +9,11 @@ import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { ref, computed } from "vue";
 import type { PurchaseOrderResponse } from "@/Types/purchase-order-types";
+import type { ReceptionOrderStatus } from "@/Types/reception-order-types";
 import POStatusBadge from "../Components/POStatusBadge.vue";
 import POTotalsPanel from "../Components/POTotalsPanel.vue";
 import POVariantVendorsDialog from "../Components/POVariantVendorsDialog.vue";
+import ReceptionStatusBadge from "@/Pages/ReceptionOrders/Components/ReceptionStatusBadge.vue";
 import AdvanceStatusModal from "./Components/AdvanceStatusModal.vue";
 import CancelPOModal from "./Components/CancelPOModal.vue";
 
@@ -103,9 +105,17 @@ const activeStepValue = computed(() => {
   return index >= 0 ? String(index + 1) : "1";
 });
 
-const cancelledPt = computed(() =>
-  isCancelled.value ? { root: { class: "opacity-100" }, separator: { class: "!bg-red-300 dark:!bg-red-700" } } : {},
-);
+const stepperPt = computed(() => {
+  const pt: Record<string, Record<string, string>> = {
+    root: { class: "pointer-events-none" },
+    step: { class: "pointer-events-none" },
+  };
+  if (isCancelled.value) {
+    pt.root.class += " opacity-100";
+    pt.separator = { class: "!bg-red-300 dark:!bg-red-700" };
+  }
+  return pt;
+});
 
 const expandedRows = ref<Record<string, boolean>>({});
 
@@ -159,7 +169,7 @@ function hasExpandableData(item: PurchaseOrderResponse["line_items"][number]): b
       </div>
     </div>
 
-    <Stepper :value="activeStepValue" :pt="cancelledPt" class="mb-4 hidden xl:block">
+    <Stepper :value="activeStepValue" :pt="stepperPt" class="mb-4 hidden xl:block">
       <StepList>
         <Step v-for="step in stepperSteps" :key="step.key" :value="step.value" :class="{ '!text-red-500': isCancelled }">
           {{ t(step.label) }}
@@ -362,6 +372,52 @@ function hasExpandableData(item: PurchaseOrderResponse["line_items"][number]): b
           <template #title>{{ t("Notes") }}</template>
           <template #content>
             <p class="m-0 whitespace-pre-line text-surface-700 dark:text-surface-300">{{ purchaseOrder.notes }}</p>
+          </template>
+        </Card>
+
+        <Card v-if="purchaseOrder.reception_orders?.length" class="mb-4">
+          <template #title>
+            <div class="flex items-center justify-between">
+              <span>{{ t("Receptions") }}</span>
+              <Button
+                v-can="'reception_order.create'"
+                :label="t('Create Reception Order')"
+                icon="fa fa-add"
+                size="small"
+                @click="router.visit(route('reception-orders.create'))"
+              />
+            </div>
+          </template>
+          <template #content>
+            <DataTable :value="purchaseOrder.reception_orders" data-key="id" striped-rows row-hover>
+              <Column field="id" :header="t('#')" style="min-width: 60px">
+                <template #body="{ data }">
+                  <a class="text-primary-500 hover:underline cursor-pointer" @click="router.visit(route('reception-orders.show', data.id))">
+                    #{{ data.id }}
+                  </a>
+                </template>
+              </Column>
+              <Column :header="t('Reception Date')" style="min-width: 120px">
+                <template #body="{ data }">
+                  {{ formatDate(data.reception_date) }}
+                </template>
+              </Column>
+              <Column :header="t('Store')" style="min-width: 120px">
+                <template #body="{ data }">
+                  {{ data.store?.name ?? "—" }}
+                </template>
+              </Column>
+              <Column :header="t('Status')" style="min-width: 120px">
+                <template #body="{ data }">
+                  <ReceptionStatusBadge :status="data.status as ReceptionOrderStatus" />
+                </template>
+              </Column>
+              <Column :header="t('Created By')" style="min-width: 120px">
+                <template #body="{ data }">
+                  {{ data.user?.full_name ?? "—" }}
+                </template>
+              </Column>
+            </DataTable>
           </template>
         </Card>
       </div>
