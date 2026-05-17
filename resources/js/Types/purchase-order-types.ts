@@ -41,7 +41,7 @@ export interface PurchaseOrder {
 
 export interface PurchaseOrderResponse extends PurchaseOrder {
   user: Pick<UserResponse, "id" | "full_name">;
-  vendor: Pick<VendorResponse, "id" | "fullname" | "email" | "phone" | "address">;
+  vendor: Pick<VendorResponse, "id" | "fullname" | "email" | "phone" | "address" | "details" | "additional_contacts">;
   line_items: PurchaseOrderLineItem[];
 }
 
