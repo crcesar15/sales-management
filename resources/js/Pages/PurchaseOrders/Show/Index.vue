@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, Button, DataTable, Column, Popover, Stepper, StepList, Step } from "primevue";
+import { Card, Button, DataTable, Column, Popover, Stepper, StepList, Step, Tag } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
@@ -106,6 +106,40 @@ const activeStepValue = computed(() => {
 const cancelledPt = computed(() =>
   isCancelled.value ? { root: { class: "opacity-100" }, separator: { class: "!bg-red-300 dark:!bg-red-700" } } : {},
 );
+
+const expandedRows = ref<Record<string, boolean>>({});
+
+function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" {
+  if (stock === null || stock === undefined) return "success";
+  if (stock === 0) return "danger";
+  if (minStock && stock <= minStock) return "warn";
+  return "success";
+}
+
+function getStockLabel(stock: number | null | undefined): string {
+  if (stock === null || stock === undefined) return "—";
+  if (stock === 0) return t("Out of stock");
+  return `${t("In stock")}: ${String(stock)}`;
+}
+
+function getPaymentTermsLabel(paymentTerms: string | null | undefined): string | null {
+  if (!paymentTerms) return null;
+  switch (paymentTerms) {
+    case "debit":
+      return t("Cash");
+    case "credit":
+      return t("Credit");
+    case "both":
+      return t("Cash / Credit");
+    default:
+      return paymentTerms;
+  }
+}
+
+function hasExpandableData(item: PurchaseOrderResponse["line_items"][number]): boolean {
+  const catalog = item.catalog_entry;
+  return !!(catalog?.minimum_order_quantity || catalog?.lead_time_days || catalog?.payment_terms || catalog?.details || catalog?.unit);
+}
 </script>
 
 <template>
@@ -236,16 +270,27 @@ const cancelledPt = computed(() =>
         </Card>
 
         <Card class="mb-4">
-          <template #title>{{ t("Line Items") }}</template>
+          <template #title>{{ t("Products") }}</template>
           <template #content>
-            <DataTable :value="purchaseOrder.line_items ?? []" class="mt-4 border-t-2 border-surface-200">
+            <DataTable v-model:expanded-rows="expandedRows" :value="purchaseOrder.line_items ?? []" data-key="id" class="mt-4 border-t-2 border-surface-200">
               <template #empty>
                 {{ t("No items") }}
               </template>
+              <Column expander style="width: 3rem" />
               <Column :header="t('Product')" style="min-width: 180px">
                 <template #body="{ data }">
                   <span class="font-medium">{{ data.product_variant?.product?.name ?? "---" }}</span>
                   <div class="text-sm text-surface-500">{{ data.product_variant?.name ?? data.product_variant?.identifier ?? "---" }}</div>
+                </template>
+              </Column>
+              <Column :header="t('Stock')" style="min-width: 90px">
+                <template #body="{ data }">
+                  <Tag
+                    :value="getStockLabel(data.product_variant?.stock)"
+                    :severity="getStockSeverity(data.product_variant?.stock, data.product_variant?.minimum_stock_level)"
+                    class="text-xs"
+                    rounded
+                  />
                 </template>
               </Column>
               <Column :header="t('Quantity')" style="min-width: 90px">
@@ -280,6 +325,35 @@ const cancelledPt = computed(() =>
                   />
                 </template>
               </Column>
+              <template #expansion="{ data }">
+                <div v-if="hasExpandableData(data)" class="px-4 py-3">
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div v-if="data.catalog_entry?.minimum_order_quantity">
+                      <span class="text-surface-500 block mb-1">{{ t("Min. Order") }}</span>
+                      <span class="font-medium">{{ data.catalog_entry.minimum_order_quantity }}</span>
+                    </div>
+                    <div v-if="data.catalog_entry?.lead_time_days">
+                      <span class="text-surface-500 block mb-1">{{ t("Lead Time") }}</span>
+                      <span class="font-medium">{{ data.catalog_entry.lead_time_days }} {{ t("days") }}</span>
+                    </div>
+                    <div v-if="data.catalog_entry?.payment_terms">
+                      <span class="text-surface-500 block mb-1">{{ t("Payment Terms") }}</span>
+                      <span class="font-medium">{{ getPaymentTermsLabel(data.catalog_entry.payment_terms) }}</span>
+                    </div>
+                    <div v-if="data.catalog_entry?.details">
+                      <span class="text-surface-500 block mb-1">{{ t("Details") }}</span>
+                      <span class="font-medium">{{ data.catalog_entry.details }}</span>
+                    </div>
+                    <div v-if="data.catalog_entry?.unit">
+                      <span class="text-surface-500 block mb-1">{{ t("Purchase Unit") }}</span>
+                      <span class="font-medium">{{ data.catalog_entry.unit.name }}</span>
+                      <span v-if="data.catalog_entry.unit.conversion_factor !== 1" class="text-surface-500 ml-1">
+                        (x{{ data.catalog_entry.unit.conversion_factor }} {{ data.product_variant?.product?.measurement_unit?.name }})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </DataTable>
           </template>
         </Card>

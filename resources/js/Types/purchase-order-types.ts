@@ -10,6 +10,19 @@ export type PurchaseOrderStatus =
   | "paid"
   | "cancelled";
 
+export interface CatalogEntry {
+  id: number;
+  product_variant_id: number;
+  vendor_id: number;
+  price: number;
+  payment_terms: string | null;
+  details: string | null;
+  unit_id: number | null;
+  minimum_order_quantity: number | null;
+  lead_time_days: number | null;
+  unit?: { id: number; name: string; conversion_factor: number } | null;
+}
+
 export interface PurchaseOrderLineItem {
   id: number;
   purchase_order_id: number;
@@ -17,9 +30,12 @@ export interface PurchaseOrderLineItem {
   quantity: number;
   price: number;
   total: number;
-  product_variant: Pick<ProductVariantResponse, "id" | "name" | "identifier"> & {
-    product: Pick<ProductVariantResponse["product"], "id" | "name">;
+  product_variant: Pick<ProductVariantResponse, "id" | "name" | "identifier" | "stock" | "minimum_stock_level"> & {
+    product: Pick<ProductVariantResponse["product"], "id" | "name"> & {
+      measurement_unit?: { id: number; name: string; abbreviation: string } | null;
+    };
   };
+  catalog_entry?: CatalogEntry | null;
 }
 
 export interface PurchaseOrder {

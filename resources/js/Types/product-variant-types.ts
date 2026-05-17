@@ -13,6 +13,7 @@ export interface ProductVariantResponse extends ProductVariantBase {
   id?: number;
   product_id: number;
   stock?: number;
+  minimum_stock_level?: number | null;
   status: string;
   created_at?: string | null;
   updated_at?: string | null;

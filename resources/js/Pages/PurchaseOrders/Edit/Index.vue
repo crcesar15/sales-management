@@ -69,16 +69,32 @@ const [discount, discountAttrs] = defineField("discount");
 const [notes, notesAttrs] = defineField("notes");
 
 const lineItems = ref<LineItem[]>(
-  props.purchaseOrder.line_items.map((item) => ({
-    id: String(item.id),
-    catalog_id: 0,
-    product_variant_id: item.product_variant_id,
-    product_name: item.product_variant?.product?.name ?? "—",
-    variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
-    quantity: item.quantity,
-    price: item.price,
-    total: item.total,
-  })),
+  props.purchaseOrder.line_items.map((item) => {
+    const catalog = item.catalog_entry;
+    const measurementUnit = item.product_variant?.product?.measurement_unit;
+    const purchaseUnit = catalog?.unit;
+
+    return {
+      id: String(item.id),
+      catalog_id: catalog?.id ?? 0,
+      product_variant_id: item.product_variant_id,
+      product_name: item.product_variant?.product?.name ?? "—",
+      variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
+      quantity: item.quantity,
+      price: item.price,
+      total: item.total,
+      stock: item.product_variant?.stock ?? null,
+      minimum_stock_level: item.product_variant?.minimum_stock_level ?? null,
+      payment_terms: getPaymentTermsLabel(catalog?.payment_terms),
+      details: catalog?.details ?? null,
+      unit_id: catalog?.unit_id ?? null,
+      purchase_unit:
+        purchaseUnit ?? (measurementUnit ? { id: measurementUnit.id, name: measurementUnit.name, conversion_factor: 1 } : null),
+      base_unit: measurementUnit ? { id: measurementUnit.id, name: measurementUnit.name } : null,
+      minimum_order_quantity: catalog?.minimum_order_quantity ?? null,
+      lead_time_days: catalog?.lead_time_days ?? null,
+    };
+  }),
 );
 const itemsError = ref("");
 
@@ -89,6 +105,20 @@ const total = computed(() => subTotal.value - (values.discount ?? 0));
 
 function toggleVendorInfo(event: Event) {
   vendorInfoPopover.value.toggle(event);
+}
+
+function getPaymentTermsLabel(paymentTerms: string | null | undefined): string | null {
+  if (!paymentTerms) return null;
+  switch (paymentTerms) {
+    case "debit":
+      return t("Cash");
+    case "credit":
+      return t("Credit");
+    case "both":
+      return t("Cash / Credit");
+    default:
+      return paymentTerms;
+  }
 }
 
 const submit = handleSubmit((formValues) => {
@@ -163,6 +193,7 @@ function goBack() {
                       :placeholder="t('Select a Vendor')"
                       :class="{ 'p-invalid': submitCount > 0 && !!errors.vendor_id }"
                       filter
+                      class="w-full"
                       @update:model-value="setFieldValue('vendor_id', $event)"
                     />
                     <small v-if="submitCount > 0 && errors.vendor_id" class="text-red-400 dark:text-red-300">{{ errors.vendor_id }}</small>
@@ -240,7 +271,7 @@ function goBack() {
         </Card>
 
         <Card class="mb-4">
-          <template #title>{{ t("Line Items") }}</template>
+          <template #title>{{ t("Products") }}</template>
           <template #content>
             <POLineItemsTable v-model="lineItems" :vendor-id="selectedVendor?.id ?? null" />
             <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>

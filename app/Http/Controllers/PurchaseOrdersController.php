@@ -10,6 +10,7 @@ use App\Http\Requests\PurchaseOrders\StorePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\TransitionPurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\UpdatePurchaseOrderRequest;
 use App\Http\Resources\PurchaseOrder\PurchaseOrderCollection;
+use App\Models\Catalog;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
 use App\Services\PurchaseOrderService;
@@ -89,7 +90,19 @@ final class PurchaseOrdersController extends Controller
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_VIEW);
 
-        $purchaseOrder->load(['vendor', 'user', 'lineItems.productVariant.product']);
+        $purchaseOrder->load(['vendor', 'user', 'lineItems.productVariant.product.measurementUnit']);
+
+        $catalogEntries = Catalog::query()
+            ->where('vendor_id', $purchaseOrder->vendor_id)
+            ->whereIn('product_variant_id', $purchaseOrder->lineItems->pluck('product_variant_id'))
+            ->with(['unit'])
+            ->get()
+            ->keyBy('product_variant_id');
+
+        $purchaseOrder->lineItems->each(fn ($item) => $item->setRelation(
+            'catalogEntry',
+            $catalogEntries->get($item->product_variant_id),
+        ));
 
         return Inertia::render('PurchaseOrders/Show/Index', [
             'purchaseOrder' => $purchaseOrder,
@@ -100,7 +113,19 @@ final class PurchaseOrdersController extends Controller
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_EDIT);
 
-        $purchaseOrder->load(['vendor', 'lineItems.productVariant.product']);
+        $purchaseOrder->load(['vendor', 'lineItems.productVariant.product.measurementUnit']);
+
+        $catalogEntries = Catalog::query()
+            ->where('vendor_id', $purchaseOrder->vendor_id)
+            ->whereIn('product_variant_id', $purchaseOrder->lineItems->pluck('product_variant_id'))
+            ->with(['unit'])
+            ->get()
+            ->keyBy('product_variant_id');
+
+        $purchaseOrder->lineItems->each(fn ($item) => $item->setRelation(
+            'catalogEntry',
+            $catalogEntries->get($item->product_variant_id),
+        ));
 
         return Inertia::render('PurchaseOrders/Edit/Index', [
             'purchaseOrder' => $purchaseOrder,
