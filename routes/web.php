@@ -20,6 +20,7 @@ use App\Http\Controllers\ProductOptionController;
 use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\ProductVariantUnitController;
 use App\Http\Controllers\PurchaseOrdersController;
+use App\Http\Controllers\ReceptionOrderController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StockAdjustmentController;
@@ -230,6 +231,16 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::patch('/purchase-orders/{purchaseOrder}/send', [PurchaseOrdersController::class, 'send'])->name('purchase-orders.send');
     Route::patch('/purchase-orders/{purchaseOrder}/pay', [PurchaseOrdersController::class, 'pay'])->name('purchase-orders.pay');
     Route::patch('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrdersController::class, 'cancel'])->name('purchase-orders.cancel');
+
+    // Reception Orders Routes
+    Route::get('/reception-orders', [ReceptionOrderController::class, 'index'])->name('reception-orders');
+    Route::get('/reception-orders/create', [ReceptionOrderController::class, 'create'])->name('reception-orders.create');
+    Route::post('/reception-orders', [ReceptionOrderController::class, 'store'])->name('reception-orders.store');
+    Route::get('/reception-orders/{receptionOrder}', [ReceptionOrderController::class, 'show'])->name('reception-orders.show');
+    Route::get('/reception-orders/{receptionOrder}/edit', [ReceptionOrderController::class, 'edit'])->name('reception-orders.edit');
+    Route::put('/reception-orders/{receptionOrder}', [ReceptionOrderController::class, 'update'])->name('reception-orders.update');
+    Route::patch('/reception-orders/{receptionOrder}/complete', [ReceptionOrderController::class, 'complete'])->name('reception-orders.complete');
+    Route::patch('/reception-orders/{receptionOrder}/cancel', [ReceptionOrderController::class, 'cancel'])->name('reception-orders.cancel');
 
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('settings');

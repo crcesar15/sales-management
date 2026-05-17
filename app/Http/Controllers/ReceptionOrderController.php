@@ -1,0 +1,215 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers;
+
+use App\Enums\PermissionsEnum;
+use App\Http\Requests\ReceptionOrders\CancelReceptionOrderRequest;
+use App\Http\Requests\ReceptionOrders\CompleteReceptionOrderRequest;
+use App\Http\Requests\ReceptionOrders\StoreReceptionOrderRequest;
+use App\Http\Requests\ReceptionOrders\UpdateReceptionOrderRequest;
+use App\Models\Catalog;
+use App\Models\PurchaseOrder;
+use App\Models\ReceptionOrder;
+use App\Models\Store;
+use App\Models\Vendor;
+use App\Services\ReceptionOrderService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
+use InvalidArgumentException;
+use RuntimeException;
+
+final class ReceptionOrderController extends Controller
+{
+    private readonly ReceptionOrderService $receptionService;
+
+    public function __construct(ReceptionOrderService $receptionService)
+    {
+        $this->receptionService = $receptionService;
+    }
+
+    public function index(Request $request): InertiaResponse
+    {
+        $this->authorize(PermissionsEnum::RECEPTION_ORDERS_VIEW);
+
+        $receptionOrders = $this->receptionService->list(
+            filters: [
+                'status' => $request->string('status', '')->toString() ?: null,
+                'purchase_order_id' => $request->integer('purchase_order_id') ?: null,
+                'vendor_id' => $request->integer('vendor_id') ?: null,
+                'store_id' => $request->integer('store_id') ?: null,
+                'from' => $request->string('from', '')->toString() ?: null,
+                'to' => $request->string('to', '')->toString() ?: null,
+            ],
+            perPage: $request->integer('per_page', 25),
+        );
+
+        return Inertia::render('ReceptionOrders/Index', [
+            'receptionOrders' => $receptionOrders,
+            'filters' => [
+                'status' => $request->string('status', '')->toString(),
+                'purchase_order_id' => $request->integer('purchase_order_id') ?: null,
+                'vendor_id' => $request->integer('vendor_id') ?: null,
+                'store_id' => $request->integer('store_id') ?: null,
+                'from' => $request->string('from', '')->toString(),
+                'to' => $request->string('to', '')->toString(),
+            ],
+            'vendors' => Vendor::query()
+                ->orderBy('fullname')
+                ->where('status', 'active')
+                ->get(['id', 'fullname']),
+            'stores' => Store::query()
+                ->orderBy('name')
+                ->where('status', 'active')
+                ->get(['id', 'name']),
+        ]);
+    }
+
+    public function create(Request $request): InertiaResponse
+    {
+        $this->authorize(PermissionsEnum::RECEPTION_ORDERS_CREATE);
+
+        $purchaseOrders = PurchaseOrder::query()
+            ->whereIn('status', ['approved', 'sent'])
+            ->with(['vendor', 'lineItems.productVariant.product'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return Inertia::render('ReceptionOrders/Create/Index', [
+            'purchaseOrders' => $purchaseOrders,
+            'stores' => Store::query()
+                ->orderBy('name')
+                ->where('status', 'active')
+                ->get(['id', 'name']),
+        ]);
+    }
+
+    public function store(StoreReceptionOrderRequest $request): RedirectResponse
+    {
+        try {
+            $receptionOrder = $this->receptionService->create(
+                $request->validated(),
+                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+            );
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['items' => $e->getMessage()]);
+        }
+
+        return redirect()->route('reception-orders.show', $receptionOrder->id)
+            ->with('success', 'Reception order created successfully.');
+    }
+
+    public function show(ReceptionOrder $receptionOrder): InertiaResponse
+    {
+        $this->authorize(PermissionsEnum::RECEPTION_ORDERS_VIEW);
+
+        $receptionOrder->load([
+            'purchaseOrder.vendor',
+            'vendor',
+            'store',
+            'user',
+            'lineItems.productVariant.product',
+        ]);
+
+        $catalogEntries = Catalog::query()
+            ->where('vendor_id', $receptionOrder->vendor_id)
+            ->whereIn('product_variant_id', $receptionOrder->lineItems->pluck('product_variant_id'))
+            ->with(['unit'])
+            ->get()
+            ->keyBy('product_variant_id');
+
+        $receptionOrder->lineItems->each(fn ($item) => $item->setRelation(
+            'catalogEntry',
+            $catalogEntries->get($item->product_variant_id),
+        ));
+
+        return Inertia::render('ReceptionOrders/Show/Index', [
+            'receptionOrder' => $receptionOrder,
+        ]);
+    }
+
+    public function edit(ReceptionOrder $receptionOrder): InertiaResponse|RedirectResponse
+    {
+        $this->authorize(PermissionsEnum::RECEPTION_ORDERS_EDIT);
+
+        if (! in_array($receptionOrder->status, ['pending', 'uncompleted'], true)) {
+            return redirect()->route('reception-orders.show', $receptionOrder->id)
+                ->withErrors(['status' => 'Only pending or uncompleted reception orders can be edited.']);
+        }
+
+        $receptionOrder->load([
+            'purchaseOrder.lineItems.productVariant.product',
+            'lineItems.productVariant.product',
+        ]);
+
+        $catalogEntries = Catalog::query()
+            ->where('vendor_id', $receptionOrder->vendor_id)
+            ->whereIn('product_variant_id', $receptionOrder->lineItems->pluck('product_variant_id'))
+            ->with(['unit'])
+            ->get()
+            ->keyBy('product_variant_id');
+
+        $receptionOrder->lineItems->each(fn ($item) => $item->setRelation(
+            'catalogEntry',
+            $catalogEntries->get($item->product_variant_id),
+        ));
+
+        return Inertia::render('ReceptionOrders/Edit/Index', [
+            'receptionOrder' => $receptionOrder,
+            'stores' => Store::query()
+                ->orderBy('name')
+                ->where('status', 'active')
+                ->get(['id', 'name']),
+        ]);
+    }
+
+    public function update(UpdateReceptionOrderRequest $request, ReceptionOrder $receptionOrder): RedirectResponse
+    {
+        try {
+            $this->receptionService->update(
+                $receptionOrder,
+                $request->validated(),
+                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+            );
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['items' => $e->getMessage()]);
+        }
+
+        return redirect()->route('reception-orders.show', $receptionOrder->id)
+            ->with('success', 'Reception order updated successfully.');
+    }
+
+    public function complete(CompleteReceptionOrderRequest $request, ReceptionOrder $receptionOrder): RedirectResponse
+    {
+        try {
+            $this->receptionService->complete(
+                $receptionOrder,
+                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+            );
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['status' => $e->getMessage()]);
+        }
+
+        return redirect()->route('reception-orders.show', $receptionOrder->id)
+            ->with('success', 'Reception order completed successfully.');
+    }
+
+    public function cancel(CancelReceptionOrderRequest $request, ReceptionOrder $receptionOrder): RedirectResponse
+    {
+        try {
+            $this->receptionService->cancel(
+                $receptionOrder,
+                $request->string('reason', '')->toString() ?: null,
+                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+            );
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['status' => $e->getMessage()]);
+        }
+
+        return redirect()->route('reception-orders')
+            ->with('success', 'Reception order cancelled.');
+    }
+}
