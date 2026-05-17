@@ -9,6 +9,7 @@ use App\Http\Requests\ReceptionOrders\CancelReceptionOrderRequest;
 use App\Http\Requests\ReceptionOrders\CompleteReceptionOrderRequest;
 use App\Http\Requests\ReceptionOrders\StoreReceptionOrderRequest;
 use App\Http\Requests\ReceptionOrders\UpdateReceptionOrderRequest;
+use App\Http\Resources\ReceptionOrder\ReceptionOrderCollection;
 use App\Models\Catalog;
 use App\Models\PurchaseOrder;
 use App\Models\ReceptionOrder;
@@ -48,7 +49,7 @@ final class ReceptionOrderController extends Controller
         );
 
         return Inertia::render('ReceptionOrders/Index', [
-            'receptionOrders' => $receptionOrders,
+            'receptionOrders' => new ReceptionOrderCollection($receptionOrders),
             'filters' => [
                 'status' => $request->string('status', '')->toString(),
                 'purchase_order_id' => $request->integer('purchase_order_id') ?: null,
@@ -74,7 +75,7 @@ final class ReceptionOrderController extends Controller
 
         $purchaseOrders = PurchaseOrder::query()
             ->whereIn('status', ['approved', 'sent'])
-            ->with(['vendor', 'lineItems.productVariant.product'])
+            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -111,7 +112,7 @@ final class ReceptionOrderController extends Controller
             'vendor',
             'store',
             'user',
-            'lineItems.productVariant.product',
+            'lineItems.productVariant.product.measurementUnit',
         ]);
 
         $catalogEntries = Catalog::query()
@@ -142,7 +143,7 @@ final class ReceptionOrderController extends Controller
 
         $receptionOrder->load([
             'purchaseOrder.lineItems.productVariant.product',
-            'lineItems.productVariant.product',
+            'lineItems.productVariant.product.measurementUnit',
         ]);
 
         $catalogEntries = Catalog::query()

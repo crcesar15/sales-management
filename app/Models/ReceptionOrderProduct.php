@@ -7,6 +7,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read Catalog|null $catalogEntry
+ */
 final class ReceptionOrderProduct extends Model
 {
     protected $table = 'reception_order_product';
