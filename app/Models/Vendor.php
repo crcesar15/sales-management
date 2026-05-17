@@ -45,6 +45,12 @@ final class Vendor extends Model
         return $this->hasMany(PurchaseOrder::class);
     }
 
+    /** @return HasMany<ReceptionOrder, $this>*/
+    public function receptionOrders(): HasMany
+    {
+        return $this->hasMany(ReceptionOrder::class);
+    }
+
     public function hasPurchaseOrders(): bool
     {
         return $this->purchaseOrders()->exists();

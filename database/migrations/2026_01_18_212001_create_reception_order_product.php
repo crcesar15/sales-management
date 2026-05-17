@@ -20,6 +20,7 @@ return new class extends Migration
             $table->float('quantity', 8);
             $table->float('price', 8);
             $table->float('total', 8);
+            $table->date('expiry_date')->nullable();
             $table->timestamps();
         });
     }

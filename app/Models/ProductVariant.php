@@ -96,6 +96,12 @@ final class ProductVariant extends Model
         return $this->hasMany(PurchaseOrderProduct::class);
     }
 
+    /** @return HasMany<ReceptionOrderProduct, $this> */
+    public function receptionOrderItems(): HasMany
+    {
+        return $this->hasMany(ReceptionOrderProduct::class);
+    }
+
     /** @return HasMany<ProductVariantUnit, $this> */
     public function units(): HasMany
     {

@@ -57,6 +57,12 @@ final class Store extends Model
         return $this->hasMany(Batch::class);
     }
 
+    /** @return HasMany<ReceptionOrder, $this> */
+    public function receptionOrders(): HasMany
+    {
+        return $this->hasMany(ReceptionOrder::class);
+    }
+
     /** @return HasMany<StockTransfer, $this> */
     public function stockTransfersFrom(): HasMany
     {

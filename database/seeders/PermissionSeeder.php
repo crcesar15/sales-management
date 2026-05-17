@@ -108,6 +108,13 @@ final class PermissionSeeder extends Seeder
                 PermissionsEnum::PURCHASE_ORDERS_APPROVE->value,
                 PermissionsEnum::PURCHASE_ORDERS_RESTORE->value,
             ],
+            'reception orders' => [
+                PermissionsEnum::RECEPTION_ORDERS_VIEW->value,
+                PermissionsEnum::RECEPTION_ORDERS_CREATE->value,
+                PermissionsEnum::RECEPTION_ORDERS_EDIT->value,
+                PermissionsEnum::RECEPTION_ORDERS_DELETE->value,
+                PermissionsEnum::RECEPTION_ORDERS_MANAGE->value,
+            ],
         ];
 
         $role = Role::query()->where('name', RolesEnum::ADMIN->value)->firstOrFail();

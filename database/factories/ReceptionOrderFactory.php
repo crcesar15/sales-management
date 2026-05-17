@@ -6,6 +6,7 @@ namespace Database\Factories;
 
 use App\Models\PurchaseOrder;
 use App\Models\ReceptionOrder;
+use App\Models\Store;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,8 +27,10 @@ final class ReceptionOrderFactory extends Factory
             'purchase_order_id' => PurchaseOrder::factory(),
             'user_id' => User::factory(),
             'vendor_id' => Vendor::factory(),
+            'store_id' => Store::factory(),
             'reception_date' => fake()->date(),
-            'status' => fake()->randomElement(['pending', 'completed', 'cancelled']),
+            'notes' => fake()->optional()->sentence(),
+            'status' => fake()->randomElement(['pending', 'uncompleted', 'completed', 'cancelled']),
         ];
     }
 }

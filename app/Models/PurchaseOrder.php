@@ -51,6 +51,12 @@ final class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderProduct::class);
     }
 
+    /** @return HasMany<ReceptionOrder, $this> */
+    public function receptionOrders(): HasMany
+    {
+        return $this->hasMany(ReceptionOrder::class);
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

@@ -18,10 +18,15 @@ return new class extends Migration
             $table->foreignId('purchase_order_id')->constrained();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('vendor_id')->constrained();
+            $table->foreignId('store_id')->constrained('stores');
             $table->date('reception_date')->nullable();
             $table->text('notes')->nullable();
             $table->enum('status', ['pending', 'uncompleted', 'completed', 'cancelled'])->default('pending');
             $table->timestamps();
+
+            $table->index('purchase_order_id');
+            $table->index('store_id');
+            $table->index('status');
         });
     }
 
