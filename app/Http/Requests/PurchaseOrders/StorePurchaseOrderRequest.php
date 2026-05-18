@@ -27,8 +27,6 @@ final class StorePurchaseOrderRequest extends FormRequest
             'expected_arrival_date' => ['nullable', 'date'],
             'discount' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'proof_of_payment_type' => ['nullable', 'string', 'max:50'],
-            'proof_of_payment_number' => ['nullable', 'string', 'max:100'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],

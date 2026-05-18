@@ -158,9 +158,7 @@ final class PurchaseOrderService
 
     public function cancel(PurchaseOrder $po, ?string $reason, User $actor): void
     {
-        if (in_array($po->status, ['sent', 'paid'], true)) {
-            throw new InvalidArgumentException("Cannot cancel a purchase order with status: {$po->status}.");
-        }
+        $this->validateTransition($po->status, 'cancelled');
 
         DB::transaction(function () use ($po, $reason, $actor): void {
             $po->update(['status' => 'cancelled']);
@@ -170,6 +168,33 @@ final class PurchaseOrderService
                 ->performedOn($po)
                 ->withProperties(['reason' => $reason])
                 ->log('cancelled');
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function markAsPaid(PurchaseOrder $po, array $data, User $actor): void
+    {
+        $this->validateTransition($po->status, 'paid');
+
+        DB::transaction(function () use ($po, $data, $actor): void {
+            $po->update([
+                'status' => 'paid',
+                'proof_of_payment_type' => $data['proof_of_payment_type'],
+                'proof_of_payment_number' => $data['proof_of_payment_number'],
+            ]);
+
+            activity()
+                ->causedBy($actor)
+                ->performedOn($po)
+                ->withProperties([
+                    'from' => 'sent',
+                    'to' => 'paid',
+                    'proof_of_payment_type' => $data['proof_of_payment_type'],
+                    'proof_of_payment_number' => $data['proof_of_payment_number'],
+                ])
+                ->log('marked as paid');
         });
     }
 

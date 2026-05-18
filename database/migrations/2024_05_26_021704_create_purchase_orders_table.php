@@ -20,11 +20,11 @@ return new class extends Migration
             $table->enum('status', ['draft', 'awaiting_approval', 'approved', 'sent', 'paid', 'cancelled'])->default('draft');
             $table->date('order_date');
             $table->date('expected_arrival_date')->nullable();
-            $table->float('sub_total', 8)->nullable();
-            $table->float('discount', 8)->nullable();
-            $table->float('total', 8)->nullable();
+            $table->decimal('sub_total', 10, 2)->nullable();
+            $table->decimal('discount', 10, 2)->nullable();
+            $table->decimal('total', 10, 2)->nullable();
             $table->text('notes')->nullable();
-            $table->string('proof_of_payment_type')->nullable();
+            $table->enum('proof_of_payment_type', ['bank_transfer', 'cash', 'check', 'credit_card'])->nullable();
             $table->string('proof_of_payment_number')->nullable();
             $table->timestamps();
 

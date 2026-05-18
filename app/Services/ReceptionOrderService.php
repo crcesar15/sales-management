@@ -126,12 +126,17 @@ final class ReceptionOrderService
                 }
             }
 
-            $receptionOrder->update([
+            $updateData = [
                 'store_id' => $data['store_id'] ?? $receptionOrder->store_id,
                 'reception_date' => $data['reception_date'] ?? $receptionOrder->reception_date,
                 'notes' => array_key_exists('notes', $data) ? $data['notes'] : $receptionOrder->notes,
-                'status' => 'uncompleted',
-            ]);
+            ];
+
+            if ($items !== null) {
+                $updateData['status'] = 'uncompleted';
+            }
+
+            $receptionOrder->update($updateData);
 
             activity()
                 ->causedBy($actor)

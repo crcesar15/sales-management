@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\PaymentMethod;
 use Database\Factories\PurchaseOrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,12 +12,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-final class PurchaseOrder extends Model
+final class PurchaseOrder extends Model implements HasMedia
 {
     /** @use HasFactory<PurchaseOrderFactory> */
     use HasFactory;
 
+    use InteractsWithMedia;
     use LogsActivity;
 
     protected $fillable = [
@@ -57,6 +61,11 @@ final class PurchaseOrder extends Model
         return $this->hasMany(ReceptionOrder::class);
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('proof-of-payment')->singleFile();
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -74,6 +83,10 @@ final class PurchaseOrder extends Model
         return [
             'order_date' => 'date',
             'expected_arrival_date' => 'date',
+            'proof_of_payment_type' => PaymentMethod::class,
+            'sub_total' => 'decimal:2',
+            'discount' => 'decimal:2',
+            'total' => 'decimal:2',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',
         ];

@@ -41,6 +41,9 @@ final class ReceptionOrderProduct extends Model
     protected function casts(): array
     {
         return [
+            'quantity' => 'decimal:4',
+            'price' => 'decimal:2',
+            'total' => 'decimal:2',
             'expiry_date' => 'date',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',

@@ -6,7 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Requests\PurchaseOrders\CancelPurchaseOrderRequest;
+use App\Http\Requests\PurchaseOrders\MarkPurchaseOrderPaidRequest;
 use App\Http\Requests\PurchaseOrders\StorePurchaseOrderRequest;
+use App\Http\Requests\PurchaseOrders\SubmitPurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\TransitionPurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\UpdatePurchaseOrderRequest;
 use App\Http\Resources\PurchaseOrder\PurchaseOrderCollection;
@@ -106,6 +108,20 @@ final class PurchaseOrdersController extends Controller
 
         return Inertia::render('PurchaseOrders/Show/Index', [
             'purchaseOrder' => $purchaseOrder,
+            'proofOfPaymentMedia' => (function () use ($purchaseOrder) {
+                $media = $purchaseOrder->getFirstMedia('proof-of-payment');
+                if ($media === null) {
+                    return null;
+                }
+
+                return [
+                    'id' => $media->id,
+                    'file_name' => $media->file_name,
+                    'mime_type' => $media->mime_type,
+                    'size' => $media->size,
+                    'url' => $media->getUrl(),
+                ];
+            })(),
         ]);
     }
 
@@ -152,7 +168,7 @@ final class PurchaseOrdersController extends Controller
             ->with('success', 'Purchase order updated successfully.');
     }
 
-    public function submit(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    public function submit(SubmitPurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_EDIT);
 
@@ -199,16 +215,21 @@ final class PurchaseOrdersController extends Controller
         return redirect()->back()->with('success', 'Purchase order marked as sent.');
     }
 
-    public function pay(TransitionPurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    public function pay(MarkPurchaseOrderPaidRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
     {
         try {
-            $this->poService->transitionStatus(
+            $this->poService->markAsPaid(
                 $purchaseOrder,
-                'paid',
+                $request->validated(),
                 $request->user() ?? throw new RuntimeException('Unauthenticated.'),
             );
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['status' => $e->getMessage()]);
+        }
+
+        if ($request->hasFile('proof_of_payment_file')) {
+            $purchaseOrder->addMediaFromRequest('proof_of_payment_file')
+                ->toMediaCollection('proof-of-payment');
         }
 
         return redirect()->back()->with('success', 'Purchase order marked as paid.');
@@ -223,7 +244,7 @@ final class PurchaseOrdersController extends Controller
                 $request->user() ?? throw new RuntimeException('Unauthenticated.'),
             );
         } catch (InvalidArgumentException $e) {
-            redirect()->back()->withErrors(['status' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['status' => $e->getMessage()]);
         }
 
         return redirect()->back()->with('success', 'Purchase order cancelled.');

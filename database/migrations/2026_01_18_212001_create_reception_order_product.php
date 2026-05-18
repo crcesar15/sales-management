@@ -17,9 +17,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('reception_order_id')->constrained();
             $table->foreignId('product_variant_id')->constrained();
-            $table->float('quantity', 8);
-            $table->float('price', 8);
-            $table->float('total', 8);
+            $table->decimal('quantity', 10, 4);
+            $table->decimal('price', 10, 2);
+            $table->decimal('total', 10, 2);
             $table->date('expiry_date')->nullable();
             $table->timestamps();
         });

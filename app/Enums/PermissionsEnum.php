@@ -76,13 +76,10 @@ enum PermissionsEnum: string
     case PURCHASE_ORDERS_VIEW = 'purchase_order.view';
     case PURCHASE_ORDERS_CREATE = 'purchase_order.create';
     case PURCHASE_ORDERS_EDIT = 'purchase_order.edit';
-    case PURCHASE_ORDERS_DELETE = 'purchase_order.delete';
     case PURCHASE_ORDERS_APPROVE = 'purchase_order.approve';
-    case PURCHASE_ORDERS_RESTORE = 'purchase_order.restore';
 
     case RECEPTION_ORDERS_VIEW = 'reception_order.view';
     case RECEPTION_ORDERS_CREATE = 'reception_order.create';
     case RECEPTION_ORDERS_EDIT = 'reception_order.edit';
-    case RECEPTION_ORDERS_DELETE = 'reception_order.delete';
     case RECEPTION_ORDERS_MANAGE = 'reception_order.manage';
 }
