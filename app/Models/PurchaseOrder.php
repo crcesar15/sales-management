@@ -27,6 +27,8 @@ final class PurchaseOrder extends Model implements HasMedia
         'user_id',
         'vendor_id',
         'status',
+        'is_paid',
+        'paid_at',
         'order_date',
         'expected_arrival_date',
         'sub_total',
@@ -61,6 +63,32 @@ final class PurchaseOrder extends Model implements HasMedia
         return $this->hasMany(ReceptionOrder::class);
     }
 
+    /** Whether all line items have been fully received. */
+    public function getIsFullyReceivedAttribute(): bool
+    {
+        $this->loadMissing('lineItems.receptionOrderItems.receptionOrder');
+
+        return $this->lineItems->every(function (PurchaseOrderProduct $item): bool {
+            $receivedQuantity = (float) $item->received_quantity;
+
+            return $receivedQuantity >= (float) $item->quantity;
+        });
+    }
+
+    /** Whether at least one line item has been partially received but not all are complete. */
+    public function getIsPartiallyReceivedAttribute(): bool
+    {
+        if ($this->is_fully_received) {
+            return false;
+        }
+
+        $this->loadMissing('lineItems.receptionOrderItems.receptionOrder');
+
+        return $this->lineItems->some(function (PurchaseOrderProduct $item): bool {
+            return (float) $item->received_quantity > 0;
+        });
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('proof-of-payment')->singleFile();
@@ -83,6 +111,8 @@ final class PurchaseOrder extends Model implements HasMedia
         return [
             'order_date' => 'date',
             'expected_arrival_date' => 'date',
+            'is_paid' => 'boolean',
+            'paid_at' => 'datetime',
             'proof_of_payment_type' => PaymentMethod::class,
             'sub_total' => 'decimal:2',
             'discount' => 'decimal:2',

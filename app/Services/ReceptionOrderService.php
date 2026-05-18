@@ -12,7 +12,6 @@ use App\Models\ReceptionOrder;
 use App\Models\ReceptionOrderProduct;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -50,8 +49,9 @@ final class ReceptionOrderService
 
             $items = $data['items'];
             $this->guardItemsBelongToPo($items, $purchaseOrder);
+            $this->guardAgainstOverReceiving($items, $purchaseOrder);
 
-            $resolvedPrices = $this->resolvePrices($purchaseOrder->vendor_id, $items);
+            $poLineItems = $purchaseOrder->lineItems->keyBy('product_variant_id');
 
             $receptionOrder = ReceptionOrder::create([
                 'purchase_order_id' => $purchaseOrder->id,
@@ -64,12 +64,14 @@ final class ReceptionOrderService
             ]);
 
             foreach ($items as $item) {
-                $price = $resolvedPrices->get($item['product_variant_id']);
+                $poLineItem = $poLineItems->get($item['product_variant_id']);
+                $price = (float) ($poLineItem->price ?? 0);
                 $quantity = (float) $item['quantity'];
                 $lineTotal = $price * $quantity;
 
                 ReceptionOrderProduct::create([
                     'reception_order_id' => $receptionOrder->id,
+                    'purchase_order_item_id' => $poLineItem?->id,
                     'product_variant_id' => $item['product_variant_id'],
                     'quantity' => $quantity,
                     'price' => $price,
@@ -106,17 +108,21 @@ final class ReceptionOrderService
 
             if ($items !== null) {
                 $this->guardItemsBelongToPo($items, $purchaseOrder);
-                $resolvedPrices = $this->resolvePrices($purchaseOrder->vendor_id, $items);
+                $this->guardAgainstOverReceiving($items, $purchaseOrder, $receptionOrder->id);
+
+                $poLineItems = $purchaseOrder->lineItems->keyBy('product_variant_id');
 
                 $receptionOrder->lineItems()->delete();
 
                 foreach ($items as $item) {
-                    $price = $resolvedPrices->get($item['product_variant_id']);
+                    $poLineItem = $poLineItems->get($item['product_variant_id']);
+                    $price = (float) ($poLineItem->price ?? 0);
                     $quantity = (float) $item['quantity'];
                     $lineTotal = $price * $quantity;
 
                     ReceptionOrderProduct::create([
                         'reception_order_id' => $receptionOrder->id,
+                        'purchase_order_item_id' => $poLineItem?->id,
                         'product_variant_id' => $item['product_variant_id'],
                         'quantity' => $quantity,
                         'price' => $price,
@@ -160,7 +166,7 @@ final class ReceptionOrderService
         $purchaseOrder = $receptionOrder->purchaseOrder;
         $this->guardPurchaseOrderStatus($purchaseOrder);
 
-        return DB::transaction(function () use ($receptionOrder, $actor): ReceptionOrder {
+        return DB::transaction(function () use ($receptionOrder, $purchaseOrder, $actor): ReceptionOrder {
             $receptionOrder->load('lineItems');
 
             $catalogEntries = Catalog::query()
@@ -200,6 +206,9 @@ final class ReceptionOrderService
 
             $receptionOrder->update(['status' => 'completed']);
 
+            $purchaseOrderService = new PurchaseOrderService;
+            $purchaseOrderService->updateReceptionStatus($purchaseOrder);
+
             activity()
                 ->causedBy($actor)
                 ->performedOn($receptionOrder)
@@ -222,6 +231,11 @@ final class ReceptionOrderService
         DB::transaction(function () use ($receptionOrder, $reason, $actor): void {
             $receptionOrder->update(['status' => 'cancelled']);
 
+            /** @var PurchaseOrder $purchaseOrder */
+            $purchaseOrder = $receptionOrder->purchaseOrder;
+            $purchaseOrderService = new PurchaseOrderService;
+            $purchaseOrderService->updateReceptionStatus($purchaseOrder);
+
             activity()
                 ->causedBy($actor)
                 ->performedOn($receptionOrder)
@@ -232,7 +246,7 @@ final class ReceptionOrderService
 
     private function guardPurchaseOrderStatus(PurchaseOrder $po): void
     {
-        $blocked = ['draft', 'awaiting_approval', 'paid', 'cancelled'];
+        $blocked = ['draft', 'awaiting_approval', 'cancelled', 'received'];
 
         if (in_array($po->status, $blocked, true)) {
             throw new InvalidArgumentException("Cannot create a reception order against a purchase order with status: {$po->status}.");
@@ -256,33 +270,60 @@ final class ReceptionOrderService
     }
 
     /**
-     * @param  array<int, array{product_variant_id: int}>  $items
-     * @return Collection<int, float> keyed by product_variant_id
+     * Validate that proposed reception quantities do not exceed remaining ordered quantities.
+     *
+     * @param  array<int, array{product_variant_id: int, quantity: float|int|string}>  $items
+     * @param  int|null  $excludeReceptionOrderId  Exclude this RO's quantities (for updates)
      */
-    private function resolvePrices(int $vendorId, array $items): Collection
+    private function guardAgainstOverReceiving(array $items, PurchaseOrder $po, ?int $excludeReceptionOrderId = null): void
     {
-        $variantIds = array_map(fn (array $item) => $item['product_variant_id'], $items);
+        $poLineItems = $po->lineItems->keyBy('product_variant_id');
 
-        $catalogEntries = Catalog::query()
-            ->where('vendor_id', $vendorId)
-            ->where('status', 'active')
-            ->whereIn('product_variant_id', $variantIds)
-            ->get()
-            ->keyBy('product_variant_id');
-
-        $prices = collect();
+        $claimedQuantities = $this->getClaimedQuantities($po, $excludeReceptionOrderId);
 
         foreach ($items as $item) {
             $variantId = $item['product_variant_id'];
-            $catalogEntry = $catalogEntries->get($variantId);
+            $poLineItem = $poLineItems->get($variantId);
 
-            if ($catalogEntry === null) {
-                throw new InvalidArgumentException("Product variant ID {$variantId} is not in the vendor's active catalog.");
+            if ($poLineItem === null) {
+                continue;
             }
 
-            $prices->put($variantId, (float) $catalogEntry->price);
+            $orderedQuantity = (float) $poLineItem->quantity;
+            $alreadyClaimed = (float) ($claimedQuantities[$variantId] ?? 0);
+            $proposedQuantity = (float) $item['quantity'];
+            $remaining = $orderedQuantity - $alreadyClaimed;
+
+            if ($proposedQuantity > $remaining) {
+                throw new InvalidArgumentException(
+                    "Cannot receive {$proposedQuantity} units of this product variant. Only {$remaining} remaining of {$orderedQuantity} ordered ({$alreadyClaimed} already claimed by other reception orders)."
+                );
+            }
+        }
+    }
+
+    /**
+     * Get the total claimed quantities per product variant for a PO, from all non-cancelled reception orders.
+     *
+     * @return array<int, string> keyed by product_variant_id
+     */
+    private function getClaimedQuantities(PurchaseOrder $po, ?int $excludeReceptionOrderId = null): array
+    {
+        $receptionOrders = $po->receptionOrders()
+            ->where('status', '!=', 'cancelled')
+            ->when($excludeReceptionOrderId, fn ($q) => $q->where('id', '!=', $excludeReceptionOrderId))
+            ->with('lineItems')
+            ->get();
+
+        $quantities = [];
+
+        foreach ($receptionOrders as $receptionOrder) {
+            foreach ($receptionOrder->lineItems as $lineItem) {
+                $variantId = $lineItem->product_variant_id;
+                $quantities[$variantId] = bcadd((string) ($quantities[$variantId] ?? '0'), (string) $lineItem->quantity, 4);
+            }
         }
 
-        return $prices;
+        return $quantities;
     }
 }

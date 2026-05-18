@@ -8,7 +8,8 @@ export type PurchaseOrderStatus =
   | "awaiting_approval"
   | "approved"
   | "sent"
-  | "paid"
+  | "partially_received"
+  | "received"
   | "cancelled";
 
 export type PaymentMethod =
@@ -35,6 +36,8 @@ export interface PurchaseOrderLineItem {
   purchase_order_id: number;
   product_variant_id: number;
   quantity: number;
+  received_quantity: number;
+  remaining_quantity: number;
   price: number;
   total: number;
   product_variant: Pick<ProductVariantResponse, "id" | "name" | "identifier" | "stock" | "minimum_stock_level"> & {
@@ -56,6 +59,8 @@ export interface PurchaseOrder {
   discount: number | null;
   total: number | null;
   notes: string | null;
+  is_paid: boolean;
+  paid_at: string | null;
   proof_of_payment_type: PaymentMethod | null;
   proof_of_payment_number: string | null;
   created_at: string | null;
@@ -113,5 +118,6 @@ export interface PurchaseOrderPayload {
   items: Array<{
     product_variant_id: number;
     quantity: number;
+    price: number;
   }>;
 }

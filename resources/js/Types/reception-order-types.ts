@@ -1,3 +1,4 @@
+import type { PurchaseOrderLineItem, PurchaseOrderStatus } from "./purchase-order-types";
 import type { UserResponse } from "./user-types";
 import type { VendorResponse } from "./vendor-types";
 import type { StoreResponse } from "./store-types";
@@ -8,6 +9,7 @@ export type ReceptionOrderStatus = "pending" | "uncompleted" | "completed" | "ca
 export interface ReceptionOrderLineItem {
   id: number;
   reception_order_id: number;
+  purchase_order_item_id: number | null;
   product_variant_id: number;
   quantity: number;
   price: number;
@@ -46,10 +48,11 @@ export interface ReceptionOrder {
 export interface ReceptionOrderResponse extends ReceptionOrder {
   purchase_order: {
     id: number;
-    status: string;
+    status: PurchaseOrderStatus;
     order_date: string | null;
     total: number | null;
     vendor: Pick<VendorResponse, "id" | "fullname">;
+    line_items?: PurchaseOrderLineItem[];
   };
   vendor: Pick<VendorResponse, "id" | "fullname" | "email" | "phone" | "address" | "details" | "additional_contacts">;
   store: Pick<StoreResponse, "id" | "name" | "code">;
@@ -87,6 +90,7 @@ export interface ReceptionOrderPayload {
   notes?: string | null;
   items: Array<{
     product_variant_id: number;
+    purchase_order_item_id?: number | null;
     quantity: number;
     expiry_date?: string | null;
   }>;

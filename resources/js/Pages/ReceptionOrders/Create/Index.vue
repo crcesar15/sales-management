@@ -71,10 +71,12 @@ watch(
     if (po) {
       lineItems.value = po.line_items.map((item) => ({
         id: crypto.randomUUID(),
+        purchase_order_item_id: item.id,
         product_variant_id: item.product_variant_id,
         product_name: item.product_variant?.product?.name ?? "—",
         variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
-        quantity: item.quantity,
+        quantity: Number(item.remaining_quantity ?? item.quantity),
+        max_quantity: Number(item.remaining_quantity ?? item.quantity),
         expiry_date: null,
         purchase_unit: item.catalog_entry?.unit ?? null,
         base_unit: item.product_variant?.product?.measurement_unit
@@ -113,7 +115,7 @@ const submit = handleSubmit((formValues) => {
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
       product_variant_id: item.product_variant_id,
-      quantity: item.quantity,
+      quantity: Number(item.quantity),
       expiry_date: item.expiry_date ? item.expiry_date.toISOString().split("T")[0] : null,
     })),
   };

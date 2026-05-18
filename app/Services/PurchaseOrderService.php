@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Catalog;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderProduct;
 use App\Models\User;
@@ -18,8 +17,9 @@ final class PurchaseOrderService
         'draft' => ['awaiting_approval', 'cancelled'],
         'awaiting_approval' => ['approved', 'cancelled'],
         'approved' => ['sent', 'cancelled'],
-        'sent' => ['paid'],
-        'paid' => [],
+        'sent' => ['partially_received', 'received', 'cancelled'],
+        'partially_received' => ['received'],
+        'received' => [],
     ];
 
     /**
@@ -48,8 +48,6 @@ final class PurchaseOrderService
             $vendorId = $data['vendor_id'];
             $items = $data['items'];
 
-            $resolvedPrices = $this->resolvePrices($vendorId, $items);
-
             $po = PurchaseOrder::create([
                 'user_id' => $actor->id,
                 'vendor_id' => $vendorId,
@@ -63,7 +61,7 @@ final class PurchaseOrderService
             ]);
 
             foreach ($items as $item) {
-                $price = $resolvedPrices->get($item['product_variant_id']);
+                $price = (float) $item['price'];
                 $quantity = (float) $item['quantity'];
                 $lineTotal = $price * $quantity;
 
@@ -101,12 +99,10 @@ final class PurchaseOrderService
             $vendorId = $data['vendor_id'] ?? $po->vendor_id;
 
             if ($items !== null) {
-                $resolvedPrices = $this->resolvePrices($vendorId, $items);
-
                 $po->lineItems()->delete();
 
                 foreach ($items as $item) {
-                    $price = $resolvedPrices->get($item['product_variant_id']);
+                    $price = (float) $item['price'];
                     $quantity = (float) $item['quantity'];
                     $lineTotal = $price * $quantity;
 
@@ -176,11 +172,20 @@ final class PurchaseOrderService
      */
     public function markAsPaid(PurchaseOrder $po, array $data, User $actor): void
     {
-        $this->validateTransition($po->status, 'paid');
+        if ($po->is_paid) {
+            throw new InvalidArgumentException('This purchase order is already marked as paid.');
+        }
+
+        $allowedStatuses = ['approved', 'sent', 'partially_received'];
+
+        if (! in_array($po->status, $allowedStatuses, true)) {
+            throw new InvalidArgumentException("Cannot mark purchase order with status {$po->status} as paid.");
+        }
 
         DB::transaction(function () use ($po, $data, $actor): void {
             $po->update([
-                'status' => 'paid',
+                'is_paid' => true,
+                'paid_at' => now(),
                 'proof_of_payment_type' => $data['proof_of_payment_type'],
                 'proof_of_payment_number' => $data['proof_of_payment_number'],
             ]);
@@ -189,8 +194,6 @@ final class PurchaseOrderService
                 ->causedBy($actor)
                 ->performedOn($po)
                 ->withProperties([
-                    'from' => 'sent',
-                    'to' => 'paid',
                     'proof_of_payment_type' => $data['proof_of_payment_type'],
                     'proof_of_payment_number' => $data['proof_of_payment_number'],
                 ])
@@ -212,6 +215,38 @@ final class PurchaseOrderService
         ]);
     }
 
+    /**
+     * Update the purchase order's status based on reception progress.
+     * Called after a reception order is completed or cancelled.
+     */
+    public function updateReceptionStatus(PurchaseOrder $po): void
+    {
+        $po->loadMissing('lineItems.receptionOrderItems.receptionOrder');
+
+        if ($po->is_fully_received) {
+            $newStatus = 'received';
+        } elseif ($po->is_partially_received) {
+            $newStatus = 'partially_received';
+        } else {
+            return;
+        }
+
+        if ($po->status === $newStatus) {
+            return;
+        }
+
+        $this->validateTransition($po->status, $newStatus);
+
+        $oldStatus = $po->status;
+        $po->update(['status' => $newStatus]);
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($po)
+            ->withProperties(['from' => $oldStatus, 'to' => $newStatus])
+            ->log("Status changed to {$newStatus}");
+    }
+
     private function validateTransition(string $from, string $to): void
     {
         $allowed = self::TRANSITION_MAP[$from] ?? [];
@@ -219,37 +254,5 @@ final class PurchaseOrderService
         if (! in_array($to, $allowed, true)) {
             throw new InvalidArgumentException("Invalid transition: {$from} → {$to}.");
         }
-    }
-
-    /**
-     * @param  array<int, array{product_variant_id: int, quantity: float|int|string}>  $items
-     * @return \Illuminate\Support\Collection<int, float> keyed by product_variant_id
-     */
-    private function resolvePrices(int $vendorId, array $items): \Illuminate\Support\Collection
-    {
-        $variantIds = array_map(fn (array $item) => $item['product_variant_id'], $items);
-
-        $catalogEntries = Catalog::query()
-            ->where('vendor_id', $vendorId)
-            ->where('status', 'active')
-            ->whereIn('product_variant_id', $variantIds)
-            ->get()
-            ->keyBy('product_variant_id');
-
-        $prices = collect();
-
-        foreach ($items as $item) {
-            $variantId = $item['product_variant_id'];
-            $catalogEntry = $catalogEntries->get($variantId);
-
-            if ($catalogEntry === null) {
-                $variant = $variantIds;
-                throw new InvalidArgumentException("Product variant ID {$variantId} is not in the vendor's active catalog.");
-            }
-
-            $prices->put($variantId, (float) $catalogEntry->price);
-        }
-
-        return $prices;
     }
 }

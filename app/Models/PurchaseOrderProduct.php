@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class PurchaseOrderProduct extends Model
 {
@@ -29,6 +30,35 @@ final class PurchaseOrderProduct extends Model
     public function productVariant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class);
+    }
+
+    /** @return HasMany<ReceptionOrderProduct, $this> */
+    public function receptionOrderItems(): HasMany
+    {
+        return $this->hasMany(ReceptionOrderProduct::class, 'purchase_order_item_id');
+    }
+
+    /**
+     * Total quantity received from completed receptions for this line item.
+     * Computed by summing quantities from non-cancelled reception orders.
+     */
+    public function getReceivedQuantityAttribute(): string
+    {
+        $sum = $this->receptionOrderItems
+            ->filter(fn (ReceptionOrderProduct $item) => $item->receptionOrder?->status === 'completed')
+            ->sum('quantity');
+
+        return number_format((float) $sum, 4, '.', '');
+    }
+
+    /**
+     * Remaining quantity yet to be received for this line item.
+     */
+    public function getRemainingQuantityAttribute(): string
+    {
+        $received = (float) $this->received_quantity;
+
+        return number_format((float) $this->quantity - $received, 4, '.', '');
     }
 
     /**

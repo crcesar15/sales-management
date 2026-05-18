@@ -21,7 +21,7 @@ final class TransitionPurchaseOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', 'string', 'in:approved,sent,paid'],
+            'status' => ['required', 'string', 'in:approved,sent'],
         ];
     }
 }

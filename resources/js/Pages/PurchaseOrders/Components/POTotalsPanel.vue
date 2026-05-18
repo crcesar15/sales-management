@@ -11,13 +11,15 @@ const props = withDefaults(
     total: number | null;
     notes?: string | null;
     canCancel?: boolean;
+    canMarkAsPaid?: boolean;
   }>(),
-  { canCancel: false },
+  { canCancel: false, canMarkAsPaid: false },
 );
 
 const emit = defineEmits<{
   (e: "edit"): void;
   (e: "cancel"): void;
+  (e: "mark-as-paid"): void;
 }>();
 
 const { t } = useI18n();
@@ -58,16 +60,27 @@ const discountPercentage = computed(() => {
           </div>
         </template>
         <Divider class="!my-1" />
-        <div class="flex gap-2">
-          <Button v-can="'purchase_order.edit'" icon="fa fa-pen" :label="t('Edit')" class="flex-1" @click="emit('edit')" />
+        <div class="flex flex-col gap-2">
+          <div class="flex gap-2">
+            <Button v-can="'purchase_order.edit'" icon="fa fa-pen" :label="t('Edit')" class="flex-1" @click="emit('edit')" />
+            <Button
+              v-if="canCancel"
+              v-can="'purchase_order.edit'"
+              icon="fa fa-ban"
+              :label="t('Cancel')"
+              severity="secondary"
+              class="flex-1"
+              @click="emit('cancel')"
+            />
+          </div>
           <Button
-            v-if="canCancel"
+            v-if="canMarkAsPaid"
             v-can="'purchase_order.edit'"
-            icon="fa fa-ban"
-            :label="t('Cancel')"
-            severity="secondary"
-            class="flex-1"
-            @click="emit('cancel')"
+            icon="fa fa-dollar-sign"
+            :label="t('Mark as Paid')"
+            severity="success"
+            class="w-full"
+            @click="emit('mark-as-paid')"
           />
         </div>
       </div>

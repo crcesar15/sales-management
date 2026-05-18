@@ -6,6 +6,7 @@ namespace App\Http\Requests\ReceptionOrders;
 
 use App\Enums\PermissionsEnum;
 use App\Models\Catalog;
+use App\Models\PurchaseOrder;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -94,6 +95,52 @@ final class UpdateReceptionOrderRequest extends FormRequest
                     );
                 }
             }
+
+            // Validate that reception quantities don't exceed remaining ordered quantities
+            // Exclude current reception order's quantities from claimed total
+            $poLineItems = $purchaseOrder->lineItems->keyBy('product_variant_id');
+            $claimedQuantities = $this->getClaimedQuantities($purchaseOrder, $receptionOrder->id);
+
+            foreach ($items as $index => $item) {
+                $variantId = $item['product_variant_id'];
+                $poLineItem = $poLineItems->get($variantId);
+
+                if ($poLineItem === null) {
+                    continue;
+                }
+
+                $orderedQuantity = (float) $poLineItem->quantity;
+                $alreadyClaimed = (float) ($claimedQuantities[$variantId] ?? 0);
+                $proposedQuantity = (float) $item['quantity'];
+                $remaining = $orderedQuantity - $alreadyClaimed;
+
+                if ($proposedQuantity > $remaining) {
+                    $validator->errors()->add(
+                        "items.{$index}.quantity",
+                        "Cannot receive more than the remaining quantity. Ordered: {$orderedQuantity}, already claimed: {$alreadyClaimed}, remaining: {$remaining}.",
+                    );
+                }
+            }
         });
+    }
+
+    /**
+     * Get the total claimed quantities per product variant from all non-cancelled
+     * reception orders for this PO, excluding the given reception order.
+     *
+     * @return array<int, string> keyed by product_variant_id
+     */
+    private function getClaimedQuantities(PurchaseOrder $po, int $excludeReceptionOrderId): array
+    {
+        $quantities = [];
+
+        foreach ($po->receptionOrders()->where('status', '!=', 'cancelled')->where('id', '!=', $excludeReceptionOrderId)->with('lineItems')->get() as $receptionOrder) {
+            foreach ($receptionOrder->lineItems as $lineItem) {
+                $variantId = $lineItem->product_variant_id;
+                $quantities[$variantId] = bcadd((string) ($quantities[$variantId] ?? '0'), (string) $lineItem->quantity, 4);
+            }
+        }
+
+        return $quantities;
     }
 }

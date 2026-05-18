@@ -30,6 +30,7 @@ final class StorePurchaseOrderRequest extends FormRequest
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'items.*.price' => ['required', 'numeric', 'min:0'],
         ];
     }
 
@@ -66,16 +67,9 @@ final class StorePurchaseOrderRequest extends FormRequest
 
             $discount = $this->input('discount');
             if ($discount !== null && $discount > 0) {
-                $catalogPrices = Catalog::query()
-                    ->where('vendor_id', $vendorId)
-                    ->where('status', 'active')
-                    ->whereIn('product_variant_id', $variantIds)
-                    ->pluck('price', 'product_variant_id');
-
                 $subTotal = 0;
                 foreach ($items as $item) {
-                    $price = $catalogPrices->get($item['product_variant_id'], 0);
-                    $subTotal += (float) $price * (float) $item['quantity'];
+                    $subTotal += (float) $item['price'] * (float) $item['quantity'];
                 }
 
                 if ((float) $discount > $subTotal) {

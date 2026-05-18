@@ -57,7 +57,8 @@ const statusOptions = computed(() => [
   { label: t("Awaiting Approval"), value: "awaiting_approval" },
   { label: t("Approved"), value: "approved" },
   { label: t("Sent"), value: "sent" },
-  { label: t("Paid"), value: "paid" },
+  { label: t("Partially Received"), value: "partially_received" },
+  { label: t("Received"), value: "received" },
   { label: t("Cancelled"), value: "cancelled" },
 ]);
 

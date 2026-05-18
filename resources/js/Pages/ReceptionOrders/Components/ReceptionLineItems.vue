@@ -5,10 +5,12 @@ import { computed } from "vue";
 
 export interface ReceptionLineItem {
   id: string;
+  purchase_order_item_id?: number | null;
   product_variant_id: number;
   product_name: string;
   variant_label: string;
   quantity: number;
+  max_quantity?: number;
   expiry_date: Date | null;
   purchase_unit?: { id: number; name: string; conversion_factor: number } | null;
   base_unit?: { id: number; name: string; abbreviation: string } | null;
@@ -126,7 +128,7 @@ function formatConversion(item: ReceptionLineItem): string {
         <InputNumber
           :model-value="data.quantity"
           :min="0.01"
-          :max="99999"
+          :max="data.max_quantity ?? 99999"
           :step="1"
           :min-fraction-digits="1"
           :max-fraction-digits="2"
@@ -136,6 +138,9 @@ function formatConversion(item: ReceptionLineItem): string {
           :disabled="disabled"
           @update:model-value="(val: number) => updateQuantity(index, val)"
         />
+        <small v-if="data.max_quantity != null" class="text-surface-500 block mt-1">
+          {{ t("Max") }}: {{ data.max_quantity }}
+        </small>
       </template>
     </Column>
 

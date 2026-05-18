@@ -17,7 +17,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('vendor_id')->constrained();
-            $table->enum('status', ['draft', 'awaiting_approval', 'approved', 'sent', 'paid', 'cancelled'])->default('draft');
+            $table->enum('status', ['draft', 'awaiting_approval', 'approved', 'sent', 'partially_received', 'received', 'cancelled'])->default('draft');
+            $table->boolean('is_paid')->default(false);
+            $table->timestamp('paid_at')->nullable();
             $table->date('order_date');
             $table->date('expected_arrival_date')->nullable();
             $table->decimal('sub_total', 10, 2)->nullable();

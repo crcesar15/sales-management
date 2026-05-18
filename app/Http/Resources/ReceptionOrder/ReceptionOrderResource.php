@@ -37,6 +37,25 @@ final class ReceptionOrderResource extends JsonResource
                     'id' => $reception->purchaseOrder->vendor->id,
                     'fullname' => $reception->purchaseOrder->vendor->fullname,
                 ] : null,
+                'line_items' => $reception->purchaseOrder?->relationLoaded('lineItems') ? $reception->purchaseOrder->lineItems->map(fn ($item) => [
+                    'id' => $item->id,
+                    'purchase_order_id' => $item->purchase_order_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'quantity' => (float) $item->quantity,
+                    'received_quantity' => (float) $item->received_quantity,
+                    'remaining_quantity' => (float) $item->remaining_quantity,
+                    'price' => (float) $item->price,
+                    'total' => (float) $item->total,
+                    'product_variant' => $item->productVariant ? [
+                        'id' => $item->productVariant->id,
+                        'name' => $item->productVariant->name,
+                        'identifier' => $item->productVariant->identifier,
+                        'product' => $item->productVariant->product ? [
+                            'id' => $item->productVariant->product->id,
+                            'name' => $item->productVariant->product->name,
+                        ] : null,
+                    ] : null,
+                ]) : null,
             ]),
             'vendor' => $this->whenLoaded('vendor', fn () => [
                 'id' => $reception->vendor?->id,
@@ -59,6 +78,7 @@ final class ReceptionOrderResource extends JsonResource
             'lineItems' => $this->whenLoaded('lineItems') ? $reception->lineItems->map(fn ($item) => [
                 'id' => $item->id,
                 'reception_order_id' => $item->reception_order_id,
+                'purchase_order_item_id' => $item->purchase_order_item_id,
                 'product_variant_id' => $item->product_variant_id,
                 'quantity' => (float) $item->quantity,
                 'price' => (float) $item->price,

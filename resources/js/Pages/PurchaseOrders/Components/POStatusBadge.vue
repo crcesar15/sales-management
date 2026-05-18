@@ -15,7 +15,8 @@ const statusMap: Record<
   awaiting_approval: { label: "Awaiting Approval", severity: "warn" },
   approved: { label: "Approved", severity: "success" },
   sent: { label: "Sent", severity: "info" },
-  paid: { label: "Paid", severity: "success" },
+  partially_received: { label: "Partially Received", severity: "warn" },
+  received: { label: "Received", severity: "success" },
   cancelled: { label: "Cancelled", severity: "danger" },
 };
 

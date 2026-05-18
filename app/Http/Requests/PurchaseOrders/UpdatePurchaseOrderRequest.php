@@ -30,6 +30,7 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             'items' => ['sometimes', 'required', 'array', 'min:1'],
             'items.*.product_variant_id' => ['required_with:items', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => ['required_with:items', 'numeric', 'min:0.01'],
+            'items.*.price' => ['required_with:items', 'numeric', 'min:0'],
         ];
     }
 

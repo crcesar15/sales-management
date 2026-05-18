@@ -16,6 +16,7 @@ final class ReceptionOrderProduct extends Model
 
     protected $fillable = [
         'reception_order_id',
+        'purchase_order_item_id',
         'product_variant_id',
         'quantity',
         'price',
@@ -27,6 +28,12 @@ final class ReceptionOrderProduct extends Model
     public function receptionOrder(): BelongsTo
     {
         return $this->belongsTo(ReceptionOrder::class);
+    }
+
+    /** @return BelongsTo<PurchaseOrderProduct, $this> */
+    public function purchaseOrderItem(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrderProduct::class, 'purchase_order_item_id');
     }
 
     /** @return BelongsTo<ProductVariant, $this> */

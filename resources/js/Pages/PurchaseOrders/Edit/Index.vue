@@ -80,9 +80,9 @@ const lineItems = ref<LineItem[]>(
       product_variant_id: item.product_variant_id,
       product_name: item.product_variant?.product?.name ?? "—",
       variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
-      quantity: item.quantity,
-      price: item.price,
-      total: item.total,
+      quantity: Number(item.quantity),
+      price: Number(item.price),
+      total: Number(item.total),
       stock: item.product_variant?.stock ?? null,
       minimum_stock_level: item.product_variant?.minimum_stock_level ?? null,
       payment_terms: getPaymentTermsLabel(catalog?.payment_terms),
@@ -136,7 +136,8 @@ const submit = handleSubmit((formValues) => {
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
       product_variant_id: item.product_variant_id,
-      quantity: item.quantity,
+      quantity: Number(item.quantity),
+      price: Number(item.price),
     })),
   };
 

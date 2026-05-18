@@ -30,6 +30,8 @@ final class PurchaseOrderResource extends JsonResource
             'discount' => $po->discount !== null ? (float) $po->discount : null,
             'total' => $po->total !== null ? (float) $po->total : null,
             'notes' => $po->notes,
+            'is_paid' => $po->is_paid,
+            'paid_at' => $po->getAttribute('paid_at')?->toISOString(),
             'proof_of_payment_type' => $po->proof_of_payment_type,
             'proof_of_payment_number' => $po->proof_of_payment_number,
             'user' => $this->whenLoaded('user') && $po->user !== null ? [
@@ -48,6 +50,8 @@ final class PurchaseOrderResource extends JsonResource
                 'purchase_order_id' => $item->purchase_order_id,
                 'product_variant_id' => $item->product_variant_id,
                 'quantity' => (float) $item->quantity,
+                'received_quantity' => (float) $item->received_quantity,
+                'remaining_quantity' => (float) $item->remaining_quantity,
                 'price' => (float) $item->price,
                 'total' => (float) $item->total,
                 'product_variant' => $item->productVariant ? [

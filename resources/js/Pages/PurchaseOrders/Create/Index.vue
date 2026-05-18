@@ -93,7 +93,8 @@ const submit = handleSubmit((formValues) => {
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
       product_variant_id: item.product_variant_id,
-      quantity: item.quantity,
+      quantity: Number(item.quantity),
+      price: Number(item.price),
     })),
   };
 

@@ -41,12 +41,12 @@ const selectedVariantName = ref("");
 const selectedVariantLabel = ref("");
 
 function openAdvanceModal(status: string) {
-  if (status === "paid") {
-    markAsPaidModalVisible.value = true;
-    return;
-  }
   targetStatus.value = status;
   advanceModalVisible.value = true;
+}
+
+function openMarkAsPaidModal() {
+  markAsPaidModalVisible.value = true;
 }
 
 function toggleVendorInfo(event: Event) {
@@ -79,7 +79,7 @@ const nextAction = computed<{ label: string; status: string } | null>(() => {
     draft: { label: "Confirm", status: "awaiting_approval" },
     awaiting_approval: { label: "Approve", status: "approved" },
     approved: { label: "Sent", status: "sent" },
-    sent: { label: "Pay", status: "paid" },
+    partially_received: { label: "Mark Received", status: "received" },
   };
   return map[props.purchaseOrder.status] ?? null;
 });
@@ -90,11 +90,14 @@ const advancePermission = computed(() => {
     awaiting_approval: "purchase_order.approve",
     approved: "purchase_order.edit",
     sent: "purchase_order.edit",
+    partially_received: "purchase_order.edit",
   };
   return map[props.purchaseOrder.status] ?? "";
 });
 
 const canCancel = computed(() => ["draft", "awaiting_approval", "approved"].includes(props.purchaseOrder.status));
+
+const canMarkAsPaid = computed(() => !props.purchaseOrder.is_paid && ["approved", "sent", "partially_received"].includes(props.purchaseOrder.status));
 
 const isCancelled = computed(() => props.purchaseOrder.status === "cancelled");
 
@@ -103,7 +106,8 @@ const stepperSteps = [
   { key: "awaiting_approval", value: "2", label: "Awaiting Approval" },
   { key: "approved", value: "3", label: "Approved" },
   { key: "sent", value: "4", label: "Sent" },
-  { key: "paid", value: "5", label: "Paid" },
+  { key: "partially_received", value: "5", label: "Partially Received" },
+  { key: "received", value: "6", label: "Received" },
 ];
 
 const activeStepValue = computed(() => {
@@ -205,9 +209,12 @@ function formatFileSize(bytes: number): string {
       <div class="col-span-12 lg:col-span-8">
         <Card class="mb-4">
           <template #title>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
               <span>{{ t("Order Details") }}</span>
-              <POStatusBadge :status="purchaseOrder.status" />
+              <div class="flex items-center gap-2">
+                <Tag v-if="purchaseOrder.is_paid" :value="t('Paid')" severity="success" rounded class="text-xs" />
+                <POStatusBadge :status="purchaseOrder.status" />
+              </div>
             </div>
           </template>
           <template #content>
@@ -299,6 +306,13 @@ function formatFileSize(bytes: number): string {
                 </span>
                 <span class="font-medium">{{ formatDateTime(purchaseOrder.created_at) }}</span>
               </div>
+              <div v-if="purchaseOrder.is_paid && purchaseOrder.paid_at" class="flex flex-col gap-1">
+                <span class="text-sm text-surface-500 flex items-center gap-1.5">
+                  <i class="fa fa-check-circle text-green-500 w-4 text-center" />
+                  {{ t("Paid At") }}
+                </span>
+                <span class="font-medium text-green-600">{{ formatDateTime(purchaseOrder.paid_at) }}</span>
+              </div>
             </div>
           </template>
         </Card>
@@ -330,6 +344,13 @@ function formatFileSize(bytes: number): string {
               <Column :header="t('Quantity')" style="min-width: 90px">
                 <template #body="{ data }">
                   {{ data.quantity }}
+                </template>
+              </Column>
+              <Column :header="t('Received')" style="min-width: 120px">
+                <template #body="{ data }">
+                  <span :class="data.received_quantity >= data.quantity ? 'text-green-600' : data.received_quantity > 0 ? 'text-amber-600' : 'text-surface-500'">
+                    {{ data.received_quantity }} / {{ data.quantity }}
+                  </span>
                 </template>
               </Column>
               <Column :header="t('Unit Price')" style="min-width: 120px">
@@ -399,7 +420,7 @@ function formatFileSize(bytes: number): string {
           </template>
         </Card>
 
-        <Card v-if="purchaseOrder.status === 'paid' && purchaseOrder.proof_of_payment_type" class="mb-4">
+        <Card v-if="purchaseOrder.is_paid && purchaseOrder.proof_of_payment_type" class="mb-4">
           <template #title>{{ t("Proof of Payment Details") }}</template>
           <template #content>
             <div class="flex flex-col gap-3">
@@ -479,8 +500,10 @@ function formatFileSize(bytes: number): string {
           :discount="purchaseOrder.discount ?? 0"
           :total="purchaseOrder.total ?? 0"
           :can-cancel="canCancel"
+          :can-mark-as-paid="canMarkAsPaid"
           @edit="goToEdit"
           @cancel="cancelModalVisible = true"
+          @mark-as-paid="openMarkAsPaidModal()"
         />
       </div>
     </div>

@@ -12,6 +12,7 @@ use App\Http\Requests\ReceptionOrders\UpdateReceptionOrderRequest;
 use App\Http\Resources\ReceptionOrder\ReceptionOrderCollection;
 use App\Models\Catalog;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderProduct;
 use App\Models\ReceptionOrder;
 use App\Models\Store;
 use App\Models\Vendor;
@@ -74,10 +75,27 @@ final class ReceptionOrderController extends Controller
         $this->authorize(PermissionsEnum::RECEPTION_ORDERS_CREATE);
 
         $purchaseOrders = PurchaseOrder::query()
-            ->whereIn('status', ['approved', 'sent'])
-            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit'])
+            ->whereIn('status', ['sent', 'partially_received'])
+            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit', 'receptionOrders.lineItems' => fn ($q) => $q->whereHas('receptionOrder', fn ($q) => $q->where('status', '!=', 'cancelled'))])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function (PurchaseOrder $po) {
+                $claimedQuantities = [];
+                foreach ($po->receptionOrders as $ro) {
+                    foreach ($ro->lineItems as $item) {
+                        $variantId = $item->product_variant_id;
+                        $claimedQuantities[$variantId] = bcadd((string) ($claimedQuantities[$variantId] ?? '0'), (string) $item->quantity, 4);
+                    }
+                }
+
+                $po->lineItems->each(function (PurchaseOrderProduct $item) use ($claimedQuantities) {
+                    $ordered = (float) $item->quantity;
+                    $claimed = (float) ($claimedQuantities[$item->product_variant_id] ?? 0);
+                    $item->setAttribute('remaining_quantity', (string) ($ordered - $claimed));
+                });
+
+                return $po;
+            });
 
         return Inertia::render('ReceptionOrders/Create/Index', [
             'purchaseOrders' => $purchaseOrders,
@@ -143,8 +161,26 @@ final class ReceptionOrderController extends Controller
 
         $receptionOrder->load([
             'purchaseOrder.lineItems.productVariant.product',
+            'purchaseOrder.receptionOrders.lineItems' => fn ($q) => $q->whereHas('receptionOrder', fn ($q) => $q->where('status', '!=', 'cancelled')->where('id', '!=', $receptionOrder->id)),
             'lineItems.productVariant.product.measurementUnit',
         ]);
+
+        /** @var PurchaseOrder $purchaseOrder */
+        $purchaseOrder = $receptionOrder->purchaseOrder;
+
+        $claimedQuantities = [];
+        foreach ($purchaseOrder->receptionOrders as $ro) {
+            foreach ($ro->lineItems as $item) {
+                $variantId = $item->product_variant_id;
+                $claimedQuantities[$variantId] = bcadd((string) ($claimedQuantities[$variantId] ?? '0'), (string) $item->quantity, 4);
+            }
+        }
+
+        $purchaseOrder->lineItems->each(function (PurchaseOrderProduct $item) use ($claimedQuantities) {
+            $ordered = (float) $item->quantity;
+            $claimed = (float) ($claimedQuantities[$item->product_variant_id] ?? 0);
+            $item->setAttribute('remaining_quantity', (string) ($ordered - $claimed));
+        });
 
         $catalogEntries = Catalog::query()
             ->where('vendor_id', $receptionOrder->vendor_id)
