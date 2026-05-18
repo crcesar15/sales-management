@@ -686,5 +686,20 @@
   "Cancellation Reason": "Razón de Cancelación",
   "items": "artículos",
   "PO Total": "Total OC",
-  "Select a purchase order to see summary": "Seleccione una orden de compra para ver el resumen"
+  "Select a purchase order to see summary": "Seleccione una orden de compra para ver el resumen",
+  "Provide payment details to mark this purchase order as paid.": "Proporcione los detalles del pago para marcar esta orden de compra como pagada.",
+  "Payment Method": "Método de Pago",
+  "Reference Number": "Número de Referencia",
+  "Proof of Payment": "Comprobante de Pago",
+  "Bank Transfer": "Transferencia Bancaria",
+  "Confirm Payment": "Confirmar Pago",
+  "Select payment method": "Seleccione método de pago",
+  "Enter transaction or reference number": "Ingrese número de transacción o referencia",
+  "Upload receipt or proof (PDF, JPG, PNG)": "Subir recibo o comprobante (PDF, JPG, PNG)",
+  "Max 10MB. PDF, JPG, PNG accepted.": "Máximo 10MB. PDF, JPG, PNG aceptados.",
+  "Could not mark purchase order as paid": "No se pudo marcar la orden de compra como pagada",
+  "Check": "Cheque",
+  "Credit Card": "Tarjeta de Crédito",
+  "Proof of Payment Details": "Detalles del Comprobante de Pago",
+  "Download": "Descargar"
 }

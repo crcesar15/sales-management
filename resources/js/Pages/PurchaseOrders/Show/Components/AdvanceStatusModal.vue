@@ -22,14 +22,12 @@ const confirmMessages: Record<string, string> = {
   awaiting_approval: "Are you sure you want to submit this purchase order for approval?",
   approved: "Are you sure you want to approve this purchase order?",
   sent: "Are you sure you want to mark this purchase order as sent?",
-  paid: "Are you sure you want to mark this purchase order as paid?",
 };
 
 const routeNames: Record<string, string> = {
   awaiting_approval: "purchase-orders.submit",
   approved: "purchase-orders.approve",
   sent: "purchase-orders.send",
-  paid: "purchase-orders.pay",
 };
 
 const confirmMessage = computed(() => confirmMessages[props.targetStatus] ?? "Are you sure you want to change the status?");
@@ -38,7 +36,6 @@ const headerLabel = computed(() => {
     awaiting_approval: "Submit for Approval",
     approved: "Approve Purchase Order",
     sent: "Mark as Sent",
-    paid: "Mark as Paid",
   };
   return map[props.targetStatus] ?? "Change Status";
 });
@@ -50,8 +47,6 @@ function confirmAction() {
   const body: Record<string, string> = {};
   if (props.targetStatus === "approved") {
     body.status = "approved";
-  } else if (props.targetStatus === "paid") {
-    body.status = "paid";
   } else if (props.targetStatus === "sent") {
     body.status = "sent";
   }

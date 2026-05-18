@@ -11,6 +11,12 @@ export type PurchaseOrderStatus =
   | "paid"
   | "cancelled";
 
+export type PaymentMethod =
+  | "bank_transfer"
+  | "cash"
+  | "check"
+  | "credit_card";
+
 export interface CatalogEntry {
   id: number;
   product_variant_id: number;
@@ -50,7 +56,7 @@ export interface PurchaseOrder {
   discount: number | null;
   total: number | null;
   notes: string | null;
-  proof_of_payment_type: string | null;
+  proof_of_payment_type: PaymentMethod | null;
   proof_of_payment_number: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -67,6 +73,14 @@ export interface PurchaseOrderResponse extends PurchaseOrder {
       user: Pick<UserResponse, "id" | "full_name">;
     }
   >;
+}
+
+export interface ProofOfPaymentMedia {
+  id: number;
+  file_name: string;
+  mime_type: string;
+  size: number;
+  url: string;
 }
 
 export interface PurchaseOrderListResponse {

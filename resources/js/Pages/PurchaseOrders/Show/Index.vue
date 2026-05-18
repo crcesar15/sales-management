@@ -8,19 +8,21 @@ import { useAuth } from "@/Composables/useAuth";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { ref, computed } from "vue";
-import type { PurchaseOrderResponse } from "@/Types/purchase-order-types";
+import type { PurchaseOrderResponse, ProofOfPaymentMedia } from "@/Types/purchase-order-types";
 import type { ReceptionOrderStatus } from "@/Types/reception-order-types";
 import POStatusBadge from "../Components/POStatusBadge.vue";
 import POTotalsPanel from "../Components/POTotalsPanel.vue";
 import POVariantVendorsDialog from "../Components/POVariantVendorsDialog.vue";
 import ReceptionStatusBadge from "@/Pages/ReceptionOrders/Components/ReceptionStatusBadge.vue";
 import AdvanceStatusModal from "./Components/AdvanceStatusModal.vue";
+import MarkAsPaidModal from "./Components/MarkAsPaidModal.vue";
 import CancelPOModal from "./Components/CancelPOModal.vue";
 
 defineOptions({ layout: AppLayout });
 
 const props = defineProps<{
   purchaseOrder: PurchaseOrderResponse;
+  proofOfPaymentMedia: ProofOfPaymentMedia | null;
 }>();
 
 const { t } = useI18n();
@@ -28,6 +30,7 @@ const { formatCurrency } = useCurrencyFormatter();
 const { getSetting } = useAuth();
 
 const advanceModalVisible = ref(false);
+const markAsPaidModalVisible = ref(false);
 const cancelModalVisible = ref(false);
 const targetStatus = ref("");
 
@@ -38,6 +41,10 @@ const selectedVariantName = ref("");
 const selectedVariantLabel = ref("");
 
 function openAdvanceModal(status: string) {
+  if (status === "paid") {
+    markAsPaidModalVisible.value = true;
+    return;
+  }
   targetStatus.value = status;
   advanceModalVisible.value = true;
 }
@@ -149,6 +156,23 @@ function getPaymentTermsLabel(paymentTerms: string | null | undefined): string |
 function hasExpandableData(item: PurchaseOrderResponse["line_items"][number]): boolean {
   const catalog = item.catalog_entry;
   return !!(catalog?.minimum_order_quantity || catalog?.lead_time_days || catalog?.payment_terms || catalog?.details || catalog?.unit);
+}
+
+function paymentMethodLabel(type: string | null): string | null {
+  if (!type) return null;
+  const labels: Record<string, string> = {
+    bank_transfer: t("Bank Transfer"),
+    cash: t("Cash"),
+    check: t("Check"),
+    credit_card: t("Credit Card"),
+  };
+  return labels[type] ?? type;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1048576).toFixed(1)} MB`;
 }
 </script>
 
@@ -375,6 +399,33 @@ function hasExpandableData(item: PurchaseOrderResponse["line_items"][number]): b
           </template>
         </Card>
 
+        <Card v-if="purchaseOrder.status === 'paid' && purchaseOrder.proof_of_payment_type" class="mb-4">
+          <template #title>{{ t("Proof of Payment Details") }}</template>
+          <template #content>
+            <div class="flex flex-col gap-3">
+              <div class="flex items-center gap-2">
+                <i class="fa fa-credit-card text-surface-400 w-4 text-center" />
+                <span class="text-sm text-surface-500">{{ t("Payment Method") }}:</span>
+                <span class="font-medium">{{ paymentMethodLabel(purchaseOrder.proof_of_payment_type) }}</span>
+              </div>
+              <div v-if="purchaseOrder.proof_of_payment_number" class="flex items-center gap-2">
+                <i class="fa fa-hashtag text-surface-400 w-4 text-center" />
+                <span class="text-sm text-surface-500">{{ t("Reference Number") }}:</span>
+                <span class="font-medium">{{ purchaseOrder.proof_of_payment_number }}</span>
+              </div>
+              <div v-if="proofOfPaymentMedia" class="flex items-center gap-2">
+                <i class="fa fa-file text-surface-400 w-4 text-center" />
+                <span class="text-sm text-surface-500">{{ t("Proof of Payment") }}:</span>
+                <a :href="proofOfPaymentMedia.url" target="_blank" class="text-primary-500 hover:underline flex items-center gap-1">
+                  <i class="fa fa-download text-xs" />
+                  {{ proofOfPaymentMedia.file_name }}
+                  <span class="text-xs text-surface-400">({{ formatFileSize(proofOfPaymentMedia.size) }})</span>
+                </a>
+              </div>
+            </div>
+          </template>
+        </Card>
+
         <Card v-if="purchaseOrder.reception_orders?.length" class="mb-4">
           <template #title>
             <div class="flex items-center justify-between">
@@ -435,6 +486,8 @@ function hasExpandableData(item: PurchaseOrderResponse["line_items"][number]): b
     </div>
 
     <AdvanceStatusModal v-model:visible="advanceModalVisible" :purchase-order-id="purchaseOrder.id" :target-status="targetStatus" />
+
+    <MarkAsPaidModal v-model:visible="markAsPaidModalVisible" :purchase-order-id="purchaseOrder.id" />
 
     <CancelPOModal v-model:visible="cancelModalVisible" :purchase-order-id="purchaseOrder.id" />
 

@@ -686,5 +686,20 @@
   "Cancellation Reason": "Cancellation Reason",
   "items": "items",
   "PO Total": "PO Total",
-  "Select a purchase order to see summary": "Select a purchase order to see summary"
+  "Select a purchase order to see summary": "Select a purchase order to see summary",
+  "Provide payment details to mark this purchase order as paid.": "Provide payment details to mark this purchase order as paid.",
+  "Payment Method": "Payment Method",
+  "Reference Number": "Reference Number",
+  "Proof of Payment": "Proof of Payment",
+  "Bank Transfer": "Bank Transfer",
+  "Confirm Payment": "Confirm Payment",
+  "Select payment method": "Select payment method",
+  "Enter transaction or reference number": "Enter transaction or reference number",
+  "Upload receipt or proof (PDF, JPG, PNG)": "Upload receipt or proof (PDF, JPG, PNG)",
+  "Max 10MB. PDF, JPG, PNG accepted.": "Max 10MB. PDF, JPG, PNG accepted.",
+  "Could not mark purchase order as paid": "Could not mark purchase order as paid",
+  "Check": "Check",
+  "Credit Card": "Credit Card",
+  "Proof of Payment Details": "Proof of Payment Details",
+  "Download": "Download"
 }
