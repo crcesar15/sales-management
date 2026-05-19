@@ -84,6 +84,7 @@ final class ReceptionOrderResource extends JsonResource
                 'price' => (float) $item->price,
                 'total' => (float) $item->total,
                 'expiry_date' => $item->getAttribute('expiry_date')?->toDateString(),
+                'batch_identifier' => $item->batch_identifier,
                 'product_variant' => $item->productVariant ? [
                     'id' => $item->productVariant->id,
                     'name' => $item->productVariant->name,

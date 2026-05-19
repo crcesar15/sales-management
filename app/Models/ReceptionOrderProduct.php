@@ -22,6 +22,7 @@ final class ReceptionOrderProduct extends Model
         'price',
         'total',
         'expiry_date',
+        'batch_identifier',
     ];
 
     /** @return BelongsTo<ReceptionOrder, $this> */

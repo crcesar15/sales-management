@@ -30,6 +30,7 @@ final class UpdateReceptionOrderRequest extends FormRequest
             'items.*.product_variant_id' => ['required_with:items', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => ['required_with:items', 'numeric', 'min:0.01'],
             'items.*.expiry_date' => ['nullable', 'date'],
+            'items.*.batch_identifier' => ['nullable', 'string', 'max:255'],
         ];
     }
 

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->decimal('total', 10, 2);
             $table->date('expiry_date')->nullable();
+            $table->string('batch_identifier')->nullable();
             $table->timestamps();
         });
     }

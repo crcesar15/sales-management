@@ -26,6 +26,7 @@ final class Batch extends Model
         'reception_order_id',
         'store_id',
         'expiry_date',
+        'batch_identifier',
         'initial_quantity',
         'remaining_quantity',
         'missing_quantity',

@@ -74,7 +74,7 @@ function formatConversion(item: ReceptionOrderResponse["line_items"][number]): s
   if (!item.catalog_entry?.unit || item.catalog_entry.unit.conversion_factor <= 1) return "";
   const baseName =
     item.product_variant?.product?.measurement_unit?.abbreviation ?? item.product_variant?.product?.measurement_unit?.name ?? t("units");
-  return `${formatQuantity(item.quantity)} ${item.catalog_entry.unit.name} × ${item.catalog_entry.unit.conversion_factor} = ${Math.round(item.quantity * item.catalog_entry.unit.conversion_factor)} ${baseName}`;
+  return `1 ${item.catalog_entry.unit.name} = ${item.catalog_entry.unit.conversion_factor} ${baseName}`;
 }
 </script>
 
@@ -223,12 +223,17 @@ function formatConversion(item: ReceptionOrderResponse["line_items"][number]): s
               <Column :header="t('Conversion')" style="min-width: 160px">
                 <template #body="{ data }">
                   <span v-if="formatConversion(data)" class="text-sm text-surface-500">{{ formatConversion(data) }}</span>
-                  <span v-else>{{ `1 x ${data.product_variant?.product?.measurement_unit?.name ?? t("units")}` }}</span>
+                  <span v-else class="text-surface-500">{{ data.product_variant?.product?.measurement_unit?.abbreviation ?? data.product_variant?.product?.measurement_unit?.name ?? t("units") }}</span>
                 </template>
               </Column>
               <Column :header="t('Expiry Date')" style="min-width: 120px">
                 <template #body="{ data }">
                   {{ data.expiry_date ? formatDate(data.expiry_date) : "—" }}
+                </template>
+              </Column>
+              <Column :header="t('Batch Identifier')" style="min-width: 160px">
+                <template #body="{ data }">
+                  {{ data.batch_identifier || "—" }}
                 </template>
               </Column>
               <Column :header="t('Line Total')" style="min-width: 120px">

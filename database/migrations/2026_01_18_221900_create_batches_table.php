@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('reception_order_id')->constrained()->onDelete('cascade');
             $table->foreignId('store_id')->constrained()->onDelete('cascade');
             $table->date('expiry_date')->nullable();
+            $table->string('batch_identifier')->nullable();
             $table->integer('initial_quantity');
             $table->integer('remaining_quantity');
             $table->integer('missing_quantity')->default(0);

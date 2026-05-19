@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DataTable, Column, Button, InputNumber, DatePicker, Tag, useConfirm } from "primevue";
+import { DataTable, Column, Button, InputNumber, DatePicker, InputText, Tag, useConfirm } from "primevue";
 import { useI18n } from "vue-i18n";
 import { computed } from "vue";
 
@@ -12,6 +12,7 @@ export interface ReceptionLineItem {
   quantity: number;
   max_quantity?: number;
   expiry_date: Date | null;
+  batch_identifier: string;
   purchase_unit?: { id: number; name: string; conversion_factor: number } | null;
   base_unit?: { id: number; name: string; abbreviation: string } | null;
   stock?: number | null;
@@ -60,6 +61,12 @@ function updateExpiryDate(index: number, date: Date | null) {
   emit("update:modelValue", updated);
 }
 
+function updateBatchIdentifier(index: number, value: string) {
+  const updated = [...items.value];
+  updated[index] = { ...updated[index], batch_identifier: value };
+  emit("update:modelValue", updated);
+}
+
 function removeItem(index: number) {
   const updated = items.value.filter((_, i) => i !== index);
   emit("update:modelValue", updated);
@@ -81,9 +88,10 @@ function confirmRemoveItem(index: number) {
 }
 
 function formatConversion(item: ReceptionLineItem): string {
+  console.log(item);
   if (!item.purchase_unit || item.purchase_unit.conversion_factor <= 1) return "";
   const baseName = item.base_unit?.abbreviation ?? item.base_unit?.name ?? t("units");
-  return `${item.quantity} ${item.purchase_unit.name} × ${item.purchase_unit.conversion_factor} = ${Math.round(item.quantity * item.purchase_unit.conversion_factor)} ${baseName}`;
+  return `1 ${item.purchase_unit.name} = ${item.purchase_unit.conversion_factor} ${baseName}`;
 }
 </script>
 
@@ -138,9 +146,7 @@ function formatConversion(item: ReceptionLineItem): string {
           :disabled="disabled"
           @update:model-value="(val: number) => updateQuantity(index, val)"
         />
-        <small v-if="data.max_quantity != null" class="text-surface-500 block mt-1">
-          {{ t("Max") }}: {{ data.max_quantity }}
-        </small>
+        <small v-if="data.max_quantity != null" class="text-surface-500 block mt-1">{{ t("Max") }}: {{ data.max_quantity }}</small>
       </template>
     </Column>
 
@@ -160,10 +166,23 @@ function formatConversion(item: ReceptionLineItem): string {
       </template>
     </Column>
 
+    <Column :header="t('Batch Identifier')" style="min-width: 160px">
+      <template #body="{ data, index }">
+        <InputText
+          :model-value="data.batch_identifier"
+          :placeholder="t('Optional')"
+          size="small"
+          class="w-full"
+          :disabled="disabled"
+          @update:model-value="(val: string | undefined) => updateBatchIdentifier(index, val ?? '')"
+        />
+      </template>
+    </Column>
+
     <Column :header="t('Conversion')" style="min-width: 160px">
       <template #body="{ data }">
         <span v-if="formatConversion(data)">{{ formatConversion(data) }}</span>
-        <span v-else>{{ `1 x ${data.base_unit?.name}` }}</span>
+        <span v-else>{{ data.base_unit?.abbreviation ?? data.base_unit?.name ?? t("units") }}</span>
       </template>
     </Column>
 

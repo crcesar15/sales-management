@@ -77,6 +77,7 @@ final class ReceptionOrderService
                     'price' => $price,
                     'total' => $lineTotal,
                     'expiry_date' => $item['expiry_date'] ?? null,
+                    'batch_identifier' => $item['batch_identifier'] ?? null,
                 ]);
             }
 
@@ -128,6 +129,7 @@ final class ReceptionOrderService
                         'price' => $price,
                         'total' => $lineTotal,
                         'expiry_date' => $item['expiry_date'] ?? null,
+                        'batch_identifier' => $item['batch_identifier'] ?? null,
                     ]);
                 }
             }
@@ -188,6 +190,7 @@ final class ReceptionOrderService
                     'reception_order_id' => $receptionOrder->id,
                     'store_id' => $receptionOrder->store_id,
                     'expiry_date' => $lineItem->expiry_date,
+                    'batch_identifier' => $lineItem->batch_identifier,
                     'initial_quantity' => $baseQuantity,
                     'remaining_quantity' => $baseQuantity,
                     'missing_quantity' => 0,

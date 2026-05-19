@@ -72,25 +72,26 @@ watch(
       lineItems.value = po.line_items
         .filter((item) => Number(item.remaining_quantity ?? item.quantity) > 0)
         .map((item) => ({
-        id: crypto.randomUUID(),
-        purchase_order_item_id: item.id,
-        product_variant_id: item.product_variant_id,
-        product_name: item.product_variant?.product?.name ?? "—",
-        variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
-        quantity: Number(item.remaining_quantity ?? item.quantity),
-        max_quantity: Number(item.remaining_quantity ?? item.quantity),
-        expiry_date: null,
-        purchase_unit: item.catalog_entry?.unit ?? null,
-        base_unit: item.product_variant?.product?.measurement_unit
-          ? {
-              id: item.product_variant.product.measurement_unit.id,
-              name: item.product_variant.product.measurement_unit.name,
-              abbreviation: item.product_variant.product.measurement_unit.abbreviation,
-            }
-          : null,
-        stock: item.product_variant?.stock ?? null,
-        minimum_stock_level: item.product_variant?.minimum_stock_level ?? null,
-      }));
+          id: crypto.randomUUID(),
+          purchase_order_item_id: item.id,
+          product_variant_id: item.product_variant_id,
+          product_name: item.product_variant?.product?.name ?? "—",
+          variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
+          quantity: Number(item.remaining_quantity ?? item.quantity),
+          max_quantity: Number(item.remaining_quantity ?? item.quantity),
+          expiry_date: null,
+          batch_identifier: "",
+          purchase_unit: item.catalog?.unit ?? null,
+          base_unit: item.product_variant?.product?.measurement_unit
+            ? {
+                id: item.product_variant.product.measurement_unit.id,
+                name: item.product_variant.product.measurement_unit.name,
+                abbreviation: item.product_variant.product.measurement_unit.abbreviation,
+              }
+            : null,
+          stock: item.product_variant?.stock ?? null,
+          minimum_stock_level: item.product_variant?.minimum_stock_level ?? null,
+        }));
     } else {
       lineItems.value = [];
     }
@@ -120,6 +121,7 @@ const submit = handleSubmit((formValues) => {
       product_variant_id: item.product_variant_id,
       quantity: Number(item.quantity),
       expiry_date: item.expiry_date ? item.expiry_date.toISOString().split("T")[0] : null,
+      batch_identifier: item.batch_identifier || null,
     })),
   };
 
@@ -193,7 +195,8 @@ function goBack() {
                         </div>
                         <div class="flex items-center gap-3 text-xs text-surface-500">
                           <span v-if="slotProps.option.order_date">
-                            <i class="fa fa-calendar mr-1" />{{ formatPoDate(slotProps.option.order_date) }}
+                            <i class="fa fa-calendar mr-1" />
+                            {{ formatPoDate(slotProps.option.order_date) }}
                           </span>
                           <span>{{ slotProps.option.line_items?.length ?? 0 }} {{ t("items") }}</span>
                         </div>
@@ -207,7 +210,9 @@ function goBack() {
                     </div>
                   </template>
                 </Select>
-                <small v-if="submitCount > 0 && errors.purchase_order_id" class="text-red-400 dark:text-red-300">{{ errors.purchase_order_id }}</small>
+                <small v-if="submitCount > 0 && errors.purchase_order_id" class="text-red-400 dark:text-red-300">
+                  {{ errors.purchase_order_id }}
+                </small>
               </div>
 
               <div v-if="selectedPurchaseOrder" class="flex items-center gap-2">
@@ -275,7 +280,9 @@ function goBack() {
                     show-icon
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.reception_date }"
                   />
-                  <small v-if="submitCount > 0 && errors.reception_date" class="text-red-400 dark:text-red-300">{{ errors.reception_date }}</small>
+                  <small v-if="submitCount > 0 && errors.reception_date" class="text-red-400 dark:text-red-300">
+                    {{ errors.reception_date }}
+                  </small>
                 </div>
               </div>
             </div>

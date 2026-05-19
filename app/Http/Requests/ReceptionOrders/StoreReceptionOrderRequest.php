@@ -31,6 +31,7 @@ final class StoreReceptionOrderRequest extends FormRequest
             'items.*.product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'items.*.expiry_date' => ['nullable', 'date'],
+            'items.*.batch_identifier' => ['nullable', 'string', 'max:255'],
         ];
     }
 
