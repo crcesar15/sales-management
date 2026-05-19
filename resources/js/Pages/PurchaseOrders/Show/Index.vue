@@ -97,7 +97,9 @@ const advancePermission = computed(() => {
 
 const canCancel = computed(() => ["draft", "awaiting_approval", "approved"].includes(props.purchaseOrder.status));
 
-const canMarkAsPaid = computed(() => !props.purchaseOrder.is_paid && ["approved", "sent", "partially_received"].includes(props.purchaseOrder.status));
+const canMarkAsPaid = computed(() => !props.purchaseOrder.is_paid && ["approved", "sent", "partially_received", "received"].includes(props.purchaseOrder.status));
+
+const canEdit = computed(() => props.purchaseOrder.status === "draft");
 
 const isCancelled = computed(() => props.purchaseOrder.status === "cancelled");
 
@@ -141,6 +143,11 @@ function getStockLabel(stock: number | null | undefined): string {
   if (stock === null || stock === undefined) return "—";
   if (stock === 0) return t("Out of stock");
   return `${t("In stock")}: ${String(stock)}`;
+}
+
+function formatQuantity(q: number | string | null | undefined): string {
+  if (q === null || q === undefined) return "0";
+  return String(parseFloat(String(q)));
 }
 
 function getPaymentTermsLabel(paymentTerms: string | null | undefined): string | null {
@@ -343,13 +350,13 @@ function formatFileSize(bytes: number): string {
               </Column>
               <Column :header="t('Quantity')" style="min-width: 90px">
                 <template #body="{ data }">
-                  {{ data.quantity }}
+                  {{ formatQuantity(data.quantity) }}
                 </template>
               </Column>
               <Column :header="t('Received')" style="min-width: 120px">
                 <template #body="{ data }">
-                  <span :class="data.received_quantity >= data.quantity ? 'text-green-600' : data.received_quantity > 0 ? 'text-amber-600' : 'text-surface-500'">
-                    {{ data.received_quantity }} / {{ data.quantity }}
+                  <span :class="Number(data.received_quantity) >= Number(data.quantity) ? 'text-green-600' : Number(data.received_quantity) > 0 ? 'text-amber-600' : 'text-surface-500'">
+                    {{ formatQuantity(data.received_quantity) }} / {{ formatQuantity(data.quantity) }}
                   </span>
                 </template>
               </Column>
@@ -385,7 +392,7 @@ function formatFileSize(bytes: number): string {
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div v-if="data.catalog_entry?.minimum_order_quantity">
                       <span class="text-surface-500 block mb-1">{{ t("Min. Order") }}</span>
-                      <span class="font-medium">{{ data.catalog_entry.minimum_order_quantity }}</span>
+                      <span class="font-medium">{{ formatQuantity(data.catalog_entry.minimum_order_quantity) }}</span>
                     </div>
                     <div v-if="data.catalog_entry?.lead_time_days">
                       <span class="text-surface-500 block mb-1">{{ t("Lead Time") }}</span>
@@ -403,7 +410,7 @@ function formatFileSize(bytes: number): string {
                       <span class="text-surface-500 block mb-1">{{ t("Purchase Unit") }}</span>
                       <span class="font-medium">{{ data.catalog_entry.unit.name }}</span>
                       <span v-if="data.catalog_entry.unit.conversion_factor !== 1" class="text-surface-500 ml-1">
-                        (x{{ data.catalog_entry.unit.conversion_factor }} {{ data.product_variant?.product?.measurement_unit?.name }})
+                        (x{{ formatQuantity(data.catalog_entry.unit.conversion_factor) }} {{ data.product_variant?.product?.measurement_unit?.name }})
                       </span>
                     </div>
                   </div>
@@ -499,6 +506,7 @@ function formatFileSize(bytes: number): string {
           :sub-total="purchaseOrder.sub_total ?? 0"
           :discount="purchaseOrder.discount ?? 0"
           :total="purchaseOrder.total ?? 0"
+          :can-edit="canEdit"
           :can-cancel="canCancel"
           :can-mark-as-paid="canMarkAsPaid"
           @edit="goToEdit"
@@ -508,7 +516,7 @@ function formatFileSize(bytes: number): string {
       </div>
     </div>
 
-    <AdvanceStatusModal v-model:visible="advanceModalVisible" :purchase-order-id="purchaseOrder.id" :target-status="targetStatus" />
+    <AdvanceStatusModal v-model:visible="advanceModalVisible" :purchase-order-id="purchaseOrder.id" :target-status="targetStatus" :is-fully-received="purchaseOrder.is_fully_received" />
 
     <MarkAsPaidModal v-model:visible="markAsPaidModalVisible" :purchase-order-id="purchaseOrder.id" />
 

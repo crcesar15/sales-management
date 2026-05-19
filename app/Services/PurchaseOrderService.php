@@ -68,6 +68,8 @@ final class PurchaseOrderService
                 PurchaseOrderProduct::create([
                     'purchase_order_id' => $po->id,
                     'product_variant_id' => $item['product_variant_id'],
+                    'catalog_id' => $item['catalog_id'] ?? null,
+                    'unit_id' => $item['unit_id'] ?? null,
                     'quantity' => $quantity,
                     'price' => $price,
                     'total' => $lineTotal,
@@ -109,6 +111,8 @@ final class PurchaseOrderService
                     PurchaseOrderProduct::create([
                         'purchase_order_id' => $po->id,
                         'product_variant_id' => $item['product_variant_id'],
+                        'catalog_id' => $item['catalog_id'] ?? null,
+                        'unit_id' => $item['unit_id'] ?? null,
                         'quantity' => $quantity,
                         'price' => $price,
                         'total' => $lineTotal,
@@ -135,19 +139,33 @@ final class PurchaseOrderService
         });
     }
 
-    public function transitionStatus(PurchaseOrder $po, string $newStatus, User $actor): void
+    /**
+     * @param  array{completion_notes?: string|null}  $data
+     */
+    public function transitionStatus(PurchaseOrder $po, string $newStatus, User $actor, array $data = []): void
     {
         $this->validateTransition($po->status, $newStatus);
 
-        DB::transaction(function () use ($po, $newStatus, $actor): void {
+        DB::transaction(function () use ($po, $newStatus, $actor, $data): void {
             $oldStatus = $po->status;
 
-            $po->update(['status' => $newStatus]);
+            $updateData = ['status' => $newStatus];
+
+            if ($newStatus === 'received' && isset($data['completion_notes'])) {
+                $updateData['completion_notes'] = $data['completion_notes'];
+            }
+
+            $po->update($updateData);
+
+            $activityProperties = ['from' => $oldStatus, 'to' => $newStatus];
+            if (isset($data['completion_notes']) && $data['completion_notes'] !== '') {
+                $activityProperties['completion_notes'] = $data['completion_notes'];
+            }
 
             activity()
                 ->causedBy($actor)
                 ->performedOn($po)
-                ->withProperties(['from' => $oldStatus, 'to' => $newStatus])
+                ->withProperties($activityProperties)
                 ->log("Status changed to {$newStatus}");
         });
     }
@@ -176,7 +194,7 @@ final class PurchaseOrderService
             throw new InvalidArgumentException('This purchase order is already marked as paid.');
         }
 
-        $allowedStatuses = ['approved', 'sent', 'partially_received'];
+        $allowedStatuses = ['approved', 'sent', 'partially_received', 'received'];
 
         if (! in_array($po->status, $allowedStatuses, true)) {
             throw new InvalidArgumentException("Cannot mark purchase order with status {$po->status} as paid.");

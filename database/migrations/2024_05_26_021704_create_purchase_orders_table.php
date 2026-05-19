@@ -26,6 +26,7 @@ return new class extends Migration
             $table->decimal('discount', 10, 2)->nullable();
             $table->decimal('total', 10, 2)->nullable();
             $table->text('notes')->nullable();
+            $table->text('completion_notes')->nullable();
             $table->enum('proof_of_payment_type', ['bank_transfer', 'cash', 'check', 'credit_card'])->nullable();
             $table->string('proof_of_payment_number')->nullable();
             $table->timestamps();

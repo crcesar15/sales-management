@@ -10,10 +10,11 @@ const props = withDefaults(
     discount: number | null;
     total: number | null;
     notes?: string | null;
+    canEdit?: boolean;
     canCancel?: boolean;
     canMarkAsPaid?: boolean;
   }>(),
-  { canCancel: false, canMarkAsPaid: false },
+  { canEdit: true, canCancel: false, canMarkAsPaid: false },
 );
 
 const emit = defineEmits<{
@@ -62,7 +63,7 @@ const discountPercentage = computed(() => {
         <Divider class="!my-1" />
         <div class="flex flex-col gap-2">
           <div class="flex gap-2">
-            <Button v-can="'purchase_order.edit'" icon="fa fa-pen" :label="t('Edit')" class="flex-1" @click="emit('edit')" />
+            <Button v-if="canEdit" v-can="'purchase_order.edit'" icon="fa fa-pen" :label="t('Edit')" class="flex-1" @click="emit('edit')" />
             <Button
               v-if="canCancel"
               v-can="'purchase_order.edit'"

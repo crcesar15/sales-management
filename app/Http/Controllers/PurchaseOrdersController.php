@@ -94,16 +94,12 @@ final class PurchaseOrdersController extends Controller
 
         $purchaseOrder->load(['vendor', 'user', 'lineItems.productVariant.product.measurementUnit', 'lineItems.receptionOrderItems.receptionOrder', 'receptionOrders.vendor', 'receptionOrders.store', 'receptionOrders.user']);
 
-        $catalogEntries = Catalog::query()
-            ->where('vendor_id', $purchaseOrder->vendor_id)
-            ->whereIn('product_variant_id', $purchaseOrder->lineItems->pluck('product_variant_id'))
-            ->with(['unit'])
-            ->get()
-            ->keyBy('product_variant_id');
+        $catalogIds = $purchaseOrder->lineItems->pluck('catalog_id')->filter()->unique()->toArray();
+        $catalogEntries = Catalog::whereIn('id', $catalogIds)->with(['unit'])->get()->keyBy('id');
 
         $purchaseOrder->lineItems->each(fn ($item) => $item->setRelation(
             'catalogEntry',
-            $catalogEntries->get($item->product_variant_id),
+            $catalogEntries->get($item->catalog_id),
         ));
 
         return Inertia::render('PurchaseOrders/Show/Index', [
@@ -125,22 +121,23 @@ final class PurchaseOrdersController extends Controller
         ]);
     }
 
-    public function edit(PurchaseOrder $purchaseOrder): InertiaResponse
+    public function edit(PurchaseOrder $purchaseOrder): InertiaResponse|RedirectResponse
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_EDIT);
 
+        if ($purchaseOrder->status !== 'draft') {
+            return redirect()->route('purchase-orders.show', $purchaseOrder->id)
+                ->with('error', 'Only draft purchase orders can be edited.');
+        }
+
         $purchaseOrder->load(['vendor', 'lineItems.productVariant.product.measurementUnit']);
 
-        $catalogEntries = Catalog::query()
-            ->where('vendor_id', $purchaseOrder->vendor_id)
-            ->whereIn('product_variant_id', $purchaseOrder->lineItems->pluck('product_variant_id'))
-            ->with(['unit'])
-            ->get()
-            ->keyBy('product_variant_id');
+        $catalogIds = $purchaseOrder->lineItems->pluck('catalog_id')->filter()->unique()->toArray();
+        $catalogEntries = Catalog::whereIn('id', $catalogIds)->with(['unit'])->get()->keyBy('id');
 
         $purchaseOrder->lineItems->each(fn ($item) => $item->setRelation(
             'catalogEntry',
-            $catalogEntries->get($item->product_variant_id),
+            $catalogEntries->get($item->catalog_id),
         ));
 
         return Inertia::render('PurchaseOrders/Edit/Index', [
@@ -192,6 +189,7 @@ final class PurchaseOrdersController extends Controller
                 $purchaseOrder,
                 $request->string('status')->toString(),
                 $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+                ['completion_notes' => $request->input('completion_notes')],
             );
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['status' => $e->getMessage()]);

@@ -35,6 +35,8 @@ export interface PurchaseOrderLineItem {
   id: number;
   purchase_order_id: number;
   product_variant_id: number;
+  catalog_id: number | null;
+  unit_id: number | null;
   quantity: number;
   received_quantity: number;
   remaining_quantity: number;
@@ -59,10 +61,12 @@ export interface PurchaseOrder {
   discount: number | null;
   total: number | null;
   notes: string | null;
+  completion_notes: string | null;
   is_paid: boolean;
   paid_at: string | null;
   proof_of_payment_type: PaymentMethod | null;
   proof_of_payment_number: string | null;
+  is_fully_received: boolean;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -117,6 +121,8 @@ export interface PurchaseOrderPayload {
   notes?: string | null;
   items: Array<{
     product_variant_id: number;
+    catalog_id: number;
+    unit_id?: number | null;
     quantity: number;
     price: number;
   }>;

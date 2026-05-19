@@ -35,6 +35,7 @@ final class PurchaseOrder extends Model implements HasMedia
         'discount',
         'total',
         'notes',
+        'completion_notes',
         'proof_of_payment_type',
         'proof_of_payment_number',
     ];

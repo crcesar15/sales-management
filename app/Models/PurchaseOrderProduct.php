@@ -15,10 +15,14 @@ final class PurchaseOrderProduct extends Model
     protected $fillable = [
         'purchase_order_id',
         'product_variant_id',
+        'catalog_id',
+        'unit_id',
         'quantity',
         'price',
         'total',
     ];
+
+    protected $appends = ['received_quantity', 'remaining_quantity'];
 
     /** @return BelongsTo<PurchaseOrder, $this> */
     public function purchaseOrder(): BelongsTo
@@ -30,6 +34,18 @@ final class PurchaseOrderProduct extends Model
     public function productVariant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class);
+    }
+
+    /** @return BelongsTo<Catalog, $this> */
+    public function catalog(): BelongsTo
+    {
+        return $this->belongsTo(Catalog::class);
+    }
+
+    /** @return BelongsTo<ProductVariantUnit, $this> */
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariantUnit::class);
     }
 
     /** @return HasMany<ReceptionOrderProduct, $this> */

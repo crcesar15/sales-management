@@ -29,6 +29,8 @@ final class StorePurchaseOrderRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'items.*.catalog_id' => ['required', 'integer', 'exists:catalog,id'],
+            'items.*.unit_id' => ['nullable', 'integer', 'exists:product_variant_units,id'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'items.*.price' => ['required', 'numeric', 'min:0'],
         ];
@@ -47,20 +49,20 @@ final class StorePurchaseOrderRequest extends FormRequest
                 return;
             }
 
-            $variantIds = array_map(fn (array $item) => $item['product_variant_id'], $items);
+            $catalogIds = array_map(fn (array $item) => $item['catalog_id'], $items);
 
-            $activeCatalogVariants = Catalog::query()
+            $activeCatalogIds = Catalog::query()
                 ->where('vendor_id', $vendorId)
                 ->where('status', 'active')
-                ->whereIn('product_variant_id', $variantIds)
-                ->pluck('product_variant_id')
+                ->whereIn('id', $catalogIds)
+                ->pluck('id')
                 ->toArray();
 
-            foreach ($variantIds as $variantId) {
-                if (! in_array($variantId, $activeCatalogVariants)) {
+            foreach ($catalogIds as $catalogId) {
+                if (! in_array($catalogId, $activeCatalogIds)) {
                     $validator->errors()->add(
                         'items',
-                        "Product variant ID {$variantId} is not in the vendor's active catalog.",
+                        "Catalog entry ID {$catalogId} is not in the vendor's active catalog.",
                     );
                 }
             }
