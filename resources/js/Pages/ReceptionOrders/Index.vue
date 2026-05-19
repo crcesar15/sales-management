@@ -55,7 +55,6 @@ const filterPopover = ref();
 const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
   { label: t("Pending"), value: "pending" },
-  { label: t("Uncompleted"), value: "uncompleted" },
   { label: t("Completed"), value: "completed" },
   { label: t("Cancelled"), value: "cancelled" },
 ]);
@@ -288,7 +287,7 @@ function editOrder(order: ReceptionOrderResponse) {
               <div class="flex justify-center gap-2">
                 <Button v-tooltip.top="t('View')" icon="fa fa-eye" text size="large" rounded @click="viewOrder(data)" />
                 <Button
-                  v-if="data.status === 'pending' || data.status === 'uncompleted'"
+                  v-if="data.status === 'pending'"
                   v-can="'reception_order.edit'"
                   v-tooltip.top="t('Edit')"
                   icon="fa fa-edit"

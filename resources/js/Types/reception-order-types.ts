@@ -4,12 +4,12 @@ import type { VendorResponse } from "./vendor-types";
 import type { StoreResponse } from "./store-types";
 import type { ProductVariantResponse, PurchaseUnitResponse } from "./product-variant-types";
 
-export type ReceptionOrderStatus = "pending" | "uncompleted" | "completed" | "cancelled";
+export type ReceptionOrderStatus = "pending" | "completed" | "cancelled";
 
 export interface ReceptionOrderLineItem {
   id: number;
   reception_order_id: number;
-  purchase_order_item_id: number | null;
+  purchase_order_item_id: number;
   product_variant_id: number;
   quantity: number;
   price: number;
@@ -90,7 +90,7 @@ export interface ReceptionOrderPayload {
   notes?: string | null;
   items: Array<{
     product_variant_id: number;
-    purchase_order_item_id?: number | null;
+    purchase_order_item_id: number;
     quantity: number;
     expiry_date?: string | null;
   }>;

@@ -69,7 +69,9 @@ watch(
   () => {
     const po = selectedPurchaseOrder.value;
     if (po) {
-      lineItems.value = po.line_items.map((item) => ({
+      lineItems.value = po.line_items
+        .filter((item) => Number(item.remaining_quantity ?? item.quantity) > 0)
+        .map((item) => ({
         id: crypto.randomUUID(),
         purchase_order_item_id: item.id,
         product_variant_id: item.product_variant_id,
@@ -114,6 +116,7 @@ const submit = handleSubmit((formValues) => {
     reception_date: formValues.reception_date ? formValues.reception_date.toISOString().split("T")[0] : null,
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
+      purchase_order_item_id: item.purchase_order_item_id,
       product_variant_id: item.product_variant_id,
       quantity: Number(item.quantity),
       expiry_date: item.expiry_date ? item.expiry_date.toISOString().split("T")[0] : null,

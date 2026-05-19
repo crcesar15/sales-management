@@ -11,7 +11,7 @@
 | store_id            | foreignId     | FK → stores **(new column — see migration)**   |
 | reception_date      | date          |                                                |
 | notes               | text, nullable|                                                |
-| status              | enum          | `pending`, `uncompleted`, `completed`, `cancelled` |
+| status              | enum          | `pending`, `completed`, `cancelled` |
 | created_at          | timestamp     |                                                |
 | updated_at          | timestamp     |                                                |
 

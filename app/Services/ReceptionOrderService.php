@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Batch;
-use App\Models\Catalog;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderProduct;
 use App\Models\ReceptionOrder;
 use App\Models\ReceptionOrderProduct;
 use App\Models\User;
@@ -51,7 +51,7 @@ final class ReceptionOrderService
             $this->guardItemsBelongToPo($items, $purchaseOrder);
             $this->guardAgainstOverReceiving($items, $purchaseOrder);
 
-            $poLineItems = $purchaseOrder->lineItems->keyBy('product_variant_id');
+            $poLineItems = $purchaseOrder->lineItems->keyBy('id');
 
             $receptionOrder = ReceptionOrder::create([
                 'purchase_order_id' => $purchaseOrder->id,
@@ -64,14 +64,14 @@ final class ReceptionOrderService
             ]);
 
             foreach ($items as $item) {
-                $poLineItem = $poLineItems->get($item['product_variant_id']);
+                $poLineItem = $poLineItems->get($item['purchase_order_item_id']);
                 $price = (float) ($poLineItem->price ?? 0);
                 $quantity = (float) $item['quantity'];
                 $lineTotal = $price * $quantity;
 
                 ReceptionOrderProduct::create([
                     'reception_order_id' => $receptionOrder->id,
-                    'purchase_order_item_id' => $poLineItem?->id,
+                    'purchase_order_item_id' => $item['purchase_order_item_id'],
                     'product_variant_id' => $item['product_variant_id'],
                     'quantity' => $quantity,
                     'price' => $price,
@@ -110,19 +110,19 @@ final class ReceptionOrderService
                 $this->guardItemsBelongToPo($items, $purchaseOrder);
                 $this->guardAgainstOverReceiving($items, $purchaseOrder, $receptionOrder->id);
 
-                $poLineItems = $purchaseOrder->lineItems->keyBy('product_variant_id');
+                $poLineItems = $purchaseOrder->lineItems->keyBy('id');
 
                 $receptionOrder->lineItems()->delete();
 
                 foreach ($items as $item) {
-                    $poLineItem = $poLineItems->get($item['product_variant_id']);
+                    $poLineItem = $poLineItems->get($item['purchase_order_item_id']);
                     $price = (float) ($poLineItem->price ?? 0);
                     $quantity = (float) $item['quantity'];
                     $lineTotal = $price * $quantity;
 
                     ReceptionOrderProduct::create([
                         'reception_order_id' => $receptionOrder->id,
-                        'purchase_order_item_id' => $poLineItem?->id,
+                        'purchase_order_item_id' => $item['purchase_order_item_id'],
                         'product_variant_id' => $item['product_variant_id'],
                         'quantity' => $quantity,
                         'price' => $price,
@@ -137,10 +137,6 @@ final class ReceptionOrderService
                 'reception_date' => $data['reception_date'] ?? $receptionOrder->reception_date,
                 'notes' => array_key_exists('notes', $data) ? $data['notes'] : $receptionOrder->notes,
             ];
-
-            if ($items !== null) {
-                $updateData['status'] = 'uncompleted';
-            }
 
             $receptionOrder->update($updateData);
 
@@ -169,18 +165,17 @@ final class ReceptionOrderService
         return DB::transaction(function () use ($receptionOrder, $purchaseOrder, $actor): ReceptionOrder {
             $receptionOrder->load('lineItems');
 
-            $catalogEntries = Catalog::query()
-                ->where('vendor_id', $receptionOrder->vendor_id)
-                ->where('status', 'active')
-                ->whereIn('product_variant_id', $receptionOrder->lineItems->pluck('product_variant_id'))
-                ->with('unit')
+            $poLineItemIds = $receptionOrder->lineItems->pluck('purchase_order_item_id')->filter()->unique()->toArray();
+            $poLineItems = PurchaseOrderProduct::with('catalog.unit')
+                ->whereIn('id', $poLineItemIds)
                 ->get()
-                ->keyBy('product_variant_id');
+                ->keyBy('id');
 
             $stockChanges = [];
 
             foreach ($receptionOrder->lineItems as $lineItem) {
-                $catalogEntry = $catalogEntries->get($lineItem->product_variant_id);
+                $poLineItem = $poLineItems->get($lineItem->purchase_order_item_id);
+                $catalogEntry = $poLineItem?->catalog;
                 $conversionFactor = $catalogEntry?->unit->conversion_factor ?? 1;
 
                 $baseQuantity = (int) round($lineItem->quantity * $conversionFactor);
@@ -254,16 +249,16 @@ final class ReceptionOrderService
     }
 
     /**
-     * @param  array<int, array{product_variant_id: int}>  $items
+     * @param  array<int, array{purchase_order_item_id: int}>  $items
      */
     private function guardItemsBelongToPo(array $items, PurchaseOrder $po): void
     {
-        $poVariantIds = $po->lineItems->pluck('product_variant_id')->toArray();
+        $poItemIds = $po->lineItems->pluck('id')->toArray();
 
         foreach ($items as $item) {
-            if (! in_array($item['product_variant_id'], $poVariantIds, true)) {
+            if (! in_array($item['purchase_order_item_id'], $poItemIds, true)) {
                 throw new InvalidArgumentException(
-                    "Product variant ID {$item['product_variant_id']} is not in purchase order #{$po->id}'s line items."
+                    "Purchase order item ID {$item['purchase_order_item_id']} is not in purchase order #{$po->id}'s line items."
                 );
             }
         }
@@ -272,25 +267,25 @@ final class ReceptionOrderService
     /**
      * Validate that proposed reception quantities do not exceed remaining ordered quantities.
      *
-     * @param  array<int, array{product_variant_id: int, quantity: float|int|string}>  $items
+     * @param  array<int, array{purchase_order_item_id: int, quantity: float|int|string}>  $items
      * @param  int|null  $excludeReceptionOrderId  Exclude this RO's quantities (for updates)
      */
     private function guardAgainstOverReceiving(array $items, PurchaseOrder $po, ?int $excludeReceptionOrderId = null): void
     {
-        $poLineItems = $po->lineItems->keyBy('product_variant_id');
+        $poLineItems = $po->lineItems->keyBy('id');
 
         $claimedQuantities = $this->getClaimedQuantities($po, $excludeReceptionOrderId);
 
         foreach ($items as $item) {
-            $variantId = $item['product_variant_id'];
-            $poLineItem = $poLineItems->get($variantId);
+            $poItemId = $item['purchase_order_item_id'];
+            $poLineItem = $poLineItems->get($poItemId);
 
             if ($poLineItem === null) {
                 continue;
             }
 
             $orderedQuantity = (float) $poLineItem->quantity;
-            $alreadyClaimed = (float) ($claimedQuantities[$variantId] ?? 0);
+            $alreadyClaimed = (float) ($claimedQuantities[$poItemId] ?? 0);
             $proposedQuantity = (float) $item['quantity'];
             $remaining = $orderedQuantity - $alreadyClaimed;
 
@@ -303,9 +298,9 @@ final class ReceptionOrderService
     }
 
     /**
-     * Get the total claimed quantities per product variant for a PO, from all non-cancelled reception orders.
+     * Get the total claimed quantities per PO line item for a PO, from all non-cancelled reception orders.
      *
-     * @return array<int, string> keyed by product_variant_id
+     * @return array<int, string> keyed by purchase_order_item_id
      */
     private function getClaimedQuantities(PurchaseOrder $po, ?int $excludeReceptionOrderId = null): array
     {
@@ -319,8 +314,8 @@ final class ReceptionOrderService
 
         foreach ($receptionOrders as $receptionOrder) {
             foreach ($receptionOrder->lineItems as $lineItem) {
-                $variantId = $lineItem->product_variant_id;
-                $quantities[$variantId] = bcadd((string) ($quantities[$variantId] ?? '0'), (string) $lineItem->quantity, 4);
+                $poItemId = (int) $lineItem->purchase_order_item_id;
+                $quantities[$poItemId] = bcadd((string) ($quantities[$poItemId] ?? '0'), (string) $lineItem->quantity, 4);
             }
         }
 

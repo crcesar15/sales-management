@@ -517,7 +517,6 @@
   "Requested": "Requested",
   "Picked": "Picked",
   "In Transit": "In Transit",
-  "Received": "Received",
   "Completed": "Completed",
   "Cancelled": "Cancelled",
   "Add Item": "Add Item",
@@ -667,9 +666,7 @@
   "No reception orders found": "No reception orders found",
   "Destination Store": "Destination Store",
   "Select Store": "Select Store",
-  "Store is required": "Store is required",
   "Reception Date": "Reception Date",
-  "Uncompleted": "Uncompleted",
   "Complete": "Complete",
   "Complete Reception": "Complete Reception",
   "Cancel Reception Order": "Cancel Reception Order",
@@ -686,9 +683,6 @@
   "Receptions": "Receptions",
   "cannot be changed": "cannot be changed",
   "Yes, Complete": "Yes, Complete",
-  "Yes, Cancel": "Yes, Cancel",
-  "Optional reason for cancellation": "Optional reason for cancellation",
-  "Cancellation Reason": "Cancellation Reason",
   "items": "items",
   "PO Total": "PO Total",
   "Select a purchase order to see summary": "Select a purchase order to see summary",
@@ -706,5 +700,9 @@
   "Check": "Check",
   "Credit Card": "Credit Card",
   "Proof of Payment Details": "Proof of Payment Details",
-  "Download": "Download"
+  "Download": "Download",
+  "Completion Notes": "Completion Notes",
+  "Reason for closing the purchase order before all items have been received": "Reason for closing the purchase order before all items have been received",
+  "Optional notes about completing this purchase order": "Optional notes about completing this purchase order",
+  "Are you sure you want to mark this purchase order as received?": "Are you sure you want to mark this purchase order as received?"
 }

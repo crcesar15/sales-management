@@ -12,7 +12,6 @@ const statusMap: Record<
   { label: string; severity: "success" | "info" | "warn" | "secondary" | "danger" }
 > = {
   pending: { label: "Pending", severity: "warn" },
-  uncompleted: { label: "Uncompleted", severity: "info" },
   completed: { label: "Completed", severity: "success" },
   cancelled: { label: "Cancelled", severity: "danger" },
 };

@@ -10,7 +10,7 @@ Receiving closes the loop between what was ordered and what physically arrived. 
 - One purchase order can have multiple partial receptions
 - Each reception targets a specific **store** (destination for received stock)
 - New `store_id` column added to `reception_orders` table via migration
-- Status values: `pending`, `uncompleted`, `completed`, `cancelled`
+- Status values: `pending`, `completed`, `cancelled`
 - On **completion**:
   1. For each line item: `stock += quantity × conversion_factor`
   2. Auto-create a batch per line item with `initial_quantity = quantity × conversion_factor`

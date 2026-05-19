@@ -7,7 +7,7 @@
 | GET    | `/reception-orders`                   | Paginated list                     | reception_orders.manage  |
 | POST   | `/reception-orders`                   | Create reception order             | reception_orders.manage  |
 | GET    | `/reception-orders/{ro}`              | Show reception with line items     | reception_orders.manage  |
-| PUT    | `/reception-orders/{ro}`              | Update pending/uncompleted         | reception_orders.manage  |
+| PUT    | `/reception-orders/{ro}`              | Update pending                     | reception_orders.manage  |
 | POST   | `/reception-orders/{ro}/complete`     | Complete and update stock          | reception_orders.manage  |
 | POST   | `/reception-orders/{ro}/cancel`       | Cancel reception order             | reception_orders.manage  |
 | GET    | `/purchase-orders/{po}/receptions`    | List receptions for a PO           | reception_orders.manage  |

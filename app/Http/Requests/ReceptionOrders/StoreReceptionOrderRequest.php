@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Requests\ReceptionOrders;
 
 use App\Enums\PermissionsEnum;
-use App\Models\Catalog;
 use App\Models\PurchaseOrder;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,6 +27,7 @@ final class StoreReceptionOrderRequest extends FormRequest
             'reception_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
+            'items.*.purchase_order_item_id' => ['required', 'integer', 'exists:purchase_order_product,id'],
             'items.*.product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'items.*.expiry_date' => ['nullable', 'date'],
@@ -64,49 +64,32 @@ final class StoreReceptionOrderRequest extends FormRequest
                 return;
             }
 
-            $poVariantIds = $purchaseOrder->lineItems->pluck('product_variant_id')->toArray();
-            $vendorId = $purchaseOrder->vendor_id;
-            $variantIds = array_map(fn (array $item) => $item['product_variant_id'], $items);
+            $poItemIds = $purchaseOrder->lineItems->pluck('id')->toArray();
+            $itemPoIds = array_map(fn (array $item) => $item['purchase_order_item_id'], $items);
 
-            foreach ($variantIds as $variantId) {
-                if (! in_array($variantId, $poVariantIds, true)) {
+            foreach ($itemPoIds as $itemPoId) {
+                if (! in_array($itemPoId, $poItemIds, true)) {
                     $validator->errors()->add(
                         'items',
-                        "Product variant ID {$variantId} is not in purchase order #{$purchaseOrder->id}'s line items.",
-                    );
-                }
-            }
-
-            $activeCatalogVariants = Catalog::query()
-                ->where('vendor_id', $vendorId)
-                ->where('status', 'active')
-                ->whereIn('product_variant_id', $variantIds)
-                ->pluck('product_variant_id')
-                ->toArray();
-
-            foreach ($variantIds as $variantId) {
-                if (! in_array($variantId, $activeCatalogVariants, true)) {
-                    $validator->errors()->add(
-                        'items',
-                        "Product variant ID {$variantId} is not in the vendor's active catalog.",
+                        "Purchase order item ID {$itemPoId} is not in purchase order #{$purchaseOrder->id}'s line items.",
                     );
                 }
             }
 
             // Validate that reception quantities don't exceed remaining ordered quantities
-            $poLineItems = $purchaseOrder->lineItems->keyBy('product_variant_id');
+            $poLineItems = $purchaseOrder->lineItems->keyBy('id');
             $claimedQuantities = $this->getClaimedQuantities($purchaseOrder);
 
             foreach ($items as $index => $item) {
-                $variantId = $item['product_variant_id'];
-                $poLineItem = $poLineItems->get($variantId);
+                $poItemId = $item['purchase_order_item_id'];
+                $poLineItem = $poLineItems->get($poItemId);
 
                 if ($poLineItem === null) {
                     continue;
                 }
 
                 $orderedQuantity = (float) $poLineItem->quantity;
-                $alreadyClaimed = (float) ($claimedQuantities[$variantId] ?? 0);
+                $alreadyClaimed = (float) ($claimedQuantities[$poItemId] ?? 0);
                 $proposedQuantity = (float) $item['quantity'];
                 $remaining = $orderedQuantity - $alreadyClaimed;
 
@@ -121,9 +104,9 @@ final class StoreReceptionOrderRequest extends FormRequest
     }
 
     /**
-     * Get the total claimed quantities per product variant from all non-cancelled reception orders for this PO.
+     * Get the total claimed quantities per PO line item from all non-cancelled reception orders for this PO.
      *
-     * @return array<int, string> keyed by product_variant_id
+     * @return array<int, string> keyed by purchase_order_item_id
      */
     private function getClaimedQuantities(PurchaseOrder $po): array
     {
@@ -131,8 +114,8 @@ final class StoreReceptionOrderRequest extends FormRequest
 
         foreach ($po->receptionOrders()->where('status', '!=', 'cancelled')->with('lineItems')->get() as $receptionOrder) {
             foreach ($receptionOrder->lineItems as $lineItem) {
-                $variantId = $lineItem->product_variant_id;
-                $quantities[$variantId] = bcadd((string) ($quantities[$variantId] ?? '0'), (string) $lineItem->quantity, 4);
+                $poItemId = (int) $lineItem->purchase_order_item_id;
+                $quantities[$poItemId] = bcadd((string) ($quantities[$poItemId] ?? '0'), (string) $lineItem->quantity, 4);
             }
         }
 

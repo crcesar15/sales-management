@@ -5,7 +5,7 @@ import { computed } from "vue";
 
 export interface ReceptionLineItem {
   id: string;
-  purchase_order_item_id?: number | null;
+  purchase_order_item_id: number;
   product_variant_id: number;
   product_name: string;
   variant_label: string;

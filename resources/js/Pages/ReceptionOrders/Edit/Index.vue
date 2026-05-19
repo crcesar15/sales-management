@@ -46,11 +46,11 @@ const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, sub
 const [receptionDate, receptionDateAttrs] = defineField("reception_date");
 const [notes, notesAttrs] = defineField("notes");
 
-// Build a map of PO line item remaining quantities by product_variant_id
-const poRemainingByVariant = new Map<number, number>();
+// Build a map of PO line item remaining quantities by PO line item id
+const poRemainingByItem = new Map<number, number>();
 if (props.receptionOrder.purchase_order?.line_items) {
   for (const poItem of props.receptionOrder.purchase_order.line_items) {
-    poRemainingByVariant.set(poItem.product_variant_id, Number(poItem.remaining_quantity ?? poItem.quantity));
+    poRemainingByItem.set(poItem.id, Number(poItem.remaining_quantity ?? poItem.quantity));
   }
 }
 
@@ -62,7 +62,7 @@ const lineItems = ref<ReceptionLineItem[]>(
     product_name: item.product_variant?.product?.name ?? "—",
     variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
     quantity: Number(item.quantity),
-    max_quantity: poRemainingByVariant.get(item.product_variant_id) ?? undefined,
+    max_quantity: poRemainingByItem.get(item.purchase_order_item_id) ?? undefined,
     expiry_date: item.expiry_date ? new Date(item.expiry_date) : null,
     purchase_unit: item.catalog_entry?.unit ?? null,
     base_unit: item.product_variant?.product?.measurement_unit
@@ -91,6 +91,7 @@ const submit = handleSubmit((formValues) => {
     reception_date: formValues.reception_date ? formValues.reception_date.toISOString().split("T")[0] : null,
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
+      purchase_order_item_id: item.purchase_order_item_id,
       product_variant_id: item.product_variant_id,
       quantity: Number(item.quantity),
       expiry_date: item.expiry_date ? item.expiry_date.toISOString().split("T")[0] : null,

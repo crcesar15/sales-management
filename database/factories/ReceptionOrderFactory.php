@@ -30,7 +30,7 @@ final class ReceptionOrderFactory extends Factory
             'store_id' => Store::factory(),
             'reception_date' => fake()->date(),
             'notes' => fake()->optional()->sentence(),
-            'status' => fake()->randomElement(['pending', 'uncompleted', 'completed', 'cancelled']),
+            'status' => fake()->randomElement(['pending', 'completed', 'cancelled']),
         ];
     }
 }

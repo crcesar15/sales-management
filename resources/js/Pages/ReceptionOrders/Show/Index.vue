@@ -30,9 +30,9 @@ const cancelModalVisible = ref(false);
 
 const vendorInfoPopover = ref();
 
-const canEdit = computed(() => ["pending", "uncompleted"].includes(props.receptionOrder.status));
-const canComplete = computed(() => ["pending", "uncompleted"].includes(props.receptionOrder.status));
-const canCancel = computed(() => ["pending", "uncompleted"].includes(props.receptionOrder.status));
+const canEdit = computed(() => props.receptionOrder.status === "pending");
+const canComplete = computed(() => props.receptionOrder.status === "pending");
+const canCancel = computed(() => props.receptionOrder.status === "pending");
 
 function toggleVendorInfo(event: Event) {
   vendorInfoPopover.value.toggle(event);
@@ -65,11 +65,16 @@ function getStockLabel(stock: number | null | undefined): string {
   return `${t("In stock")}: ${String(stock)}`;
 }
 
+function formatQuantity(q: number | string | null | undefined): string {
+  if (q === null || q === undefined) return "0";
+  return String(parseFloat(String(q)));
+}
+
 function formatConversion(item: ReceptionOrderResponse["line_items"][number]): string {
   if (!item.catalog_entry?.unit || item.catalog_entry.unit.conversion_factor <= 1) return "";
   const baseName =
     item.product_variant?.product?.measurement_unit?.abbreviation ?? item.product_variant?.product?.measurement_unit?.name ?? t("units");
-  return `${item.quantity} ${item.catalog_entry.unit.name} × ${item.catalog_entry.unit.conversion_factor} = ${Math.round(item.quantity * item.catalog_entry.unit.conversion_factor)} ${baseName}`;
+  return `${formatQuantity(item.quantity)} ${item.catalog_entry.unit.name} × ${item.catalog_entry.unit.conversion_factor} = ${Math.round(item.quantity * item.catalog_entry.unit.conversion_factor)} ${baseName}`;
 }
 </script>
 
@@ -212,7 +217,7 @@ function formatConversion(item: ReceptionOrderResponse["line_items"][number]): s
               </Column>
               <Column :header="t('Quantity')" style="min-width: 90px">
                 <template #body="{ data }">
-                  {{ data.quantity }}
+                  {{ formatQuantity(data.quantity) }}
                 </template>
               </Column>
               <Column :header="t('Conversion')" style="min-width: 160px">

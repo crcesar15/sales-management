@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('store_id')->constrained('stores');
             $table->date('reception_date')->nullable();
             $table->text('notes')->nullable();
-            $table->enum('status', ['pending', 'uncompleted', 'completed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
             $table->timestamps();
 
             $table->index('purchase_order_id');

@@ -9,8 +9,7 @@ const { t } = useI18n();
 
 const stepperSteps = [
   { key: "pending", value: "1", label: "Pending" },
-  { key: "uncompleted", value: "2", label: "Uncompleted" },
-  { key: "completed", value: "3", label: "Completed" },
+  { key: "completed", value: "2", label: "Completed" },
 ];
 
 const isCancelled = computed(() => props.currentStatus === "cancelled");
