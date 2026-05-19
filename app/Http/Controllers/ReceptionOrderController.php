@@ -75,7 +75,7 @@ final class ReceptionOrderController extends Controller
 
         $purchaseOrders = PurchaseOrder::query()
             ->whereIn('status', ['sent', 'partially_received'])
-            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit', 'receptionOrders.lineItems' => fn ($q) => $q->whereHas('receptionOrder', fn ($q) => $q->where('status', '!=', 'cancelled'))])
+            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit', 'lineItems.catalog.unit', 'receptionOrders.lineItems' => fn ($q) => $q->whereHas('receptionOrder', fn ($q) => $q->where('status', '!=', 'cancelled'))])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function (PurchaseOrder $po) {
@@ -157,6 +157,7 @@ final class ReceptionOrderController extends Controller
 
         $receptionOrder->load([
             'purchaseOrder.lineItems.productVariant.product',
+            'purchaseOrder.lineItems.catalog.unit',
             'purchaseOrder.receptionOrders.lineItems' => fn ($q) => $q->whereHas('receptionOrder', fn ($q) => $q->where('status', '!=', 'cancelled')->where('id', '!=', $receptionOrder->id)),
             'lineItems.productVariant.product.measurementUnit',
         ]);
