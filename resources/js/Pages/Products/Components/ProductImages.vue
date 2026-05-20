@@ -345,8 +345,8 @@ const removeFile = (file: MediaItem) => {
 
       <template #footer>
         <div class="flex items-center justify-end gap-2 pt-2">
-          <Button :label="t('Cancel')" icon="fa-solid fa-xmark" outlined @click="cropperVisible = false" />
-          <Button :label="t('Crop & Save')" icon="fa-solid fa-check" @click="saveCropped" />
+          <Button :label="t('Cancel')" severity="secondary" @click="cropperVisible = false" />
+          <Button :label="t('Crop & Save')" @click="saveCropped" />
         </div>
       </template>
     </Dialog>

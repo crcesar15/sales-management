@@ -99,7 +99,7 @@ const onSave = () => {
 
     <template #footer>
       <div class="flex items-center justify-end gap-2">
-        <Button :label="t('Cancel')" severity="secondary" outlined @click="$emit('close')" />
+        <Button :label="t('Cancel')" severity="secondary" @click="$emit('close')" />
         <Button :label="t('Save')" :loading="saving" @click="onSave" />
       </div>
     </template>
