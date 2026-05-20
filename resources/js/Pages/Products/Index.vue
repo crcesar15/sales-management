@@ -295,6 +295,13 @@ const restoreProduct = (id: number) => {
               </span>
             </template>
           </Column>
+          <Column field="brand" :header="t('Brand')" sortable>
+            <template #body="{ data }">
+              <span class="text-muted-color">
+                {{ data.brand?.name ?? '—' }}
+              </span>
+            </template>
+          </Column>
           <Column field="status" :header="t('Status')" sortable>
             <template #body="{ data }">
               <div style="height: 45px" class="flex items-center">
