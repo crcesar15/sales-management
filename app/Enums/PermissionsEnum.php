@@ -82,4 +82,9 @@ enum PermissionsEnum: string
     case RECEPTION_ORDERS_CREATE = 'reception_order.create';
     case RECEPTION_ORDERS_EDIT = 'reception_order.edit';
     case RECEPTION_ORDERS_MANAGE = 'reception_order.manage';
+
+    case CUSTOMERS_VIEW = 'customer.view';
+    case CUSTOMERS_CREATE = 'customer.create';
+    case CUSTOMERS_EDIT = 'customer.edit';
+    case CUSTOMERS_DELETE = 'customer.delete';
 }

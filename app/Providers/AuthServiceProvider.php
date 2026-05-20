@@ -6,11 +6,13 @@ namespace App\Providers;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Customer;
 use App\Models\MeasurementUnit;
 use App\Models\Product;
 use App\Models\User;
 use App\Policies\BrandPolicy;
 use App\Policies\CategoryPolicy;
+use App\Policies\CustomerPolicy;
 use App\Policies\MeasurementUnitPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\UserPolicy;
@@ -26,6 +28,7 @@ final class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         Brand::class => BrandPolicy::class,
         Category::class => CategoryPolicy::class,
+        Customer::class => CustomerPolicy::class,
         MeasurementUnit::class => MeasurementUnitPolicy::class,
         Product::class => ProductPolicy::class,
         StockAdjustment::class => StockAdjustmentPolicy::class,

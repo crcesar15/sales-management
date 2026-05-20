@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('sales_orders', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('customer_id')->constrained();
+            $table->foreignId('customer_id')->nullable()->constrained();
             $table->foreignId('user_id')->constrained();
             $table->enum('status', ['draft', 'sent', 'paid', 'canceled'])->default('draft');
             $table->enum('payment_method', ['cash', 'credit_card', 'qr', 'stripe', 'transfer'])->default('cash');

@@ -705,5 +705,17 @@
   "Completion Notes": "Notas de cierre",
   "Reason for closing the purchase order before all items have been received": "Razón para cerrar la orden de compra antes de recibir todos los artículos",
   "Optional notes about completing this purchase order": "Notas opcionales sobre la finalización de esta orden de compra",
-  "Are you sure you want to mark this purchase order as received?": "¿Está seguro de que desea marcar esta orden de compra como recibida?"
+  "Are you sure you want to mark this purchase order as received?": "¿Está seguro de que desea marcar esta orden de compra como recibida?",
+  "Add Customer": "Agregar Cliente",
+  "Edit Customer": "Editar Cliente",
+  "Customer Information": "Información del Cliente",
+  "Tax Information": "Información de facturación",
+  "Tax ID": "NIT/CI",
+  "Tax ID Name": "Razon Social",
+  "Customer created successfully": "Cliente creado exitosamente",
+  "Customer updated successfully": "Cliente actualizado exitosamente",
+  "Customer deleted successfully": "Cliente eliminado exitosamente",
+  "Could not delete customer": "No se pudo eliminar el cliente",
+  "Are you sure you want to delete this customer?": "¿Está seguro de que desea eliminar este cliente?",
+  "No customers found": "No se encontraron clientes"
 }

@@ -21,7 +21,13 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('tax_id')->nullable();
             $table->string('tax_id_name')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
+
+            $table->index('phone');
+            $table->index('tax_id');
+            $table->index(['first_name', 'last_name']);
+            $table->index('status');
         });
     }
 

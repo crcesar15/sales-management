@@ -10,6 +10,7 @@ use App\Http\Controllers\BatchController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MeasurementUnitController;
@@ -241,6 +242,14 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::put('/reception-orders/{receptionOrder}', [ReceptionOrderController::class, 'update'])->name('reception-orders.update');
     Route::patch('/reception-orders/{receptionOrder}/complete', [ReceptionOrderController::class, 'complete'])->name('reception-orders.complete');
     Route::patch('/reception-orders/{receptionOrder}/cancel', [ReceptionOrderController::class, 'cancel'])->name('reception-orders.cancel');
+
+    // Customer Routes
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
+    Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
+    Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+    Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+    Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+    Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('settings');
