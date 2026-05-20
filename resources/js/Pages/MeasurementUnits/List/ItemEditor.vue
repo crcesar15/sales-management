@@ -90,17 +90,25 @@ const submit = handleSubmit((values) => {
     <Dialog
       v-model:visible="showModal"
       :header="t('Measurement Unit')"
+      :closable="false"
       :breakpoints="{ '1100px': '60vw', '750px': '75vw', '500px': '90vw' }"
       :style="{ width: '30vw' }"
       modal
       @hide="onHide"
+      @keydown.ctrl.enter="submit"
     >
       <div class="flex flex-col gap-2 mb-3">
         <label for="name">
           {{ t("Name") }}
           <span class="text-red-500">*</span>
         </label>
-        <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.name }" />
+        <InputText
+          id="name"
+          v-model="name"
+          v-bind="nameAttrs"
+          autocomplete="off"
+          :class="{ 'p-invalid': submitCount > 0 && !!errors.name }"
+        />
         <small v-if="submitCount > 0 && errors.name" class="text-red-400 dark:text-red-300">
           {{ errors.name }}
         </small>

@@ -82,10 +82,12 @@ const submit = handleSubmit((values) => {
     <Dialog
       v-model:visible="showModal"
       :header="t('Category')"
+      :closable="false"
       :breakpoints="{ '1100px': '60vw', '750px': '75vw', '500px': '90vw' }"
       :style="{ width: '30vw' }"
       modal
       @hide="onHide"
+      @keydown.ctrl.enter="submit"
     >
       <div class="flex flex-col gap-2 mb-3">
         <label for="name">
