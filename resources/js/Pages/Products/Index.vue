@@ -335,7 +335,7 @@ const restoreProduct = (id: number) => {
               </div>
             </template>
           </Column>
-          <Column :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
+          <Column :header="t('Actions')">
             <template #body="{ data }">
               <div class="flex justify-start gap-2">
                 <Button v-tooltip.top="t('View')" icon="fa fa-eye" text rounded size="small" @click="viewProduct(data)" />
