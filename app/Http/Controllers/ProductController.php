@@ -70,9 +70,9 @@ final class ProductController extends Controller
 
     public function store(StoreProductRequest $request): RedirectResponse
     {
-        $this->productService->create($request->validated());
+        $product = $this->productService->create($request->validated());
 
-        return redirect()->route('products');
+        return redirect()->route('products.edit', $product);
     }
 
     public function edit(Product $product): InertiaResponse

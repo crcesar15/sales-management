@@ -184,7 +184,6 @@ const onSubmit = handleSubmit((values) => {
         detail: t("Product created successfully"),
         life: 3000,
       });
-      router.visit(route("products"));
     },
     onError: (errs) => {
       setErrors(errs);
