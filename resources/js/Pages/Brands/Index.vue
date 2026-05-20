@@ -6,10 +6,10 @@ import {
   Toast,
   Button,
   InputText,
-  IconField,
-  InputIcon,
+  Select,
+  Popover,
+  Badge,
   ConfirmDialog,
-  SelectButton,
   Tag,
   useToast,
   useConfirm,
@@ -54,9 +54,27 @@ const { t } = useI18n();
 
 // Local filter/sort state
 const filter = ref(props.filters.filter ?? "");
-const status = ref(props.filters.status ?? "active");
+const status = ref(props.filters.status ?? "all");
 const sortField = ref(props.filters.order_by ?? "name");
 const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
+const filterPopover = ref();
+
+const statusOptions = computed(() => [
+  { label: t("All"), value: "all" },
+  { label: t("Active"), value: "active" },
+  { label: t("Archived"), value: "archived" },
+]);
+
+const hasActiveFilters = computed(
+  () => status.value !== "all" || filter.value !== "",
+);
+
+const activeFilterCount = computed(() => {
+  let count = 0;
+  if (status.value !== "all") count++;
+  if (filter.value !== "") count++;
+  return count;
+});
 
 // Formatted rows
 const brands = computed(() =>
@@ -67,65 +85,42 @@ const brands = computed(() =>
   })),
 );
 
-// Debounced filter watch
-let filterTimer: ReturnType<typeof setTimeout>;
-watch(filter, (val) => {
-  clearTimeout(filterTimer);
-  filterTimer = setTimeout(() => {
-    router.visit(route("brands"), {
-      data: {
-        filter: val,
-        status: status.value,
-        order_by: sortField.value,
-        order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      },
-      preserveState: true,
-      replace: true,
-    });
-  }, 300);
-});
-
-watch(status, (val) => {
+function applyFilters(overrides: Record<string, unknown> = {}) {
   router.visit(route("brands"), {
     data: {
-      status: val,
       filter: filter.value,
+      status: status.value === "all" ? null : status.value,
       order_by: sortField.value,
       order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      ...overrides,
     },
     preserveState: true,
     replace: true,
   });
+}
+
+function resetFilters() {
+  status.value = "all";
+  filter.value = "";
+  applyFilters();
+}
+
+let filterTimer: ReturnType<typeof setTimeout>;
+watch(filter, () => {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => applyFilters(), 300);
 });
+
+watch(status, () => applyFilters());
 
 const onPage = (event: DataTablePageEvent) => {
-  router.visit(route("brands"), {
-    data: {
-      page: event.page + 1,
-      per_page: event.rows,
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      filter: filter.value,
-      status: status.value,
-    },
-    preserveState: true,
-    replace: true,
-  });
+  applyFilters({ page: event.page + 1, per_page: event.rows });
 };
 
 const onSort = (event: DataTableSortEvent) => {
   sortField.value = typeof event.sortField === "string" ? event.sortField : "name";
   sortOrder.value = event.sortOrder ?? 1;
-  router.visit(route("brands"), {
-    data: {
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      filter: filter.value,
-      status: status.value,
-    },
-    preserveState: true,
-    replace: true,
-  });
+  applyFilters();
 };
 
 // Create/Edit Brands
@@ -221,34 +216,44 @@ const restoreBrand = (id: number) => {
             </div>
           </template>
           <template #header>
-            <div class="grid grid-cols-12">
-              <div class="md:col-span-6 col-span-12 flex md:justify-start justify-center">
-                <SelectButton
-                  v-model="status"
-                  :allow-empty="false"
-                  :options="[
-                    {
-                      label: t('Active'),
-                      value: 'active',
-                    },
-                    {
-                      label: t('Archived'),
-                      value: 'archived',
-                    },
-                  ]"
-                  option-label="label"
-                  option-value="value"
+            <div class="grid grid-cols-12 gap-2">
+              <div class="lg:col-span-4 lg:col-start-1 col-span-12 flex gap-2 items-center">
+                <Button
+                  type="button"
+                  icon="fa fa-filter"
+                  :label="t('Filters')"
+                  :severity="hasActiveFilters ? 'primary' : 'secondary'"
+                  outlined
+                  @click="filterPopover.toggle($event)"
                 />
-              </div>
-              <div
-                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
-              >
-                <IconField icon-position="left" class="w-full">
-                  <InputIcon class="fa fa-search" />
-                  <InputText v-model="filter" :placeholder="t('Search')" fluid />
-                </IconField>
+                <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
               </div>
             </div>
+
+            <Popover ref="filterPopover">
+              <div class="flex flex-col gap-4 p-4 min-w-72">
+                <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
+                  <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Search") }}</label>
+                  <InputText v-model="filter" :placeholder="t('Search')" class="w-full" />
+                </div>
+                <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                  <Button
+                    type="button"
+                    :label="t('Clear')"
+                    icon="fa fa-times"
+                    severity="secondary"
+                    text
+                    size="small"
+                    :disabled="!hasActiveFilters"
+                    @click="resetFilters"
+                  />
+                </div>
+              </div>
+            </Popover>
           </template>
           <Column field="name" :header="t('Name')" sortable />
           <Column field="products_count" :header="t('Products')" :pt="{ columnHeaderContent: 'justify-center' }">
@@ -264,7 +269,7 @@ const restoreBrand = (id: number) => {
             <template #body="row">
               <div class="flex justify-center gap-2">
                 <Button
-                  v-if="status !== 'archived'"
+                  v-if="!row.data.deleted_at"
                   v-can="'brand.edit'"
                   v-tooltip.top="t('Edit')"
                   icon="fa fa-edit"
@@ -274,7 +279,7 @@ const restoreBrand = (id: number) => {
                   @click="editBrand(row.data)"
                 />
                 <Button
-                  v-if="status === 'archived'"
+                  v-if="row.data.deleted_at"
                   v-can="'brand.restore'"
                   v-tooltip.top="t('Restore')"
                   icon="fa fa-trash-arrow-up"
@@ -284,7 +289,7 @@ const restoreBrand = (id: number) => {
                   @click="restoreBrand(row.data.id)"
                 />
                 <Button
-                  v-if="status !== 'archived'"
+                  v-if="!row.data.deleted_at"
                   v-can="'brand.delete'"
                   v-tooltip.top="t('Delete')"
                   icon="fa fa-trash"

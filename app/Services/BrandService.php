@@ -26,6 +26,7 @@ final class BrandService
                 $filter !== null && $filter !== '',
                 fn ($q) => $q->where('name', 'like', "%{$filter}%")
             )
+            ->when($status === 'all', fn ($q) => $q->withTrashed())
             ->when($status === 'archived', fn ($q) => $q->onlyTrashed())
             ->withCount('products')
             ->orderBy($orderBy, $orderDirection)

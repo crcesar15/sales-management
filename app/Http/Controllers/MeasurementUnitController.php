@@ -28,7 +28,7 @@ final class MeasurementUnitController extends Controller
     {
         $this->authorize(PermissionsEnum::MEASUREMENT_UNITS_VIEW);
 
-        $status = request()->string('status', 'active')->value();
+        $status = request()->string('status', 'all')->value();
 
         $measurementUnits = $this->measurementUnitService->list(
             status: $status,

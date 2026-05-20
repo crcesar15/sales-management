@@ -31,7 +31,7 @@ final class ProductController extends Controller
     {
         $this->authorize(PermissionsEnum::PRODUCTS_VIEW);
 
-        $status = request()->string('status', 'active')->value();
+        $status = request()->string('status', 'all')->value();
 
         $products = $this->productService->list(
             status: $status,

@@ -28,7 +28,7 @@ final class BrandController extends Controller
     {
         $this->authorize(PermissionsEnum::BRANDS_VIEW);
 
-        $status = request()->string('status', 'active')->value();
+        $status = request()->string('status', 'all')->value();
 
         $brands = $this->brandService->list(
             status: $status,

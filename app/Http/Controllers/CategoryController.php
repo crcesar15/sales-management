@@ -28,7 +28,7 @@ final class CategoryController extends Controller
     {
         $this->authorize(PermissionsEnum::CATEGORIES_VIEW);
 
-        $status = request()->string('status', 'active')->value();
+        $status = request()->string('status', 'all')->value();
 
         $categories = $this->categoryService->list(
             status: $status,

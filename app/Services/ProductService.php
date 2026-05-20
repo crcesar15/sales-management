@@ -40,6 +40,7 @@ final class ProductService
             ->when($filter, fn ($q) => $q->where('name', 'like', "%{$filter}%"))
             ->when($brandId, fn ($q) => $q->where('brand_id', $brandId))
             ->when($categoryId, fn ($q) => $q->whereHas('categories', fn ($q) => $q->where('categories.id', $categoryId)))
+            ->when($status === 'all', fn ($q) => $q->withTrashed())
             ->when($status === 'active', fn ($q) => $q->where('status', 'active'))
             ->when($status === 'inactive', fn ($q) => $q->where('status', 'inactive'))
             ->when($status === 'archived', fn ($q) => $q->onlyTrashed())

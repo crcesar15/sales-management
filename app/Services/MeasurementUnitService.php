@@ -27,6 +27,7 @@ final class MeasurementUnitService
                 fn ($q) => $q->where('name', 'like', "%{$filter}%")
                     ->orWhere('abbreviation', 'like', "%{$filter}%")
             )
+            ->when($status === 'all', fn ($q) => $q->withTrashed())
             ->when($status === 'archived', fn ($q) => $q->onlyTrashed())
             ->withCount('products')
             ->orderBy($orderBy, $orderDirection)
