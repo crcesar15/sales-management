@@ -266,9 +266,9 @@ const restoreBrand = (id: number) => {
           </Column>
           <Column field="created_at" :header="t('Created At')" sortable />
           <Column field="updated_at" :header="t('Updated At')" sortable />
-          <Column field="actions" :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
+          <Column field="actions" :header="t('Actions')">
             <template #body="row">
-              <div class="flex justify-center gap-2">
+              <div class="flex justify-start gap-2">
                 <Button
                   v-if="!row.data.deleted_at"
                   v-can="'brand.edit'"
