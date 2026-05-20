@@ -228,7 +228,10 @@ const restoreProduct = (id: number) => {
           @sort="onSort($event)"
         >
           <template #empty>
-            {{ t("No products registered yet") }}
+            <div class="flex flex-col items-center py-8 text-surface-400">
+              <i class="fa fa-folder-open text-4xl mb-3"></i>
+              <span>{{ t("No products found") }}</span>
+            </div>
           </template>
           <template #header>
             <div class="grid grid-cols-12 gap-2">
