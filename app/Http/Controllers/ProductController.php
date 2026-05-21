@@ -72,7 +72,11 @@ final class ProductController extends Controller
     {
         $product = $this->productService->create($request->validated());
 
-        return redirect()->route('products.edit', $product);
+        if ($product->has_variants) {
+            return redirect()->route('products.edit', $product);
+        }
+
+        return redirect()->route('inventory.variants.show', $product->variants->first());
     }
 
     public function edit(Product $product): InertiaResponse
