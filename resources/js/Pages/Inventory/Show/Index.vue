@@ -53,7 +53,6 @@ const variantDisplayName = computed(() => {
       <Button
         :label="t('Edit product')"
         icon="fa fa-arrow-up-right-from-square"
-        variant="text"
         @click="router.visit(route('products.edit', { product: props.product.id }))"
       />
     </div>

@@ -35,13 +35,13 @@ const props = defineProps<{
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
 
+const ALL = "__all__";
+
 const search = ref(props.filters.search ?? "");
 const status = ref(props.filters.status ?? "active");
 const storeId = ref<string | number>(props.filters.store_id ?? ALL);
 const categoryId = ref<string | number>(props.filters.category_id ?? ALL);
 const brandId = ref<string | number>(props.filters.brand_id ?? ALL);
-
-const ALL = "__all__";
 
 const storeOptions = computed(() => [
   { label: t("All Stores"), value: ALL },
