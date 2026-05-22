@@ -1,5 +1,6 @@
 import type { MeasurementUnit } from "./measurement-unit-types";
 import type { VariantOptionValue, ProductMedia } from "./product-types";
+import type { StockStoreBreakdown } from "./stock-overview-types";
 
 export interface InventoryVariantListItem {
   id: number;
@@ -46,6 +47,7 @@ export interface InventoryVariantDetail {
   images: ProductMedia[];
   sale_units: VariantUnitResource[];
   purchase_units: VariantUnitResource[];
+  stores: StockStoreBreakdown[];
   created_at: string;
   updated_at: string;
 }

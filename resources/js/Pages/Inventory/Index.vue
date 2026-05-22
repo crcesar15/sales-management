@@ -297,28 +297,17 @@ const onSort = (event: DataTableSortEvent) => {
             </template>
           </Column>
 
-          <Column :header="t('Actions')" style="width: 100px">
+          <Column :header="t('Actions')" style="width: 60px">
             <template #body="{ data }">
-              <div class="flex gap-1">
-                <Button
-                  v-tooltip.top="t('Manage')"
-                  icon="fa-solid fa-list"
-                  text
-                  rounded
-                  size="small"
-                  :aria-label="t('Manage')"
-                  @click="router.visit(route('inventory.variants.show', { product: data.product_id, variant: data.id }))"
-                />
-                <Button
-                  v-tooltip.top="t('Stock Details')"
-                  icon="fa-solid fa-eye"
-                  text
-                  rounded
-                  size="small"
-                  :aria-label="t('Stock Details')"
-                  @click="router.visit(route('inventory.stock.show', { variant: data.id }))"
-                />
-              </div>
+              <Button
+                v-tooltip.top="t('Manage')"
+                icon="fa-solid fa-list"
+                text
+                rounded
+                size="small"
+                :aria-label="t('Manage')"
+                @click="router.visit(route('inventory.variants.show', { product: data.product_id, variant: data.id }))"
+              />
             </template>
           </Column>
         </DataTable>

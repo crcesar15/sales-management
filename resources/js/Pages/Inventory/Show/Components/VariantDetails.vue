@@ -13,6 +13,7 @@ import { useAuth } from "@/Composables/useAuth";
 const props = defineProps<{
   product: InventoryProductDetail;
   variant: InventoryVariantDetail;
+  canEdit?: boolean;
 }>();
 const toast = useToast();
 const { t } = useI18n();
@@ -81,6 +82,7 @@ const onSubmit = handleSubmit((values) => {
               v-model="identifier"
               v-bind="identifierAttrs"
               autocomplete="off"
+              :disabled="!props.canEdit"
               :class="{ 'p-invalid': submitCount > 0 && !!errors.identifier }"
             />
             <small v-if="submitCount > 0 && errors.identifier" class="text-red-400 dark:text-red-300">{{ errors.identifier }}</small>
@@ -88,7 +90,7 @@ const onSubmit = handleSubmit((values) => {
 
           <div class="md:col-span-6 col-span-12 flex flex-col gap-2">
             <label for="barcode">{{ t("Barcode") }}</label>
-            <InputText id="barcode" v-model="barcode" v-bind="barcodeAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.barcode }" />
+            <InputText id="barcode" v-model="barcode" v-bind="barcodeAttrs" autocomplete="off" :disabled="!props.canEdit" :class="{ 'p-invalid': submitCount > 0 && !!errors.barcode }" />
             <small v-if="submitCount > 0 && errors.barcode" class="text-red-400 dark:text-red-300">{{ errors.barcode }}</small>
           </div>
         </div>
@@ -112,6 +114,7 @@ const onSubmit = handleSubmit((values) => {
               mode="currency"
               :currency="currency"
               :min="0"
+              :disabled="!props.canEdit"
               :class="{ 'p-invalid': submitCount > 0 && !!errors.price }"
             />
             <small v-if="submitCount > 0 && errors.price" class="text-red-400 dark:text-red-300">{{ errors.price }}</small>
@@ -134,6 +137,7 @@ const onSubmit = handleSubmit((values) => {
               :options="statusOptions"
               option-label="name"
               option-value="value"
+              :disabled="!props.canEdit"
               :class="{ 'p-invalid': submitCount > 0 && !!errors.status }"
             />
             <small v-if="submitCount > 0 && errors.status" class="text-red-400 dark:text-red-300">{{ errors.status }}</small>
@@ -141,7 +145,7 @@ const onSubmit = handleSubmit((values) => {
         </div>
       </div>
 
-      <div class="flex justify-end mt-6">
+      <div v-if="props.canEdit" class="flex justify-end mt-6">
         <Button :label="t('Save')" icon="fa fa-save" raised :loading="isSubmitting" type="submit" class="uppercase" />
       </div>
     </form>

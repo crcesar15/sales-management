@@ -736,5 +736,8 @@
   "Select a vendor first": "Selecciona un proveedor primero",
   "Short form (e.g., kg, ltr, pcs)": "Forma corta (ej. kg, ltr, pcs)",
   "Variant created successfully": "Variante creada exitosamente",
-  "Pricing & Inventory": "Precios e Inventario"
+  "Pricing & Inventory": "Precios e Inventario",
+  "Manage Inventory": "Gestionar Inventario",
+  "Stock by Store": "Stock por Tienda",
+  "No stock records found": "No se encontraron registros de stock"
 }

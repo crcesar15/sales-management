@@ -26,7 +26,6 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockAlertController;
-use App\Http\Controllers\StockOverviewController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\UserController;
@@ -125,8 +124,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.variants');
     Route::get('/inventory/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
-    Route::get('/inventory/stock', fn () => redirect()->route('inventory.variants', request()->query()))->name('inventory.stock');
-    Route::get('/inventory/stock/{variant}', [StockOverviewController::class, 'show'])->name('inventory.stock.show');
 
     // Stock Alert Routes
     Route::get('/inventory/alerts', [StockAlertController::class, 'index'])->name('inventory.alerts');

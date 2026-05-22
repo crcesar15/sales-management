@@ -60,27 +60,20 @@ it('guest is redirected from inventory', function () {
         ->assertRedirect(route('login'));
 });
 
-it('old stock overview URL redirects to inventory', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole(RolesEnum::ADMIN);
-
-    actingAs($admin)
-        ->get(route('inventory.stock'))
-        ->assertRedirect(route('inventory.variants'));
-});
-
-it('admin can view stock variant detail', function () {
+it('admin can view inventory variant detail', function () {
     $admin = User::factory()->create();
     $admin->assignRole(RolesEnum::ADMIN);
 
     $variant = createVariant();
 
     actingAs($admin)
-        ->get(route('inventory.stock.show', $variant))
+        ->get(route('inventory.variants.show', ['product' => $variant->product_id, 'variant' => $variant->id]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('Inventory/Stock/Show')
-            ->has('stockDetail')
+            ->component('Inventory/Show/Index')
+            ->has('product')
+            ->has('variant')
+            ->has('stores')
         );
 });
 
@@ -161,11 +154,11 @@ it('shows per-store breakdown for a variant', function () {
     ]);
 
     actingAs($admin)
-        ->get(route('inventory.stock.show', $variant))
+        ->get(route('inventory.variants.show', ['product' => $variant->product_id, 'variant' => $variant->id]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('stockDetail.variant.total_stock', 45)
-            ->where('stockDetail.stores', fn ($stores) => count($stores) === 2)
+            ->where('variant.stock', 45)
+            ->where('stores', fn ($stores) => count($stores) === 2)
         );
 });
 

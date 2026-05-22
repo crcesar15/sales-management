@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Resources\Inventory\StockOverviewCollection;
-use App\Models\Batch;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\ProductVariant;
@@ -60,7 +59,7 @@ final class InventoryController extends Controller
 
     public function show(ProductVariant $variant): InertiaResponse
     {
-        $this->authorize(PermissionsEnum::INVENTORY_EDIT, auth());
+        $this->authorize(PermissionsEnum::INVENTORY_VIEW, auth()->user());
 
         $variant->load([
             'values.option',
@@ -72,6 +71,8 @@ final class InventoryController extends Controller
             'saleUnits',
             'purchaseUnits',
         ]);
+
+        $breakdown = $this->stockService->getVariantStockBreakdown($variant);
 
         return Inertia::render('Inventory/Show/Index', [
             'product' => [
@@ -106,8 +107,7 @@ final class InventoryController extends Controller
                 'identifier' => $variant->identifier,
                 'barcode' => $variant->barcode,
                 'price' => (float) $variant->price,
-                'stock' => (int) Batch::where('product_variant_id', $variant->id)
-                    ->activeOrQueued()->sum('remaining_quantity'),
+                'stock' => (int) $breakdown['total_quantity'],
                 'status' => $variant->status,
                 'name' => $variant->name,
                 'values' => $variant->values->map(fn ($v) => [
@@ -141,6 +141,12 @@ final class InventoryController extends Controller
                 'created_at' => $variant->created_at?->toISOString(),
                 'updated_at' => $variant->updated_at?->toISOString(),
             ],
+            'stores' => $breakdown['stores']->map(fn ($row) => [
+                'store_id' => $row['store']?->id,
+                'store_name' => $row['store']?->name,
+                'store_code' => $row['store']?->code,
+                'quantity' => $row['quantity'],
+            ]),
         ]);
     }
 }

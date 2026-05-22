@@ -7,17 +7,24 @@ import { useI18n } from "vue-i18n";
 import { computed } from "vue";
 import { route } from "ziggy-js";
 import type { InventoryVariantDetail, InventoryProductDetail } from "@/Types/inventory-variant-types";
+import type { StockStoreBreakdown } from "@/Types/stock-overview-types";
+import { useAuth } from "@/Composables/useAuth";
 import VariantDetails from "./Components/VariantDetails.vue";
 import ImagesTab from "./Components/ImagesTab.vue";
 import UnitsTab from "./Components/UnitsTab.vue";
+import StockTab from "./Components/StockTab.vue";
 
 defineOptions({ layout: AppLayout });
 const props = defineProps<{
   product: InventoryProductDetail;
   variant: InventoryVariantDetail;
+  stores: StockStoreBreakdown[];
 }>();
 const { t } = useI18n();
 const page = usePage();
+const { can } = useAuth();
+
+const canEdit = computed(() => can("inventory.edit"));
 
 const from = computed(() => (page.url.includes("from=product") ? "product" : "inventory"));
 
@@ -51,6 +58,7 @@ const variantDisplayName = computed(() => {
         </div>
       </div>
       <Button
+        v-if="canEdit"
         :label="t('Edit product')"
         icon="fa fa-arrow-up-right-from-square"
         @click="router.visit(route('products.edit', { product: props.product.id }))"
@@ -100,7 +108,7 @@ const variantDisplayName = computed(() => {
           </div>
         </template>
         <template #content>
-          <VariantDetails :product="product" :variant="variant" />
+          <VariantDetails :product="product" :variant="variant" :can-edit="canEdit" />
         </template>
       </Card>
 
@@ -115,6 +123,13 @@ const variantDisplayName = computed(() => {
         <template #title>{{ t("Units") }}</template>
         <template #content>
           <UnitsTab :product="product" :variant="variant" />
+        </template>
+      </Card>
+
+      <Card>
+        <template #title>{{ t("Stock by Store") }}</template>
+        <template #content>
+          <StockTab :stores="stores" />
         </template>
       </Card>
     </div>

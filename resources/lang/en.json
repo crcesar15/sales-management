@@ -736,5 +736,8 @@
   "Select a vendor first": "Select a vendor first",
   "Short form (e.g., kg, ltr, pcs)": "Short form (e.g., kg, ltr, pcs)",
   "Variant created successfully": "Variant created successfully",
-  "Pricing & Inventory": "Pricing & Inventory"
+  "Pricing & Inventory": "Pricing & Inventory",
+  "Manage Inventory": "Manage Inventory",
+  "Stock by Store": "Stock by Store",
+  "No stock records found": "No stock records found"
 }

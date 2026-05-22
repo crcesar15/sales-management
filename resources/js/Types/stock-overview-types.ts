@@ -45,20 +45,3 @@ export interface StockStoreBreakdown {
   quantity: number;
 }
 
-export interface StockVariantDetail {
-  variant: {
-    id: number;
-    product_id: number;
-    product_name: string | null;
-    brand_name: string | null;
-    name: string;
-    identifier: string | null;
-    barcode: string | null;
-    price: number;
-    status: string;
-    total_stock: number;
-    is_low_stock: boolean;
-    values: VariantOptionValue[];
-  };
-  stores: StockStoreBreakdown[];
-}
