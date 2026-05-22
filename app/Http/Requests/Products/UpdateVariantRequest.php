@@ -25,7 +25,6 @@ final class UpdateVariantRequest extends FormRequest
             'identifier' => ['sometimes', 'nullable', 'string', 'max:50', Rule::unique('product_variants', 'identifier')->ignore($this->route('variant'))],
             'price' => ['sometimes', 'numeric', 'min:0'],
             'barcode' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'stock' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'status' => ['sometimes', 'in:active,inactive,archived'],
         ];
     }

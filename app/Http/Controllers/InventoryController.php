@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Resources\Inventory\StockOverviewCollection;
+use App\Models\Batch;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\ProductVariant;
@@ -16,9 +17,12 @@ use Inertia\Response as InertiaResponse;
 
 final class InventoryController extends Controller
 {
-    public function __construct(
-        private readonly StockService $stockService,
-    ) {}
+    private readonly StockService $stockService;
+
+    public function __construct(StockService $stockService)
+    {
+        $this->stockService = $stockService;
+    }
 
     public function index(): InertiaResponse
     {
@@ -102,7 +106,8 @@ final class InventoryController extends Controller
                 'identifier' => $variant->identifier,
                 'barcode' => $variant->barcode,
                 'price' => (float) $variant->price,
-                'stock' => $variant->stock,
+                'stock' => (int) Batch::where('product_variant_id', $variant->id)
+                    ->activeOrQueued()->sum('remaining_quantity'),
                 'status' => $variant->status,
                 'name' => $variant->name,
                 'values' => $variant->values->map(fn ($v) => [

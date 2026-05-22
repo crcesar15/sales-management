@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, InputNumber, InputText, Select, Badge, useToast } from "primevue";
+import { Button, InputNumber, InputText, Select, useToast } from "primevue";
 
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
@@ -24,7 +24,6 @@ const schema = toTypedSchema(
     identifier: string().nullable().optional().max(50),
     barcode: string().nullable().optional().max(100),
     price: number().required().min(0),
-    stock: number().required().integer().min(0),
     status: string().required().oneOf(["active", "inactive", "archived"]),
   }),
 );
@@ -36,7 +35,6 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount 
     identifier: props.variant.identifier ?? "",
     barcode: props.variant.barcode ?? "",
     price: props.variant.price,
-    stock: props.variant.stock,
     status: props.variant.status,
   },
 });
@@ -44,7 +42,6 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount 
 const [identifier, identifierAttrs] = defineField("identifier");
 const [barcode, barcodeAttrs] = defineField("barcode");
 const [price, priceAttrs] = defineField("price");
-const [stock, stockAttrs] = defineField("stock");
 const [status, statusAttrs] = defineField("status");
 
 const statusOptions = [
@@ -121,19 +118,11 @@ const onSubmit = handleSubmit((values) => {
           </div>
 
           <div class="lg:col-span-4 md:col-span-6 col-span-12 flex flex-col gap-2">
-            <label for="stock">
-              {{ t("Stock") }}
-              <span class="text-red-400">*</span>
-            </label>
-            <InputNumber
-              id="stock"
-              v-model="stock"
-              v-bind="stockAttrs"
-              :min="0"
-              :use-grouping="false"
-              :class="{ 'p-invalid': submitCount > 0 && !!errors.stock }"
-            />
-            <small v-if="submitCount > 0 && errors.stock" class="text-red-400 dark:text-red-300">{{ errors.stock }}</small>
+            <label>{{ t("Stock") }}</label>
+            <div class="p-3 bg-surface-50 dark:bg-surface-950 rounded-border text-lg font-semibold">
+              {{ props.variant.stock }}
+            </div>
+            <small class="text-gray-500">{{ t("Stock is managed via batches and reception orders") }}</small>
           </div>
 
           <div class="lg:col-span-4 md:col-span-6 col-span-12 flex flex-col gap-2">

@@ -26,7 +26,6 @@ const isEditing = computed(() => !!props.variant);
 
 const form = reactive({
   price: 0 as number,
-  stock: 0 as number,
   barcode: "" as string | null,
 });
 
@@ -37,7 +36,6 @@ const initForm = () => {
     selectedValues[o.name] = props.variant?.option_values[o.name] ?? null;
   });
   form.price = props.variant?.price ?? 0;
-  form.stock = props.variant?.stock ?? 0;
   form.barcode = props.variant?.barcode ?? "";
 };
 
@@ -79,7 +77,6 @@ const onSubmit = () => {
       key,
       option_values: optionValues,
       price: form.price,
-      stock: form.stock,
       barcode: form.barcode || null,
       pending_media_ids: props.variant?.pending_media_ids ?? [],
     });
@@ -95,7 +92,6 @@ const onSubmit = () => {
     key,
     option_values: optionValues,
     price: form.price,
-    stock: form.stock,
     barcode: form.barcode || null,
     pending_media_ids: [],
   });
@@ -134,15 +130,6 @@ const onSubmit = () => {
           <span class="text-red-400">*</span>
         </label>
         <InputNumber id="variant-price" v-model="form.price" mode="currency" :currency="currency" :min="0" fluid />
-      </div>
-
-      <!-- Stock -->
-      <div class="flex flex-col gap-2">
-        <label for="variant-stock">
-          {{ t("Stock") }}
-          <span class="text-red-400">*</span>
-        </label>
-        <InputNumber id="variant-stock" v-model="form.stock" :min="0" :use-grouping="false" fluid />
       </div>
 
       <!-- Barcode -->

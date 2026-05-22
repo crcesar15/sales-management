@@ -133,7 +133,6 @@ const onGenerateAll = () => {
       key: buildKey(optionValues),
       option_values: optionValues,
       price: 0,
-      stock: 0,
       barcode: null,
       pending_media_ids: [],
     };
@@ -153,8 +152,8 @@ const onDeleteVariant = (data: CreateVariant) => {
     message: t("This variant will be permanently deleted."),
     header: t("Delete Variant"),
     icon: "fa fa-triangle-exclamation",
-    rejectProps: { label: t("Cancel"), severity: "secondary", outlined: true },
-    acceptProps: { label: t("Delete"), severity: "danger" },
+    rejectProps: { label: t("Cancel"), severity: "secondary"},
+    acceptProps: { label: t("Delete"), severity: "primary" },
     accept: () => {
       emit(
         "update:variants",
@@ -171,8 +170,8 @@ const onDeleteVariant = (data: CreateVariant) => {
       <div class="flex items-center justify-between">
         <span>{{ t("Variants") }}</span>
         <div class="flex gap-2">
-          <Button :label="t('Generate All Variants')" icon="fa fa-wand-magic-sparkles" size="small" outlined @click="onGenerateAll" />
-          <Button :label="t('Add Variant')" icon="fa fa-plus" size="small" outlined @click="openCreateDialog" />
+          <Button :label="t('Generate All Variants')" outlined icon="fa fa-wand-magic-sparkles" size="small" @click="onGenerateAll" />
+          <Button :label="t('Add Variant')" icon="fa fa-plus" size="small" @click="openCreateDialog" />
         </div>
       </div>
     </template>
@@ -214,13 +213,6 @@ const onDeleteVariant = (data: CreateVariant) => {
         <Column field="price" :header="t('Price')">
           <template #body="{ data }">
             {{ formatCurrency(String(data.price)) }}
-          </template>
-        </Column>
-
-        <!-- Stock Column -->
-        <Column field="stock" :header="t('Stock')">
-          <template #body="{ data }">
-            <span>{{ data.stock }}</span>
           </template>
         </Column>
 

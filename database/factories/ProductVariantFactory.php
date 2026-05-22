@@ -23,7 +23,6 @@ final class ProductVariantFactory extends Factory
             'identifier' => 'SKU-' . fake()->numerify('####'),
             'barcode' => fake()->ean13(),
             'price' => fake()->randomFloat(2, 10, 1000),
-            'stock' => fake()->numberBetween(0, 100),
             'status' => 'active',
         ];
     }

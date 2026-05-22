@@ -88,8 +88,13 @@ final class ProductController extends Controller
             'categories',
             'measurementUnit',
             'media',
-            'variants.values.option',
-            'variants.images',
+            'variants' => fn ($q) => $q
+                ->withCount([
+                    'batches as batch_stock' => fn ($q) => $q
+                        ->selectRaw('COALESCE(SUM(remaining_quantity), 0)')
+                        ->whereIn('batches.status', ['active', 'queued']),
+                ])
+                ->with('values.option', 'images'),
             'options.values',
         ]);
 
@@ -105,7 +110,7 @@ final class ProductController extends Controller
             'id' => $v->id,
             'name' => $v->name,
             'price' => (float) $v->price,
-            'stock' => $v->stock,
+            'stock' => (int) ($v->batch_stock ?? 0),
             'barcode' => $v->barcode,
             'identifier' => $v->identifier,
             'status' => $v->status,

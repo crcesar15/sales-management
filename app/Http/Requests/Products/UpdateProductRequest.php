@@ -29,7 +29,6 @@ final class UpdateProductRequest extends FormRequest
             'categories_ids' => ['nullable', 'array'],
             'categories_ids.*' => ['exists:categories,id'],
             'price' => ['sometimes', 'numeric', 'min:0'],
-            'stock' => ['sometimes', 'integer', 'min:0'],
             'barcode' => ['sometimes', 'nullable', 'string', 'max:100'],
             'pending_media_ids' => ['nullable', 'array'],
             'pending_media_ids.*' => ['exists:pending_media_uploads,id,user_id,' . $this->user()?->id],

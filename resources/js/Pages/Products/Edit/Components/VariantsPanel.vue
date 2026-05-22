@@ -193,13 +193,6 @@ const onDeleteVariant = (data: ProductVariantInline) => {
           </template>
         </Column>
 
-        <!-- Stock Column (read-only) -->
-        <Column field="stock" :header="t('Stock')">
-          <template #body="{ data }">
-            <span>{{ data.stock }}</span>
-          </template>
-        </Column>
-
         <!-- Status Column -->
         <Column field="status" :header="t('Status')">
           <template #body="{ data }">

@@ -101,7 +101,6 @@ const schema = toTypedSchema(
     measurement_unit_id: number().nullable().optional(),
     categories_ids: array().of(number().required()).required().min(1, t("At least one category is required")),
     price: number().nullable().optional().min(0),
-    stock: number().nullable().optional().integer().min(0),
     barcode: string().nullable().optional().max(100),
   }),
 );
@@ -117,7 +116,6 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount 
     measurement_unit_id: null as number | null,
     categories_ids: [] as number[],
     price: 0,
-    stock: 0,
     barcode: "" as string | null,
   },
 });
@@ -129,7 +127,6 @@ const [brandId, brandIdAttrs] = defineField("brand_id");
 const [measurementUnitId, measurementUnitIdAttrs] = defineField("measurement_unit_id");
 const [categoriesIds, categoriesIdsAttrs] = defineField("categories_ids");
 const [price, priceAttrs] = defineField("price");
-const [stock, stockAttrs] = defineField("stock");
 const [barcode, barcodeAttrs] = defineField("barcode");
 
 // Description char counter
@@ -159,7 +156,6 @@ const onSubmit = handleSubmit((values) => {
 
     payload.has_variants = true;
     payload.price = 0;
-    payload.stock = 0;
     payload.barcode = null;
     payload.options = localOptions.value.map((o) => ({
       name: o.name,
@@ -168,7 +164,6 @@ const onSubmit = handleSubmit((values) => {
     payload.variants = variants.value.map((v) => ({
       option_values: v.option_values,
       price: v.price,
-      stock: v.stock,
       barcode: v.barcode,
       pending_media_ids: v.pending_media_ids ?? [],
     }));
@@ -265,7 +260,7 @@ const onSubmit = handleSubmit((values) => {
           </template>
           <template #content>
             <div class="grid grid-cols-12 gap-4">
-              <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12 gap-2 mb-3">
+              <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
                 <label for="price">
                   {{ t("Base Price") }}
                   <span class="text-red-400">*</span>
@@ -282,17 +277,7 @@ const onSubmit = handleSubmit((values) => {
                   {{ errors.price }}
                 </small>
               </div>
-              <div class="flex flex-col lg:col-span-4 md:col-span-6 col-span-12 gap-2 mb-3">
-                <label for="stock">
-                  {{ t("Stock") }}
-                  <span class="text-red-400">*</span>
-                </label>
-                <InputNumber id="stock" v-model="stock" v-bind="stockAttrs" :class="{ 'p-invalid': submitCount > 0 && !!errors.stock }" />
-                <small v-if="submitCount > 0 && errors.stock" class="text-red-400 dark:text-red-300">
-                  {{ errors.stock }}
-                </small>
-              </div>
-              <div class="flex flex-col lg:col-span-4 md:col-span-12 col-span-12 gap-2 mb-3">
+              <div class="flex flex-col lg:col-span-6 md:col-span-12 col-span-12 gap-2 mb-3">
                 <label for="barcode">{{ t("Barcode") }}</label>
                 <InputText
                   id="barcode"

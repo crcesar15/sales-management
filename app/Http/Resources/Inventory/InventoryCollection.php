@@ -24,7 +24,7 @@ final class InventoryCollection extends ResourceCollection
                 'identifier' => $variant->identifier,
                 'barcode' => $variant->barcode,
                 'price' => (float) $variant->price,
-                'stock' => $variant->stock,
+                'stock' => (int) ($variant->global_stock ?? $variant->stock ?? 0),
                 'status' => $variant->status,
                 'is_default' => $variant->values->isEmpty(),
                 'values' => $variant->values->map(fn ($v) => [

@@ -68,7 +68,6 @@ export interface ProductPayload {
   measurement_unit_id?: number | null;
   categories_ids?: number[];
   price?: number | null;
-  stock?: number | null;
   barcode?: string | null;
   pending_media_ids?: number[];
   remove_media_ids?: number[];
@@ -124,7 +123,6 @@ export interface CreateVariant {
   key: string;
   option_values: Record<string, string>;
   price: number;
-  stock: number;
   barcode: string | null;
   pending_media_ids: number[];
 }

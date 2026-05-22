@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Batch;
-use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderProduct;
 use App\Models\ReceptionOrder;
@@ -181,9 +180,6 @@ final class ReceptionOrderService
                 $conversionFactor = $catalogEntry?->unit->conversion_factor ?? 1;
 
                 $baseQuantity = (int) round($lineItem->quantity * $conversionFactor);
-
-                ProductVariant::where('id', $lineItem->product_variant_id)
-                    ->increment('stock', $baseQuantity);
 
                 Batch::create([
                     'product_variant_id' => $lineItem->product_variant_id,

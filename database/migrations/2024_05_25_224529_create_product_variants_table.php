@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('identifier', 50)->unique()->nullable();
             $table->string('barcode', 100)->nullable()->index();
             $table->decimal('price', 10, 2);
-            $table->unsignedInteger('stock');
             $table->unsignedInteger('minimum_stock_level')->nullable();
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->index('status');

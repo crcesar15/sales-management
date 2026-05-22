@@ -104,7 +104,6 @@ final class DatabaseSeeder extends Seeder
                     . random_int(1000, 9999),
                 'barcode' => 'BC-' . random_int(100000, 999999),
                 'price' => fake()->randomFloat(2, 10, 1000),
-                'stock' => random_int(10, 100),
                 'status' => 'active',
             ]);
 
@@ -190,7 +189,6 @@ final class DatabaseSeeder extends Seeder
                         . '-' . random_int(1000, 9999),
                     'barcode' => 'BC-' . random_int(100000, 999999),
                     'price' => fake()->randomFloat(2, 10, 1000),
-                    'stock' => random_int(10, 100),
                     'status' => 'active',
                 ]);
 

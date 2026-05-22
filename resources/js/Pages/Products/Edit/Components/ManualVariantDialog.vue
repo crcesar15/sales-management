@@ -24,7 +24,6 @@ const currency = getSetting("finance", "currency") ?? "USD";
 
 const form = reactive({
   price: 0,
-  stock: 0,
   identifier: "" as string | null,
   status: "active",
 });
@@ -39,7 +38,6 @@ const initForm = () => {
     selectedValues[o.id] = match?.id ?? null;
   });
   form.price = props.variant?.price ?? 0;
-  form.stock = props.variant?.stock ?? 0;
   form.identifier = props.variant?.identifier ?? "";
   form.status = props.variant?.status ?? "active";
 };
@@ -101,7 +99,6 @@ const onSubmit = () => {
     {
       option_value_ids: optionValueIds,
       price: form.price,
-      stock: form.stock,
       identifier: form.identifier || null,
       status: form.status,
     },
@@ -160,15 +157,6 @@ const onSubmit = () => {
           <span class="text-red-400">*</span>
         </label>
         <InputNumber id="variant-price" v-model="form.price" mode="currency" :currency="currency" :min="0" fluid />
-      </div>
-
-      <!-- Stock -->
-      <div class="flex flex-col gap-2">
-        <label for="variant-stock">
-          {{ t("Stock") }}
-          <span class="text-red-400">*</span>
-        </label>
-        <InputNumber id="variant-stock" v-model="form.stock" :min="0" :use-grouping="false" fluid />
       </div>
 
       <!-- Identifier -->

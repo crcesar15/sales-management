@@ -66,7 +66,6 @@ final class ProductVariantService
                     'identifier' => null,
                     'barcode' => null,
                     'price' => $defaultVariant->price,
-                    'stock' => 0,
                     'status' => 'active',
                 ]);
 
@@ -79,10 +78,10 @@ final class ProductVariantService
      * Create options and variants from frontend-submitted data.
      *
      * Creates ProductOption + ProductOptionValue records, builds a name-to-ID
-     * lookup map, then creates each variant with its specific price/stock/barcode.
+     * lookup map, then creates each variant with its specific price/barcode.
      *
      * @param  array<int, array{name: string, values: array<int, string>}>  $optionsData
-     * @param  array<int, array{option_values: array<string, string>, price: float|int, stock: int, barcode: string|null, pending_media_ids?: array<int, int>}>  $variantsData
+     * @param  array<int, array{option_values: array<string, string>, price: float|int, barcode: string|null, pending_media_ids?: array<int, int>}>  $variantsData
      * @param  array<int, int>  $pendingMediaMap  Mapping of pending_media_uploads.id → media.id
      */
     public function createVariantsFromData(Product $product, array $optionsData, array $variantsData, array $pendingMediaMap = []): void
@@ -119,7 +118,6 @@ final class ProductVariantService
                     'identifier' => null,
                     'barcode' => $variantData['barcode'] ?? null,
                     'price' => $variantData['price'],
-                    'stock' => $variantData['stock'],
                     'status' => 'active',
                 ]);
 
@@ -160,7 +158,6 @@ final class ProductVariantService
                 'identifier' => $data['identifier'] ?? null,
                 'barcode' => null,
                 'price' => $data['price'],
-                'stock' => $data['stock'],
                 'status' => $data['status'] ?? 'active',
             ]);
 
@@ -178,7 +175,7 @@ final class ProductVariantService
     public function update(ProductVariant $variant, array $data): ProductVariant
     {
         return DB::transaction(function () use ($variant, $data): ProductVariant {
-            $updateData = collect($data)->only(['identifier', 'price', 'barcode', 'stock', 'status'])->toArray();
+            $updateData = collect($data)->only(['identifier', 'price', 'barcode', 'status'])->toArray();
 
             $variant->update($updateData);
 

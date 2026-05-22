@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Batch;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Exception;
@@ -31,10 +32,23 @@ final class ProductService
                 'brand:id,name',
                 'categories:id,name',
                 'media',
-                'variants' => fn ($q) => $q->select(['id', 'product_id', 'identifier', 'status', 'price', 'stock'])->with('values.option'),
+                'variants' => fn ($q) => $q
+                    ->select(['id', 'product_id', 'identifier', 'status', 'price'])
+                    ->withCount([
+                        'batches as batch_stock' => fn ($q) => $q
+                            ->selectRaw('COALESCE(SUM(remaining_quantity), 0)')
+                            ->activeOrQueued(),
+                    ])
+                    ->with('values.option'),
             ])
             ->withCount('variants')
-            ->withSum('variants as stock', 'stock')
+            ->addSelect([
+                'stock' => Batch::query()
+                    ->selectRaw('COALESCE(SUM(remaining_quantity), 0)')
+                    ->join('product_variants', 'batches.product_variant_id', '=', 'product_variants.id')
+                    ->whereColumn('product_variants.product_id', 'products.id')
+                    ->whereIn('batches.status', ['active', 'queued']),
+            ])
             ->withMin('variants as price_min', 'price')
             ->withMax('variants as price_max', 'price')
             ->when($filter, fn ($q) => $q->where('name', 'like', "%{$filter}%"))
@@ -86,7 +100,6 @@ final class ProductService
                     'identifier' => null,
                     'barcode' => $data['barcode'] ?? null,
                     'price' => $data['price'] ?? 0,
-                    'stock' => $data['stock'] ?? 0,
                     'status' => 'active',
                 ]);
 
@@ -139,12 +152,11 @@ final class ProductService
                 }
             }
 
-            if (isset($data['price']) || isset($data['stock']) || isset($data['barcode'])) {
+            if (isset($data['price']) || isset($data['barcode'])) {
                 $defaultVariant = $product->variants()->first();
                 if ($defaultVariant) {
                     $defaultVariant->update([
                         'price' => $data['price'] ?? $defaultVariant->price,
-                        'stock' => $data['stock'] ?? $defaultVariant->stock,
                         'barcode' => $data['barcode'] ?? $defaultVariant->barcode,
                     ]);
                 }
