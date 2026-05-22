@@ -351,7 +351,7 @@ watch(activeTab, () => {
     </Tabs>
 
     <!-- Create/Edit Dialog -->
-    <Dialog v-model:visible="dialogVisible" :header="isEditing ? t('Edit Unit') : t('Add Unit')" modal :style="{ width: '450px' }">
+    <Dialog v-model:visible="dialogVisible" :header="isEditing ? t('Edit Unit') : t('Add Unit')" modal :style="{ width: 'min(450px, calc(100vw - 2rem))' }">
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-2">
           <label for="unit-name">

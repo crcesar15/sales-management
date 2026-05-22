@@ -12,7 +12,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <DataTable :value="stores" resizable-rows>
+  <DataTable :value="stores" resizable-rows class="border-t">
     <template #empty>
       {{ t("No stock records found") }}
     </template>
@@ -24,13 +24,13 @@ const { t } = useI18n();
       </template>
     </Column>
 
-    <Column field="store_code" :header="t('Code')" style="width: 120px">
+    <Column field="store_code" :header="t('Code')" class="hidden md:table-cell">
       <template #body="{ data }">
         {{ data.store_code }}
       </template>
     </Column>
 
-    <Column field="quantity" :header="t('Quantity')" style="width: 150px">
+    <Column field="quantity" :header="t('Quantity')">
       <template #body="{ data }">
         <span class="font-bold" :class="{ 'text-red-500': data.quantity <= 0 }">{{ data.quantity }}</span>
       </template>

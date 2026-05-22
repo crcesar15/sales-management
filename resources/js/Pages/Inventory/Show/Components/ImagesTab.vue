@@ -80,7 +80,7 @@ const onSave = () => {
           "
           @click="toggleMedia(media.id)"
         >
-          <img :src="media.thumb_url" :alt="t('Product image')" class="h-40 w-40 object-cover" />
+          <img :src="media.thumb_url" :alt="t('Product image')" class="h-24 w-24 sm:h-32 sm:w-32 lg:h-40 lg:w-40 object-cover" />
           <div
             v-if="selectedMediaIds.includes(media.id)"
             class="absolute top-1 right-1 h-5 w-5 rounded-full bg-primary-500 flex items-center justify-center"

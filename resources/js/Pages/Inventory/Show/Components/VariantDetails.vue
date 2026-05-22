@@ -102,7 +102,7 @@ const onSubmit = handleSubmit((values) => {
           {{ t("Commerce") }}
         </h4>
         <div class="grid grid-cols-12 gap-4">
-          <div class="lg:col-span-4 md:col-span-6 col-span-12 flex flex-col gap-2">
+          <div class="md:col-span-6 col-span-12 flex flex-col gap-2">
             <label for="price">
               {{ t("Price") }}
               <span class="text-red-400">*</span>
@@ -120,15 +120,7 @@ const onSubmit = handleSubmit((values) => {
             <small v-if="submitCount > 0 && errors.price" class="text-red-400 dark:text-red-300">{{ errors.price }}</small>
           </div>
 
-          <div class="lg:col-span-4 md:col-span-6 col-span-12 flex flex-col gap-2">
-            <label>{{ t("Stock") }}</label>
-            <div class="p-3 bg-surface-50 dark:bg-surface-950 rounded-border text-lg font-semibold">
-              {{ props.variant.stock }}
-            </div>
-            <small class="text-gray-500">{{ t("Stock is managed via batches and reception orders") }}</small>
-          </div>
-
-          <div class="lg:col-span-4 md:col-span-6 col-span-12 flex flex-col gap-2">
+          <div class="md:col-span-6 col-span-12 flex flex-col gap-2">
             <label for="status">{{ t("Status") }}</label>
             <Select
               id="status"
