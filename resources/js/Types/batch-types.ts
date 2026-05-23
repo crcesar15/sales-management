@@ -4,6 +4,7 @@ export interface Batch {
   product_variant_id: number;
   reception_order_id: number;
   store_id: number;
+  batch_identifier: string | null;
   expiry_date: string | null;
   initial_quantity: number;
   remaining_quantity: number;
@@ -17,10 +18,14 @@ export interface Batch {
 
 export type ExpiryStatus = "ok" | "expiring_soon" | "expired" | null;
 
+export interface BatchProduct {
+  name: string;
+  brand_name: string | null;
+}
+
 export interface BatchProductVariant {
   id: number;
   label: string;
-  product_name: string;
 }
 
 export interface BatchStore {
@@ -35,6 +40,7 @@ export interface BatchReceptionOrder {
 
 export interface BatchResponse extends Batch {
   expiry_status: ExpiryStatus;
+  product: BatchProduct;
   product_variant: BatchProductVariant;
   store: BatchStore;
   reception_order?: BatchReceptionOrder;

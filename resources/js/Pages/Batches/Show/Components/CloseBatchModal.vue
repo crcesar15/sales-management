@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Dialog, Button, Textarea } from "primevue";
+import { Dialog, Button, Textarea, Message } from "primevue";
 import { useI18n } from "vue-i18n";
 import { ref } from "vue";
 import { router } from "@inertiajs/vue3";
@@ -48,6 +48,9 @@ function confirm() {
     @update:visible="emit('update:visible', $event)"
   >
     <div class="flex flex-col gap-4">
+      <Message severity="warn" icon="fa-solid fa-triangle-exclamation">
+        {{ t("Closing a batch is permanent. You will not be able to sell or edit this batch after it is closed.") }}
+      </Message>
       <p class="m-0 text-surface-600 dark:text-surface-400">
         {{ t("Are you sure you want to close this batch?") }}
       </p>
@@ -57,8 +60,8 @@ function confirm() {
       </div>
     </div>
     <template #footer>
-      <Button :label="t('Cancel')" severity="secondary" outlined @click="close" />
-      <Button :label="t('Close Batch')" severity="danger" :loading="loading" @click="confirm" />
+      <Button :label="t('Cancel')" severity="secondary" @click="close" />
+      <Button :label="t('Close Batch')" :loading="loading" @click="confirm" />
     </template>
   </Dialog>
 </template>

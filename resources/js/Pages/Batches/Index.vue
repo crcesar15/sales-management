@@ -21,6 +21,7 @@ import type { BatchListResponse, BatchFilters, BatchResponse } from "@/Types/bat
 import BatchStatusTag from "./Show/Components/BatchStatusTag.vue";
 import ExpiryBadge from "./Show/Components/ExpiryBadge.vue";
 import CloseBatchModal from "./Show/Components/CloseBatchModal.vue";
+import EditBatchModal from "./Show/Components/EditBatchModal.vue";
 
 defineOptions({ layout: AppLayout });
 
@@ -43,6 +44,11 @@ const filterPopover = ref();
 
 const closeModalVisible = ref(false);
 const selectedBatchId = ref<number | null>(null);
+
+const editModalVisible = ref(false);
+const editBatchId = ref<number | null>(null);
+const editBatchIdentifier = ref<string | null>(null);
+const editExpiryDate = ref<string | null>(null);
 
 const statusOptions = computed(() => [
   { label: t("All"), value: ALL },
@@ -107,6 +113,13 @@ const onPage = (event: DataTablePageEvent) => {
 function openCloseModal(batchId: number) {
   selectedBatchId.value = batchId;
   closeModalVisible.value = true;
+}
+
+function openEditModal(batch: BatchResponse) {
+  editBatchId.value = batch.id;
+  editBatchIdentifier.value = batch.batch_identifier;
+  editExpiryDate.value = batch.expiry_date;
+  editModalVisible.value = true;
 }
 
 function formatDate(date: string | null): string {
@@ -200,7 +213,7 @@ function formatDate(date: string | null): string {
 
           <Column :header="t('Product Variant')">
             <template #body="{ data }: { data: BatchResponse }">
-              <span class="text-900 font-medium">{{ data.product_variant?.product_name }}</span>
+              <span class="text-900 font-medium">{{ data.product?.name ?? "---" }}</span>
               <div class="text-sm text-surface-500">{{ data.product_variant?.label }}</div>
             </template>
           </Column>
@@ -208,6 +221,12 @@ function formatDate(date: string | null): string {
           <Column :header="t('Store')">
             <template #body="{ data }: { data: BatchResponse }">
               {{ data.store?.name ?? "---" }}
+            </template>
+          </Column>
+
+          <Column :header="t('Batch Identifier')" style="width: 120px">
+            <template #body="{ data }: { data: BatchResponse }">
+              {{ data.batch_identifier ?? "---" }}
             </template>
           </Column>
 
@@ -260,6 +279,17 @@ function formatDate(date: string | null): string {
                 />
                 <Button
                   v-if="data.status !== 'closed'"
+                  v-can="'batch.edit'"
+                  v-tooltip.top="t('Edit')"
+                  icon="fa-solid fa-pen"
+                  text
+                  rounded
+                  size="small"
+                  :aria-label="t('Edit')"
+                  @click="openEditModal(data)"
+                />
+                <Button
+                  v-if="data.status !== 'closed'"
                   v-tooltip.top="t('Close Batch')"
                   icon="fa-solid fa-xmark"
                   text
@@ -280,6 +310,14 @@ function formatDate(date: string | null): string {
       v-if="selectedBatchId"
       v-model:visible="closeModalVisible"
       :batch-id="selectedBatchId"
+    />
+
+    <EditBatchModal
+      v-if="editBatchId"
+      v-model:visible="editModalVisible"
+      :batch-id="editBatchId"
+      :batch-identifier="editBatchIdentifier"
+      :expiry-date="editExpiryDate"
     />
   </div>
 </template>

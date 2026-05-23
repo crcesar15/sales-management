@@ -21,11 +21,15 @@ final class BatchResource extends JsonResource
 
         return [
             'id' => $batch->id,
+            'batch_identifier' => $batch->batch_identifier,
             'status' => $batch->status,
+            'product' => $this->whenLoaded('productVariant', fn () => [
+                'name' => $batch->productVariant?->product?->name,
+                'brand_name' => $batch->productVariant?->product?->brand?->name,
+            ]),
             'product_variant' => $this->whenLoaded('productVariant', fn () => [
                 'id' => $batch->productVariant?->id,
                 'label' => $batch->productVariant?->name,
-                'product_name' => $batch->productVariant?->product?->name,
             ]),
             'store' => $this->whenLoaded('store', fn () => [
                 'id' => $batch->store?->id,
