@@ -77,6 +77,7 @@ final class PermissionSeeder extends Seeder
             ],
             'batches' => [
                 PermissionsEnum::BATCHES_VIEW->value,
+                PermissionsEnum::BATCHES_EDIT->value,
                 PermissionsEnum::STOCK_ADJUST->value,
             ],
             'stock transfers' => [

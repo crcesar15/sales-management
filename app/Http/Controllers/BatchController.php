@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Requests\Batches\CloseBatchRequest;
+use App\Http\Requests\Batches\UpdateBatchRequest;
 use App\Http\Resources\Batches\BatchCollection;
 use App\Http\Resources\Batches\BatchResource;
 use App\Models\Batch;
@@ -77,5 +78,20 @@ final class BatchController extends Controller
         }
 
         return redirect()->back()->with('success', 'Batch closed successfully.');
+    }
+
+    public function update(UpdateBatchRequest $request, Batch $batch): RedirectResponse
+    {
+        try {
+            $this->batchService->update(
+                batch: $batch,
+                data: $request->validated(),
+                actor: $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+            );
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['batch' => $e->getMessage()]);
+        }
+
+        return redirect()->back()->with('success', 'Batch updated successfully.');
     }
 }

@@ -50,6 +50,7 @@ enum PermissionsEnum: string
     case INVENTORY_EDIT = 'inventory.edit';
 
     case BATCHES_VIEW = 'batch.view';
+    case BATCHES_EDIT = 'batch.edit';
     case STOCK_ADJUST = 'stock.adjust';
 
     case STOCK_ALERTS_VIEW = 'stock_alert.view';

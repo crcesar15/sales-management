@@ -132,6 +132,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     // Batch Routes
     Route::get('/batches', [BatchController::class, 'index'])->name('batches');
     Route::get('/batches/{batch}', [BatchController::class, 'show'])->name('batches.show');
+    Route::put('/batches/{batch}', [BatchController::class, 'update'])->name('batches.update');
     Route::patch('/batches/{batch}/close', [BatchController::class, 'close'])->name('batches.close');
 
     // Stock Transfer Routes

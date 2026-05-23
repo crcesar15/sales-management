@@ -63,6 +63,33 @@ final class BatchService
         });
     }
 
+    /**
+     * @param  array{batch_identifier?: string|null, expiry_date?: string|null}  $data
+     */
+    public function update(Batch $batch, array $data, User $actor): Batch
+    {
+        if ($batch->status === 'closed') {
+            throw new InvalidArgumentException('Cannot update a closed batch.');
+        }
+
+        return DB::transaction(function () use ($batch, $data, $actor): Batch {
+            $batch->update($data);
+
+            activity()
+                ->causedBy($actor)
+                ->performedOn($batch)
+                ->withProperties($batch->getChanges())
+                ->log('updated');
+
+            return $batch->load([
+                'productVariant.product.brand',
+                'productVariant.values.option',
+                'store',
+                'receptionOrder',
+            ]);
+        });
+    }
+
     public function deductFIFO(int $variantId, int $storeId, int $quantity): void
     {
         DB::transaction(function () use ($variantId, $storeId, $quantity): void {
