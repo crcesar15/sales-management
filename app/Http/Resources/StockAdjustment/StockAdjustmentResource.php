@@ -50,6 +50,8 @@ final class StockAdjustmentResource extends JsonResource
                 'id' => $adjustment->batch?->id,
                 'initial_quantity' => $adjustment->batch?->initial_quantity,
                 'remaining_quantity' => $adjustment->batch?->remaining_quantity,
+                'batch_identifier' => $adjustment->batch?->batch_identifier,
+                'expiry_date' => $adjustment->batch?->getAttribute('expiry_date')?->toDateString(),
             ]),
         ];
     }

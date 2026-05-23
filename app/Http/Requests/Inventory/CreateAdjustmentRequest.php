@@ -26,6 +26,8 @@ final class CreateAdjustmentRequest extends FormRequest
             'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'store_id' => ['required', 'integer', 'exists:stores,id'],
             'batch_id' => ['nullable', 'integer', 'exists:batches,id'],
+            'expiry_date' => ['nullable', 'date'],
+            'batch_identifier' => ['nullable', 'string', 'max:255'],
             'quantity_change' => ['required', 'integer', 'not_in:0'],
             'reason' => ['required', Rule::enum(AdjustmentReason::class)],
             'notes' => ['nullable', 'string', 'max:1000'],

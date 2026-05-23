@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('batch_id')->nullable()->constrained()->cascadeOnDelete();
             $table->integer('quantity_change');
-            $table->enum('reason', ['physical_audit', 'robbery', 'expiry', 'damage', 'correction', 'other']);
+            $table->enum('reason', ['initial_stock', 'physical_audit', 'robbery', 'expiry', 'damage', 'correction', 'other']);
             $table->text('notes')->nullable();
             $table->timestamps();
 

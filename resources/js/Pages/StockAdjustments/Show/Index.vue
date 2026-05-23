@@ -100,6 +100,14 @@ function formatDateTime(date: string | null): string {
                 <span class="text-surface-500">{{ t("Batch ID") }}</span>
                 <span class="font-bold">#{{ adjustment.batch.id }}</span>
               </div>
+              <div v-if="adjustment.batch.batch_identifier" class="flex justify-between">
+                <span class="text-surface-500">{{ t("Batch Identifier") }}</span>
+                <span class="font-bold">{{ adjustment.batch.batch_identifier }}</span>
+              </div>
+              <div v-if="adjustment.batch.expiry_date" class="flex justify-between">
+                <span class="text-surface-500">{{ t("Expiry Date") }}</span>
+                <span class="font-bold">{{ adjustment.batch.expiry_date }}</span>
+              </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Initial Quantity") }}</span>
                 <span class="font-bold">{{ adjustment.batch.initial_quantity }}</span>

@@ -43,6 +43,7 @@ const filterPopover = ref();
 
 const reasonOptions = computed(() => [
   { label: t("All"), value: ALL },
+  { label: t("Initial Stock"), value: "initial_stock" },
   { label: t("Physical Audit"), value: "physical_audit" },
   { label: t("Robbery"), value: "robbery" },
   { label: t("Expiry"), value: "expiry" },

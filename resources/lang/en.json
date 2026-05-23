@@ -739,5 +739,17 @@
   "Pricing & Inventory": "Pricing & Inventory",
   "Manage Inventory": "Manage Inventory",
   "Stock by Store": "Stock by Store",
-  "No stock records found": "No stock records found"
+  "No stock records found": "No stock records found",
+  "initial_stock": "Initial Stock",
+  "Initial Stock": "Initial Stock",
+  "Select batch": "Select batch",
+  "Create new batch": "Create new batch",
+  "No batches available for this product in this store": "No batches available for this product in this store",
+  "Batch & Quantity": "Batch & Quantity",
+  "Select store and product first": "Select store and product first",
+  "New batch": "New batch",
+  "Adjustment Summary": "Adjustment Summary",
+  "Batch is required": "Batch is required",
+  "Enter batch identifier (optional)": "Enter batch identifier (optional)",
+  "Select expiry date (optional)": "Select expiry date (optional)"
 }

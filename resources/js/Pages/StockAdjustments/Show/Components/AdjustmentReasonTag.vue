@@ -8,6 +8,7 @@ const props = defineProps<{ reason: AdjustmentReason }>();
 const { t } = useI18n();
 
 const reasonMap: Record<string, { label: string; severity: "success" | "info" | "warn" | "secondary" | "danger" }> = {
+  initial_stock: { label: "Initial Stock", severity: "success" },
   physical_audit: { label: "Physical Audit", severity: "info" },
   robbery: { label: "Robbery", severity: "danger" },
   expiry: { label: "Expiry", severity: "warn" },

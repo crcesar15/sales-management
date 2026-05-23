@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\BatchesController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
@@ -21,6 +22,9 @@ Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $reques
 
 // API v1 Routes
 Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.'], function (): void {
+    // Routes for Batches
+    Route::get('batches/available', [BatchesController::class, 'available'])->name('batches.available');
+
     // Routes for Categories
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
     Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');

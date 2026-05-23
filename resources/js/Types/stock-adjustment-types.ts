@@ -1,4 +1,13 @@
-export type AdjustmentReason = "physical_audit" | "robbery" | "expiry" | "damage" | "correction" | "other";
+export type AdjustmentReason = "initial_stock" | "physical_audit" | "robbery" | "expiry" | "damage" | "correction" | "other";
+
+export interface AvailableBatch {
+  id: number;
+  batch_identifier: string | null;
+  expiry_date: string | null;
+  remaining_quantity: number;
+  initial_quantity: number;
+  status: string;
+}
 
 export interface StockAdjustment {
   id: number;
@@ -34,6 +43,8 @@ export interface StockAdjustmentResponse extends StockAdjustment {
     id: number;
     initial_quantity: number;
     remaining_quantity: number;
+    batch_identifier: string | null;
+    expiry_date: string | null;
   } | null;
 }
 

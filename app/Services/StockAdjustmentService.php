@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\AdjustmentReason;
 use App\Enums\RolesEnum;
 use App\Models\Batch;
 use App\Models\StockAdjustment;
@@ -54,10 +55,13 @@ final class StockAdjustmentService
             $delta = $data['quantity_change'];
 
             $batch = $this->resolveBatch(
-                $data['batch_id'] ?? null,
-                $variantId,
-                $storeId,
-                $delta,
+                batchId: $data['batch_id'] ?? null,
+                variantId: $variantId,
+                storeId: $storeId,
+                delta: $delta,
+                reason: $data['reason'],
+                expiryDate: $data['expiry_date'] ?? null,
+                batchIdentifier: $data['batch_identifier'] ?? null,
             );
 
             if ($delta < 0 && ($batch->remaining_quantity + $delta) < 0) {
@@ -112,8 +116,15 @@ final class StockAdjustmentService
         ]);
     }
 
-    private function resolveBatch(?int $batchId, int $variantId, int $storeId, int $delta): Batch
-    {
+    private function resolveBatch(
+        ?int $batchId,
+        int $variantId,
+        int $storeId,
+        int $delta,
+        string $reason,
+        ?string $expiryDate = null,
+        ?string $batchIdentifier = null,
+    ): Batch {
         if ($batchId !== null) {
             return Batch::query()
                 ->where('id', $batchId)
@@ -124,20 +135,13 @@ final class StockAdjustmentService
                 ->firstOrFail();
         }
 
-        $batch = Batch::query()
-            ->available($variantId, $storeId)
-            ->lockForUpdate()
-            ->first();
-
-        if ($batch !== null) {
-            return $batch;
-        }
-
-        if ($delta > 0) {
+        if ($reason === AdjustmentReason::INITIAL_STOCK->value) {
             return Batch::create([
                 'product_variant_id' => $variantId,
                 'reception_order_id' => null,
                 'store_id' => $storeId,
+                'expiry_date' => $expiryDate,
+                'batch_identifier' => $batchIdentifier,
                 'initial_quantity' => $delta,
                 'remaining_quantity' => $delta,
                 'missing_quantity' => 0,
@@ -147,6 +151,6 @@ final class StockAdjustmentService
             ]);
         }
 
-        throw new InvalidArgumentException('No active batch found for this product variant in the specified store.');
+        throw new InvalidArgumentException('A batch must be explicitly selected.');
     }
 }

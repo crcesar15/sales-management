@@ -739,5 +739,17 @@
   "Pricing & Inventory": "Precios e Inventario",
   "Manage Inventory": "Gestionar Inventario",
   "Stock by Store": "Stock por Tienda",
-  "No stock records found": "No se encontraron registros de stock"
+  "No stock records found": "No se encontraron registros de stock",
+  "initial_stock": "Stock Inicial",
+  "Initial Stock": "Stock Inicial",
+  "Select batch": "Seleccionar lote",
+  "Create new batch": "Crear nuevo lote",
+  "No batches available for this product in this store": "No hay lotes disponibles para este producto en esta tienda",
+  "Batch & Quantity": "Lote y Cantidad",
+  "Select store and product first": "Seleccione tienda y producto primero",
+  "New batch": "Nuevo lote",
+  "Adjustment Summary": "Resumen del Ajuste",
+  "Batch is required": "El lote es obligatorio",
+  "Enter batch identifier (optional)": "Ingrese identificador de lote (opcional)",
+  "Select expiry date (optional)": "Seleccione fecha de vencimiento (opcional)"
 }
