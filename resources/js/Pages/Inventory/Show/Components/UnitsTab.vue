@@ -194,12 +194,18 @@ watch(activeTab, () => {
     <ConfirmDialog />
 
     <Tabs v-model:value="activeTab">
-      <TabList>
+      <TabList
+        :pt="{
+          activeBar: {
+            class: 'border-2 border-primary'
+          }
+        }"
+      >
         <Tab
           value="sale"
           :pt="{
             root: ({ context }: any) => ({
-              class: [{ '!bg-primary-50 !rounded-t-lg': context.active }],
+              class: [{ 'bg-primary-50 !rounded-t-lg dark:bg-primary-900': context.active }],
             }),
           }"
         >
@@ -209,7 +215,7 @@ watch(activeTab, () => {
           value="purchase"
           :pt="{
             root: ({ context }: any) => ({
-              class: [{ '!bg-primary-50 !rounded-t-lg': context.active }],
+              class: [{ 'bg-primary-50 !rounded-t-lg dark:bg-primary-900': context.active }],
             }),
           }"
         >

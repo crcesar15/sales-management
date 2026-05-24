@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, InputText, InputNumber, Select, TabView, TabPanel, useToast } from "primevue";
+import { Button, Card, InputText, InputNumber, Select, Tabs, Tab, TabList, TabPanel, TabPanels, useToast } from "primevue";
 
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
@@ -8,6 +8,7 @@ import { toTypedSchema } from "@vee-validate/yup";
 import { object, string, number } from "yup";
 import { route } from "ziggy-js";
 import AppLayout from "@layouts/admin.vue";
+import { ref } from "vue";
 
 // Layout
 defineOptions({ layout: AppLayout });
@@ -39,6 +40,8 @@ const datetimeFormatOptions = [
   { label: "MM/DD/YYYY HH:mm", value: "MM/DD/YYYY HH:mm" },
   { label: "DD-MM-YYYY HH:mm", value: "DD-MM-YYYY HH:mm" },
 ];
+
+const activeTab = ref("general");
 
 // ─── General Form ──────────────────────────────────────────────────────────
 
@@ -224,220 +227,260 @@ const onSubmitFinance = handleSubmitFinance((values) => {
 
     <Card>
       <template #content>
-        <TabView>
-          <TabPanel :header="t('General')">
-            <form @submit.prevent="onSubmitGeneral" class="space-y-4">
-              <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-12 md:col-span-6">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="business_name">{{ t("Business Name") }}</label>
-                    <InputText
-                      id="business_name"
-                      v-model="generalBusinessName"
-                      v-bind="generalBusinessNameAttrs"
-                      autocomplete="off"
-                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.business_name }"
-                    />
-                    <small v-if="generalSubmitCount > 0 && generalErrors.business_name" class="text-red-400 dark:text-red-300">
-                      {{ generalErrors.business_name }}
-                    </small>
+        <Tabs  v-model:value="activeTab">
+          <TabList
+            :pt="{
+              activeBar: {
+                class: 'border-2 border-primary'
+              }
+            }"
+          >
+            <Tab
+              value="general"
+              :pt="{
+                root: ({ context }: any) => ({
+                  class: [{ 'bg-primary-50 !rounded-t-lg dark:bg-primary-900': context.active }],
+                }),
+              }"
+            >
+              {{ t("General") }}
+            </Tab>
+            <Tab
+              value="tax"
+              :pt="{
+                root: ({ context }: any) => ({
+                  class: [{ 'bg-primary-50 !rounded-t-lg dark:bg-primary-900': context.active }],
+                }),
+              }"
+            >
+              {{ t("Tax") }}
+            </Tab>
+            <Tab
+              value="finance"
+              :pt="{
+                root: ({ context }: any) => ({
+                  class: [{ 'bg-primary-50 !rounded-t-lg dark:bg-primary-900': context.active }],
+                }),
+              }"
+            >
+              {{ t("Finance") }}
+            </Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel value="general">
+              <form @submit.prevent="onSubmitGeneral" class="space-y-4">
+                <div class="grid grid-cols-12 gap-4">
+                  <div class="col-span-12 md:col-span-6">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="business_name">{{ t("Business Name") }}</label>
+                      <InputText
+                        id="business_name"
+                        v-model="generalBusinessName"
+                        v-bind="generalBusinessNameAttrs"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.business_name }"
+                      />
+                      <small v-if="generalSubmitCount > 0 && generalErrors.business_name" class="text-red-400 dark:text-red-300">
+                        {{ generalErrors.business_name }}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div class="col-span-12 md:col-span-6">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="business_phone">{{ t("Business Phone") }}</label>
+                      <InputText
+                        id="business_phone"
+                        v-model="generalBusinessPhone"
+                        v-bind="generalBusinessPhoneAttrs"
+                        type="tel"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.business_phone }"
+                      />
+                      <small v-if="generalSubmitCount > 0 && generalErrors.business_phone" class="text-red-400 dark:text-red-300">
+                        {{ generalErrors.business_phone }}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div class="col-span-12">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="business_address">{{ t("Business Address") }}</label>
+                      <InputText
+                        id="business_address"
+                        v-model="generalBusinessAddress"
+                        v-bind="generalBusinessAddressAttrs"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.business_address }"
+                      />
+                      <small v-if="generalSubmitCount > 0 && generalErrors.business_address" class="text-red-400 dark:text-red-300">
+                        {{ generalErrors.business_address }}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div class="col-span-12 md:col-span-6">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="timezone">{{ t("Timezone") }}</label>
+                      <Select
+                        id="timezone"
+                        v-model="generalTimezone"
+                        v-bind="generalTimezoneAttrs"
+                        :options="timezoneOptions"
+                        option-label="label"
+                        option-value="value"
+                        filter
+                        :placeholder="t('Select timezone')"
+                        :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.timezone }"
+                      />
+                      <small v-if="generalSubmitCount > 0 && generalErrors.timezone" class="text-red-400 dark:text-red-300">
+                        {{ generalErrors.timezone }}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div class="col-span-12 md:col-span-6">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="date_format">{{ t("Date Format") }}</label>
+                      <Select
+                        id="date_format"
+                        v-model="generalDateFormat"
+                        v-bind="generalDateFormatAttrs"
+                        :options="dateFormatOptions"
+                        option-label="label"
+                        option-value="value"
+                        :placeholder="t('Select date format')"
+                        :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.date_format }"
+                      />
+                      <small v-if="generalSubmitCount > 0 && generalErrors.date_format" class="text-red-400 dark:text-red-300">
+                        {{ generalErrors.date_format }}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div class="col-span-12 md:col-span-6">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="datetime_format">{{ t("Datetime Format") }}</label>
+                      <Select
+                        id="datetime_format"
+                        v-model="generalDatetimeFormat"
+                        v-bind="generalDatetimeFormatAttrs"
+                        :options="datetimeFormatOptions"
+                        option-label="label"
+                        option-value="value"
+                        :placeholder="t('Select datetime format')"
+                        :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.datetime_format }"
+                      />
+                      <small v-if="generalSubmitCount > 0 && generalErrors.datetime_format" class="text-red-400 dark:text-red-300">
+                        {{ generalErrors.datetime_format }}
+                      </small>
+                    </div>
                   </div>
                 </div>
 
-                <div class="col-span-12 md:col-span-6">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="business_phone">{{ t("Business Phone") }}</label>
-                    <InputText
-                      id="business_phone"
-                      v-model="generalBusinessPhone"
-                      v-bind="generalBusinessPhoneAttrs"
-                      type="tel"
-                      autocomplete="off"
-                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.business_phone }"
-                    />
-                    <small v-if="generalSubmitCount > 0 && generalErrors.business_phone" class="text-red-400 dark:text-red-300">
-                      {{ generalErrors.business_phone }}
-                    </small>
+                <div class="flex justify-end mt-4">
+                  <Button type="submit" :label="t('Save')" icon="fa fa-save" class="uppercase" raised :loading="generalIsSubmitting" />
+                </div>
+              </form>
+            </TabPanel>
+
+            <TabPanel value="tax">
+              <form @submit.prevent="onSubmitTax" class="space-y-4">
+                <div class="grid grid-cols-12 gap-4">
+                  <div class="col-span-12 md:col-span-6">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="tax_rate">{{ t("Tax Rate (%)") }}</label>
+                      <InputNumber
+                        id="tax_rate"
+                        v-model="taxTaxRate"
+                        v-bind="taxTaxRateAttrs"
+                        :min="0"
+                        :max="100"
+                        :min-fraction-digits="0"
+                        :max-fraction-digits="2"
+                        suffix=" %"
+                        class="w-full"
+                        :class="{ 'p-invalid': taxSubmitCount > 0 && !!taxErrors.tax_rate }"
+                      />
+                      <small class="text-gray-500">{{ t("Applied to all sales transactions") }}</small>
+                      <small v-if="taxSubmitCount > 0 && taxErrors.tax_rate" class="text-red-400 dark:text-red-300">
+                        {{ taxErrors.tax_rate }}
+                      </small>
+                    </div>
                   </div>
                 </div>
 
-                <div class="col-span-12">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="business_address">{{ t("Business Address") }}</label>
-                    <InputText
-                      id="business_address"
-                      v-model="generalBusinessAddress"
-                      v-bind="generalBusinessAddressAttrs"
-                      autocomplete="off"
-                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.business_address }"
-                    />
-                    <small v-if="generalSubmitCount > 0 && generalErrors.business_address" class="text-red-400 dark:text-red-300">
-                      {{ generalErrors.business_address }}
-                    </small>
+                <div class="flex justify-end mt-4">
+                  <Button type="submit" :label="t('Save')" icon="fa fa-save" class="uppercase" raised :loading="taxIsSubmitting" />
+                </div>
+              </form>
+            </TabPanel>
+
+            <TabPanel value="finance">
+              <form @submit.prevent="onSubmitFinance" class="space-y-4">
+                <div class="grid grid-cols-12 gap-4">
+                  <div class="col-span-12 md:col-span-6">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="currency">{{ t("Currency Code") }}</label>
+                      <Select
+                        id="currency"
+                        v-model="financeCurrency"
+                        v-bind="financeCurrencyAttrs"
+                        :options="currencyOptions"
+                        option-label="label"
+                        option-value="value"
+                        :placeholder="t('Select currency')"
+                        :class="{ 'p-invalid': financeSubmitCount > 0 && !!financeErrors.currency }"
+                      />
+                      <small v-if="financeSubmitCount > 0 && financeErrors.currency" class="text-red-400 dark:text-red-300">
+                        {{ financeErrors.currency }}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div class="col-span-12 md:col-span-6">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="currency_symbol">{{ t("Currency Symbol") }}</label>
+                      <InputText
+                        id="currency_symbol"
+                        v-model="financeCurrencySymbol"
+                        v-bind="financeCurrencySymbolAttrs"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': financeSubmitCount > 0 && !!financeErrors.currency_symbol }"
+                      />
+                      <small v-if="financeSubmitCount > 0 && financeErrors.currency_symbol" class="text-red-400 dark:text-red-300">
+                        {{ financeErrors.currency_symbol }}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div class="col-span-12 md:col-span-6">
+                    <div class="flex flex-col gap-2 mb-3">
+                      <label for="decimal_precision">{{ t("Decimal Precision") }}</label>
+                      <InputNumber
+                        id="decimal_precision"
+                        v-model="financeDecimalPrecision"
+                        v-bind="financeDecimalPrecisionAttrs"
+                        :min="0"
+                        :max="6"
+                        class="w-full"
+                        :class="{ 'p-invalid': financeSubmitCount > 0 && !!financeErrors.decimal_precision }"
+                      />
+                      <small class="text-gray-500">{{ t("Applied to all monetary values") }}</small>
+                      <small v-if="financeSubmitCount > 0 && financeErrors.decimal_precision" class="text-red-400 dark:text-red-300">
+                        {{ financeErrors.decimal_precision }}
+                      </small>
+                    </div>
                   </div>
                 </div>
 
-                <div class="col-span-12 md:col-span-6">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="timezone">{{ t("Timezone") }}</label>
-                    <Select
-                      id="timezone"
-                      v-model="generalTimezone"
-                      v-bind="generalTimezoneAttrs"
-                      :options="timezoneOptions"
-                      option-label="label"
-                      option-value="value"
-                      filter
-                      :placeholder="t('Select timezone')"
-                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.timezone }"
-                    />
-                    <small v-if="generalSubmitCount > 0 && generalErrors.timezone" class="text-red-400 dark:text-red-300">
-                      {{ generalErrors.timezone }}
-                    </small>
-                  </div>
+                <div class="flex justify-end mt-4">
+                  <Button type="submit" :label="t('Save')" icon="fa fa-save" class="uppercase" raised :loading="financeIsSubmitting" />
                 </div>
-
-                <div class="col-span-12 md:col-span-6">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="date_format">{{ t("Date Format") }}</label>
-                    <Select
-                      id="date_format"
-                      v-model="generalDateFormat"
-                      v-bind="generalDateFormatAttrs"
-                      :options="dateFormatOptions"
-                      option-label="label"
-                      option-value="value"
-                      :placeholder="t('Select date format')"
-                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.date_format }"
-                    />
-                    <small v-if="generalSubmitCount > 0 && generalErrors.date_format" class="text-red-400 dark:text-red-300">
-                      {{ generalErrors.date_format }}
-                    </small>
-                  </div>
-                </div>
-
-                <div class="col-span-12 md:col-span-6">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="datetime_format">{{ t("Datetime Format") }}</label>
-                    <Select
-                      id="datetime_format"
-                      v-model="generalDatetimeFormat"
-                      v-bind="generalDatetimeFormatAttrs"
-                      :options="datetimeFormatOptions"
-                      option-label="label"
-                      option-value="value"
-                      :placeholder="t('Select datetime format')"
-                      :class="{ 'p-invalid': generalSubmitCount > 0 && !!generalErrors.datetime_format }"
-                    />
-                    <small v-if="generalSubmitCount > 0 && generalErrors.datetime_format" class="text-red-400 dark:text-red-300">
-                      {{ generalErrors.datetime_format }}
-                    </small>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-end mt-4">
-                <Button type="submit" :label="t('Save')" icon="fa fa-save" class="uppercase" raised :loading="generalIsSubmitting" />
-              </div>
-            </form>
-          </TabPanel>
-
-          <TabPanel :header="t('Tax')">
-            <form @submit.prevent="onSubmitTax" class="space-y-4">
-              <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-12 md:col-span-6">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="tax_rate">{{ t("Tax Rate (%)") }}</label>
-                    <InputNumber
-                      id="tax_rate"
-                      v-model="taxTaxRate"
-                      v-bind="taxTaxRateAttrs"
-                      :min="0"
-                      :max="100"
-                      :min-fraction-digits="0"
-                      :max-fraction-digits="2"
-                      suffix=" %"
-                      class="w-full"
-                      :class="{ 'p-invalid': taxSubmitCount > 0 && !!taxErrors.tax_rate }"
-                    />
-                    <small class="text-gray-500">{{ t("Applied to all sales transactions") }}</small>
-                    <small v-if="taxSubmitCount > 0 && taxErrors.tax_rate" class="text-red-400 dark:text-red-300">
-                      {{ taxErrors.tax_rate }}
-                    </small>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-end mt-4">
-                <Button type="submit" :label="t('Save')" icon="fa fa-save" class="uppercase" raised :loading="taxIsSubmitting" />
-              </div>
-            </form>
-          </TabPanel>
-
-          <TabPanel :header="t('Finance')">
-            <form @submit.prevent="onSubmitFinance" class="space-y-4">
-              <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-12 md:col-span-6">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="currency">{{ t("Currency Code") }}</label>
-                    <Select
-                      id="currency"
-                      v-model="financeCurrency"
-                      v-bind="financeCurrencyAttrs"
-                      :options="currencyOptions"
-                      option-label="label"
-                      option-value="value"
-                      :placeholder="t('Select currency')"
-                      :class="{ 'p-invalid': financeSubmitCount > 0 && !!financeErrors.currency }"
-                    />
-                    <small v-if="financeSubmitCount > 0 && financeErrors.currency" class="text-red-400 dark:text-red-300">
-                      {{ financeErrors.currency }}
-                    </small>
-                  </div>
-                </div>
-
-                <div class="col-span-12 md:col-span-6">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="currency_symbol">{{ t("Currency Symbol") }}</label>
-                    <InputText
-                      id="currency_symbol"
-                      v-model="financeCurrencySymbol"
-                      v-bind="financeCurrencySymbolAttrs"
-                      autocomplete="off"
-                      :class="{ 'p-invalid': financeSubmitCount > 0 && !!financeErrors.currency_symbol }"
-                    />
-                    <small v-if="financeSubmitCount > 0 && financeErrors.currency_symbol" class="text-red-400 dark:text-red-300">
-                      {{ financeErrors.currency_symbol }}
-                    </small>
-                  </div>
-                </div>
-
-                <div class="col-span-12 md:col-span-6">
-                  <div class="flex flex-col gap-2 mb-3">
-                    <label for="decimal_precision">{{ t("Decimal Precision") }}</label>
-                    <InputNumber
-                      id="decimal_precision"
-                      v-model="financeDecimalPrecision"
-                      v-bind="financeDecimalPrecisionAttrs"
-                      :min="0"
-                      :max="6"
-                      class="w-full"
-                      :class="{ 'p-invalid': financeSubmitCount > 0 && !!financeErrors.decimal_precision }"
-                    />
-                    <small class="text-gray-500">{{ t("Applied to all monetary values") }}</small>
-                    <small v-if="financeSubmitCount > 0 && financeErrors.decimal_precision" class="text-red-400 dark:text-red-300">
-                      {{ financeErrors.decimal_precision }}
-                    </small>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-end mt-4">
-                <Button type="submit" :label="t('Save')" icon="fa fa-save" class="uppercase" raised :loading="financeIsSubmitting" />
-              </div>
-            </form>
-          </TabPanel>
-        </TabView>
+              </form>
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
       </template>
     </Card>
   </div>
