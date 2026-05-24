@@ -83,7 +83,7 @@ it('admin can view inventory variant detail', function () {
 |--------------------------------------------------------------------------
 */
 
-it('aggregates stock from active and queued batches only', function () {
+it('aggregates stock from active batches only', function () {
     $admin = User::factory()->create();
     $admin->assignRole(RolesEnum::ADMIN);
 
@@ -99,21 +99,17 @@ it('aggregates stock from active and queued batches only', function () {
     Batch::factory()->create([
         'product_variant_id' => $variant->id,
         'store_id' => $store->id,
-        'remaining_quantity' => 10,
-        'status' => 'queued',
-    ]);
-    Batch::factory()->create([
-        'product_variant_id' => $variant->id,
-        'store_id' => $store->id,
         'remaining_quantity' => 50,
         'status' => 'closed',
     ]);
+
+    $variant->recalculateStock();
 
     actingAs($admin)
         ->get(route('inventory.variants'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('variants.data.0.total_stock', 30)
+            ->where('variants.data.0.total_stock', 20)
         );
 });
 
@@ -262,6 +258,7 @@ it('filters by low stock only', function () {
         'remaining_quantity' => 10,
         'status' => 'active',
     ]);
+    $variantWithStock->recalculateStock();
 
     actingAs($admin)
         ->get(route('inventory.variants', ['low_stock' => true]))
@@ -303,6 +300,7 @@ it('applies status and low_stock filters together', function () {
         'remaining_quantity' => 10,
         'status' => 'active',
     ]);
+    $activeWithStock->recalculateStock();
 
     $activeNoStock = createVariant(['status' => 'active']);
     createVariant(['status' => 'inactive']);

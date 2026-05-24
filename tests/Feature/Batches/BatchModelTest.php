@@ -58,9 +58,9 @@ it('expiry_status returns ok when beyond threshold', function () {
     expect($batch->expiry_status)->toBe('ok');
 });
 
-it('scopeAvailable returns queued and active batches ordered by created_at', function () {
+it('scopeAvailable returns active batches ordered by created_at', function () {
     $old = makeBatch($this->variant, $this->store, $this->receptionOrder, [
-        'status' => 'queued',
+        'status' => 'active',
         'remaining_quantity' => 10,
         'created_at' => now()->subDay(),
     ]);

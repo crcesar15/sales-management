@@ -11,7 +11,7 @@ export interface Batch {
   missing_quantity: number;
   sold_quantity: number;
   transferred_quantity: number;
-  status: string;
+  status: "active" | "closed";
   created_at: string | null;
   updated_at: string | null;
 }
@@ -57,7 +57,7 @@ export interface BatchListResponse {
 }
 
 export interface BatchFilters {
-  status: string;
+  status: "active" | "closed" | "";
   store_id: number | null;
   product_variant_id: number | null;
   expiry_from: string | null;

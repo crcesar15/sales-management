@@ -193,7 +193,7 @@ final class ReceptionOrderService
                     'missing_quantity' => 0,
                     'sold_quantity' => 0,
                     'transferred_quantity' => 0,
-                    'status' => 'queued',
+                    'status' => 'active',
                 ]);
 
                 $stockChanges[$lineItem->product_variant_id] = $baseQuantity;

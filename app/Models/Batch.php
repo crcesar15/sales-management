@@ -64,9 +64,9 @@ final class Batch extends Model
     // ─── Scopes ──────────────────────────────────────────────────────────────────
 
     /** @param  Builder<self>  $query */
-    public function scopeActiveOrQueued(Builder $query): void
+    public function scopeActive(Builder $query): void
     {
-        $query->whereIn('status', ['active', 'queued']);
+        $query->where('status', 'active');
     }
 
     /**
@@ -79,7 +79,7 @@ final class Batch extends Model
     {
         return $query->where('product_variant_id', $variantId)
             ->where('store_id', $storeId)
-            ->activeOrQueued()
+            ->active()
             ->where('remaining_quantity', '>', 0)
             ->orderBy('created_at', 'asc');
     }
@@ -94,7 +94,7 @@ final class Batch extends Model
     {
         return $query->whereNotNull('expiry_date')
             ->where('expiry_date', '<=', now()->addDays($days)->endOfDay()->toDateTimeString())
-            ->activeOrQueued();
+            ->active();
     }
 
     // ─── Activity Log ────────────────────────────────────────────────────────────

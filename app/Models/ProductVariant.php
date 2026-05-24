@@ -142,7 +142,7 @@ final class ProductVariant extends Model
 
     public function recalculateStock(): self
     {
-        $this->stock = max(0, (int) $this->batches()->activeOrQueued()->sum('remaining_quantity'));
+        $this->stock = max(0, (int) $this->batches()->active()->sum('remaining_quantity'));
         $this->save();
 
         return $this;

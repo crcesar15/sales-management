@@ -329,7 +329,7 @@ it('completing a transfer deducts source batches and creates destination batch',
     expect($destBatch->initial_quantity)->toBe(8);
     expect($destBatch->remaining_quantity)->toBe(8);
     expect($destBatch->reception_order_id)->toBeNull();
-    expect($destBatch->status)->toBe('queued');
+    expect($destBatch->status)->toBe('active');
 
     expect($transfer->fresh()->status)->toBe('completed');
     expect($transfer->fresh()->completed_at)->not->toBeNull();

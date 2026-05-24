@@ -148,7 +148,7 @@ final class StockTransferService
                     'missing_quantity' => 0,
                     'sold_quantity' => 0,
                     'transferred_quantity' => 0,
-                    'status' => 'queued',
+                    'status' => 'active',
                 ]);
             }
 

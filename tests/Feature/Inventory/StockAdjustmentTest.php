@@ -395,8 +395,8 @@ it('creates new batch when no active batch exists and delta is positive', functi
     expect(StockAdjustment::first()->batch_id)->toBe($batch->id);
 });
 
-it('activates queued batch when adjustment is applied', function () {
-    $batch = createActiveBatch($this->variant, $this->store, 40, ['status' => 'queued']);
+it('keeps batch active when adjustment is applied', function () {
+    $batch = createActiveBatch($this->variant, $this->store, 40);
 
     actingAs($this->admin)
         ->post(route('stock-adjustments.store'), adjustmentPayload($this->variant, $this->store, [

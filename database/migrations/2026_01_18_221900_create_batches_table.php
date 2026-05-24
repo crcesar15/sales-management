@@ -25,7 +25,7 @@ return new class extends Migration
             $table->integer('missing_quantity')->default(0);
             $table->integer('sold_quantity')->default(0);
             $table->integer('transferred_quantity')->default(0);
-            $table->enum('status', ['queued', 'active', 'closed'])->default('queued');
+            $table->enum('status', ['active', 'closed'])->default('active');
             $table->timestamps();
 
             $table->index(['store_id', 'status']);

@@ -116,7 +116,7 @@ it('aggregates stock across multiple batches for the same variant', function () 
     $variant = createVariantWithMinimumStock(15);
     createActiveBatch($variant, $this->store, 5);
     createActiveBatch($variant, $this->store, 3);
-    createActiveBatch($variant, $this->store, 2, ['status' => 'queued']);
+    createActiveBatch($variant, $this->store, 2);
 
     $results = $this->service->getLowStockAlerts();
 

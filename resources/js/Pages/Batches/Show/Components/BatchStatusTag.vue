@@ -7,7 +7,6 @@ const props = defineProps<{ status: string }>();
 const { t } = useI18n();
 
 const statusMap: Record<string, { label: string; severity: "success" | "info" | "secondary" }> = {
-  queued: { label: "Queued", severity: "info" },
   active: { label: "Active", severity: "success" },
   closed: { label: "Closed", severity: "secondary" },
 };

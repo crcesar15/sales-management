@@ -58,7 +58,6 @@ const editExpiryDate = ref<string | null>(null);
 
 const statusOptions = computed(() => [
   { label: t("All"), value: ALL },
-  { label: t("Queued"), value: "queued" },
   { label: t("Active"), value: "active" },
   { label: t("Closed"), value: "closed" },
 ]);

@@ -16,13 +16,6 @@ use InvalidArgumentException;
 
 final class StockAdjustmentService
 {
-    private readonly BatchService $batchService;
-
-    public function __construct(BatchService $batchService)
-    {
-        $this->batchService = $batchService;
-    }
-
     /**
      * @param  array{store_id?: int|null, reason?: string|null, date_from?: string|null, date_to?: string|null}  $filters
      * @return LengthAwarePaginator<int, StockAdjustment>
@@ -70,8 +63,6 @@ final class StockAdjustmentService
                     "Insufficient stock. Available: {$batch->remaining_quantity}, requested deduction: " . abs($delta) . '.'
                 );
             }
-
-            $this->batchService->activateIfQueued($batch);
 
             if (! $batch->wasRecentlyCreated) {
                 $batch->increment('remaining_quantity', $delta);
@@ -133,7 +124,7 @@ final class StockAdjustmentService
                 ->where('id', $batchId)
                 ->where('product_variant_id', $variantId)
                 ->where('store_id', $storeId)
-                ->activeOrQueued()
+                ->active()
                 ->lockForUpdate()
                 ->firstOrFail();
         }

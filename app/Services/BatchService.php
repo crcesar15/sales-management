@@ -115,8 +115,6 @@ final class BatchService
                     break;
                 }
 
-                $this->activateIfQueued($batch);
-
                 $deduct = min($batch->remaining_quantity, $remaining);
                 $batch->increment('sold_quantity', $deduct);
                 $batch->decrement('remaining_quantity', $deduct);
@@ -149,8 +147,6 @@ final class BatchService
                     break;
                 }
 
-                $this->activateIfQueued($batch);
-
                 $deduct = min($batch->remaining_quantity, $remaining);
                 $batch->increment('transferred_quantity', $deduct);
                 $batch->decrement('remaining_quantity', $deduct);
@@ -164,13 +160,6 @@ final class BatchService
 
             ProductVariant::where('id', $variantId)->firstOrFail()->recalculateStock();
         });
-    }
-
-    public function activateIfQueued(Batch $batch): void
-    {
-        if ($batch->status === 'queued') {
-            $batch->update(['status' => 'active']);
-        }
     }
 
     /**

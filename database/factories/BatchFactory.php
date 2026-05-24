@@ -32,7 +32,7 @@ final class BatchFactory extends Factory
             'missing_quantity' => fake()->numberBetween(0, 10),
             'sold_quantity' => fake()->numberBetween(0, 50),
             'transferred_quantity' => fake()->numberBetween(0, 5),
-            'status' => fake()->randomElement(['queued', 'active', 'closed']),
+            'status' => fake()->randomElement(['active', 'closed']),
         ];
     }
 }

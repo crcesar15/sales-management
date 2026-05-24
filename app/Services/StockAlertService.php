@@ -81,7 +81,7 @@ final class StockAlertService
     {
         $stockSubquery = Batch::query()
             ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as store_stock'))
-            ->activeOrQueued()
+            ->active()
             ->where('store_id', $storeId)
             ->groupBy('product_variant_id');
 
@@ -101,7 +101,7 @@ final class StockAlertService
         if ($storeId !== null) {
             $stockSubquery = Batch::query()
                 ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as store_stock'))
-                ->activeOrQueued()
+                ->active()
                 ->where('store_id', $storeId)
                 ->groupBy('product_variant_id');
 

@@ -164,10 +164,10 @@ it('excludes variant where stock meets or exceeds minimum_stock_level', function
         );
 });
 
-it('aggregates stock across active and queued batches for low-stock check', function () {
+it('aggregates stock across active batches for low-stock check', function () {
     $variant = createVariantWithMinimumStock(20);
     createActiveBatch($variant, $this->store, 8);
-    createActiveBatch($variant, $this->store, 5, ['status' => 'queued']);
+    createActiveBatch($variant, $this->store, 5);
 
     actingAs($this->admin)
         ->get(route('inventory.alerts'))

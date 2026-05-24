@@ -95,14 +95,14 @@ it('guest is redirected from batch list', function () {
 */
 
 it('filters by status', function () {
-    createBatch($this->variant, $this->store, $this->receptionOrder, ['status' => 'queued']);
+    createBatch($this->variant, $this->store, $this->receptionOrder, ['status' => 'active']);
     createBatch($this->variant, $this->store, $this->receptionOrder, ['status' => 'closed']);
 
     actingAs($this->admin)
-        ->get(route('batches', ['status' => 'queued']))
+        ->get(route('batches', ['status' => 'active']))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('filters.status', 'queued')
+            ->where('filters.status', 'active')
             ->has('batches.data', 1)
         );
 });
@@ -188,8 +188,8 @@ it('admin with stock.adjust can close an active batch', function () {
     expect($batch->fresh()->status)->toBe('closed');
 });
 
-it('admin can close a queued batch', function () {
-    $batch = createBatch($this->variant, $this->store, $this->receptionOrder, ['status' => 'queued']);
+it('admin can close an active batch', function () {
+    $batch = createBatch($this->variant, $this->store, $this->receptionOrder, ['status' => 'active']);
 
     actingAs($this->admin)
         ->patch(route('batches.close', $batch))

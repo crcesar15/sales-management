@@ -92,7 +92,7 @@ final class StockService
         $perStoreStock = Batch::query()
             ->select('store_id', DB::raw('SUM(remaining_quantity) as quantity'))
             ->where('product_variant_id', $variant->id)
-            ->activeOrQueued()
+            ->active()
             ->groupBy('store_id')
             ->with('store')
             ->get();
@@ -125,7 +125,7 @@ final class StockService
     ): LengthAwarePaginator {
         $storeStockSubquery = Batch::query()
             ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as store_stock'))
-            ->activeOrQueued()
+            ->active()
             ->where('store_id', $storeId)
             ->groupBy('product_variant_id');
 
@@ -145,7 +145,7 @@ final class StockService
                 ->on('product_variants.id', '=', 'stock_agg.product_variant_id')
             )
             ->with(['product.brand', 'product.categories', 'values.option', 'images'])
-            ->whereHas('batches', fn (Builder $bq) => $bq->whereIn('status', ['active', 'queued'])->where('store_id', $storeId))
+            ->whereHas('batches', fn (Builder $bq) => $bq->where('status', 'active')->where('store_id', $storeId))
             ->when($categoryId, fn ($q) => $q->whereHas(
                 'product.categories', fn ($cq) => $cq->where('categories.id', $categoryId)
             ))
