@@ -8,7 +8,7 @@ import {
   InputText,
   Textarea,
   AutoComplete,
-  Calendar,
+  DatePicker,
   Tag,
   useToast,
 } from "primevue";
@@ -429,7 +429,7 @@ const submit = handleSubmit((formValues) => {
               <div v-if="showNewBatchFields" class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
                   <label for="expiry_date">{{ t("Expiry Date") }}</label>
-                  <Calendar
+                  <DatePicker
                     id="expiry_date"
                     :model-value="values.expiry_date ? new Date(values.expiry_date) : null"
                     date-format="yy-mm-dd"
