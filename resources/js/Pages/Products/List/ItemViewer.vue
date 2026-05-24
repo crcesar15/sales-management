@@ -112,7 +112,7 @@ const statusLabel = computed(() => {
       <!-- Details Column -->
       <div class="flex-1 min-w-0 flex flex-col gap-4">
         <!-- Pricing & Inventory -->
-        <Card :pt="{ root: { class: '' }, body: { class: 'bg-surface-50 dark:bg-surface-900' } }">
+        <Card :pt="{ root: { class: '' }, body: { class: 'bg-surface-50 dark:bg-surface-800' } }">
           <template #title>{{ t("Pricing & Inventory") }}</template>
           <template #content>
             <div class="grid grid-cols-2 gap-4">
@@ -160,7 +160,7 @@ const statusLabel = computed(() => {
         </Card>
 
         <!-- Details -->
-        <Card :pt="{ root: { class: '' }, body: { class: 'bg-surface-50 dark:bg-surface-900' } }">
+        <Card :pt="{ root: { class: '' }, body: { class: 'bg-surface-50 dark:bg-surface-800' } }">
           <template #title>{{ t("Details") }}</template>
           <template #content>
             <div class="grid grid-cols-2 gap-4">
@@ -177,7 +177,7 @@ const statusLabel = computed(() => {
         </Card>
 
         <!-- Description -->
-        <Card v-if="product.description" :pt="{ root: { class: '' }, body: { class: 'bg-surface-50 dark:bg-surface-900' } }">
+        <Card v-if="product.description" :pt="{ root: { class: '' }, body: { class: 'bg-surface-50 dark:bg-surface-800' } }">
           <template #title>{{ t("Description") }}</template>
           <template #content>
             <p class="m-0 leading-relaxed whitespace-pre-line">{{ product.description }}</p>
@@ -185,7 +185,7 @@ const statusLabel = computed(() => {
         </Card>
 
         <!-- Variants -->
-        <Card v-if="product.variants.length > 1" :pt="{ root: { class: '' }, body: { class: 'bg-surface-50 dark:bg-surface-900' } }">
+        <Card v-if="product.variants.length > 1" :pt="{ root: { class: '' }, body: { class: 'bg-surface-50 dark:bg-surface-800' } }">
           <template #title>{{ t("Variants") }} ({{ product.variants.length }})</template>
           <template #content>
             <DataTable :value="product.variants" size="small" striped-rows>
