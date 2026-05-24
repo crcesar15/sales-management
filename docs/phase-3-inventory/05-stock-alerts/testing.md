@@ -18,7 +18,7 @@
 - Variant with `minimum_stock_level = null` does NOT appear in alerts
 - Variant where stock < `minimum_stock_level` appears in low-stock list
 - Variant where stock >= `minimum_stock_level` does NOT appear
-- Stock is aggregated correctly across active + queued batches
+- Stock is aggregated correctly across active batches
 
 **Expiry alerts**
 - Batch with `expiry_date = null` does NOT appear in expiry alerts

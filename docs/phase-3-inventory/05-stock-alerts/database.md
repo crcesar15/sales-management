@@ -13,7 +13,7 @@ $table->unsignedInteger('minimum_stock_level')->nullable()->after('cost_price');
 | `product_variants` | `minimum_stock_level` | Low-stock threshold (new) |
 | `batches` | `expiry_date` | Expiry alert trigger |
 | `batches` | `store_id` | Store-scoped alerts |
-| `batches` | `status` | Only active/queued batches considered |
+| `batches` | `status` | Only active batches considered |
 | `batches` | `remaining_quantity` | For stock aggregation |
 
 ## No New Tables
@@ -27,10 +27,10 @@ Alerts are computed on demand — no persistence layer required for v1.
 ProductVariant::query()
     ->whereNotNull('minimum_stock_level')
     ->whereHas('batches', function ($q) use ($storeId) {
-        $q->whereIn('status', ['active', 'queued'])
+        $q->where('status', 'active')
           ->when($storeId, fn($q) => $q->where('store_id', $storeId));
     })
-    ->withSum(['batches' => fn($q) => $q->whereIn('status', ['active','queued'])
+    ->withSum(['batches' => fn($q) => $q->where('status', 'active')
         ->when($storeId, fn($q) => $q->where('store_id', $storeId))
     ], 'remaining_quantity')
     ->havingRaw('batches_sum_remaining_quantity < minimum_stock_level');
@@ -39,7 +39,7 @@ ProductVariant::query()
 **Expiry alert query:**
 ```php
 Batch::whereNotNull('expiry_date')
-    ->whereIn('status', ['active', 'queued'])
+    ->where('status', 'active')
     ->where('remaining_quantity', '>', 0)
     ->whereDate('expiry_date', '<=', now()->addDays($alertDays))
     ->when($storeId, fn($q) => $q->where('store_id', $storeId));

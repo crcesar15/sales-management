@@ -9,7 +9,7 @@
 ## Components
 | File | Description |
 |---|---|
-| `resources/js/Components/Inventory/BatchStatusTag.vue` | Status badge (queued/active/closed) |
+| `resources/js/Components/Inventory/BatchStatusTag.vue` | Status badge (active/closed) |
 | `resources/js/Components/Inventory/ExpiryBadge.vue` | Expiry status chip (ok/expiring/expired) |
 | `resources/js/Components/Inventory/BatchQuantityBar.vue` | Visual breakdown (sold/remaining/missing) |
 | `resources/js/Components/Inventory/CloseBatchModal.vue` | Confirm + notes before manual close |

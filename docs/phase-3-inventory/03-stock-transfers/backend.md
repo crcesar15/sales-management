@@ -45,7 +45,7 @@ Validate in service: throw `InvalidStateException` on illegal transition.
 - Wrap `completeTransfer` in `DB::transaction()` — multiple batch rows modified
 - Use `lockForUpdate()` on batches during FIFO deduction
 - Log each transition: `activity()->on($transfer)->causedBy($actor)->log("Status changed to {$newStatus}")`
-- New destination batch: `reception_order_id = null`, `status = queued`
+- New destination batch: `reception_order_id = null`, `status = active`
 
 ## Gotchas
 - Validate `from_store_id !== to_store_id` in form request

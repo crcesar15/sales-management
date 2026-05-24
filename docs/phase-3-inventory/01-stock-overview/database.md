@@ -15,7 +15,7 @@
 | `missing_quantity` | int default 0 | From audits |
 | `sold_quantity` | int default 0 | Incremented by sales |
 | `transferred_quantity` | int default 0 | Incremented by transfers out |
-| `status` | enum | `queued`, `active`, `closed` |
+| `status` | enum | `active`, `closed` |
 | `timestamps` | | |
 
 ### `product_variants` (referenced)
@@ -30,7 +30,7 @@ add_store_id_to_batches_table
 ```
 
 ## Key Indexes
-- `batches(store_id, status)` — filters active/queued batches per store
+- `batches(store_id, status)` — filters active batches per store
 - `batches(product_variant_id, store_id, status)` — stock aggregation query
 - `batches(expiry_date)` — expiry alert queries (Task 05)
 
@@ -43,7 +43,7 @@ add_store_id_to_batches_table
 ```php
 // Stock per variant per store
 Batch::query()
-    ->whereIn('status', ['active', 'queued'])
+    ->where('status', 'active')
     ->selectRaw('product_variant_id, store_id, SUM(remaining_quantity) as stock')
     ->groupBy('product_variant_id', 'store_id');
 ```

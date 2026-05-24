@@ -11,7 +11,7 @@
 ## Query Parameters — `GET /inventory/batches`
 | Param | Type | Description |
 |---|---|---|
-| `status` | string | `queued`, `active`, `closed` |
+| `status` | string | `active`, `closed` |
 | `store_id` | int | Filter by store |
 | `product_variant_id` | int | Filter by variant |
 | `expiry_from` | date | Expiry date range start |

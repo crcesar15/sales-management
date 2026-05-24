@@ -39,6 +39,6 @@ public function getVariantStock(ProductVariant $variant): array
 
 ## Gotchas
 - `minimum_stock_level` column does not exist until Task 05 migration — use `null` check
-- Closed batches must be excluded: `whereIn('status', ['active', 'queued'])`
+- Closed batches must be excluded: `where('status', 'active')`
 - Global stock ≠ sum of `initial_quantity`; always use `remaining_quantity`
 - If `store_id` FK is added after data exists, ensure existing batches get a store_id or allow nullable temporarily

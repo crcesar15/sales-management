@@ -15,7 +15,7 @@
 | `missing_quantity` | int default 0 | Audit discrepancies |
 | `sold_quantity` | int default 0 | Phase 5 increments |
 | `transferred_quantity` | int default 0 | Task 03 increments |
-| `status` | enum(`queued`,`active`,`closed`) | Lifecycle state |
+| `status` | enum(`active`,`closed`) | Lifecycle state |
 | `timestamps` | | |
 
 ### `settings` (referenced)
@@ -37,7 +37,7 @@
 ```php
 Batch::where('product_variant_id', $variantId)
     ->where('store_id', $storeId)
-    ->whereIn('status', ['queued', 'active'])
+    ->where('status', 'active')
     ->where('remaining_quantity', '>', 0)
     ->orderBy('created_at', 'asc')
     ->first();

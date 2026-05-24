@@ -37,9 +37,6 @@ public function deductFIFO(int $variantId, int $storeId, int $quantity): void
 
 // Closes a batch, logs the action
 public function closeBatch(Batch $batch, ?string $notes, User $actor): void
-
-// Transitions queued → active on first deduction
-public function activateIfQueued(Batch $batch): void
 ```
 
 ## Important Patterns

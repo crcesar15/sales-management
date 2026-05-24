@@ -24,7 +24,6 @@
 
 **Close batch**
 - Admin with `stock.adjust` can close an `active` batch
-- Closing a `queued` batch is allowed
 - Closing an already `closed` batch returns 422
 - Close action is recorded in activity log with correct causer and notes
 
@@ -32,7 +31,6 @@
 - `deductFIFO()` selects oldest available batch first
 - `deductFIFO()` spans multiple batches when one batch has insufficient quantity
 - `deductFIFO()` throws exception when total available stock is insufficient
-- `activateIfQueued()` sets status to `active` and saves
 - `closeBatch()` sets `status = closed` and logs activity
 
 ## Unit Test Cases — `Batch` Model

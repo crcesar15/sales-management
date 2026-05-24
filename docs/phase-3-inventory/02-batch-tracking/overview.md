@@ -11,10 +11,10 @@ expiry monitoring, and per-batch quantities are all batch-level concerns.
 ## Requirements
 - [ ] View list of batches with filters (status, product, store, expiry range)
 - [ ] View individual batch details: variant, reception order, all quantity fields, expiry status
-- [ ] Batch lifecycle: `queued` → `active` → `closed`
+- [ ] Batch lifecycle: `active` → `closed`
 - [ ] Expiry alerts when `expiry_date` is within `expiry_alert_days` (from settings)
 - [ ] Manual close action (Admin only, requires `stock.adjust` permission)
-- [ ] Batches consumed FIFO during sales (oldest `created_at` / `queued` batch first)
+- [ ] Batches consumed FIFO during sales (oldest `created_at` batch first)
 - [ ] Admin-only to view batch details; `stock.adjust` to modify
 
 ## Acceptance Criteria
@@ -39,6 +39,6 @@ expiry monitoring, and per-batch quantities are all batch-level concerns.
 - Lifecycle is managed here; other phases interact with batches but don't own the lifecycle
 
 ## Notes
-- `queued` → `active` transition is automatic: first sale deduction marks batch active
+- Batches are created as `active` by default
 - `active` → `closed` is automatic when `remaining_quantity = 0`, or manual by Admin
 - Expiry date is set at reception and is immutable after creation

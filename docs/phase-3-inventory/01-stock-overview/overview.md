@@ -10,7 +10,7 @@ which stores have stock, and what the global position is — without digging int
 
 ## Requirements
 - [ ] Show stock per store and global totals for every product variant
-- [ ] Aggregate `remaining_quantity` from `active` and `queued` batches only
+- [ ] Aggregate `remaining_quantity` from `active` batches only
 - [ ] Display: product name, variant identifier, per-store quantities, global total
 - [ ] Low-stock indicator when stock falls below `minimum_stock_level`
 - [ ] Filter by: store, category, brand, low-stock flag
@@ -18,7 +18,7 @@ which stores have stock, and what the global position is — without digging int
 - [ ] Add `store_id` to `batches` table (new migration)
 
 ## Acceptance Criteria
-- [ ] Stock totals match SUM of `remaining_quantity` from active/queued batches per store
+- [ ] Stock totals match SUM of `remaining_quantity` from active batches per store
 - [ ] Global column = sum across all stores
 - [ ] Low-stock badge appears when `total_stock < minimum_stock_level`
 - [ ] Filters work independently and in combination

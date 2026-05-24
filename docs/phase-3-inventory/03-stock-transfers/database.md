@@ -48,5 +48,5 @@ Rule::different('from_store_id') // applied to to_store_id
 
 ## Completion Flow (DB side)
 1. For each item: FIFO deduct `quantity_received` from source store batches
-2. Create new `Batch` at destination: `initial_quantity = quantity_received`, `status = queued`
+2. Create new `Batch` at destination: `initial_quantity = quantity_received`, `status = active`
 3. Update `stock_transfers.status = completed`, set `completed_at`

@@ -14,7 +14,7 @@
 - Guest is redirected to login
 
 **Stock aggregation**
-- Returns correct `global_stock` as SUM of `remaining_quantity` from active + queued batches
+- Returns correct `global_stock` as SUM of `remaining_quantity` from active batches
 - Excludes `closed` batches from stock total
 - Returns correct per-store stock breakdown
 
