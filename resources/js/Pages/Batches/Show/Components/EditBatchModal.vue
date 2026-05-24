@@ -19,6 +19,7 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const toast = useToast();
 const loading = ref(false);
+const fieldErrors = ref<Record<string, string>>({});
 
 const batchIdentifier = ref(props.batchIdentifier ?? "");
 const expiryDate = ref<Date | null>(props.expiryDate ? new Date(props.expiryDate) : null);
@@ -81,6 +82,7 @@ function submit() {
         });
       },
       onError: (errs) => {
+        fieldErrors.value = errs as Record<string, string>;
         toast.add({
           severity: "error",
           summary: t("Error"),
@@ -100,6 +102,7 @@ function submit() {
   <Dialog
     :visible="visible"
     modal
+    :closable="false"
     :header="t('Edit Batch')"
     :style="{ width: '450px' }"
     @update:visible="handleDismiss($event)"
@@ -112,12 +115,21 @@ function submit() {
           v-model="batchIdentifier"
           :placeholder="t('Enter batch identifier (optional)')"
           class="w-full"
+          :class="{ 'p-invalid': fieldErrors.batch_identifier }"
         />
+        <small v-if="fieldErrors.batch_identifier" class="text-red-500">{{ fieldErrors.batch_identifier }}</small>
       </div>
       <div>
         <label for="expiry-date" class="text-sm font-medium mb-1 block">{{ t("Expiry Date") }}</label>
-        <DatePicker id="expiry-date" v-model="expiryDate" show-icon class="w-full" />
-        <small class="text-surface-500">{{ t("Updating the expiry date will recalculate the expiry status") }}</small>
+        <DatePicker
+          id="expiry-date"
+          v-model="expiryDate"
+          show-icon
+          class="w-full"
+          :class="{ 'p-invalid': fieldErrors.expiry_date }"
+        />
+        <small v-if="fieldErrors.expiry_date" class="text-red-500">{{ fieldErrors.expiry_date }}</small>
+        <small v-else class="text-surface-500">{{ t("Updating the expiry date will recalculate the expiry status") }}</small>
       </div>
     </div>
     <template #footer>

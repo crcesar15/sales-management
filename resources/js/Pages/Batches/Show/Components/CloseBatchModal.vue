@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Dialog, Button, Textarea, Message } from "primevue";
+import { Dialog, Button, Textarea, Message, useToast } from "primevue";
 import { useI18n } from "vue-i18n";
 import { ref } from "vue";
 import { router } from "@inertiajs/vue3";
@@ -15,6 +15,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const toast = useToast();
 const notes = ref("");
 const loading = ref(false);
 
@@ -31,6 +32,14 @@ function confirm() {
     {
       preserveScroll: true,
       onSuccess: () => close(),
+      onError: (errs) => {
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: t(Object.values(errs)[0] ?? "Failed to close batch"),
+          life: 5000,
+        });
+      },
       onFinish: () => {
         loading.value = false;
       },
@@ -44,6 +53,7 @@ function confirm() {
     :visible="visible"
     modal
     :header="t('Close Batch')"
+    :closable="false"
     :style="{ width: '450px' }"
     @update:visible="emit('update:visible', $event)"
   >
