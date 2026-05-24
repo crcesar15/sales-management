@@ -39,7 +39,7 @@ function createVariantWithoutMinimumStock(array $overrides = []): ProductVariant
 
 function createActiveBatch(ProductVariant $variant, Store $store, int $remaining = 50, array $overrides = []): Batch
 {
-    return Batch::factory()->create([
+    $batch = Batch::factory()->create([
         'product_variant_id' => $variant->id,
         'store_id' => $store->id,
         'remaining_quantity' => $remaining,
@@ -47,6 +47,10 @@ function createActiveBatch(ProductVariant $variant, Store $store, int $remaining
         'status' => 'active',
         ...$overrides,
     ]);
+
+    $variant->recalculateStock();
+
+    return $batch;
 }
 
 function setExpiryAlertDays(int $days): void
@@ -83,7 +87,7 @@ it('includes variants where total stock is below minimum_stock_level', function 
 
     expect($results)->toHaveCount(1);
     expect($results->first()->id)->toBe($variant->id);
-    expect($results->first()->total_stock)->toBe(10);
+    expect($results->first()->stock)->toBe(10);
 });
 
 it('excludes variants where total stock meets or exceeds minimum_stock_level', function () {
@@ -105,7 +109,7 @@ it('applies store filter correctly', function () {
     $results = $this->service->getLowStockAlerts($this->store->id);
 
     expect($results)->toHaveCount(1);
-    expect($results->first()->total_stock)->toBe(2);
+    expect($results->first()->stock)->toBe(2);
 });
 
 it('aggregates stock across multiple batches for the same variant', function () {
@@ -117,7 +121,7 @@ it('aggregates stock across multiple batches for the same variant', function () 
     $results = $this->service->getLowStockAlerts();
 
     expect($results)->toHaveCount(1);
-    expect($results->first()->total_stock)->toBe(10);
+    expect($results->first()->stock)->toBe(10);
 });
 
 it('returns empty collection when no variants meet criteria', function () {

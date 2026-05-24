@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Batch;
+use App\Models\ProductVariant;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -58,6 +59,8 @@ final class BatchService
 
         DB::transaction(function () use ($batch, $notes, $actor): void {
             $batch->update(['status' => 'closed']);
+
+            ProductVariant::where('id', $batch->product_variant_id)->firstOrFail()->recalculateStock();
 
             activity()
                 ->causedBy($actor)
@@ -124,6 +127,8 @@ final class BatchService
                     $batch->update(['status' => 'closed']);
                 }
             }
+
+            ProductVariant::where('id', $variantId)->firstOrFail()->recalculateStock();
         });
     }
 
@@ -156,6 +161,8 @@ final class BatchService
                     $batch->update(['status' => 'closed']);
                 }
             }
+
+            ProductVariant::where('id', $variantId)->firstOrFail()->recalculateStock();
         });
     }
 

@@ -25,8 +25,8 @@ final class StockOverviewCollection extends ResourceCollection
                 'barcode' => $variant->barcode,
                 'price' => (float) $variant->price,
                 'status' => $variant->status,
-                'total_stock' => (int) ($variant->global_stock ?? 0),
-                'is_low_stock' => ($variant->global_stock ?? 0) <= 0,
+                'total_stock' => (int) $variant->stock,
+                'is_low_stock' => $variant->stock <= 0,
                 'values' => $variant->values->map(fn ($v) => [
                     'id' => $v->id,
                     'value' => $v->value,

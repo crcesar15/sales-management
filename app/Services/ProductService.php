@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Batch;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Exception;
@@ -33,22 +32,11 @@ final class ProductService
                 'categories:id,name',
                 'media',
                 'variants' => fn ($q) => $q
-                    ->select(['id', 'product_id', 'identifier', 'status', 'price'])
-                    ->withCount([
-                        'batches as batch_stock' => fn ($q) => $q
-                            ->selectRaw('COALESCE(SUM(remaining_quantity), 0)')
-                            ->activeOrQueued(),
-                    ])
+                    ->select(['id', 'product_id', 'identifier', 'status', 'price', 'stock'])
                     ->with('values.option'),
             ])
             ->withCount('variants')
-            ->addSelect([
-                'stock' => Batch::query()
-                    ->selectRaw('COALESCE(SUM(remaining_quantity), 0)')
-                    ->join('product_variants', 'batches.product_variant_id', '=', 'product_variants.id')
-                    ->whereColumn('product_variants.product_id', 'products.id')
-                    ->whereIn('batches.status', ['active', 'queued']),
-            ])
+            ->withSum('variants as stock', 'stock')
             ->withMin('variants as price_min', 'price')
             ->withMax('variants as price_max', 'price')
             ->when($filter, fn ($q) => $q->where('name', 'like', "%{$filter}%"))

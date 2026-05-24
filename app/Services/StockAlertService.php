@@ -19,19 +19,13 @@ final class StockAlertService
      */
     public function getLowStockAlerts(?int $storeId = null): Collection
     {
-        $stockSubquery = Batch::query()
-            ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as total_stock'))
-            ->activeOrQueued()
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->groupBy('product_variant_id');
+        if ($storeId !== null) {
+            return $this->getLowStockAlertsByStore($storeId);
+        }
 
         return ProductVariant::query()
-            ->select('product_variants.*', DB::raw('COALESCE(stock_agg.total_stock, 0) as total_stock'))
-            ->joinSub($stockSubquery, 'stock_agg', fn ($join) => $join
-                ->on('product_variants.id', '=', 'stock_agg.product_variant_id')
-            )
-            ->whereNotNull('product_variants.minimum_stock_level')
-            ->whereColumn('stock_agg.total_stock', '<', 'product_variants.minimum_stock_level')
+            ->whereNotNull('minimum_stock_level')
+            ->whereColumn('stock', '<', 'minimum_stock_level')
             ->with(['product.brand', 'values.option'])
             ->get();
     }
@@ -80,20 +74,49 @@ final class StockAlertService
         return (int) Setting::get('expiry_alert_days', 30);
     }
 
-    private function countLowStock(?int $storeId): int
+    /**
+     * @return Collection<int, ProductVariant>
+     */
+    private function getLowStockAlertsByStore(int $storeId): Collection
     {
         $stockSubquery = Batch::query()
-            ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as total_stock'))
+            ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as store_stock'))
             ->activeOrQueued()
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
+            ->where('store_id', $storeId)
             ->groupBy('product_variant_id');
 
         return ProductVariant::query()
+            ->select('product_variants.*', DB::raw('CAST(COALESCE(stock_agg.store_stock, 0) AS UNSIGNED) as stock'))
             ->joinSub($stockSubquery, 'stock_agg', fn ($join) => $join
                 ->on('product_variants.id', '=', 'stock_agg.product_variant_id')
             )
             ->whereNotNull('product_variants.minimum_stock_level')
-            ->whereColumn('stock_agg.total_stock', '<', 'product_variants.minimum_stock_level')
+            ->whereColumn('stock_agg.store_stock', '<', 'product_variants.minimum_stock_level')
+            ->with(['product.brand', 'values.option'])
+            ->get();
+    }
+
+    private function countLowStock(?int $storeId): int
+    {
+        if ($storeId !== null) {
+            $stockSubquery = Batch::query()
+                ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as store_stock'))
+                ->activeOrQueued()
+                ->where('store_id', $storeId)
+                ->groupBy('product_variant_id');
+
+            return ProductVariant::query()
+                ->joinSub($stockSubquery, 'stock_agg', fn ($join) => $join
+                    ->on('product_variants.id', '=', 'stock_agg.product_variant_id')
+                )
+                ->whereNotNull('product_variants.minimum_stock_level')
+                ->whereColumn('stock_agg.store_stock', '<', 'product_variants.minimum_stock_level')
+                ->count();
+        }
+
+        return ProductVariant::query()
+            ->whereNotNull('minimum_stock_level')
+            ->whereColumn('stock', '<', 'minimum_stock_level')
             ->count();
     }
 

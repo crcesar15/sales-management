@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Batch;
+use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderProduct;
 use App\Models\ReceptionOrder;
@@ -196,6 +197,11 @@ final class ReceptionOrderService
                 ]);
 
                 $stockChanges[$lineItem->product_variant_id] = $baseQuantity;
+            }
+
+            $variantIds = $receptionOrder->lineItems->pluck('product_variant_id')->unique();
+            foreach ($variantIds as $variantId) {
+                ProductVariant::where('id', $variantId)->firstOrFail()->recalculateStock();
             }
 
             $receptionOrder->update(['status' => 'completed']);

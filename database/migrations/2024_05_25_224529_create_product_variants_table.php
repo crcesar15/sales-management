@@ -20,8 +20,10 @@ return new class extends Migration
             $table->string('barcode', 100)->nullable()->index();
             $table->decimal('price', 10, 2);
             $table->unsignedInteger('minimum_stock_level')->nullable();
+            $table->unsignedInteger('stock')->default(0);
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->index('status');
+            $table->index('stock');
             $table->timestamps();
         });
     }

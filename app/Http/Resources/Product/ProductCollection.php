@@ -37,7 +37,7 @@ final class ProductCollection extends ResourceCollection
                     ]),
                     'status' => $v->status,
                     'price' => (float) $v->price,
-                    'stock' => (int) ($v->batch_stock ?? 0),
+                    'stock' => $v->stock,
                 ]),
                 'variants_count' => $product->variants_count,
                 'stock' => (int) $product->stock,

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\RolesEnum;
 use App\Models\Batch;
+use App\Models\ProductVariant;
 use App\Models\StockTransfer;
 use App\Models\StockTransferItem;
 use App\Models\User;
@@ -149,6 +150,11 @@ final class StockTransferService
                     'transferred_quantity' => 0,
                     'status' => 'queued',
                 ]);
+            }
+
+            $variantIds = $transfer->items->pluck('product_variant_id')->unique();
+            foreach ($variantIds as $variantId) {
+                ProductVariant::where('id', $variantId)->firstOrFail()->recalculateStock();
             }
 
             $transfer->update([

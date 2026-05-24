@@ -29,6 +29,7 @@ final class ProductVariant extends Model
         'barcode',
         'price',
         'minimum_stock_level',
+        'stock',
         'status',
     ];
 
@@ -137,6 +138,14 @@ final class ProductVariant extends Model
             ->where('type', 'purchase')
             ->where('status', 'active')
             ->orderBy('sort_order');
+    }
+
+    public function recalculateStock(): self
+    {
+        $this->stock = max(0, (int) $this->batches()->activeOrQueued()->sum('remaining_quantity'));
+        $this->save();
+
+        return $this;
     }
 
     public function getActivitylogOptions(): LogOptions

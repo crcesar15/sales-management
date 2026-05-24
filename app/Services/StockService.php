@@ -17,7 +17,7 @@ final class StockService
     private const SORT_COLUMN_MAP = [
         'product_name' => 'products.name',
         'brand_name' => 'brands.name',
-        'total_stock' => 'global_stock',
+        'total_stock' => 'product_variants.stock',
         'identifier' => 'product_variants.identifier',
         'price' => 'product_variants.price',
     ];
@@ -36,39 +36,41 @@ final class StockService
         int $perPage = 15,
         ?string $status = null,
     ): LengthAwarePaginator {
-        $globalStockSubquery = Batch::query()
-            ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as global_stock'))
-            ->activeOrQueued()
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->groupBy('product_variant_id');
+        if ($storeId !== null) {
+            return $this->listStockOverviewByStore(
+                $storeId,
+                $categoryId,
+                $brandId,
+                $lowStockOnly,
+                $search,
+                $orderBy,
+                $orderDirection,
+                $perPage,
+                $status,
+            );
+        }
 
         $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'products.name';
         $needsProductJoin = in_array($orderBy, ['product_name', 'brand_name', 'price', 'identifier']);
         $needsBrandJoin = $orderBy === 'brand_name';
 
         return ProductVariant::query()
-            ->select('product_variants.*', DB::raw('COALESCE(stock_agg.global_stock, 0) as global_stock'))
+            ->select('product_variants.*')
             ->when($needsProductJoin, fn ($q) => $q->join(
                 'products', 'product_variants.product_id', '=', 'products.id'
             ))
             ->when($needsBrandJoin, fn ($q) => $q->leftJoin(
                 'brands', 'products.brand_id', '=', 'brands.id'
             ))
-            ->leftJoinSub($globalStockSubquery, 'stock_agg', fn ($join) => $join
-                ->on('product_variants.id', '=', 'stock_agg.product_variant_id')
-            )
             ->with(['product.brand', 'product.categories', 'values.option', 'images'])
-            ->when($storeId, fn ($q) => $q->whereHas(
-                'batches', fn (Builder $bq) => $bq->whereIn('status', ['active', 'queued'])->where('store_id', $storeId)
-            ))
             ->when($categoryId, fn ($q) => $q->whereHas(
                 'product.categories', fn ($cq) => $cq->where('categories.id', $categoryId)
             ))
             ->when($brandId, fn ($q) => $q->whereHas(
                 'product', fn ($pq) => $pq->where('brand_id', $brandId)
             ))
-            ->when($lowStockOnly, fn ($q) => $q->whereRaw(
-                'COALESCE(stock_agg.global_stock, 0) <= ?', [self::LOW_STOCK_THRESHOLD]
+            ->when($lowStockOnly, fn ($q) => $q->where(
+                'product_variants.stock', '<=', self::LOW_STOCK_THRESHOLD
             ))
             ->when($search, fn ($q) => $q->whereHas(
                 'product', fn ($pq) => $pq->where('name', 'like', "%{$search}%")
@@ -105,5 +107,61 @@ final class StockService
             'stores' => $stores,
             'total_quantity' => (int) $perStoreStock->sum('quantity'),
         ];
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, ProductVariant>
+     */
+    private function listStockOverviewByStore(
+        int $storeId,
+        ?int $categoryId = null,
+        ?int $brandId = null,
+        bool $lowStockOnly = false,
+        string $search = '',
+        string $orderBy = 'product_name',
+        string $orderDirection = 'asc',
+        int $perPage = 15,
+        ?string $status = null,
+    ): LengthAwarePaginator {
+        $storeStockSubquery = Batch::query()
+            ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as store_stock'))
+            ->activeOrQueued()
+            ->where('store_id', $storeId)
+            ->groupBy('product_variant_id');
+
+        $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'products.name';
+        $needsProductJoin = in_array($orderBy, ['product_name', 'brand_name', 'price', 'identifier']);
+        $needsBrandJoin = $orderBy === 'brand_name';
+
+        return ProductVariant::query()
+            ->select('product_variants.*', DB::raw('CAST(COALESCE(stock_agg.store_stock, 0) AS UNSIGNED) as stock'))
+            ->when($needsProductJoin, fn ($q) => $q->join(
+                'products', 'product_variants.product_id', '=', 'products.id'
+            ))
+            ->when($needsBrandJoin, fn ($q) => $q->leftJoin(
+                'brands', 'products.brand_id', '=', 'brands.id'
+            ))
+            ->leftJoinSub($storeStockSubquery, 'stock_agg', fn ($join) => $join
+                ->on('product_variants.id', '=', 'stock_agg.product_variant_id')
+            )
+            ->with(['product.brand', 'product.categories', 'values.option', 'images'])
+            ->whereHas('batches', fn (Builder $bq) => $bq->whereIn('status', ['active', 'queued'])->where('store_id', $storeId))
+            ->when($categoryId, fn ($q) => $q->whereHas(
+                'product.categories', fn ($cq) => $cq->where('categories.id', $categoryId)
+            ))
+            ->when($brandId, fn ($q) => $q->whereHas(
+                'product', fn ($pq) => $pq->where('brand_id', $brandId)
+            ))
+            ->when($lowStockOnly, fn ($q) => $q->whereRaw(
+                'COALESCE(stock_agg.store_stock, 0) <= ?', [self::LOW_STOCK_THRESHOLD]
+            ))
+            ->when($search, fn ($q) => $q->whereHas(
+                'product', fn ($pq) => $pq->where('name', 'like', "%{$search}%")
+                    ->orWhere('products.name', 'like', "%{$search}%")
+            ))
+            ->when($status && $status !== 'all', fn ($q) => $q->where('product_variants.status', $status))
+            ->orderBy($sortColumn, $orderDirection)
+            ->paginate($perPage)
+            ->withQueryString();
     }
 }

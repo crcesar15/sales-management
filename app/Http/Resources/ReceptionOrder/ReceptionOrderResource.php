@@ -89,7 +89,7 @@ final class ReceptionOrderResource extends JsonResource
                     'id' => $item->productVariant->id,
                     'name' => $item->productVariant->name,
                     'identifier' => $item->productVariant->identifier,
-                    'stock' => (int) ($item->productVariant->batch_stock ?? 0),
+                    'stock' => (int) ($item->productVariant->stock ?? 0),
                     'minimum_stock_level' => $item->productVariant->minimum_stock_level,
                     'product' => $item->productVariant->product ? [
                         'id' => $item->productVariant->product->id,

@@ -34,7 +34,7 @@ final class VendorCatalogResource extends JsonResource
                 'identifier' => $variant->identifier,
                 'barcode' => $variant->barcode,
                 'price' => (float) $variant->price,
-                'stock' => (int) ($variant->batch_stock ?? 0),
+                'stock' => $variant->stock,
                 'minimum_stock_level' => $variant->minimum_stock_level,
                 'status' => $variant->status,
                 'name' => $variant->name,

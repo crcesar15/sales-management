@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\AdjustmentReason;
 use App\Enums\RolesEnum;
 use App\Models\Batch;
+use App\Models\ProductVariant;
 use App\Models\StockAdjustment;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -90,6 +91,8 @@ final class StockAdjustmentService
                 'reason' => $data['reason'],
                 'notes' => $data['notes'] ?? null,
             ]);
+
+            ProductVariant::where('id', $variantId)->firstOrFail()->recalculateStock();
 
             activity()
                 ->causedBy($actor)

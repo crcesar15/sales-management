@@ -20,7 +20,7 @@ final class CatalogVariantResource extends JsonResource
             'identifier' => $this->identifier,
             'barcode' => $this->barcode,
             'price' => (float) $this->price,
-            'stock' => (int) ($this->batch_stock ?? 0),
+            'stock' => $this->stock,
             'status' => $this->status,
             'name' => $this->name,
             'product' => $this->whenLoaded('product') ? [
