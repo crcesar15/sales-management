@@ -56,18 +56,20 @@ const vendorOptions = computed(() => [
   ...props.vendors.map((v) => ({ label: v.fullname, value: v.id })),
 ]);
 
-const hasActiveFilters = computed(() => status.value !== "active" || vendorId.value !== null);
+const hasActiveFilters = computed(() => status.value !== "active" || vendorId.value !== null || filter.value !== "");
 
 const activeFilterCount = computed(() => {
   let count = 0;
   if (status.value !== "active") count++;
   if (vendorId.value !== null) count++;
+  if (filter.value !== "") count++;
   return count;
 });
 
 function resetFilters() {
   status.value = "active";
   vendorId.value = null;
+  filter.value = "";
   applyFilters();
 }
 
@@ -144,28 +146,25 @@ const viewDetails = (productVariantId: number) => {
           </template>
 
           <template #header>
-            <div class="grid grid-cols-12 gap-2">
-              <div class="lg:col-span-4 lg:col-start-1 md:col-span-6 col-span-12 flex gap-2 items-center">
-                <Button
-                  type="button"
-                  icon="fa fa-filter"
-                  :label="t('Filters')"
-                  :severity="hasActiveFilters ? 'primary' : 'secondary'"
-                  outlined
-                  @click="filterPopover.toggle($event)"
-                />
-                <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
-              </div>
-              <div class="lg:col-span-4 lg:col-start-9 md:col-start-7 col-start-1 col-span-12 flex items-end">
-                <IconField icon-position="left" class="w-full">
-                  <InputIcon class="fa fa-search" />
-                  <InputText v-model="filter" :placeholder="t('Search')" fluid />
-                </IconField>
-              </div>
+            <div class="flex items-center gap-2">
+              <Button
+                type="button"
+                icon="fa fa-filter"
+                :label="t('Filters')"
+                :severity="hasActiveFilters ? 'primary' : 'secondary'"
+                outlined
+                :pt="{ label: { class: 'hidden sm:inline' } }"
+                @click="filterPopover.toggle($event)"
+              />
+              <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
+              <IconField icon-position="left" class="flex-1 sm:flex-none sm:w-80 sm:ml-auto">
+                <InputIcon class="fa fa-search" />
+                <InputText v-model="filter" :placeholder="t('Search')" class="w-full" />
+              </IconField>
             </div>
 
             <Popover ref="filterPopover">
-              <div class="flex flex-col gap-4 p-4" style="width: 320px">
+              <div class="flex flex-col gap-4 p-4 min-w-72">
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
                   <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />

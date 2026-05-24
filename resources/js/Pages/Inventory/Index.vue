@@ -80,7 +80,7 @@ const statusSeverity = (s: string): "success" | "warn" | "danger" | "info" => {
 };
 
 const hasActiveFilters = computed(
-  () => status.value !== "active" || storeId.value !== ALL || categoryId.value !== ALL || brandId.value !== ALL || lowStock.value,
+  () => status.value !== "active" || storeId.value !== ALL || categoryId.value !== ALL || brandId.value !== ALL || lowStock.value || search.value !== "",
 );
 
 const activeFilterCount = computed(() => {
@@ -90,6 +90,7 @@ const activeFilterCount = computed(() => {
   if (categoryId.value !== ALL) count++;
   if (brandId.value !== ALL) count++;
   if (lowStock.value) count++;
+  if (search.value !== "") count++;
   return count;
 });
 
@@ -99,6 +100,7 @@ function resetFilters() {
   categoryId.value = ALL;
   brandId.value = ALL;
   lowStock.value = false;
+  search.value = "";
   applyFilters();
 }
 
@@ -172,30 +174,25 @@ const onSort = (event: DataTableSortEvent) => {
           </template>
 
           <template #header>
-            <div class="grid grid-cols-12 gap-2">
-              <div class="lg:col-span-4 lg:col-start-1 md:col-span-6 col-span-12 flex gap-2 items-center">
-                <Button
-                  type="button"
-                  icon="fa fa-filter"
-                  :label="t('Filters')"
-                  :severity="hasActiveFilters ? 'primary' : 'secondary'"
-                  outlined
-                  @click="filterPopover.toggle($event)"
-                />
-                <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
-              </div>
-              <div class="lg:col-span-4 lg:col-start-9 md:col-start-5 col-start-1 col-span-12 flex items-end">
-                <div class="flex-1">
-                  <IconField icon-position="left" class="w-full">
-                    <InputIcon class="fa fa-search" />
-                    <InputText v-model="search" :placeholder="t('Search')" class="w-full" />
-                  </IconField>
-                </div>
-              </div>
+            <div class="flex items-center gap-2">
+              <Button
+                type="button"
+                icon="fa fa-filter"
+                :label="t('Filters')"
+                :severity="hasActiveFilters ? 'primary' : 'secondary'"
+                outlined
+                :pt="{ label: { class: 'hidden sm:inline' } }"
+                @click="filterPopover.toggle($event)"
+              />
+              <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
+              <IconField icon-position="left" class="flex-1 sm:flex-none sm:w-80 sm:ml-auto">
+                <InputIcon class="fa fa-search" />
+                <InputText v-model="search" :placeholder="t('Search')" class="w-full" />
+              </IconField>
             </div>
 
             <Popover ref="filterPopover">
-              <div class="flex flex-col gap-4 p-4" style="width: 320px">
+              <div class="flex flex-col gap-4 p-4 min-w-72">
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
                   <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />

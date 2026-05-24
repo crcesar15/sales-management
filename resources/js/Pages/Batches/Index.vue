@@ -183,7 +183,7 @@ function openEditModal(batch: BatchResponse) {
             </div>
 
             <Popover ref="filterPopover">
-              <div class="flex flex-col gap-4 p-4" style="width: 320px">
+              <div class="flex flex-col gap-4 p-4 min-w-72">
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
                   <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />
