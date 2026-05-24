@@ -8,7 +8,7 @@ import {
   Badge,
   Checkbox,
   Popover,
-  Calendar,
+  DatePicker,
   type DataTablePageEvent,
 } from "primevue";
 
@@ -18,8 +18,9 @@ import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import type { BatchListResponse, BatchFilters, BatchResponse } from "@/Types/batch-types";
+import useDatetimeFormatter from "@/Composables/useDatetimeFormatter";
+import { useAuth } from "@/Composables/useAuth";
 import BatchStatusTag from "./Show/Components/BatchStatusTag.vue";
-import ExpiryBadge from "./Show/Components/ExpiryBadge.vue";
 import CloseBatchModal from "./Show/Components/CloseBatchModal.vue";
 import EditBatchModal from "./Show/Components/EditBatchModal.vue";
 
@@ -122,9 +123,12 @@ function openEditModal(batch: BatchResponse) {
   editModalVisible.value = true;
 }
 
+const { getSetting } = useAuth();
+
 function formatDate(date: string | null): string {
   if (!date) return "---";
-  return new Date(date).toLocaleDateString();
+  const format = getSetting("general", "date_format") ?? "YYYY-MM-DD";
+  return useDatetimeFormatter(date, format);
 }
 </script>
 
@@ -181,8 +185,8 @@ function formatDate(date: string | null): string {
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Expiry Date") }}</label>
                   <div class="flex gap-2">
-                    <Calendar v-model="expiryFrom" :placeholder="t('From')" show-icon class="w-full" />
-                    <Calendar v-model="expiryTo" :placeholder="t('To')" show-icon class="w-full" />
+                    <DatePicker v-model="expiryFrom" :placeholder="t('From')" show-icon class="w-full" />
+                    <DatePicker v-model="expiryTo" :placeholder="t('To')" show-icon class="w-full" />
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -232,14 +236,21 @@ function formatDate(date: string | null): string {
 
           <Column :header="t('Expiry Date')" style="width: 120px">
             <template #body="{ data }: { data: BatchResponse }">
-              <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2">
+                <span
+                  class="w-2.5 h-2.5 rounded-full"
+                  :class="{
+                    'bg-green-500': data.expiry_status === 'ok',
+                    'bg-yellow-500': data.expiry_status === 'expiring_soon',
+                    'bg-red-500': data.expiry_status === 'expired',
+                  }"
+                />
                 <span>{{ formatDate(data.expiry_date) }}</span>
-                <ExpiryBadge v-if="data.expiry_status" :status="data.expiry_status" />
               </div>
             </template>
           </Column>
 
-          <Column :header="t('Initial Quantity')" style="width: 110px">
+          <Column :header="t('Initial Quantity')" style="width: 110px" class="hidden md:table-cell">
             <template #body="{ data }: { data: BatchResponse }">
               {{ data.initial_quantity }}
             </template>
@@ -253,13 +264,13 @@ function formatDate(date: string | null): string {
             </template>
           </Column>
 
-          <Column :header="t('Sold Quantity')" style="width: 110px">
+          <Column :header="t('Sold Quantity')" style="width: 110px" class="hidden md:table-cell">
             <template #body="{ data }: { data: BatchResponse }">
               {{ data.sold_quantity }}
             </template>
           </Column>
 
-          <Column :header="t('Created At')" style="width: 120px">
+          <Column :header="t('Created At')" style="width: 120px" class="hidden md:table-cell">
             <template #body="{ data }: { data: BatchResponse }">
               {{ formatDate(data.created_at) }}
             </template>
@@ -290,12 +301,12 @@ function formatDate(date: string | null): string {
                 />
                 <Button
                   v-if="data.status !== 'closed'"
+                  v-can="'batch.edit'"
                   v-tooltip.top="t('Close Batch')"
-                  icon="fa-solid fa-xmark"
+                  icon="fa-solid fa-ban"
                   text
                   rounded
                   size="small"
-                  severity="danger"
                   :aria-label="t('Close Batch')"
                   @click="openCloseModal(data.id)"
                 />
