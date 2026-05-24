@@ -63,4 +63,5 @@ export interface BatchFilters {
   expiry_from: string | null;
   expiry_to: string | null;
   expiring_soon: boolean;
+  product_name: string | null;
 }

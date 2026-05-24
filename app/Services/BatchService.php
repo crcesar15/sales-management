@@ -15,7 +15,7 @@ use RuntimeException;
 final class BatchService
 {
     /**
-     * @param  array{status?: string|null, store_id?: int|null, product_variant_id?: int|null, expiry_from?: string|null, expiry_to?: string|null, expiring_soon?: bool}  $filters
+     * @param  array{status?: string|null, store_id?: int|null, product_variant_id?: int|null, expiry_from?: string|null, expiry_to?: string|null, expiring_soon?: bool, product_name?: string|null}  $filters
      * @return LengthAwarePaginator<int, Batch>
      */
     public function list(array $filters = [], int $perPage = 25): LengthAwarePaginator
@@ -31,6 +31,10 @@ final class BatchService
                 $days = (int) Setting::get('expiry_alert_days', 30);
                 $q->expiringSoon($days);
             })
+            ->when($filters['product_name'] ?? null, fn ($q, $name) => $q->whereHas(
+                'productVariant.product',
+                fn ($q) => $q->where('name', 'like', "%{$name}%")
+            ))
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();

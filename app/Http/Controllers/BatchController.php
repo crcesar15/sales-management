@@ -36,6 +36,7 @@ final class BatchController extends Controller
                 'expiry_from' => request()->string('expiry_from', '')->toString() ?: null,
                 'expiry_to' => request()->string('expiry_to', '')->toString() ?: null,
                 'expiring_soon' => request()->boolean('expiring_soon'),
+                'product_name' => request()->string('product_name', '')->toString() ?: null,
             ],
             perPage: request()->integer('per_page', 25),
         );
@@ -49,6 +50,7 @@ final class BatchController extends Controller
                 'expiry_from' => request()->string('expiry_from', '')->toString() ?: null,
                 'expiry_to' => request()->string('expiry_to', '')->toString() ?: null,
                 'expiring_soon' => request()->boolean('expiring_soon'),
+                'product_name' => request()->string('product_name', '')->toString() ?: null,
             ],
             'stores' => Store::query()->where('status', 'active')->get(['id', 'name', 'code']),
         ]);

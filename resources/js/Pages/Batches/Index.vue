@@ -4,6 +4,9 @@ import {
   Card,
   Column,
   Button,
+  InputText,
+  IconField,
+  InputIcon,
   Select,
   Badge,
   Checkbox,
@@ -43,6 +46,8 @@ const expiryFrom = ref<Date | null>(props.filters.expiry_from ? new Date(props.f
 const expiryTo = ref<Date | null>(props.filters.expiry_to ? new Date(props.filters.expiry_to) : null);
 const filterPopover = ref();
 
+const productName = ref(props.filters.product_name ?? "");
+
 const closeModalVisible = ref(false);
 const selectedBatchId = ref<number | null>(null);
 
@@ -64,7 +69,7 @@ const storeOptions = computed(() => [
 ]);
 
 const hasActiveFilters = computed(
-  () => status.value !== ALL || storeId.value !== ALL || expiringSoon.value || expiryFrom.value || expiryTo.value,
+  () => status.value !== ALL || storeId.value !== ALL || expiringSoon.value || expiryFrom.value || expiryTo.value || productName.value !== "",
 );
 
 const activeFilterCount = computed(() => {
@@ -74,6 +79,7 @@ const activeFilterCount = computed(() => {
   if (expiringSoon.value) count++;
   if (expiryFrom.value) count++;
   if (expiryTo.value) count++;
+  if (productName.value !== "") count++;
   return count;
 });
 
@@ -83,6 +89,7 @@ function resetFilters() {
   expiringSoon.value = false;
   expiryFrom.value = null;
   expiryTo.value = null;
+  productName.value = "";
   applyFilters();
 }
 
@@ -94,6 +101,7 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
       expiring_soon: expiringSoon.value,
       expiry_from: expiryFrom.value ? expiryFrom.value.toISOString().split("T")[0] : "",
       expiry_to: expiryTo.value ? expiryTo.value.toISOString().split("T")[0] : "",
+      product_name: productName.value,
       ...overrides,
     },
     preserveState: true,
@@ -106,6 +114,12 @@ watch(storeId, () => applyFilters());
 watch(expiringSoon, () => applyFilters());
 watch(expiryFrom, () => applyFilters());
 watch(expiryTo, () => applyFilters());
+
+let filterTimer: ReturnType<typeof setTimeout>;
+watch(productName, () => {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => applyFilters(), 300);
+});
 
 const onPage = (event: DataTablePageEvent) => {
   applyFilters({ page: event.page + 1, per_page: event.rows });
@@ -158,18 +172,21 @@ function formatDate(date: string | null): string {
           </template>
 
           <template #header>
-            <div class="grid grid-cols-12 gap-2">
-              <div class="lg:col-span-4 lg:col-start-1 md:col-span-6 col-span-12 flex gap-2 items-center">
-                <Button
-                  type="button"
-                  icon="fa fa-filter"
-                  :label="t('Filters')"
-                  :severity="hasActiveFilters ? 'primary' : 'secondary'"
-                  outlined
-                  @click="filterPopover.toggle($event)"
-                />
-                <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
-              </div>
+            <div class="flex items-center gap-2">
+              <Button
+                type="button"
+                icon="fa fa-filter"
+                :label="t('Filters')"
+                :severity="hasActiveFilters ? 'primary' : 'secondary'"
+                outlined
+                :pt="{ label: { class: 'hidden sm:inline' } }"
+                @click="filterPopover.toggle($event)"
+              />
+              <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
+              <IconField icon-position="left" class="flex-1 sm:flex-none sm:w-80 sm:ml-auto">
+                <InputIcon class="fa fa-search" />
+                <InputText v-model="productName" :placeholder="t('Search')" class="w-full" />
+              </IconField>
             </div>
 
             <Popover ref="filterPopover">
