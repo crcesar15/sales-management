@@ -72,7 +72,7 @@ final class ProductController extends Controller
     {
         $product = $this->productService->create($request->validated());
 
-        if ($product->has_variants) {
+        if ($product->variants()->count() > 1) {
             return redirect()->route('products.edit', $product);
         }
 
