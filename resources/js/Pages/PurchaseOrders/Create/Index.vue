@@ -14,13 +14,6 @@ import type { LineItem } from "../Components/POLineItemsTable.vue";
 
 defineOptions({ layout: AppLayout });
 
-interface AdditionalContact {
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-}
-
 const props = defineProps<{
   vendors: Array<{
     id: number;
@@ -32,6 +25,13 @@ const props = defineProps<{
     additional_contacts: AdditionalContact[] | null;
   }>;
 }>();
+
+interface AdditionalContact {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+}
 
 const toast = useToast();
 const { t } = useI18n();

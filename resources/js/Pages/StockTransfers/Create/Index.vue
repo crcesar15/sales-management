@@ -277,7 +277,7 @@ const submit = handleSubmit((formValues) => {
                         />
                       </td>
                       <td class="p-2 text-center">
-                        <Button icon="fa fa-trash" text severity="danger" size="small" @click="removeItem(index)" />
+                        <Button icon="fa fa-trash" text severity="danger" @click="removeItem(index)" />
                       </td>
                     </tr>
                   </tbody>

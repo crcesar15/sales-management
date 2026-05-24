@@ -241,7 +241,6 @@ function formatQuantity(val: number): string {
                 icon="fa-solid fa-eye"
                 text
                 rounded
-                size="small"
                 :aria-label="t('View')"
                 @click="router.visit(route('stock-adjustments.show', { stockAdjustment: data.id }))"
               />

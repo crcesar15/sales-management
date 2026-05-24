@@ -376,7 +376,6 @@ function formatFileSize(bytes: number): string {
                     v-tooltip.top="t('View Vendors')"
                     icon="fa fa-store"
                     text
-                    size="small"
                     @click="
                       openVariantVendors(
                         data.product_variant_id,

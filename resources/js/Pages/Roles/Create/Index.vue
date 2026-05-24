@@ -196,7 +196,7 @@ const submit = handleSubmit((values) => {
               <div class="flex-1 min-w-0">
                 <div class="font-medium truncate">{{ user.full_name }}</div>
               </div>
-              <Button icon="fa fa-trash" text rounded severity="primary" size="small" @click="removeUser(user.id)" />
+              <Button icon="fa fa-trash" text rounded severity="primary" @click="removeUser(user.id)" />
             </div>
           </template>
         </Card>

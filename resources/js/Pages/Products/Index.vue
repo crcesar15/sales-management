@@ -338,7 +338,7 @@ const restoreProduct = (id: number) => {
           <Column :header="t('Actions')">
             <template #body="{ data }">
               <div class="flex justify-start gap-2">
-                <Button v-tooltip.top="t('View')" icon="fa fa-eye" text rounded size="small" @click="viewProduct(data)" />
+                <Button v-tooltip.top="t('View')" icon="fa fa-eye" text rounded @click="viewProduct(data)" />
                 <Button
                   v-if="!data.deleted_at"
                   v-can="'product.edit'"
@@ -346,7 +346,6 @@ const restoreProduct = (id: number) => {
                   icon="fa fa-edit"
                   text
                   rounded
-                  size="small"
                   @click="editProduct(data.id)"
                 />
                 <Button
@@ -356,7 +355,6 @@ const restoreProduct = (id: number) => {
                   icon="fa fa-trash-arrow-up"
                   text
                   rounded
-                  size="small"
                   @click="restoreProduct(data.id)"
                 />
                 <Button
@@ -366,7 +364,6 @@ const restoreProduct = (id: number) => {
                   icon="fa fa-trash"
                   text
                   rounded
-                  size="small"
                   @click="deleteProduct(data.id)"
                 />
                 <Button
@@ -375,7 +372,6 @@ const restoreProduct = (id: number) => {
                   :icon="isExpanded(data.id) ? 'fa fa-chevron-up' : 'fa fa-chevron-down'"
                   text
                   rounded
-                  size="small"
                   @click="toggleExpand(data)"
                 />
               </div>

@@ -301,7 +301,6 @@ function formatDate(date: string | null): string {
                   icon="fa-solid fa-eye"
                   text
                   rounded
-                  size="small"
                   :aria-label="t('View')"
                   @click="router.visit(route('batches.show', { batch: data.id }))"
                 />
@@ -312,7 +311,6 @@ function formatDate(date: string | null): string {
                   icon="fa-solid fa-pen"
                   text
                   rounded
-                  size="small"
                   :aria-label="t('Edit')"
                   @click="openEditModal(data)"
                 />
@@ -323,7 +321,6 @@ function formatDate(date: string | null): string {
                   icon="fa-solid fa-ban"
                   text
                   rounded
-                  size="small"
                   :aria-label="t('Close Batch')"
                   @click="openCloseModal(data.id)"
                 />

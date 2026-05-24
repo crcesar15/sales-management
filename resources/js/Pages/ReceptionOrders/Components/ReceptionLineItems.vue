@@ -193,7 +193,6 @@ function formatConversion(item: ReceptionLineItem): string {
           icon="fa fa-trash-can"
           text
           rounded
-          size="small"
           severity="danger"
           @click="confirmRemoveItem(index)"
         />

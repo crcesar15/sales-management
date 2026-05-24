@@ -258,7 +258,6 @@ watch(activeTab, () => {
                       icon="fa fa-pen"
                       text
                       rounded
-                      size="small"
                       v-tooltip.top="t('Edit')"
                       @click="openEdit(unit as VariantUnitResource)"
                     />
@@ -267,7 +266,6 @@ watch(activeTab, () => {
                       icon="fa fa-trash"
                       text
                       rounded
-                      size="small"
                       v-tooltip.top="t('Delete')"
                       @click="onDelete(unit as VariantUnitResource)"
                     />
@@ -318,7 +316,6 @@ watch(activeTab, () => {
                       icon="fa fa-pen"
                       text
                       rounded
-                      size="small"
                       v-tooltip.top="t('Edit')"
                       @click="openEdit(unit as VariantUnitResource)"
                     />
@@ -327,7 +324,6 @@ watch(activeTab, () => {
                       icon="fa fa-trash"
                       text
                       rounded
-                      size="small"
                       v-tooltip.top="t('Delete')"
                       @click="onDelete(unit as VariantUnitResource)"
                     />

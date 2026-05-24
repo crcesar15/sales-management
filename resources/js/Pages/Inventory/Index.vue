@@ -301,10 +301,9 @@ const onSort = (event: DataTableSortEvent) => {
             <template #body="{ data }">
               <Button
                 v-tooltip.top="t('Manage')"
-                icon="fa-solid fa-list"
+                icon="fa-solid fa-file-arrow-up"
                 text
                 rounded
-                size="small"
                 :aria-label="t('Manage')"
                 @click="router.visit(route('inventory.variants.show', { product: data.product_id, variant: data.id }))"
               />

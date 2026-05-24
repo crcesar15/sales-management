@@ -229,7 +229,6 @@ function formatDate(date: string | null): string {
                   icon="fa-solid fa-eye"
                   text
                   rounded
-                  size="small"
                   :aria-label="t('View')"
                   @click="router.visit(route('stock-transfers.show', { stockTransfer: data.id }))"
                 />
@@ -240,7 +239,6 @@ function formatDate(date: string | null): string {
                   icon="fa-solid fa-ban"
                   text
                   rounded
-                  size="small"
                   severity="danger"
                   :aria-label="t('Cancel Transfer')"
                   @click="openCancelModal(data.id)"

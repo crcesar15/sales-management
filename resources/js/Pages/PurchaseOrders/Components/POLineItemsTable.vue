@@ -415,10 +415,9 @@ watch(
               icon="fa fa-store"
               text
               rounded
-              size="small"
               @click="openVendorsDialog(data)"
             />
-            <Button v-tooltip.top="t('Delete')" icon="fa fa-trash-can" text rounded size="small" @click="confirmRemoveItem(index)" />
+            <Button v-tooltip.top="t('Delete')" icon="fa fa-trash-can" text rounded @click="confirmRemoveItem(index)" />
           </div>
         </template>
       </Column>

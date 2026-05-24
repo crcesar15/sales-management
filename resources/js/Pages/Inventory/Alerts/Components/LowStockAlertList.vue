@@ -99,7 +99,6 @@ function deficitSeverity(item: LowStockAlertItem): "danger" | "warning" | "info"
           icon="fa-solid fa-eye"
           text
           rounded
-          size="small"
           :aria-label="t('Manage')"
           @click="router.visit(route('inventory.variants.show', { product: data.product_id, variant: data.id }))"
         />
