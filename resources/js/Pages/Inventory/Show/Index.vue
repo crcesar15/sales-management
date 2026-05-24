@@ -141,7 +141,7 @@ const stockClass = computed(() => (props.variant.stock <= 0 ? "text-red-500 font
                 <span class="text-surface-500">{{ t("Measurement Unit") }}</span>
                 <span class="font-medium">{{ product.measurement_unit?.name ?? "—" }}</span>
               </div>
-              <div v-if="product.categories?.length">
+              <div v-if="product.categories?.length" class="flex justify-between">
                 <span class="text-surface-500 block mb-2">{{ t("Categories") }}</span>
                 <div class="flex flex-wrap gap-2">
                   <Badge
