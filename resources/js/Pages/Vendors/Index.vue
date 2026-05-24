@@ -18,7 +18,7 @@ import {
 } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
-import useDatetimeFormatter from "@composables/useDatetimeFormatter";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 
 import { computed, ref, watch } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
@@ -50,6 +50,7 @@ const props = defineProps<{
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
+const { formatDatetime } = useDatetimeFormatter();
 
 const filter = ref(props.filters.filter ?? "");
 const status = ref(props.filters.status ?? "all");
@@ -59,8 +60,8 @@ const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
 const vendors = computed(() =>
   props.vendors.data.map((item) => ({
     ...item,
-    created_at: useDatetimeFormatter(item.created_at),
-    updated_at: useDatetimeFormatter(item.updated_at),
+    created_at: formatDatetime(item.created_at),
+    updated_at: formatDatetime(item.updated_at),
   })),
 );
 

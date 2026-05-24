@@ -10,8 +10,7 @@ import ExpiryBadge from "./Components/ExpiryBadge.vue";
 import CloseBatchModal from "./Components/CloseBatchModal.vue";
 import EditBatchModal from "./Components/EditBatchModal.vue";
 import QuantityDoughnut from "./Components/QuantityDoughnut.vue";
-import { useAuth } from "@/Composables/useAuth";
-import formatDateTime from "@/Composables/useDatetimeFormatter";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { ref, computed } from "vue";
 
 defineOptions({ layout: AppLayout });
@@ -21,15 +20,9 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const { getSetting } = useAuth();
+const { formatDate, formatDatetime } = useDatetimeFormatter();
 const closeModalVisible = ref(false);
 const editModalVisible = ref(false);
-
-function formatDate(date: string | null): string {
-  if (!date) return "---";
-  const dateFormat = getSetting("general", "date_format") ?? "YYYY-MM-DD";
-  return formatDateTime(date, dateFormat);
-}
 
 const soldPercent = computed(() => {
   if (!props.batch.initial_quantity) return 0;
@@ -122,7 +115,7 @@ const missingPercent = computed(() => {
               </div>
               <div>
                 <span class="text-surface-500 block">{{ t("Created At") }}</span>
-                <span class="font-medium">{{ formatDate(batch.created_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(batch.created_at) }}</span>
               </div>
             </div>
           </template>

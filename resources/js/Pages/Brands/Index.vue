@@ -21,7 +21,7 @@ import {
 
 import AppLayout from "@layouts/admin.vue";
 import BrandEditor from "@pages/Brands/List/ItemEditor.vue";
-import useDatetimeFormatter from "@composables/useDatetimeFormatter";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { computed, ref, watch } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
@@ -53,6 +53,7 @@ const props = defineProps<{
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
+const { formatDatetime } = useDatetimeFormatter();
 
 // Local filter/sort state
 const filter = ref(props.filters.filter ?? "");
@@ -82,8 +83,8 @@ const activeFilterCount = computed(() => {
 const brands = computed(() =>
   props.brands.data.map((item) => ({
     ...item,
-    created_at: useDatetimeFormatter(item.created_at),
-    updated_at: useDatetimeFormatter(item.updated_at),
+    created_at: formatDatetime(item.created_at),
+    updated_at: formatDatetime(item.updated_at),
   })),
 );
 

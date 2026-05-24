@@ -22,6 +22,7 @@ import type {
   StockAdjustmentResponse,
 } from "@/Types/stock-adjustment-types";
 import AdjustmentReasonTag from "./Show/Components/AdjustmentReasonTag.vue";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 
 defineOptions({ layout: AppLayout });
 
@@ -32,6 +33,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const { formatDate } = useDatetimeFormatter();
 
 const ALL = "__all__";
 
@@ -102,11 +104,6 @@ watch(reason, () => applyFilters());
 const onPage = (event: DataTablePageEvent) => {
   applyFilters({ page: event.page + 1, per_page: event.rows });
 };
-
-function formatDate(date: string | null): string {
-  if (!date) return "---";
-  return new Date(date).toLocaleDateString();
-}
 
 function quantityClass(val: number): string {
   return val < 0 ? "text-red-500 font-semibold" : "text-green-600 font-semibold";

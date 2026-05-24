@@ -9,8 +9,7 @@ import { route } from "ziggy-js";
 import { ref, computed, nextTick, watch } from "vue";
 import AppLayout from "@layouts/admin.vue";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import useDatetimeFormatter from "@composables/useDatetimeFormatter";
-import { useAuth } from "@/Composables/useAuth";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import ReceptionLineItemsTable from "../Components/ReceptionLineItems.vue";
 import type { ReceptionLineItem } from "../Components/ReceptionLineItems.vue";
 import type { PurchaseOrderResponse } from "@/Types/purchase-order-types";
@@ -26,7 +25,7 @@ const props = defineProps<{
 const toast = useToast();
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
-const { getSetting } = useAuth();
+const { formatDate } = useDatetimeFormatter();
 
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
 
@@ -98,11 +97,6 @@ watch(
     itemsError.value = "";
   },
 );
-
-function formatPoDate(date: string | null): string {
-  if (!date) return "—";
-  return useDatetimeFormatter(date, getSetting("general", "date_format") ?? "YYYY-MM-DD");
-}
 
 const submit = handleSubmit((formValues) => {
   itemsError.value = "";
@@ -196,7 +190,7 @@ function goBack() {
                         <div class="flex items-center gap-3 text-xs text-surface-500">
                           <span v-if="slotProps.option.order_date">
                             <i class="fa fa-calendar mr-1" />
-                            {{ formatPoDate(slotProps.option.order_date) }}
+                            {{ formatDate(slotProps.option.order_date) }}
                           </span>
                           <span>{{ slotProps.option.line_items?.length ?? 0 }} {{ t("items") }}</span>
                         </div>

@@ -1,12 +1,21 @@
 import { useAuth } from "@/Composables/useAuth";
 import moment from "moment-timezone";
 
-export default function useDatetimeFormatter(datetime: string | null, format?: string) {
+export function useDatetimeFormatter() {
   const { getSetting } = useAuth();
   const timezone = getSetting("general", "timezone") ?? "UTC";
-  if (!format) {
-    format = getSetting("general", "datetime_format") ?? "YYYY-MM-DD HH:mm";
+  const datetimeFormat = getSetting("general", "datetime_format") ?? "YYYY-MM-DD HH:mm";
+  const dateFormat = getSetting("general", "date_format") ?? "YYYY-MM-DD";
+
+  function formatDatetime(date: string | null): string {
+    if (!date) return "---";
+    return moment(date).tz(timezone).format(datetimeFormat);
   }
 
-  return moment(datetime).tz(timezone).format(format);
+  function formatDate(date: string | null): string {
+    if (!date) return "---";
+    return moment(date).tz(timezone).format(dateFormat);
+  }
+
+  return { formatDatetime, formatDate };
 }

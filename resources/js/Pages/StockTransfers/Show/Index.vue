@@ -6,6 +6,7 @@ import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { ref, computed } from "vue";
 import type { StockTransferResponse } from "@/Types/stock-transfer-types";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import TransferStatusTag from "./Components/TransferStatusTag.vue";
 import TransferStatusStepper from "./Components/TransferStatusStepper.vue";
 import AdvanceTransferModal from "./Components/AdvanceTransferModal.vue";
@@ -18,6 +19,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const { formatDatetime } = useDatetimeFormatter();
 
 const advanceModalVisible = ref(false);
 const cancelModalVisible = ref(false);
@@ -40,11 +42,6 @@ function openAdvanceModal() {
     targetStatus.value = nextAction.value.status;
     advanceModalVisible.value = true;
   }
-}
-
-function formatDateTime(date: string | null): string {
-  if (!date) return "---";
-  return new Date(date).toLocaleString();
 }
 
 function discrepancy(item: { quantity_sent: number; quantity_received: number }): number {
@@ -104,15 +101,15 @@ function discrepancy(item: { quantity_sent: number; quantity_received: number })
               </div>
               <div>
                 <span class="text-sm text-surface-500 block">{{ t("Created At") }}</span>
-                <span class="font-medium">{{ formatDateTime(transfer.created_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(transfer.created_at) }}</span>
               </div>
               <div v-if="transfer.completed_at">
                 <span class="text-sm text-surface-500 block">{{ t("Completed At") }}</span>
-                <span class="font-medium">{{ formatDateTime(transfer.completed_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(transfer.completed_at) }}</span>
               </div>
               <div v-if="transfer.cancelled_at">
                 <span class="text-sm text-surface-500 block">{{ t("Cancelled At") }}</span>
-                <span class="font-medium text-red-500">{{ formatDateTime(transfer.cancelled_at) }}</span>
+                <span class="font-medium text-red-500">{{ formatDatetime(transfer.cancelled_at) }}</span>
               </div>
               <div v-if="transfer.notes" class="col-span-2">
                 <span class="text-sm text-surface-500 block">{{ t("Notes") }}</span>

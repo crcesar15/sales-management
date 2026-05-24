@@ -15,7 +15,7 @@ import {
 } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
-import useDatetimeFormatter from "@composables/useDatetimeFormatter";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { useI18n } from "vue-i18n";
 import { computed, ref, watch } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
@@ -48,6 +48,7 @@ const props = defineProps<{
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
+const { formatDatetime } = useDatetimeFormatter();
 
 // Local filter state
 const filter = ref(props.filters.filter ?? "");
@@ -75,8 +76,8 @@ watch(filter, (val) => {
 const roles = computed(() =>
   props.roles.data.map((item: RoleResponse) => ({
     ...item,
-    created_at: useDatetimeFormatter(item.created_at),
-    updated_at: useDatetimeFormatter(item.updated_at),
+    created_at: formatDatetime(item.created_at),
+    updated_at: formatDatetime(item.updated_at),
   })),
 );
 

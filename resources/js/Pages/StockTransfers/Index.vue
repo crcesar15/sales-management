@@ -21,6 +21,7 @@ import type {
   StockTransferResponse,
 } from "@/Types/stock-transfer-types";
 import TransferStatusTag from "./Show/Components/TransferStatusTag.vue";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import CancelTransferModal from "./Show/Components/CancelTransferModal.vue";
 
 defineOptions({ layout: AppLayout });
@@ -32,6 +33,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const { formatDate } = useDatetimeFormatter();
 
 const ALL = "__all__";
 
@@ -101,11 +103,6 @@ const onPage = (event: DataTablePageEvent) => {
 function openCancelModal(transferId: number) {
   selectedTransferId.value = transferId;
   cancelModalVisible.value = true;
-}
-
-function formatDate(date: string | null): string {
-  if (!date) return "---";
-  return new Date(date).toLocaleDateString();
 }
 </script>
 

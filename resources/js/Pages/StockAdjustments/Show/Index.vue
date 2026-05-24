@@ -6,6 +6,7 @@ import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { computed } from "vue";
 import type { StockAdjustmentResponse } from "@/Types/stock-adjustment-types";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import AdjustmentReasonTag from "./Components/AdjustmentReasonTag.vue";
 
 defineOptions({ layout: AppLayout });
@@ -15,6 +16,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const { formatDatetime } = useDatetimeFormatter();
 
 const quantityClass = computed(() =>
   props.adjustment.quantity_change < 0 ? "text-red-500 font-bold" : "text-green-600 font-bold",
@@ -24,11 +26,6 @@ const formattedQuantity = computed(() => {
   const val = props.adjustment.quantity_change;
   return val > 0 ? `+${val}` : `${val}`;
 });
-
-function formatDateTime(date: string | null): string {
-  if (!date) return "---";
-  return new Date(date).toLocaleString();
-}
 </script>
 
 <template>
@@ -80,7 +77,7 @@ function formatDateTime(date: string | null): string {
               </div>
               <div>
                 <span class="text-sm text-surface-500 block">{{ t("Created At") }}</span>
-                <span class="font-medium">{{ formatDateTime(adjustment.created_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(adjustment.created_at) }}</span>
               </div>
               <div v-if="adjustment.notes" class="col-span-2">
                 <span class="text-sm text-surface-500 block">{{ t("Notes") }}</span>

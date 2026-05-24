@@ -17,7 +17,7 @@ import {
 } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
-import useDatetimeFormatter from "@composables/useDatetimeFormatter";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { useI18n } from "vue-i18n";
 import { computed, ref, watch } from "vue";
 import { router, useForm, usePage } from "@inertiajs/vue3";
@@ -49,6 +49,7 @@ const props = defineProps<{
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
+const { formatDatetime } = useDatetimeFormatter();
 
 // Current user
 const currentUser = usePage().props.auth.user as UserAuth;
@@ -71,7 +72,7 @@ const users = computed(() =>
   props.users.data.map((item) => ({
     ...item,
     initials: item.first_name.charAt(0) + item.last_name.charAt(0),
-    created_at: useDatetimeFormatter(item.created_at),
+    created_at: formatDatetime(item.created_at),
   })),
 );
 

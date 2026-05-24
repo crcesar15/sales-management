@@ -11,11 +11,10 @@ import {
 import { computed } from "vue";
 import type { ProductListResponse } from "@/Types/product-types";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import useDatetimeFormatter from "@/Composables/useDatetimeFormatter";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { useI18n } from "vue-i18n";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { useAuth } from "@/Composables/useAuth";
 
 const props = defineProps<{
   product: ProductListResponse | null;
@@ -27,14 +26,9 @@ const showDialog = defineModel<boolean>("showDialog", {
 
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
-const { getSetting } = useAuth();
+const { formatDate } = useDatetimeFormatter();
 
 const productMedia = computed(() => props.product?.media ?? []);
-
-const formatDate = (dateStr?: string | null): string => {
-  if (!dateStr) return "—";
-  return useDatetimeFormatter(dateStr, getSetting("general", "date_format") ?? "YYYY-MM-DD");
-};
 
 const goToEdit = () => {
   if (props.product) {

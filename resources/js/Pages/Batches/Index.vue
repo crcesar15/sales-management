@@ -21,8 +21,7 @@ import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import type { BatchListResponse, BatchFilters, BatchResponse } from "@/Types/batch-types";
-import useDatetimeFormatter from "@/Composables/useDatetimeFormatter";
-import { useAuth } from "@/Composables/useAuth";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import BatchStatusTag from "./Show/Components/BatchStatusTag.vue";
 import CloseBatchModal from "./Show/Components/CloseBatchModal.vue";
 import EditBatchModal from "./Show/Components/EditBatchModal.vue";
@@ -36,6 +35,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const { formatDate, formatDatetime } = useDatetimeFormatter();
 
 const ALL = "__all__";
 
@@ -137,13 +137,6 @@ function openEditModal(batch: BatchResponse) {
   editModalVisible.value = true;
 }
 
-const { getSetting } = useAuth();
-
-function formatDate(date: string | null): string {
-  if (!date) return "---";
-  const format = getSetting("general", "date_format") ?? "YYYY-MM-DD";
-  return useDatetimeFormatter(date, format);
-}
 </script>
 
 <template>
@@ -289,7 +282,7 @@ function formatDate(date: string | null): string {
 
           <Column :header="t('Created At')" style="width: 120px" class="hidden md:table-cell">
             <template #body="{ data }: { data: BatchResponse }">
-              {{ formatDate(data.created_at) }}
+              {{ formatDatetime(data.created_at) }}
             </template>
           </Column>
 

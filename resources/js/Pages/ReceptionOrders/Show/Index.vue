@@ -3,8 +3,7 @@ import { Card, Button, DataTable, Column, Divider, Popover, Tag } from "primevue
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import useDatetimeFormatter from "@composables/useDatetimeFormatter";
-import { useAuth } from "@/Composables/useAuth";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { ref, computed } from "vue";
@@ -23,7 +22,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
-const { getSetting } = useAuth();
+const { formatDate, formatDatetime } = useDatetimeFormatter();
 
 const completeModalVisible = ref(false);
 const cancelModalVisible = ref(false);
@@ -36,16 +35,6 @@ const canCancel = computed(() => props.receptionOrder.status === "pending");
 
 function toggleVendorInfo(event: Event) {
   vendorInfoPopover.value.toggle(event);
-}
-
-function formatDate(date: string | null): string {
-  if (!date) return "—";
-  return useDatetimeFormatter(date, getSetting("general", "date_format") ?? "YYYY-MM-DD");
-}
-
-function formatDateTime(date: string | null): string {
-  if (!date) return "—";
-  return useDatetimeFormatter(date);
 }
 
 function goToEdit() {
@@ -186,7 +175,7 @@ function formatConversion(item: ReceptionOrderResponse["line_items"][number]): s
                   <i class="fa fa-clock text-surface-400 w-4 text-center" />
                   {{ t("Created At") }}
                 </span>
-                <span class="font-medium">{{ formatDateTime(receptionOrder.created_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(receptionOrder.created_at) }}</span>
               </div>
             </div>
           </template>

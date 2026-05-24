@@ -10,7 +10,7 @@ import type { InventoryVariantDetail, InventoryProductDetail } from "@/Types/inv
 import type { StockStoreBreakdown } from "@/Types/stock-overview-types";
 import { useAuth } from "@/Composables/useAuth";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import formatDateTime from "@/Composables/useDatetimeFormatter";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import VariantDetails from "./Components/VariantDetails.vue";
 import ImagesTab from "./Components/ImagesTab.vue";
 import UnitsTab from "./Components/UnitsTab.vue";
@@ -26,6 +26,7 @@ const { t } = useI18n();
 const page = usePage();
 const { can } = useAuth();
 const { formatCurrency } = useCurrencyFormatter();
+const { formatDatetime } = useDatetimeFormatter();
 
 const canEdit = computed(() => can("inventory.edit"));
 
@@ -158,11 +159,11 @@ const stockClass = computed(() => (props.variant.stock <= 0 ? "text-red-500 font
               </div>
               <div class="border-t border-surface-200 pt-3 flex justify-between">
                 <span class="text-surface-500">{{ t("Created") }}</span>
-                <span class="font-medium">{{ formatDateTime(variant.created_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(variant.created_at) }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Updated") }}</span>
-                <span class="font-medium">{{ formatDateTime(variant.updated_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(variant.updated_at) }}</span>
               </div>
             </div>
           </template>

@@ -6,7 +6,7 @@ import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
 import { computed, ref } from "vue";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import formatDateTime from "@/Composables/useDatetimeFormatter";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import type { CatalogShowProps, CatalogResponse } from "@/Types/catalog-types";
 
 defineOptions({ layout: AppLayout });
@@ -15,6 +15,7 @@ const props = defineProps<CatalogShowProps>();
 
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
+const { formatDatetime } = useDatetimeFormatter();
 const confirm = useConfirm();
 const toast = useToast();
 
@@ -295,11 +296,11 @@ const formatPaymentTerms = (terms: string | null): string => {
               </div>
               <div class="border-t border-surface-200 pt-3 flex justify-between">
                 <span class="text-surface-500">{{ t("Created") }}</span>
-                <span class="font-medium">{{ formatDateTime(productVariant.created_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(productVariant.created_at) }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Updated") }}</span>
-                <span class="font-medium">{{ formatDateTime(productVariant.updated_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(productVariant.updated_at) }}</span>
               </div>
             </div>
           </template>

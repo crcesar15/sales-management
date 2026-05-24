@@ -13,8 +13,7 @@ import {
 } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
-import useDatetimeFormatter from "@composables/useDatetimeFormatter";
-import { useAuth } from "@/Composables/useAuth";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
@@ -40,7 +39,7 @@ const props = defineProps<{
   stores: Array<{ id: number; name: string }>;
 }>();
 
-const { getSetting } = useAuth();
+const { formatDate, formatDatetime } = useDatetimeFormatter();
 const { t } = useI18n();
 
 const status = ref(props.filters.status || "all");
@@ -86,8 +85,8 @@ const activeFilterCount = computed(() => {
 const orders = computed(() =>
   props.receptionOrders.data.map((item) => ({
     ...item,
-    reception_date: useDatetimeFormatter(item.reception_date, getSetting("general", "date_format") || "DD-MM-YYYY"),
-    created_at: useDatetimeFormatter(item.created_at),
+    reception_date: formatDate(item.reception_date),
+    created_at: formatDatetime(item.created_at),
   })),
 );
 

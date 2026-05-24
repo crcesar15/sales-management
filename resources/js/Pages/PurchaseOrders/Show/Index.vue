@@ -3,8 +3,7 @@ import { Card, Button, DataTable, Column, Popover, Stepper, StepList, Step, Tag 
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import useDatetimeFormatter from "@composables/useDatetimeFormatter";
-import { useAuth } from "@/Composables/useAuth";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { ref, computed } from "vue";
@@ -27,7 +26,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
-const { getSetting } = useAuth();
+const { formatDate, formatDatetime } = useDatetimeFormatter();
 
 const advanceModalVisible = ref(false);
 const markAsPaidModalVisible = ref(false);
@@ -58,16 +57,6 @@ function openVariantVendors(productVariantId: number, productName: string, varia
   selectedVariantName.value = productName;
   selectedVariantLabel.value = variantLabel;
   variantVendorsVisible.value = true;
-}
-
-function formatDate(date: string | null): string {
-  if (!date) return "---";
-  return useDatetimeFormatter(date, getSetting("general", "date_format") ?? "YYYY-MM-DD");
-}
-
-function formatDateTime(date: string | null): string {
-  if (!date) return "---";
-  return useDatetimeFormatter(date);
 }
 
 function goToEdit() {
@@ -311,14 +300,14 @@ function formatFileSize(bytes: number): string {
                   <i class="fa fa-clock text-surface-400 w-4 text-center" />
                   {{ t("Created At") }}
                 </span>
-                <span class="font-medium">{{ formatDateTime(purchaseOrder.created_at) }}</span>
+                <span class="font-medium">{{ formatDatetime(purchaseOrder.created_at) }}</span>
               </div>
               <div v-if="purchaseOrder.is_paid && purchaseOrder.paid_at" class="flex flex-col gap-1">
                 <span class="text-sm text-surface-500 flex items-center gap-1.5">
                   <i class="fa fa-check-circle text-green-500 w-4 text-center" />
                   {{ t("Paid At") }}
                 </span>
-                <span class="font-medium text-green-600">{{ formatDateTime(purchaseOrder.paid_at) }}</span>
+                <span class="font-medium text-green-600">{{ formatDatetime(purchaseOrder.paid_at) }}</span>
               </div>
             </div>
           </template>
