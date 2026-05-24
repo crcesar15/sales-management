@@ -12,7 +12,12 @@ use Illuminate\Support\Facades\DB;
 
 final class ProductService
 {
-    public function __construct(private readonly PendingMediaService $pendingMediaService) {}
+    private readonly PendingMediaService $pendingMediaService;
+
+    public function __construct(PendingMediaService $pendingMediaService)
+    {
+        $this->pendingMediaService = $pendingMediaService;
+    }
 
     /**
      * @return LengthAwarePaginator<int, Product>
