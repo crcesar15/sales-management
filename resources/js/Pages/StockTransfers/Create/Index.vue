@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import { Button, Card, Select, InputNumber, Textarea, AutoComplete, useToast } from "primevue";
+import { Button, Card, Select, InputNumber, Textarea, AutoComplete, Tag, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -60,12 +60,8 @@ interface VariantOption {
   name: string;
   product: ProductResponse;
   identifier: string;
-}
-
-interface VariantOptionValue {
-  id: number;
-  value: string;
-  option_name: string;
+  stock: number;
+  label: string;
 }
 
 const variantSearchResults = ref<VariantOption[]>([]);
@@ -82,13 +78,15 @@ async function searchVariants(event: { query: string }) {
     const response = await axios.get(route("api.v1.variants"), {
       params: { filter: event.query, per_page: 15 },
     });
-    variantSearchResults.value = (response.data.data || []).map((v: Record<string, unknown>) => ({
-      id: v.id as number,
-      name: v.name as string,
-      product: v.product as ProductResponse,
-      identifier: v.identifier as string,
-      values: v.values as VariantOptionValue[],
-    }));
+    variantSearchResults.value = (response.data.data || []).map((v: Record<string, unknown>) => {
+      const id = v.id as number;
+      const name = v.name as string;
+      const product = v.product as ProductResponse;
+      const identifier = v.identifier as string;
+      const stock = (v.stock as number) ?? 0;
+      const label = name ? `${product?.name ?? ""} - ${name}` : `${product?.name ?? ""}`;
+      return { id, name, product, identifier, stock, label };
+    });
   } catch {
     variantSearchResults.value = [];
   } finally {
@@ -232,16 +230,68 @@ const submit = handleSubmit((formValues) => {
                     v-model="selectedVariant"
                     :suggestions="variantSearchResults"
                     :loading="variantSearchLoading"
-                    option-label="identifier"
+                    option-label="label"
                     :placeholder="t('Type to search products...')"
+                    :empty-search-message="t('No results found')"
+                    dropdown
+                    force-selection
                     class="w-full"
                     input-class="w-full"
                     @complete="searchVariants"
                   >
+                    <template #header>
+                      <div
+                        class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 text-sm font-semibold text-surface-500 uppercase tracking-wide border-b border-surface-200 dark:border-surface-700"
+                      >
+                        <span class="col-span-5">{{ t("Product") }}</span>
+                        <span class="col-span-3">{{ t("Unit") }}</span>
+                        <span class="col-span-2">{{ t("Stock") }}</span>
+                        <span class="col-span-2">{{ t("Identifier") }}</span>
+                      </div>
+                    </template>
                     <template #option="{ option }">
-                      <div>
-                        <span class="font-medium">{{ option.product?.name }}</span>
-                        <span class="text-surface-500 ml-2">{{ option.name || option.identifier }}</span>
+                      <!-- Desktop: grid row -->
+                      <div class="hidden lg:grid grid-cols-12 gap-2 items-center w-full py-1">
+                        <div class="col-span-5 flex flex-col gap-0.5 min-w-0">
+                          <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
+                          <span v-if="option.name" class="text-sm text-surface-500 truncate">{{ option.name }}</span>
+                        </div>
+                        <div class="col-span-3">
+                          <span v-if="option.product?.measurement_unit" class="text-sm">
+                            {{ option.product.measurement_unit.name }}
+                          </span>
+                        </div>
+                        <div class="col-span-2">
+                          <Tag
+                            :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
+                            :severity="option.stock === 0 ? 'danger' : 'success'"
+                            class="text-sm"
+                            rounded
+                          />
+                        </div>
+                        <div class="col-span-2 text-sm text-surface-500 truncate">
+                          {{ option.identifier }}
+                        </div>
+                      </div>
+                      <!-- Mobile: card layout -->
+                      <div class="lg:hidden flex flex-col gap-1.5 py-2 w-full">
+                        <div class="flex items-center justify-between">
+                          <div class="flex flex-col gap-0.5 min-w-0 flex-1">
+                            <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
+                            <span class="text-xs text-surface-500 truncate">
+                              <span v-if="option.name">{{ option.name }} </span>
+                              <span v-if="option.product?.measurement_unit" class="ml-1">
+                                ({{ option.product.measurement_unit.name }})
+                              </span>
+                            </span>
+                          </div>
+                          <Tag
+                            :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
+                            :severity="option.stock === 0 ? 'danger' : 'success'"
+                            class="text-xs"
+                            rounded
+                          />
+                        </div>
                       </div>
                     </template>
                   </AutoComplete>
