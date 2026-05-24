@@ -243,8 +243,9 @@ const submit = handleSubmit((formValues) => {
                       <div
                         class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 text-sm font-semibold text-surface-500 uppercase tracking-wide border-b border-surface-200 dark:border-surface-700"
                       >
-                        <span class="col-span-5">{{ t("Product") }}</span>
-                        <span class="col-span-3">{{ t("Unit") }}</span>
+                        <span class="col-span-4">{{ t("Product") }}</span>
+                        <span class="col-span-2">{{ t("Brand") }}</span>
+                        <span class="col-span-2">{{ t("Unit") }}</span>
                         <span class="col-span-2">{{ t("Stock") }}</span>
                         <span class="col-span-2">{{ t("Identifier") }}</span>
                       </div>
@@ -252,11 +253,14 @@ const submit = handleSubmit((formValues) => {
                     <template #option="{ option }">
                       <!-- Desktop: grid row -->
                       <div class="hidden lg:grid grid-cols-12 gap-2 items-center w-full py-1">
-                        <div class="col-span-5 flex flex-col gap-0.5 min-w-0">
+                        <div class="col-span-4 flex flex-col gap-0.5 min-w-0">
                           <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
                           <span v-if="option.name" class="text-sm text-surface-500 truncate">{{ option.name }}</span>
                         </div>
-                        <div class="col-span-3">
+                        <div class="col-span-2 text-sm text-surface-500 truncate">
+                          {{ option.product?.brand?.name ?? "—" }}
+                        </div>
+                        <div class="col-span-2">
                           <span v-if="option.product?.measurement_unit" class="text-sm">
                             {{ option.product.measurement_unit.name }}
                           </span>
@@ -279,6 +283,7 @@ const submit = handleSubmit((formValues) => {
                           <div class="flex flex-col gap-0.5 min-w-0 flex-1">
                             <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
                             <span class="text-xs text-surface-500 truncate">
+                              <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} · </span>
                               <span v-if="option.name">{{ option.name }} </span>
                               <span v-if="option.product?.measurement_unit" class="ml-1">
                                 ({{ option.product.measurement_unit.name }})

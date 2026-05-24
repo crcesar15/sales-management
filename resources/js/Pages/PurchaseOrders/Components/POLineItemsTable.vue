@@ -237,8 +237,9 @@ watch(
           <div
             class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 text-sm font-semibold text-surface-500 uppercase tracking-wide border-b border-surface-200 dark:border-surface-700"
           >
-            <span class="col-span-4">{{ t("Product") }}</span>
-            <span class="col-span-2">{{ t("Unit") }}</span>
+            <span class="col-span-3">{{ t("Product") }}</span>
+            <span class="col-span-2">{{ t("Brand") }}</span>
+            <span class="col-span-1">{{ t("Unit") }}</span>
             <span class="col-span-2">{{ t("Price") }}</span>
             <span class="col-span-2">{{ t("Stock") }}</span>
             <span class="col-span-2">{{ t("Details") }}</span>
@@ -247,13 +248,16 @@ watch(
         <template #option="{ option }">
           <!-- Desktop: grid row -->
           <div class="hidden lg:grid grid-cols-12 gap-2 items-center w-full py-1">
-            <div class="col-span-4 flex flex-col gap-0.5 min-w-0">
+            <div class="col-span-3 flex flex-col gap-0.5 min-w-0">
               <span class="font-medium text-sm truncate">{{ option.product_variant?.product?.name ?? option.product_variant?.name }}</span>
               <span class="text-sm text-surface-500 truncate">
                 {{ option.product_variant?.name ?? option.product_variant?.identifier }}
               </span>
             </div>
-            <div class="col-span-2">
+            <div class="col-span-2 text-sm text-surface-500 truncate">
+              {{ option.product_variant?.product?.brand?.name ?? "—" }}
+            </div>
+            <div class="col-span-1">
               <span v-if="option.purchase_unit?.name" class="ml-1">
                 {{ option.purchase_unit.name }}
                 <span v-if="option.purchase_unit.conversion_factor !== 1" class="text-surface-500 ml-1">
@@ -291,6 +295,7 @@ watch(
                   {{ option.product_variant?.product?.name ?? option.product_variant?.name }}
                 </span>
                 <span class="text-xs text-surface-500 truncate">
+                  <span v-if="option.product_variant?.product?.brand?.name">{{ option.product_variant.product.brand.name }} · </span>
                   {{ option.product_variant?.name ?? option.product_variant?.identifier }}
                   <span v-if="option.purchase_unit?.name" class="ml-1">({{ option.purchase_unit.name }})</span>
                   <span v-else-if="option.product_variant?.product?.measurement_unit" class="ml-1">
