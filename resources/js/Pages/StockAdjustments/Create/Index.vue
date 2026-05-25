@@ -194,9 +194,11 @@ watch(
 
 const batchSelectOptions = computed(() => {
   const options = availableBatches.value.map((b) => {
-    const label = b.batch_identifier
-      ? `${b.batch_identifier} (${t("Remaining")}: ${b.remaining_quantity})`
-      : `#${b.id} — ${t("Remaining")}: ${b.remaining_quantity}`;
+    const parts = [`#${b.id}`];
+    if (b.batch_identifier) parts.push(b.batch_identifier);
+    parts.push(`${t("Remaining")}: ${b.remaining_quantity}`);
+    if (b.expiry_date) parts.push(`${t("Expires")}: ${b.expiry_date}`);
+    const label = parts.join(" — ");
     return { name: label, value: b.id };
   });
   if (values.quantity_change && values.quantity_change > 0) {
@@ -495,6 +497,7 @@ const submit = handleSubmit((formValues) => {
                 <span v-if="selectedVariant" class="font-medium">
                   {{ selectedVariant.product?.name }}
                   <span class="text-surface-500 ml-1">{{ selectedVariant.name || selectedVariant.identifier }}</span>
+                  <span v-if="selectedVariant.product?.brand?.name" class="block text-sm text-surface-500">{{ selectedVariant.product.brand.name }}</span>
                 </span>
                 <span v-else class="text-surface-400">---</span>
               </div>
