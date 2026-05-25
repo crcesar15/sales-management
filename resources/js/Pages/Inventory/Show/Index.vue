@@ -4,9 +4,10 @@ import { Button, Card, Badge, Tag } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { route } from "ziggy-js";
-import type { InventoryVariantDetail, InventoryProductDetail } from "@/Types/inventory-variant-types";
+import type { Ref } from "vue";
+import type { InventoryVariantDetail, InventoryProductDetail, PurchasePriceHistory } from "@/Types/inventory-variant-types";
 import type { StockStoreBreakdown } from "@/Types/stock-overview-types";
 import { useAuth } from "@/Composables/useAuth";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
@@ -15,6 +16,7 @@ import VariantDetails from "./Components/VariantDetails.vue";
 import ImagesTab from "./Components/ImagesTab.vue";
 import UnitsTab from "./Components/UnitsTab.vue";
 import StockTab from "./Components/StockTab.vue";
+import PurchasePriceMargin from "./Components/PurchasePriceMargin.vue";
 
 defineOptions({ layout: AppLayout });
 const props = defineProps<{
@@ -62,6 +64,25 @@ const isLowStock = computed(() => {
   }
   return props.variant.stock <= 0;
 });
+
+const latestPurchasePrice = ref<number | null>(null);
+const currentPrice = ref(props.variant.price);
+const variantDetailsRef = ref<InstanceType<typeof VariantDetails> | null>(null);
+
+const onPurchasePriceLoaded = (data: PurchasePriceHistory) => {
+  latestPurchasePrice.value = data.latest_purchase_price;
+};
+
+const onMarginPriceUpdate = (newPrice: number) => {
+  currentPrice.value = newPrice;
+  if (variantDetailsRef.value) {
+    (variantDetailsRef.value.price as unknown as Ref<number>).value = newPrice;
+  }
+};
+
+const onPurchasePriceUpdate = (price: number | null) => {
+  latestPurchasePrice.value = price;
+};
 </script>
 
 <template>
@@ -90,7 +111,21 @@ const isLowStock = computed(() => {
         <Card>
           <template #title>{{ t("Details") }}</template>
           <template #content>
-            <VariantDetails :product="product" :variant="variant" :can-edit="canEdit" />
+            <VariantDetails ref="variantDetailsRef" :product="product" :variant="variant" :can-edit="canEdit" />
+          </template>
+        </Card>
+
+        <Card>
+          <template #title>{{ t("Pricing") }}</template>
+          <template #content>
+            <PurchasePriceMargin
+              :variant-id="variant.id"
+              :selling-price="currentPrice"
+              :can-edit="canEdit"
+              @update:price="onMarginPriceUpdate"
+              @update:purchase-price="onPurchasePriceUpdate"
+              @loaded="onPurchasePriceLoaded"
+            />
           </template>
         </Card>
 
@@ -133,6 +168,10 @@ const isLowStock = computed(() => {
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Price") }}</span>
                 <span class="font-bold">{{ formatCurrency(String(variant.price)) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-surface-500">{{ t("Purchase Price") }}</span>
+                <span class="font-medium">{{ latestPurchasePrice !== null ? formatCurrency(String(latestPurchasePrice)) : "—" }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Stock") }}</span>

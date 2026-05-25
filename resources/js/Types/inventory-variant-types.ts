@@ -76,3 +76,25 @@ export interface VariantUnitResource {
   status: "active" | "inactive";
   sort_order: number;
 }
+
+export interface PurchasePriceHistoryEntry {
+  date: string;
+  price: number;
+  po_id: number;
+  vendor_name: string | null;
+}
+
+export interface PurchasePriceStats {
+  latest: number | null;
+  average: number | null;
+  highest: number | null;
+  lowest: number | null;
+}
+
+export interface PurchasePriceHistory {
+  latest_purchase_price: number | null;
+  latest_po_date: string | null;
+  latest_vendor_name: string | null;
+  history: PurchasePriceHistoryEntry[];
+  stats: PurchasePriceStats;
+}

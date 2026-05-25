@@ -1,3 +1,5 @@
+import type { AxiosResponse } from "axios";
+import type { PurchasePriceHistory } from "@/Types/inventory-variant-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
 
@@ -14,9 +16,14 @@ export function useVariantClient() {
     return await apiClient.get(route("api.v1.variants.purchase-units", variantId));
   };
 
+  const fetchPurchasePriceHistory = async (variantId: number): Promise<AxiosResponse<{ data: PurchasePriceHistory }>> => {
+    return await apiClient.get(route("api.v1.variants.purchase-price-history", variantId));
+  };
+
   return {
     loading,
     searchVariantsApi,
     fetchVariantPurchaseUnitsApi,
+    fetchPurchasePriceHistory,
   };
 }

@@ -8,7 +8,6 @@ import { useForm } from "vee-validate";
 import { boolean, number, object, string } from "yup";
 import { route } from "ziggy-js";
 import type { InventoryVariantDetail, InventoryProductDetail } from "@/Types/inventory-variant-types";
-import { useAuth } from "@/Composables/useAuth";
 
 const props = defineProps<{
   product: InventoryProductDetail;
@@ -17,8 +16,6 @@ const props = defineProps<{
 }>();
 const toast = useToast();
 const { t } = useI18n();
-const { getSetting } = useAuth();
-const currency = getSetting("finance", "currency") ?? "USD";
 
 const schema = toTypedSchema(
   object({
@@ -69,6 +66,8 @@ const onSubmit = handleSubmit((values) => {
     },
   });
 });
+
+defineExpose({ price });
 </script>
 
 <template>
@@ -144,24 +143,6 @@ const onSubmit = handleSubmit((values) => {
           {{ t("Commerce") }}
         </h4>
         <div class="grid grid-cols-12 gap-4">
-          <div class="md:col-span-6 col-span-12 flex flex-col gap-2">
-            <label for="price">
-              {{ t("Price") }}
-              <span class="text-red-400">*</span>
-            </label>
-            <InputNumber
-              id="price"
-              v-model="price"
-              v-bind="priceAttrs"
-              mode="currency"
-              :currency="currency"
-              :min="0"
-              :disabled="!props.canEdit"
-              :class="{ 'p-invalid': submitCount > 0 && !!errors.price }"
-            />
-            <small v-if="submitCount > 0 && errors.price" class="text-red-400 dark:text-red-300">{{ errors.price }}</small>
-          </div>
-
           <div class="md:col-span-6 col-span-12 flex flex-col gap-2">
             <label for="status">{{ t("Status") }}</label>
             <Select
