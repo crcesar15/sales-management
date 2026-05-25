@@ -26,7 +26,11 @@ final class StockOverviewCollection extends ResourceCollection
                 'price' => (float) $variant->price,
                 'status' => $variant->status,
                 'total_stock' => (int) $variant->stock,
-                'is_low_stock' => $variant->stock <= 0,
+                'minimum_stock_level' => $variant->minimum_stock_level,
+                'has_expiration' => $variant->has_expiration,
+                'is_low_stock' => $variant->minimum_stock_level !== null
+                    ? $variant->stock < $variant->minimum_stock_level
+                    : $variant->stock <= 0,
                 'values' => $variant->values->map(fn ($v) => [
                     'id' => $v->id,
                     'value' => $v->value,

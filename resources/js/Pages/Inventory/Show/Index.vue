@@ -56,7 +56,12 @@ const variantStatusSeverity = computed(() => {
   return map[props.variant.status] ?? "info";
 });
 
-const stockClass = computed(() => (props.variant.stock <= 0 ? "text-red-500 font-bold" : "font-bold"));
+const isLowStock = computed(() => {
+  if (props.variant.minimum_stock_level !== null) {
+    return props.variant.stock < props.variant.minimum_stock_level;
+  }
+  return props.variant.stock <= 0;
+});
 </script>
 
 <template>
@@ -131,7 +136,10 @@ const stockClass = computed(() => (props.variant.stock <= 0 ? "text-red-500 font
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Stock") }}</span>
-                <span :class="stockClass">{{ variant.stock }}</span>
+                <span class="inline-flex items-center gap-1.5">
+                  <i v-if="isLowStock" v-tooltip.top="t('Low Stock')" class="fa-solid fa-triangle-exclamation text-red-500" />
+                  <span class="font-bold">{{ variant.stock }}</span>
+                </span>
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Brand") }}</span>

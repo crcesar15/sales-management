@@ -26,6 +26,7 @@ export interface BatchProduct {
 export interface BatchProductVariant {
   id: number;
   label: string;
+  has_expiration: boolean;
 }
 
 export interface BatchStore {

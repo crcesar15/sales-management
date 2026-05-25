@@ -62,6 +62,7 @@ final class PurchaseOrderResource extends JsonResource
                     'id' => $item->productVariant->id,
                     'name' => $item->productVariant->name,
                     'identifier' => $item->productVariant->identifier,
+                    'has_expiration' => $item->productVariant->has_expiration,
                     'product' => $item->productVariant->product ? [
                         'id' => $item->productVariant->product->id,
                         'name' => $item->productVariant->product->name,

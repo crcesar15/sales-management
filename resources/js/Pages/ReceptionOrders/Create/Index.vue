@@ -80,6 +80,7 @@ watch(
           max_quantity: Number(item.remaining_quantity ?? item.quantity),
           expiry_date: null,
           batch_identifier: "",
+          has_expiration: item.product_variant?.has_expiration ?? false,
           purchase_unit: item.catalog?.unit ?? null,
           base_unit: item.product_variant?.product?.measurement_unit
             ? {

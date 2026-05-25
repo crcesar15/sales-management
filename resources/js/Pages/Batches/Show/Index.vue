@@ -204,6 +204,7 @@ const missingPercent = computed(() => {
       :batch-id="batch.id"
       :batch-identifier="batch.batch_identifier"
       :expiry-date="batch.expiry_date"
+      :has-expiration="batch.product_variant?.has_expiration ?? false"
     />
   </div>
 </template>

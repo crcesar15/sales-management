@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Button, InputNumber, InputText, Select, useToast } from "primevue";
+import { Button, InputNumber, InputText, Select, ToggleSwitch, useToast } from "primevue";
 
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { toTypedSchema } from "@vee-validate/yup";
 import { useForm } from "vee-validate";
-import { number, object, string } from "yup";
+import { boolean, number, object, string } from "yup";
 import { route } from "ziggy-js";
 import type { InventoryVariantDetail, InventoryProductDetail } from "@/Types/inventory-variant-types";
 import { useAuth } from "@/Composables/useAuth";
@@ -25,6 +25,8 @@ const schema = toTypedSchema(
     identifier: string().nullable().optional().max(50),
     barcode: string().nullable().optional().max(100),
     price: number().required().min(0),
+    minimum_stock_level: number().nullable().optional().min(0),
+    has_expiration: boolean(),
     status: string().required().oneOf(["active", "inactive", "archived"]),
   }),
 );
@@ -36,6 +38,8 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount 
     identifier: props.variant.identifier ?? "",
     barcode: props.variant.barcode ?? "",
     price: props.variant.price,
+    minimum_stock_level: props.variant.minimum_stock_level ?? null,
+    has_expiration: props.variant.has_expiration ?? false,
     status: props.variant.status,
   },
 });
@@ -43,6 +47,8 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount 
 const [identifier, identifierAttrs] = defineField("identifier");
 const [barcode, barcodeAttrs] = defineField("barcode");
 const [price, priceAttrs] = defineField("price");
+const [minimumStockLevel, minimumStockLevelAttrs] = defineField("minimum_stock_level");
+const [hasExpiration, hasExpirationAttrs] = defineField("has_expiration");
 const [status, statusAttrs] = defineField("status");
 
 const statusOptions = [
@@ -92,6 +98,42 @@ const onSubmit = handleSubmit((values) => {
             <label for="barcode">{{ t("Barcode") }}</label>
             <InputText id="barcode" v-model="barcode" v-bind="barcodeAttrs" autocomplete="off" :disabled="!props.canEdit" :class="{ 'p-invalid': submitCount > 0 && !!errors.barcode }" />
             <small v-if="submitCount > 0 && errors.barcode" class="text-red-400 dark:text-red-300">{{ errors.barcode }}</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory -->
+      <div class="mb-5">
+        <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">
+          {{ t("Inventory") }}
+        </h4>
+        <div class="grid grid-cols-12 gap-4">
+          <div class="md:col-span-6 col-span-12 flex flex-col gap-2">
+            <label for="minimum-stock-level">{{ t("Minimum Stock Level") }}</label>
+            <InputNumber
+              id="minimum-stock-level"
+              v-model="minimumStockLevel"
+              v-bind="minimumStockLevelAttrs"
+              :min="0"
+              :disabled="!props.canEdit"
+              placeholder="—"
+              :class="{ 'p-invalid': submitCount > 0 && !!errors.minimum_stock_level }"
+            />
+            <small v-if="submitCount > 0 && errors.minimum_stock_level" class="text-red-400 dark:text-red-300">{{ errors.minimum_stock_level }}</small>
+          </div>
+
+          <div class="md:col-span-6 col-span-12 flex flex-col gap-2">
+            <label for="has-expiration">{{ t("Requires Expiration Date") }}</label>
+            <div class="flex items-center gap-3 mt-1">
+              <ToggleSwitch
+                id="has-expiration"
+                v-model="hasExpiration"
+                v-bind="hasExpirationAttrs"
+                :disabled="!props.canEdit"
+              />
+              <span class="text-sm text-surface-500">{{ hasExpiration ? t("Yes") : t("No") }}</span>
+            </div>
+            <small class="text-surface-500">{{ t("When enabled, expiry date will be required when receiving or editing batches") }}</small>
           </div>
         </div>
       </div>

@@ -168,14 +168,14 @@ final class ProductVariantService
     }
 
     /**
-     * Update variant fields (identifier, price, status only — stock is read-only).
+     * Update variant fields (identifier, price, barcode, minimum_stock_level, has_expiration, status — stock is read-only).
      *
      * @param  array<string, mixed>  $data
      */
     public function update(ProductVariant $variant, array $data): ProductVariant
     {
         return DB::transaction(function () use ($variant, $data): ProductVariant {
-            $updateData = collect($data)->only(['identifier', 'price', 'barcode', 'status'])->toArray();
+            $updateData = collect($data)->only(['identifier', 'price', 'barcode', 'minimum_stock_level', 'has_expiration', 'status'])->toArray();
 
             $variant->update($updateData);
 

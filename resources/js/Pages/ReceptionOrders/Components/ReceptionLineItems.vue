@@ -13,6 +13,7 @@ export interface ReceptionLineItem {
   max_quantity?: number;
   expiry_date: Date | null;
   batch_identifier: string;
+  has_expiration?: boolean;
   purchase_unit?: { id: number; name: string; conversion_factor: number } | null;
   base_unit?: { id: number; name: string; abbreviation: string } | null;
   stock?: number | null;
@@ -151,18 +152,25 @@ function formatConversion(item: ReceptionLineItem): string {
     </Column>
 
     <Column :header="t('Expiry Date')" style="min-width: 180px">
+      <template #header>
+        <span>{{ t("Expiry Date") }}</span>
+      </template>
       <template #body="{ data, index }">
-        <DatePicker
-          :model-value="data.expiry_date"
-          :placeholder="t('Select date')"
-          show-icon
-          size="small"
-          :disabled="disabled"
-          class="w-full"
-          @update:model-value="
-            (val: Date | Date[] | (Date | null)[] | null | undefined) => updateExpiryDate(index, Array.isArray(val) ? null : (val ?? null))
-          "
-        />
+        <div class="flex flex-col gap-1">
+          <DatePicker
+            :model-value="data.expiry_date"
+            :placeholder="t('Select date')"
+            show-icon
+            size="small"
+            :disabled="disabled"
+            :class="{ 'p-invalid': data.has_expiration && !data.expiry_date }"
+            class="w-full"
+            @update:model-value="
+              (val: Date | Date[] | (Date | null)[] | null | undefined) => updateExpiryDate(index, Array.isArray(val) ? null : (val ?? null))
+            "
+          />
+          <small v-if="data.has_expiration && !data.expiry_date" class="text-red-400 dark:text-red-300">{{ t("Required") }}</small>
+        </div>
       </template>
     </Column>
 

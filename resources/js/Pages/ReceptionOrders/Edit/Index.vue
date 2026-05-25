@@ -75,6 +75,7 @@ const lineItems = ref<ReceptionLineItem[]>(
       : null,
     stock: item.product_variant?.stock ?? null,
     minimum_stock_level: item.product_variant?.minimum_stock_level ?? null,
+    has_expiration: item.product_variant?.has_expiration ?? false,
   })),
 );
 

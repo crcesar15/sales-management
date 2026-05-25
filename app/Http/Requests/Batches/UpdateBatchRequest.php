@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Batches;
 
 use App\Enums\PermissionsEnum;
+use App\Models\ProductVariant;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,5 +25,29 @@ final class UpdateBatchRequest extends FormRequest
             'batch_identifier' => ['nullable', 'string', 'max:100'],
             'expiry_date' => ['nullable', 'date'],
         ];
+    }
+
+    /**
+     * @param  \Illuminate\Validation\Validator  $validator
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            /** @var \App\Models\Batch|null $batch */
+            $batch = $this->route('batch');
+
+            if ($batch === null) {
+                return;
+            }
+
+            $variant = ProductVariant::find($batch->product_variant_id);
+
+            if ($variant?->has_expiration && $this->input('expiry_date') === null) {
+                $validator->errors()->add(
+                    'expiry_date',
+                    'The expiry date is required for this product variant.',
+                );
+            }
+        });
     }
 }

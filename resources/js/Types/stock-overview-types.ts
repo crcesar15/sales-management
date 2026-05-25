@@ -11,6 +11,8 @@ export interface StockOverviewItem {
   price: number;
   status: string;
   total_stock: number;
+  minimum_stock_level: number | null;
+  has_expiration: boolean;
   is_low_stock: boolean;
   values: VariantOptionValue[];
   images: ProductMedia[];

@@ -108,6 +108,8 @@ final class InventoryController extends Controller
                 'barcode' => $variant->barcode,
                 'price' => (float) $variant->price,
                 'stock' => (int) $breakdown['total_quantity'],
+                'minimum_stock_level' => $variant->minimum_stock_level,
+                'has_expiration' => $variant->has_expiration,
                 'status' => $variant->status,
                 'name' => $variant->name,
                 'values' => $variant->values->map(fn ($v) => [

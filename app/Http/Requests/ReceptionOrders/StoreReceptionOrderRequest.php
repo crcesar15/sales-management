@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\ReceptionOrders;
 
 use App\Enums\PermissionsEnum;
+use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -98,6 +99,23 @@ final class StoreReceptionOrderRequest extends FormRequest
                     $validator->errors()->add(
                         "items.{$index}.quantity",
                         "Cannot receive more than the remaining quantity. Ordered: {$orderedQuantity}, already claimed: {$alreadyClaimed}, remaining: {$remaining}.",
+                    );
+                }
+            }
+
+            // Validate that expiry_date is required for variants with has_expiration = true
+            $variantIds = array_map(fn (array $item) => (int) $item['product_variant_id'], $items);
+            $variantIds = array_unique($variantIds);
+            $variants = ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
+
+            foreach ($items as $index => $item) {
+                $variantId = (int) $item['product_variant_id'];
+                $variant = $variants->get($variantId);
+
+                if ($variant?->has_expiration && empty($item['expiry_date'])) {
+                    $validator->errors()->add(
+                        "items.{$index}.expiry_date",
+                        'The expiry date is required for this product variant.',
                     );
                 }
             }

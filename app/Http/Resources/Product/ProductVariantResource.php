@@ -22,6 +22,8 @@ final class ProductVariantResource extends JsonResource
             'barcode' => $this->barcode,
             'price' => (float) $this->price,
             'stock' => $this->stock,
+            'minimum_stock_level' => $this->minimum_stock_level,
+            'has_expiration' => $this->has_expiration,
             'status' => $this->status,
             'name' => $this->name,
             'product' => $this->whenLoaded('product', fn () => [

@@ -281,16 +281,20 @@ const onSort = (event: DataTableSortEvent) => {
 
           <Column field="total_stock" :header="t('Stock')" sortable>
             <template #body="{ data }">
-              <span :class="{ 'text-red-500 font-bold': data.is_low_stock }">{{ data.total_stock }}</span>
+              <span class="inline-flex items-center gap-1.5">
+                <i
+                  v-if="data.is_low_stock"
+                  v-tooltip.top="t('Low Stock')"
+                  class="fa-solid fa-triangle-exclamation text-red-500"
+                />
+                <span>{{ data.total_stock }}</span>
+              </span>
             </template>
           </Column>
 
-          <Column :header="t('Status')" style="width: 180px">
+          <Column :header="t('Status')" style="width: 120px">
             <template #body="{ data }">
-              <div class="flex flex-wrap gap-1">
-                <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
-                <Tag v-if="data.is_low_stock" :value="t('Low Stock')" severity="danger" />
-              </div>
+              <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
             </template>
           </Column>
 

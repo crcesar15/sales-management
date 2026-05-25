@@ -10,6 +10,7 @@ const props = defineProps<{
   batchId: number;
   batchIdentifier: string | null;
   expiryDate: string | null;
+  hasExpiration?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -63,6 +64,12 @@ function handleDismiss(value: boolean) {
 }
 
 function submit() {
+  if (props.hasExpiration && !expiryDate.value) {
+    fieldErrors.value = { expiry_date: t("The expiry date is required for this product variant.") };
+    toast.add({ severity: "error", summary: t("Error"), detail: t("The expiry date is required for this product variant."), life: 3000 });
+    return;
+  }
+
   loading.value = true;
   router.put(
     route("batches.update", { batch: props.batchId }),
@@ -120,7 +127,10 @@ function submit() {
         <small v-if="fieldErrors.batch_identifier" class="text-red-500">{{ fieldErrors.batch_identifier }}</small>
       </div>
       <div>
-        <label for="expiry-date" class="text-sm font-medium mb-1 block">{{ t("Expiry Date") }}</label>
+        <label for="expiry-date" class="text-sm font-medium mb-1 block">
+          {{ t("Expiry Date") }}
+          <span v-if="hasExpiration" class="text-red-400">*</span>
+        </label>
         <DatePicker
           id="expiry-date"
           v-model="expiryDate"

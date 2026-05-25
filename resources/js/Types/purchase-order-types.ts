@@ -31,7 +31,7 @@ export interface PurchaseOrderLineItem {
   remaining_quantity: number;
   price: number;
   total: number;
-  product_variant: Pick<ProductVariantResponse, "id" | "name" | "identifier" | "stock" | "minimum_stock_level"> & {
+  product_variant: Pick<ProductVariantResponse, "id" | "name" | "identifier" | "stock" | "minimum_stock_level" | "has_expiration"> & {
     product: Pick<ProductVariantResponse["product"], "id" | "name"> & {
       measurement_unit?: { id: number; name: string; abbreviation: string } | null;
     };

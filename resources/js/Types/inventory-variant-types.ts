@@ -41,6 +41,8 @@ export interface InventoryVariantDetail {
   barcode: string | null;
   price: number;
   stock: number;
+  minimum_stock_level: number | null;
+  has_expiration: boolean;
   status: string;
   name: string;
   values: VariantOptionValue[];

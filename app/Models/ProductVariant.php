@@ -29,8 +29,13 @@ final class ProductVariant extends Model
         'barcode',
         'price',
         'minimum_stock_level',
+        'has_expiration',
         'stock',
         'status',
+    ];
+
+    protected $casts = [
+        'has_expiration' => 'boolean',
     ];
 
     protected $appends = [

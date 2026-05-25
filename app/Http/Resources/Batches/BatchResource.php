@@ -30,6 +30,7 @@ final class BatchResource extends JsonResource
             'product_variant' => $this->whenLoaded('productVariant', fn () => [
                 'id' => $batch->productVariant?->id,
                 'label' => $batch->productVariant?->name,
+                'has_expiration' => $batch->productVariant?->has_expiration,
             ]),
             'store' => $this->whenLoaded('store', fn () => [
                 'id' => $batch->store?->id,
