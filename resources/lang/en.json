@@ -790,5 +790,8 @@
   "Lowest": "Lowest",
   "Amount": "Amount",
   "Enter a purchase price to calculate margin": "Enter a purchase price to calculate margin",
-  "Purchase price must be greater than zero": "Purchase price must be greater than zero"
+  "Purchase price must be greater than zero": "Purchase price must be greater than zero",
+  "Calculated from purchase price and margin": "Calculated from purchase price and margin",
+  "Enter purchase price and margin to calculate": "Enter purchase price and margin to calculate",
+  "Selling Price": "Selling Price"
 }

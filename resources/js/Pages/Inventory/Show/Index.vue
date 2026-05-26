@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { Button, Card, Badge, Tag } from "primevue";
+import { Button, Card, Badge, Tag, useToast } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { computed, ref } from "vue";
 import { route } from "ziggy-js";
-import type { Ref } from "vue";
-import type { InventoryVariantDetail, InventoryProductDetail, PurchasePriceHistory } from "@/Types/inventory-variant-types";
+import type { InventoryVariantDetail, InventoryProductDetail } from "@/Types/inventory-variant-types";
 import type { StockStoreBreakdown } from "@/Types/stock-overview-types";
 import { useAuth } from "@/Composables/useAuth";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
@@ -25,12 +24,13 @@ const props = defineProps<{
   stores: StockStoreBreakdown[];
 }>();
 const { t } = useI18n();
-const page = usePage();
+const toast = useToast();
 const { can } = useAuth();
 const { formatCurrency } = useCurrencyFormatter();
 const { formatDatetime } = useDatetimeFormatter();
 
 const canEdit = computed(() => can("inventory.edit"));
+const page = usePage();
 
 const from = computed(() => (page.url.includes("from=product") ? "product" : "inventory"));
 
@@ -65,23 +65,41 @@ const isLowStock = computed(() => {
   return props.variant.stock <= 0;
 });
 
-const latestPurchasePrice = ref<number | null>(null);
-const currentPrice = ref(props.variant.price);
 const variantDetailsRef = ref<InstanceType<typeof VariantDetails> | null>(null);
+const pricingRef = ref<InstanceType<typeof PurchasePriceMargin> | null>(null);
 
-const onPurchasePriceLoaded = (data: PurchasePriceHistory) => {
-  latestPurchasePrice.value = data.latest_purchase_price;
-};
+const isSaving = ref(false);
 
-const onMarginPriceUpdate = (newPrice: number) => {
-  currentPrice.value = newPrice;
-  if (variantDetailsRef.value) {
-    (variantDetailsRef.value.price as unknown as Ref<number>).value = newPrice;
-  }
-};
+const handleSave = () => {
+  const details = variantDetailsRef.value?.getValues();
+  const pricing = pricingRef.value?.getValues();
 
-const onPurchasePriceUpdate = (price: number | null) => {
-  latestPurchasePrice.value = price;
+  if (!details || !pricing) return;
+
+  isSaving.value = true;
+  router.put(
+    route("inventory.variant.update", { variant: props.variant.id }),
+    { ...details, ...pricing },
+    {
+      onSuccess: () => {
+        isSaving.value = false;
+        toast.add({ severity: "success", summary: t("Success"), detail: t("Variant updated successfully"), life: 3000 });
+      },
+      onError: (errs) => {
+        isSaving.value = false;
+        const fieldErrors = errs as Record<string, string>;
+        if (variantDetailsRef.value) {
+          variantDetailsRef.value.validate();
+        }
+        toast.add({
+          severity: "error",
+          summary: t("Error"),
+          detail: t(Object.values(fieldErrors)[0] ?? "An error occurred"),
+          life: 3000,
+        });
+      },
+    },
+  );
 };
 </script>
 
@@ -96,12 +114,7 @@ const onPurchasePriceUpdate = (price: number | null) => {
           <Badge v-if="variant.values?.length" :value="variantDisplayName" severity="primary" />
         </h2>
       </div>
-      <Button
-        v-if="canEdit"
-        :label="t('Edit product')"
-        icon="fa fa-arrow-up-right-from-square"
-        @click="router.visit(route('products.edit', { product: props.product.id }))"
-      />
+      <Button v-if="canEdit" :label="t('Save')" icon="fa fa-save" raised :loading="isSaving" @click="handleSave" class="uppercase" />
     </div>
 
     <!-- Content Grid -->
@@ -119,12 +132,12 @@ const onPurchasePriceUpdate = (price: number | null) => {
           <template #title>{{ t("Pricing") }}</template>
           <template #content>
             <PurchasePriceMargin
+              ref="pricingRef"
               :variant-id="variant.id"
-              :selling-price="currentPrice"
+              :purchase-price="variant.purchase_price"
+              :margin-type="variant.margin_type"
+              :margin-value="variant.margin_value"
               :can-edit="canEdit"
-              @update:price="onMarginPriceUpdate"
-              @update:purchase-price="onPurchasePriceUpdate"
-              @loaded="onPurchasePriceLoaded"
             />
           </template>
         </Card>
@@ -166,12 +179,12 @@ const onPurchasePriceUpdate = (price: number | null) => {
                 />
               </div>
               <div class="flex justify-between">
-                <span class="text-surface-500">{{ t("Price") }}</span>
+                <span class="text-surface-500">{{ t("Selling Price") }}</span>
                 <span class="font-bold">{{ formatCurrency(String(variant.price)) }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Purchase Price") }}</span>
-                <span class="font-medium">{{ latestPurchasePrice !== null ? formatCurrency(String(latestPurchasePrice)) : "—" }}</span>
+                <span class="font-medium">{{ variant.purchase_price !== null ? formatCurrency(String(variant.purchase_price)) : "—" }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Stock") }}</span>
@@ -179,6 +192,16 @@ const onPurchasePriceUpdate = (price: number | null) => {
                   <i v-if="isLowStock" v-tooltip.top="t('Low Stock')" class="fa-solid fa-triangle-exclamation text-red-500" />
                   <span class="font-bold">{{ variant.stock }}</span>
                 </span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-surface-500">{{ t("Product") }}</span>
+                <a
+                  class="text-primary hover:underline cursor-pointer font-medium"
+                  @click="router.visit(route('products.edit', { product: props.product.id }))"
+                >
+                  {{ product.name }}
+                  <i class="fa fa-arrow-up-right-from-square text-xs ml-1" />
+                </a>
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Brand") }}</span>
@@ -211,6 +234,16 @@ const onPurchasePriceUpdate = (price: number | null) => {
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Updated") }}</span>
                 <span class="font-medium">{{ formatDatetime(variant.updated_at) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-surface-500">{{ t("Product") }}</span>
+                <a
+                  class="text-primary hover:underline cursor-pointer font-medium"
+                  @click="router.visit(route('products.edit', { product: props.product.id }))"
+                >
+                  {{ product.name }}
+                  <i class="fa fa-arrow-up-right-from-square text-xs ml-1" />
+                </a>
               </div>
             </div>
           </template>

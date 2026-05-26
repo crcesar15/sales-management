@@ -11,6 +11,7 @@ export interface InventoryVariantListItem {
   identifier: string | null;
   barcode: string | null;
   price: number;
+  purchase_price: number | null;
   stock: number;
   status: string;
   is_default: boolean;
@@ -40,6 +41,9 @@ export interface InventoryVariantDetail {
   identifier: string | null;
   barcode: string | null;
   price: number;
+  purchase_price: number | null;
+  margin_type: "percent" | "amount";
+  margin_value: number | null;
   stock: number;
   minimum_stock_level: number | null;
   has_expiration: boolean;

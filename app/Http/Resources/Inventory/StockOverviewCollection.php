@@ -24,6 +24,7 @@ final class StockOverviewCollection extends ResourceCollection
                 'identifier' => $variant->identifier,
                 'barcode' => $variant->barcode,
                 'price' => (float) $variant->price,
+                'purchase_price' => (float) $variant->purchase_price,
                 'status' => $variant->status,
                 'total_stock' => (int) $variant->stock,
                 'minimum_stock_level' => $variant->minimum_stock_level,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\MarginType;
 use Database\Factories\ProductVariantFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,9 @@ final class ProductVariant extends Model
         'identifier',
         'barcode',
         'price',
+        'purchase_price',
+        'margin_type',
+        'margin_value',
         'minimum_stock_level',
         'has_expiration',
         'stock',
@@ -36,6 +40,9 @@ final class ProductVariant extends Model
 
     protected $casts = [
         'has_expiration' => 'boolean',
+        'purchase_price' => 'decimal:2',
+        'margin_type' => MarginType::class,
+        'margin_value' => 'decimal:2',
     ];
 
     protected $appends = [

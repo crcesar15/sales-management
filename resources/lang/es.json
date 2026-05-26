@@ -791,5 +791,8 @@
   "Lowest": "Más bajo",
   "Amount": "Monto",
   "Enter a purchase price to calculate margin": "Ingrese un precio de compra para calcular el margen",
-  "Purchase price must be greater than zero": "El precio de compra debe ser mayor a cero"
+  "Purchase price must be greater than zero": "El precio de compra debe ser mayor a cero",
+  "Calculated from purchase price and margin": "Calculado a partir del precio de compra y el margen",
+  "Enter purchase price and margin to calculate": "Ingrese precio de compra y margen para calcular",
+  "Selling Price": "Precio de venta"
 }

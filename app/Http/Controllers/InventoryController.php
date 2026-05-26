@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
+use App\Http\Requests\Inventory\UpdateVariantDetailRequest;
 use App\Http\Resources\Inventory\StockOverviewCollection;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\ProductVariant;
 use App\Models\Store;
+use App\Services\ProductVariantService;
 use App\Services\StockService;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -18,9 +21,12 @@ final class InventoryController extends Controller
 {
     private readonly StockService $stockService;
 
-    public function __construct(StockService $stockService)
+    private readonly ProductVariantService $variantService;
+
+    public function __construct(StockService $stockService, ProductVariantService $variantService)
     {
         $this->stockService = $stockService;
+        $this->variantService = $variantService;
     }
 
     public function index(): InertiaResponse
@@ -107,6 +113,9 @@ final class InventoryController extends Controller
                 'identifier' => $variant->identifier,
                 'barcode' => $variant->barcode,
                 'price' => (float) $variant->price,
+                'purchase_price' => (float) $variant->purchase_price,
+                'margin_type' => $variant->margin_type->value,
+                'margin_value' => (float) $variant->margin_value,
                 'stock' => (int) $breakdown['total_quantity'],
                 'minimum_stock_level' => $variant->minimum_stock_level,
                 'has_expiration' => $variant->has_expiration,
@@ -150,5 +159,12 @@ final class InventoryController extends Controller
                 'quantity' => $row['quantity'],
             ]),
         ]);
+    }
+
+    public function update(UpdateVariantDetailRequest $request, ProductVariant $variant): RedirectResponse
+    {
+        $this->variantService->update($variant, $request->validated());
+
+        return redirect()->back();
     }
 }

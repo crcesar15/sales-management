@@ -23,7 +23,10 @@ final class UpdateVariantDetailRequest extends FormRequest
         return [
             'identifier' => ['nullable', 'string', 'max:50'],
             'barcode' => ['nullable', 'string', 'max:100'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'purchase_price' => ['required', 'numeric', 'min:0'],
+            'margin_type' => ['required', 'in:percent,amount'],
+            'margin_value' => ['required', 'numeric', 'min:0'],
+            'price' => ['sometimes', 'numeric', 'min:0'],
             'minimum_stock_level' => ['nullable', 'integer', 'min:0'],
             'has_expiration' => ['boolean'],
             'status' => ['required', 'in:active,inactive,archived'],

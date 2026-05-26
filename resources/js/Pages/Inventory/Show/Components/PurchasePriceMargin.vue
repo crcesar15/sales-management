@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { InputNumber, SelectButton, Button, useToast } from "primevue";
 import Chart from "primevue/chart";
 import { useI18n } from "vue-i18n";
@@ -11,13 +11,16 @@ import type { PurchasePriceHistory } from "@/Types/inventory-variant-types";
 
 const props = defineProps<{
   variantId: number;
-  sellingPrice: number;
+  purchasePrice: number | null;
+  marginType: "percent" | "amount";
+  marginValue: number | null;
   canEdit: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: "update:price", value: number): void;
   (e: "update:purchasePrice", value: number | null): void;
+  (e: "update:marginType", value: "percent" | "amount"): void;
+  (e: "update:marginValue", value: number | null): void;
   (e: "loaded", data: PurchasePriceHistory): void;
 }>();
 
@@ -30,82 +33,62 @@ const currency = getSetting("finance", "currency") ?? "USD";
 const { fetchPurchasePriceHistory } = useVariantClient();
 
 const priceHistory = ref<PurchasePriceHistory | null>(null);
-const referencePurchasePrice = ref<number | null>(null);
-const localPrice = ref(props.sellingPrice);
-const marginType = ref<"percent" | "amount">("percent");
-const marginValue = ref<number | null>(null);
+const localPurchasePrice = ref<number | null>(props.purchasePrice);
+const localMarginType = ref<"percent" | "amount">(props.marginType);
+const localMarginValue = ref<number | null>(props.marginValue);
 const showHistory = ref(false);
 
 const stats = computed(() => priceHistory.value?.stats ?? null);
-const hasStats = computed(() => stats.value !== null && (
-  stats.value.latest !== null || stats.value.average !== null
-));
+const hasStats = computed(
+  () => stats.value !== null && (stats.value.latest !== null || stats.value.average !== null),
+);
 
 const marginTypeOptions = computed(() => [
   { label: "%", value: "percent" },
-  { label: t("Amount"), value: "amount" },
+  { label: currency, value: "amount" },
 ]);
 
+const calculatedPrice = computed(() => {
+  if (localPurchasePrice.value === null || localPurchasePrice.value <= 0 || localMarginValue.value === null) {
+    return null;
+  }
+  if (localMarginType.value === "percent") {
+    if (localMarginValue.value >= 100) return null;
+    return Math.round((localPurchasePrice.value / (1 - localMarginValue.value / 100)) * 100) / 100;
+  }
+  return Math.round((localPurchasePrice.value + localMarginValue.value) * 100) / 100;
+});
+
 const canCalculateMargin = computed(
-  () => referencePurchasePrice.value !== null && referencePurchasePrice.value > 0,
+  () => localPurchasePrice.value !== null && localPurchasePrice.value > 0,
 );
 
-const recalculateMargin = () => {
-  const purchasePrice = referencePurchasePrice.value;
-  const price = localPrice.value;
-
-  if (purchasePrice === null || purchasePrice <= 0 || price === null || price === undefined || price <= 0) {
-    marginValue.value = null;
-    return;
-  }
-
-  if (marginType.value === "percent") {
-    marginValue.value = Math.round(((price - purchasePrice) / price) * 10000) / 100;
-  } else {
-    marginValue.value = Math.round((price - purchasePrice) * 100) / 100;
-  }
-};
-
-const recalculatePriceFromMargin = () => {
-  const purchasePrice = referencePurchasePrice.value;
-  if (purchasePrice === null || purchasePrice <= 0 || marginValue.value === null) {
-    return;
-  }
-
-  let newPrice: number;
-  if (marginType.value === "percent") {
-    if (marginValue.value >= 100) {
-      return;
-    }
-    newPrice = Math.round((purchasePrice / (1 - marginValue.value / 100)) * 100) / 100;
-  } else {
-    newPrice = Math.round((purchasePrice + marginValue.value) * 100) / 100;
-  }
-
-  if (newPrice < 0) newPrice = 0;
-  localPrice.value = newPrice;
-  emit("update:price", newPrice);
-};
-
 const onPurchasePriceUpdate = (value: number | null) => {
-  referencePurchasePrice.value = value;
+  localPurchasePrice.value = value;
   emit("update:purchasePrice", value);
-  if (marginValue.value !== null && canCalculateMargin.value) {
-    recalculatePriceFromMargin();
-  } else {
-    recalculateMargin();
-  }
 };
 
 const onMarginUpdate = (value: number | null) => {
-  marginValue.value = value;
-  recalculatePriceFromMargin();
+  localMarginValue.value = value;
+  emit("update:marginValue", value);
 };
 
-const onPriceUpdate = (value: number | null) => {
-  localPrice.value = value ?? 0;
-  emit("update:price", localPrice.value);
-  recalculateMargin();
+const onMarginTypeChange = () => {
+  emit("update:marginType", localMarginType.value);
+
+  if (canCalculateMargin.value && localPurchasePrice.value !== null && localMarginValue.value !== null) {
+    const purchasePrice = localPurchasePrice.value;
+    if (localMarginType.value === "amount") {
+      const percent = localMarginValue.value;
+      if (percent < 100) {
+        localMarginValue.value = Math.round((purchasePrice * percent) / (100 - percent) * 100) / 100;
+      }
+    } else {
+      const amount = localMarginValue.value;
+      localMarginValue.value = Math.round((amount / (purchasePrice + amount)) * 10000) / 100;
+    }
+    emit("update:marginValue", localMarginValue.value);
+  }
 };
 
 const setPurchasePriceFromStat = (stat: "latest" | "average" | "highest" | "lowest") => {
@@ -114,48 +97,26 @@ const setPurchasePriceFromStat = (stat: "latest" | "average" | "highest" | "lowe
   }
 };
 
-const onMarginTypeChange = () => {
-  if (canCalculateMargin.value && referencePurchasePrice.value !== null) {
-    const purchasePrice = referencePurchasePrice.value;
-    if (marginValue.value !== null) {
-      if (marginType.value === "amount") {
-        const percent = marginValue.value;
-        if (percent < 100) {
-          marginValue.value = Math.round((purchasePrice * percent / (100 - percent)) * 100) / 100;
-        }
-      } else {
-        const amount = marginValue.value;
-        marginValue.value = Math.round((amount / (purchasePrice + amount)) * 10000) / 100;
-      }
-    }
-    recalculatePriceFromMargin();
-  }
-};
-
 onMounted(async () => {
   try {
     const response = await fetchPurchasePriceHistory(props.variantId);
     priceHistory.value = response.data.data;
 
-    if (response.data.data.latest_purchase_price !== null) {
-      referencePurchasePrice.value = response.data.data.latest_purchase_price;
+    if (localPurchasePrice.value === null && response.data.data.latest_purchase_price !== null) {
+      localPurchasePrice.value = response.data.data.latest_purchase_price;
+      emit("update:purchasePrice", localPurchasePrice.value);
     }
 
     emit("loaded", response.data.data);
   } catch {
-    toast.add({ severity: "error", summary: t("Error"), detail: t("Failed to load purchase price history"), life: 3000 });
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: t("Failed to load purchase price history"),
+      life: 3000,
+    });
   }
 });
-
-watch(
-  () => props.sellingPrice,
-  (newPrice) => {
-    localPrice.value = newPrice;
-    if (marginValue.value === null) {
-      recalculateMargin();
-    }
-  },
-);
 
 const chartData = computed(() => {
   const history = priceHistory.value?.history ?? [];
@@ -203,103 +164,126 @@ const chartOptions = computed(() => ({
     },
   },
 }));
+
+defineExpose({
+  getValues: () => ({
+    purchase_price: localPurchasePrice.value,
+    margin_type: localMarginType.value,
+    margin_value: localMarginValue.value,
+  }),
+});
 </script>
 
 <template>
   <div class="flex flex-col gap-4">
-    <!-- Purchase Price -->
-    <div class="flex flex-col gap-2">
-      <label for="purchase-price">{{ t("Purchase Price") }}</label>
-      <InputNumber
-        id="purchase-price"
-        :model-value="referencePurchasePrice"
-        mode="currency"
-        :currency="currency"
-        :min="0"
-        :disabled="!canEdit"
-        placeholder="0"
-        @update:model-value="onPurchasePriceUpdate"
-      />
-      <div v-if="hasStats" class="flex flex-wrap gap-2">
-        <Button
-          :label="t('Latest')"
-          size="small"
-          severity="secondary"
-          :disabled="!canEdit || stats?.latest === null"
-          @click="setPurchasePriceFromStat('latest')"
-        />
-        <Button
-          :label="t('Average')"
-          size="small"
-          severity="secondary"
-          :disabled="!canEdit || stats?.average === null"
-          @click="setPurchasePriceFromStat('average')"
-        />
-        <Button
-          :label="t('Highest')"
-          size="small"
-          severity="secondary"
-          :disabled="!canEdit || stats?.highest === null"
-          @click="setPurchasePriceFromStat('highest')"
-        />
-        <Button
-          :label="t('Lowest')"
-          size="small"
-          severity="secondary"
-          :disabled="!canEdit || stats?.lowest === null"
-          @click="setPurchasePriceFromStat('lowest')"
-        />
-      </div>
-      <small v-if="!canCalculateMargin && referencePurchasePrice === null" class="text-surface-500">
-        {{ t("Enter a purchase price to calculate margin") }}
-      </small>
-    </div>
-
-    <!-- Margin -->
-    <div class="flex flex-col gap-2">
-      <label for="margin">{{ t("Margin") }}</label>
-      <div class="flex items-center gap-2">
+    <!-- Purchase Price & Margin Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Purchase Price -->
+      <div class="flex flex-col gap-2">
+        <label for="purchase-price">
+          {{ t("Purchase Price") }}
+          <span class="text-red-400">*</span>
+        </label>
         <InputNumber
-          id="margin"
-          :model-value="marginValue"
-          :mode="marginType === 'amount' ? 'currency' : undefined"
-          :currency="marginType === 'amount' ? currency : undefined"
-          :suffix="marginType === 'percent' ? '%' : undefined"
-          :min-fraction-digits="marginType === 'percent' ? 2 : undefined"
-          :max-fraction-digits="marginType === 'percent' ? 2 : undefined"
-          :disabled="!canEdit || !canCalculateMargin"
-          @update:model-value="onMarginUpdate"
-          class="flex-1"
+          id="purchase-price"
+          :model-value="localPurchasePrice"
+          mode="currency"
+          :currency="currency"
+          :min="0"
+          :disabled="!canEdit"
+          placeholder="0"
+          @update:model-value="onPurchasePriceUpdate"
         />
-        <SelectButton
-          v-model="marginType"
-          :options="marginTypeOptions"
-          option-label="label"
-          option-value="value"
-          :allow-empty="false"
-          @change="onMarginTypeChange"
-        />
+        <div v-if="hasStats" class="flex flex-wrap gap-2">
+          <Button
+            :label="t('Latest')"
+            size="small"
+            severity="secondary"
+            :disabled="!canEdit || stats?.latest === null"
+            @click="setPurchasePriceFromStat('latest')"
+          />
+          <Button
+            :label="t('Average')"
+            size="small"
+            severity="secondary"
+            :disabled="!canEdit || stats?.average === null"
+            @click="setPurchasePriceFromStat('average')"
+          />
+          <Button
+            :label="t('Highest')"
+            size="small"
+            severity="secondary"
+            :disabled="!canEdit || stats?.highest === null"
+            @click="setPurchasePriceFromStat('highest')"
+          />
+          <Button
+            :label="t('Lowest')"
+            size="small"
+            severity="secondary"
+            :disabled="!canEdit || stats?.lowest === null"
+            @click="setPurchasePriceFromStat('lowest')"
+          />
+        </div>
       </div>
-      <small v-if="!canCalculateMargin && referencePurchasePrice !== null" class="text-surface-500">
-        {{ t("Purchase price must be greater than zero") }}
-      </small>
+
+      <!-- Margin -->
+      <div class="flex flex-col gap-2">
+        <label for="margin">
+          {{ t("Margin") }}
+          <span class="text-red-400">*</span>
+        </label>
+        <div class="flex items-center gap-2">
+          <InputNumber
+            id="margin"
+            :model-value="localMarginValue"
+            :mode="localMarginType === 'amount' ? 'currency' : undefined"
+            :currency="localMarginType === 'amount' ? currency : undefined"
+            :suffix="localMarginType === 'percent' ? '%' : undefined"
+            :min-fraction-digits="localMarginType === 'percent' ? 2 : undefined"
+            :max-fraction-digits="localMarginType === 'percent' ? 2 : undefined"
+            :disabled="!canEdit || !canCalculateMargin"
+            @update:model-value="onMarginUpdate"
+            class="flex-1"
+          />
+          <SelectButton
+            v-model="localMarginType"
+            :options="marginTypeOptions"
+            option-label="label"
+            option-value="value"
+            :allow-empty="false"
+            :disabled="!canEdit"
+            @change="onMarginTypeChange"
+          />
+        </div>
+        <small v-if="!canCalculateMargin && localPurchasePrice !== null" class="text-surface-500">
+          {{ t("Purchase price must be greater than zero") }}
+        </small>
+      </div>
     </div>
 
-    <!-- Selling Price -->
+    <!-- Selling Price (Calculated, Read-Only) -->
     <div class="flex flex-col gap-2">
-      <label for="selling-price" class="font-semibold">
-        {{ t("Price") }}
-        <span class="text-red-400">*</span>
-      </label>
-      <InputNumber
-        id="selling-price"
-        :model-value="localPrice"
-        mode="currency"
-        :currency="currency"
-        :min="0"
-        :disabled="!canEdit"
-        @update:model-value="onPriceUpdate"
-      />
+      <div class="flex items-center gap-2">
+        <label class="font-semibold">{{ t("Selling Price") }}</label>
+        <i
+          class="fa-solid fa-calculator text-sm text-surface-400"
+          v-tooltip="t('Calculated from purchase price and margin')"
+        />
+      </div>
+      <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-3 bg-surface-50 dark:bg-surface-800">
+        <div v-if="calculatedPrice !== null" class="text-2xl font-bold text-surface-900 dark:text-surface-0">
+          {{ formatCurrency(String(calculatedPrice)) }}
+        </div>
+        <div v-else class="text-surface-400 italic">
+          {{ t("Enter purchase price and margin to calculate") }}
+        </div>
+        <div v-if="calculatedPrice !== null && localPurchasePrice" class="text-xs text-surface-500 mt-1">
+          {{ formatCurrency(String(localPurchasePrice)) }}
+          +
+          {{ localMarginType === "percent" ? localMarginValue + "%" : formatCurrency(String(localMarginValue)) }}
+          = {{ formatCurrency(String(calculatedPrice)) }}
+        </div>
+      </div>
     </div>
 
     <!-- Price History Toggle -->

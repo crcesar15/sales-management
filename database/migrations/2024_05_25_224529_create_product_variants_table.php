@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('identifier', 50)->unique()->nullable();
             $table->string('barcode', 100)->nullable()->index();
             $table->decimal('price', 10, 2);
+            $table->decimal('purchase_price', 10, 2)->nullable();
+            $table->enum('margin_type', ['percent', 'amount'])->default('percent');
+            $table->decimal('margin_value', 10, 2)->nullable();
             $table->unsignedInteger('minimum_stock_level')->nullable();
             $table->boolean('has_expiration')->default(false);
             $table->unsignedInteger('stock')->default(0);
