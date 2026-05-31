@@ -100,7 +100,7 @@ function formatConversion(item: ReceptionLineItem): string {
   <DataTable
     :value="items"
     data-key="id"
-    class="mt-4 border-t-2 border-surface-200"
+    class="mt-4 border-t-2 border-surface-200 dark:border-surface-700"
     striped-rows
     row-hover
     scrollable

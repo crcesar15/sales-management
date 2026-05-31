@@ -184,7 +184,7 @@ function formatConversion(item: ReceptionOrderResponse["line_items"][number]): s
         <Card class="mb-4">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <DataTable :value="receptionOrder.line_items" data-key="id" class="mt-4 border-t-2 border-surface-200">
+            <DataTable :value="receptionOrder.line_items" data-key="id" class="mt-4 border-t-2 border-surface-200 dark:border-surface-700">
               <template #empty>
                 {{ t("No items") }}
               </template>

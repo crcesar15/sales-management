@@ -12,7 +12,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <DataTable :value="stores" resizable-rows class="border-t">
+  <DataTable :value="stores" resizable-rows class="border-t-2 border-surface-200 dark:border-surface-700">
     <template #empty>
       {{ t("No stock records found") }}
     </template>

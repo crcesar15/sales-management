@@ -316,7 +316,7 @@ function formatFileSize(bytes: number): string {
         <Card class="mb-4">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <DataTable v-model:expanded-rows="expandedRows" :value="purchaseOrder.line_items ?? []" data-key="id" class="mt-4 border-t-2 border-surface-200">
+            <DataTable v-model:expanded-rows="expandedRows" :value="purchaseOrder.line_items ?? []" data-key="id" class="mt-4 border-t-2 border-surface-200 dark:border-surface-700">
               <template #empty>
                 {{ t("No items") }}
               </template>
