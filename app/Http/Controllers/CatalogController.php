@@ -120,7 +120,7 @@ final class CatalogController extends Controller
     {
         $this->authorize(PermissionsEnum::CATALOG_EDIT);
 
-        $catalog->load(['vendor', 'productVariant.product', 'unit']);
+        $catalog->load(['vendor', 'productVariant.product', 'purchaseUnit']);
 
         return Inertia::render('Vendors/Catalog/Edit/Index', [
             'vendor' => $vendor,
