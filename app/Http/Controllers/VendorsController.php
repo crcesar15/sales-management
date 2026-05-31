@@ -59,9 +59,9 @@ final class VendorsController extends Controller
 
     public function store(StoreVendorRequest $request): RedirectResponse
     {
-        $this->vendorService->create($request->validated());
+        $vendor = $this->vendorService->create($request->validated());
 
-        return redirect()->route('vendors');
+        return redirect()->route('vendors.catalog', $vendor);
     }
 
     public function edit(Vendor $vendor): InertiaResponse

@@ -92,7 +92,6 @@ const submit = handleSubmit((formValues) => {
         detail: t("Vendor created successfully"),
         life: 3000,
       });
-      router.visit(route("vendors"));
     },
     onError: (errs: Record<string, string>) => {
       setErrors(errs);
