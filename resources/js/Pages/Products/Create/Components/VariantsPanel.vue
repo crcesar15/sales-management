@@ -6,7 +6,6 @@ import { ref } from "vue";
 import type { CreateVariant } from "@app-types/product-types";
 import ManualVariantDialog from "./ManualVariantDialog.vue";
 import VariantImageDialog from "./VariantImageDialog.vue";
-import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 
 const props = withDefaults(
   defineProps<{
@@ -36,8 +35,6 @@ const editingVariant = ref<CreateVariant | null>(null);
 const imageDialogVisible = ref(false);
 const editingImageVariant = ref<CreateVariant | null>(null);
 const selectedImageIds = ref<number[]>([]);
-
-const { formatCurrency } = useCurrencyFormatter();
 
 const getMediaThumb = (mediaId: number) => {
   return props.pendingMedia.find((m) => m.id === mediaId)?.thumb_url ?? "";
@@ -132,7 +129,6 @@ const onGenerateAll = () => {
     return {
       key: buildKey(optionValues),
       option_values: optionValues,
-      price: 0,
       barcode: null,
       pending_media_ids: [],
     };
@@ -176,7 +172,7 @@ const onDeleteVariant = (data: CreateVariant) => {
       </div>
     </template>
     <template #content>
-      <DataTable :value="props.variants" data-key="key">
+      <DataTable :value="props.variants" data-key="key" class="border-t-2 border-surface-200 dark:border-surface-700">
         <!-- Options Column -->
         <Column :header="t('Options')">
           <template #body="{ data }">
@@ -209,10 +205,10 @@ const onDeleteVariant = (data: CreateVariant) => {
           </template>
         </Column>
 
-        <!-- Price Column -->
-        <Column field="price" :header="t('Price')">
+        <!-- Identifier Column -->
+        <Column field="identifier" :header="t('Identifier')">
           <template #body="{ data }">
-            {{ formatCurrency(String(data.price)) }}
+            <span>{{ data.identifier ?? "—" }}</span>
           </template>
         </Column>
 

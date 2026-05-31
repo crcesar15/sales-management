@@ -90,7 +90,7 @@ const onSave = () => {
     <template #footer>
       <div class="flex items-center justify-end gap-2">
         <Button :label="t('Cancel')" severity="secondary" @click="$emit('close')" />
-        <Button :label="t('Save')" @click="onSave" />
+        <Button :label="t('Save')" @click="onSave" :disabled="selectedMediaIds.length === 0" />
       </div>
     </template>
   </Dialog>

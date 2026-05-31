@@ -116,9 +116,9 @@ final class ProductVariantService
 
                 $variant = ProductVariant::create([
                     'product_id' => $product->id,
-                    'identifier' => null,
+                    'identifier' => $variantData['identifier'] ?? null,
                     'barcode' => $variantData['barcode'] ?? null,
-                    'price' => $variantData['price'],
+                    'price' => $variantData['price'] ?? 0,
                     'status' => 'active',
                 ]);
 
@@ -157,8 +157,8 @@ final class ProductVariantService
             $variant = ProductVariant::create([
                 'product_id' => $product->id,
                 'identifier' => $data['identifier'] ?? null,
-                'barcode' => null,
-                'price' => $data['price'],
+                'barcode' => $data['barcode'] ?? null,
+                'price' => $data['price'] ?? 0,
                 'status' => $data['status'] ?? 'active',
             ]);
 

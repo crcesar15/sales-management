@@ -4,7 +4,6 @@ import {
   Card,
   ConfirmDialog,
   InputText,
-  InputNumber,
   MultiSelect,
   Select,
   SelectButton,
@@ -18,18 +17,17 @@ import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string, number, array } from "yup";
+import type { CreateVariant } from "@app-types/product-types";
 import { route } from "ziggy-js";
 import { computed, ref, watch } from "vue";
 import { configureYupLocale } from "@/validations/yupLocale";
 import type { Brand } from "@app-types/brand-types";
 import type { Category } from "@app-types/category-types";
 import type { MeasurementUnit } from "@app-types/measurement-unit-types";
-import type { CreateVariant } from "@app-types/product-types";
 import AppLayout from "@layouts/admin.vue";
 import ProductImages from "@pages/Products/Components/ProductImages.vue";
 import OptionsEditor from "@pages/Products/Create/Components/OptionsEditor.vue";
 import VariantsPanel from "@pages/Products/Create/Components/VariantsPanel.vue";
-import { useAuth } from "@/Composables/useAuth";
 
 defineOptions({ layout: AppLayout });
 const props = defineProps<{
@@ -40,8 +38,6 @@ const props = defineProps<{
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
-const { getSetting } = useAuth();
-const currency = getSetting("finance", "currency") ?? "USD";
 configureYupLocale(t);
 
 // Product type selector
@@ -100,8 +96,8 @@ const schema = toTypedSchema(
     brand_id: number().nullable().optional(),
     measurement_unit_id: number().nullable().optional(),
     categories_ids: array().of(number().required()).required().min(1, t("At least one category is required")),
-    price: number().nullable().optional().min(0),
     barcode: string().nullable().optional().max(100),
+    identifier: string().nullable().optional().max(50),
   }),
 );
 
@@ -115,8 +111,8 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount 
     brand_id: null as number | null,
     measurement_unit_id: null as number | null,
     categories_ids: [] as number[],
-    price: 0,
     barcode: "" as string | null,
+    identifier: "" as string | null,
   },
 });
 
@@ -126,8 +122,8 @@ const [status, statusAttrs] = defineField("status");
 const [brandId, brandIdAttrs] = defineField("brand_id");
 const [measurementUnitId, measurementUnitIdAttrs] = defineField("measurement_unit_id");
 const [categoriesIds, categoriesIdsAttrs] = defineField("categories_ids");
-const [price, priceAttrs] = defineField("price");
 const [barcode, barcodeAttrs] = defineField("barcode");
+const [identifier, identifierAttrs] = defineField("identifier");
 
 // Description char counter
 const descriptionCharCount = computed(() => (description.value ?? "").length);
@@ -155,20 +151,20 @@ const onSubmit = handleSubmit((values) => {
     }
 
     payload.has_variants = true;
-    payload.price = 0;
-    payload.barcode = null;
     payload.options = localOptions.value.map((o) => ({
       name: o.name,
       values: o.values,
     }));
-    payload.variants = variants.value.map((v) => ({
+    payload.variants = variants.value.map((v: CreateVariant) => ({
       option_values: v.option_values,
-      price: v.price,
-      barcode: v.barcode,
+      identifier: v.identifier ?? null,
+      barcode: v.barcode ?? null,
       pending_media_ids: v.pending_media_ids ?? [],
     }));
   } else {
     payload.has_variants = false;
+    payload.barcode = values.barcode || null;
+    payload.identifier = values.identifier || null;
   }
 
   router.post(route("products.store"), payload, {
@@ -261,34 +257,22 @@ const onSubmit = handleSubmit((values) => {
           <template #content>
             <div class="grid grid-cols-12 gap-4">
               <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
-                <label for="price">
-                  {{ t("Base Price") }}
-                  <span class="text-red-400">*</span>
-                </label>
-                <InputNumber
-                  id="price"
-                  v-model="price"
-                  v-bind="priceAttrs"
-                  mode="currency"
-                  :currency="currency"
-                  :class="{ 'p-invalid': submitCount > 0 && !!errors.price }"
+                <label for="identifier">{{ t("Identifier") }}</label>
+                <InputText
+                  id="identifier"
+                  v-model="identifier"
+                  v-bind="identifierAttrs"
+                  autocomplete="off"
                 />
-                <small v-if="submitCount > 0 && errors.price" class="text-red-400 dark:text-red-300">
-                  {{ errors.price }}
-                </small>
               </div>
-              <div class="flex flex-col lg:col-span-6 md:col-span-12 col-span-12 gap-2 mb-3">
+              <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
                 <label for="barcode">{{ t("Barcode") }}</label>
                 <InputText
                   id="barcode"
                   v-model="barcode"
                   v-bind="barcodeAttrs"
                   autocomplete="off"
-                  :class="{ 'p-invalid': submitCount > 0 && !!errors.barcode }"
                 />
-                <small v-if="submitCount > 0 && errors.barcode" class="text-red-400 dark:text-red-300">
-                  {{ errors.barcode }}
-                </small>
               </div>
             </div>
           </template>

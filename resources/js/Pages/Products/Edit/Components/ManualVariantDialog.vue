@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { Button, Dialog, InputNumber, InputText, Select, useToast } from "primevue";
+import { Button, Dialog, InputText, Select, useToast } from "primevue";
 
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { reactive, ref, computed, watch } from "vue";
 import { route } from "ziggy-js";
 import type { ProductOption, ProductVariantInline } from "@app-types/product-types";
-import { useAuth } from "@/Composables/useAuth";
 
 const props = defineProps<{
   productId: number;
@@ -19,12 +18,10 @@ const emit = defineEmits<{
 }>();
 const toast = useToast();
 const { t } = useI18n();
-const { getSetting } = useAuth();
-const currency = getSetting("finance", "currency") ?? "USD";
 
 const form = reactive({
-  price: 0,
   identifier: "" as string | null,
+  barcode: "" as string | null,
   status: "active",
 });
 
@@ -37,8 +34,8 @@ const initForm = () => {
     const match = props.variant?.values?.find((v) => v.option_name === o.name);
     selectedValues[o.id] = match?.id ?? null;
   });
-  form.price = props.variant?.price ?? 0;
   form.identifier = props.variant?.identifier ?? "";
+  form.barcode = props.variant?.barcode ?? "";
   form.status = props.variant?.status ?? "active";
 };
 
@@ -58,20 +55,15 @@ const onSubmit = () => {
     return;
   }
 
-  if (form.price === null || form.price === undefined) {
-    toast.add({ severity: "warn", summary: t("Warning"), detail: t("Price is required"), life: 3000 });
-    return;
-  }
-
   submitting.value = true;
 
   if (isEditing.value) {
     router.put(
       route("variant.update", { product: props.productId, variant: props.variant?.id }),
       {
-        price: form.price,
         status: form.status,
         identifier: form.identifier || null,
+        barcode: form.barcode || null,
       },
       {
         onSuccess: () => {
@@ -98,8 +90,8 @@ const onSubmit = () => {
     route("variant.store", props.productId),
     {
       option_value_ids: optionValueIds,
-      price: form.price,
       identifier: form.identifier || null,
+      barcode: form.barcode || null,
       status: form.status,
     },
     {
@@ -150,19 +142,16 @@ const onSubmit = () => {
         />
       </div>
 
-      <!-- Price -->
-      <div class="flex flex-col gap-2">
-        <label for="variant-price">
-          {{ t("Price") }}
-          <span class="text-red-400">*</span>
-        </label>
-        <InputNumber id="variant-price" v-model="form.price" mode="currency" :currency="currency" :min="0" fluid />
-      </div>
-
       <!-- Identifier -->
       <div class="flex flex-col gap-2">
         <label for="variant-identifier">{{ t("Identifier") }}</label>
         <InputText id="variant-identifier" v-model="form.identifier" autocomplete="off" fluid />
+      </div>
+
+      <!-- Barcode -->
+      <div class="flex flex-col gap-2">
+        <label for="variant-barcode">{{ t("Barcode") }}</label>
+        <InputText id="variant-barcode" v-model="form.barcode" autocomplete="off" fluid />
       </div>
 
       <!-- Status -->

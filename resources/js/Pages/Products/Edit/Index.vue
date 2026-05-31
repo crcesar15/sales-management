@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, InputText, InputNumber, MultiSelect, Select, SelectButton, Textarea, useToast } from "primevue";
+import { Button, Card, InputText, MultiSelect, Select, SelectButton, Textarea, useToast } from "primevue";
 
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
@@ -17,7 +17,6 @@ import AppLayout from "@layouts/admin.vue";
 import ProductImages from "@pages/Products/Components/ProductImages.vue";
 import OptionsEditor from "@pages/Products/Edit/Components/OptionsEditor.vue";
 import VariantsPanel from "@pages/Products/Edit/Components/VariantsPanel.vue";
-import { useAuth } from "@/Composables/useAuth";
 
 interface MediaItem {
   id: number;
@@ -48,8 +47,6 @@ const props = defineProps<{
 }>();
 const toast = useToast();
 const { t } = useI18n();
-const { getSetting } = useAuth();
-const currency = getSetting("finance", "currency") ?? "USD";
 configureYupLocale(t);
 
 // Product type selector
@@ -105,8 +102,8 @@ const schema = toTypedSchema(
     brand_id: number().nullable().optional(),
     measurement_unit_id: number().nullable().optional(),
     categories_ids: array().of(number().required()).required().min(1, t("At least one category is required")),
-    price: number().nullable().optional().min(0),
     barcode: string().nullable().optional().max(100),
+    identifier: string().nullable().optional().max(50),
   }),
 );
 
@@ -120,8 +117,8 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount 
     brand_id: props.product.brand_id ?? null,
     measurement_unit_id: props.product.measurement_unit_id ?? null,
     categories_ids: props.product.categories?.map((c) => c.id) ?? [],
-    price: defaultVariant.value?.price ?? 0,
     barcode: defaultVariant.value?.barcode ?? "",
+    identifier: defaultVariant.value?.identifier ?? "",
   },
 });
 
@@ -131,8 +128,8 @@ const [status, statusAttrs] = defineField("status");
 const [brandId, brandIdAttrs] = defineField("brand_id");
 const [measurementUnitId, measurementUnitIdAttrs] = defineField("measurement_unit_id");
 const [categoriesIds, categoriesIdsAttrs] = defineField("categories_ids");
-const [price, priceAttrs] = defineField("price");
 const [barcode, barcodeAttrs] = defineField("barcode");
+const [identifier, identifierAttrs] = defineField("identifier");
 
 // Description char counter
 const descriptionCharCount = computed(() => (description.value ?? "").length);
@@ -146,12 +143,11 @@ const onSubmit = handleSubmit((values) => {
     remove_media_ids: removeMediaIds.value,
   };
 
-  if (hasVariants.value) {
-    payload.has_variants = true;
-    delete payload.price;
-    delete payload.barcode;
-  } else {
-    payload.has_variants = false;
+  payload.has_variants = hasVariants.value;
+
+  if (!hasVariants.value) {
+    payload.barcode = values.barcode || null;
+    payload.identifier = values.identifier || null;
   }
 
   router.put(route("products.update", props.product.id), payload, {
@@ -244,48 +240,27 @@ const onSubmit = handleSubmit((values) => {
         <!-- Details Card (Simple Product mode) -->
         <Card v-if="!hasVariants" class="mb-4">
           <template #title>
-            <div class="flex justify-between">
-              {{ t("Details") }}
-              <Button
-                :label="t('Manage Inventory')"
-                icon="fa fa-warehouse"
-                text
-                size="small"
-                @click="router.visit(route('inventory.variants.show', { product: props.product.id, variant: defaultVariant?.id }))"
-              />
-            </div>
+            {{ t("Details") }}
           </template>
           <template #content>
             <div class="grid grid-cols-12 gap-4">
               <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
-                <label for="price">
-                  {{ t("Base Price") }}
-                  <span class="text-red-400">*</span>
-                </label>
-                <InputNumber
-                  id="price"
-                  v-model="price"
-                  v-bind="priceAttrs"
-                  mode="currency"
-                  :currency="currency"
-                  :class="{ 'p-invalid': submitCount > 0 && !!errors.price }"
+                <label for="identifier">{{ t("Identifier") }}</label>
+                <InputText
+                  id="identifier"
+                  v-model="identifier"
+                  v-bind="identifierAttrs"
+                  autocomplete="off"
                 />
-                <small v-if="submitCount > 0 && errors.price" class="text-red-400 dark:text-red-300">
-                  {{ errors.price }}
-                </small>
               </div>
-              <div class="flex flex-col lg:col-span-6 md:col-span-12 col-span-12 gap-2 mb-3">
+              <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
                 <label for="barcode">{{ t("Barcode") }}</label>
                 <InputText
                   id="barcode"
                   v-model="barcode"
                   v-bind="barcodeAttrs"
                   autocomplete="off"
-                  :class="{ 'p-invalid': submitCount > 0 && !!errors.barcode }"
                 />
-                <small v-if="submitCount > 0 && errors.barcode" class="text-red-400 dark:text-red-300">
-                  {{ errors.barcode }}
-                </small>
               </div>
             </div>
           </template>
@@ -421,6 +396,15 @@ const onSubmit = handleSubmit((values) => {
             </div>
           </template>
         </Card>
+
+        <!-- Manage Inventory -->
+        <Button
+          :label="t('Manage Inventory')"
+          icon="fa fa-warehouse"
+          outlined
+          class="w-full"
+          @click="router.visit(route('inventory.variants.show', { product: props.product.id, variant: defaultVariant?.id }))"
+        />
       </div>
     </div>
   </div>

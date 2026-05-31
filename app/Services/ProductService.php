@@ -90,7 +90,7 @@ final class ProductService
             } else {
                 ProductVariant::create([
                     'product_id' => $product->id,
-                    'identifier' => null,
+                    'identifier' => $data['identifier'] ?? null,
                     'barcode' => $data['barcode'] ?? null,
                     'price' => $data['price'] ?? 0,
                     'status' => 'active',
@@ -142,16 +142,13 @@ final class ProductService
                 if ($defaultVariant && $freshProduct) {
                     $currentMediaIds = $freshProduct->getMedia('images')->pluck('id')->toArray();
                     app(ProductVariantService::class)->syncVariantImages($defaultVariant, $currentMediaIds);
-                }
-            }
 
-            if (isset($data['price']) || isset($data['barcode'])) {
-                $defaultVariant = $product->variants()->first();
-                if ($defaultVariant) {
-                    $defaultVariant->update([
-                        'price' => $data['price'] ?? $defaultVariant->price,
-                        'barcode' => $data['barcode'] ?? $defaultVariant->barcode,
-                    ]);
+                    if (isset($data['barcode']) || isset($data['identifier'])) {
+                        $defaultVariant->update([
+                            'barcode' => $data['barcode'] ?? $defaultVariant->barcode,
+                            'identifier' => $data['identifier'] ?? $defaultVariant->identifier,
+                        ]);
+                    }
                 }
             }
 

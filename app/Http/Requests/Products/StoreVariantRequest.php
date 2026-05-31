@@ -26,7 +26,8 @@ final class StoreVariantRequest extends FormRequest
     {
         return [
             'identifier' => ['nullable', 'string', 'max:50', 'unique:product_variants,identifier'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'barcode' => ['nullable', 'string', 'max:100'],
+            'price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive,archived'],
             'option_value_ids' => ['required', 'array', 'min:1'],
             'option_value_ids.*' => ['required', 'integer', 'exists:product_option_values,id'],
