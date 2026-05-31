@@ -84,6 +84,7 @@ interface VariantOption {
   product: ProductResponse;
   identifier: string;
   stock: number;
+  has_expiration: boolean;
   label: string;
 }
 
@@ -101,6 +102,7 @@ const showBatchSelector = computed(
   () => !isInitialStock.value && !!values.store_id && !!values.product_variant_id,
 );
 const showNewBatchFields = computed(() => isNewBatch.value);
+const requiresExpiration = computed(() => selectedVariant.value?.has_expiration === true);
 
 async function searchVariants(event: { query: string }) {
   if (!event.query || event.query.length < 2) {
@@ -118,8 +120,9 @@ async function searchVariants(event: { query: string }) {
       const product = v.product as ProductResponse;
       const identifier = v.identifier as string;
       const stock = (v.stock as number) ?? 0;
+      const has_expiration = (v.has_expiration as boolean) ?? false;
       const label = name ? `${product?.name ?? ""} - ${name}` : `${product?.name ?? ""}`;
-      return { id, name, product, identifier, stock, label };
+      return { id, name, product, identifier, stock, has_expiration, label };
     });
   } catch {
     variantSearchResults.value = [];
@@ -225,6 +228,11 @@ const formattedQuantity = computed(() => {
 });
 
 const submit = handleSubmit((formValues) => {
+  if (showNewBatchFields && requiresExpiration.value && !formValues.expiry_date) {
+    setErrors({ expiry_date: t("Expiry date is required for this product") });
+    return;
+  }
+
   const payload = { ...formValues };
   if (isInitialStock.value) {
     payload.batch_id = null;
@@ -435,15 +443,22 @@ const submit = handleSubmit((formValues) => {
 
               <div v-if="showNewBatchFields" class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
-                  <label for="expiry_date">{{ t("Expiry Date") }}</label>
+                  <label for="expiry_date">
+                    {{ t("Expiry Date") }}
+                    <span v-if="requiresExpiration" class="text-red-400">*</span>
+                  </label>
                   <DatePicker
                     id="expiry_date"
                     :model-value="values.expiry_date ? new Date(values.expiry_date) : null"
                     date-format="yy-mm-dd"
                     show-icon
-                    :placeholder="t('Select expiry date (optional)')"
+                    :placeholder="requiresExpiration ? t('Select expiry date') : t('Select expiry date (optional)')"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.expiry_date }"
                     @update:model-value="setFieldValue('expiry_date', $event ? $event.toISOString().split('T')[0] : null)"
                   />
+                  <small v-if="submitCount > 0 && errors.expiry_date" class="text-red-400 dark:text-red-300">
+                    {{ errors.expiry_date }}
+                  </small>
                 </div>
               </div>
 

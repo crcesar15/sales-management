@@ -770,6 +770,8 @@
   "Batch is required": "Batch is required",
   "Enter batch identifier (optional)": "Enter batch identifier (optional)",
   "Select expiry date (optional)": "Select expiry date (optional)",
+  "Select expiry date": "Select expiry date",
+  "Expiry date is required for this product": "Expiry date is required for this product",
   "Locked": "Locked",
   "Latest Purchase Price": "Latest Purchase Price",
   "Markup": "Markup",
