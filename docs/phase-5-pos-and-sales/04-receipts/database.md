@@ -36,6 +36,7 @@ SalesOrder
   → items
       → productVariant → product (name)
       → saleUnit (name)
+  → payments (payment method breakdown)
 ```
 
 ## Notable Patterns

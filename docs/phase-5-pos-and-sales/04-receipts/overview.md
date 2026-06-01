@@ -9,7 +9,7 @@ Provides customers with proof of purchase without requiring a dedicated receipt 
 ## Requirements
 - Every `sales_order` gets a unique `token` (UUID) on creation
 - Public receipt URL: `/receipts/{token}` — no authentication required
-- Content: store name, logo, address; cashier name; date; item list; discount; tax; total; payment method
+- Content: store name, logo, address; cashier name; date; item list; discount; tax; total; payment breakdown (from `sales_order_payments`)
 - Header and footer text customisable via `settings` group `receipt`
 - Print via `window.print()` — print stylesheet hides all UI chrome
 - No external PDF/print libraries

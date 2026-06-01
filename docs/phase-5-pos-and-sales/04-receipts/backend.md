@@ -24,6 +24,7 @@ public function show(string $token): Response
         'customer', 'user', 'store',
         'items.productVariant.product',
         'items.saleUnit',
+        'payments',
     ])->where('token', $token)->firstOrFail();
 
     abort_if($order->status !== 'paid', 404);

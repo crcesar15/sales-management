@@ -30,7 +30,7 @@ Enables formal return handling with approval workflow and audit trail, while ens
 
 ## Dependencies
 - `sales_orders`, `sales_order_items`
-- `inventory_batches` — new batch on completion
+- `batches` — new batch record on completion (note: table name is `batches`, not `inventory_batches`)
 - `spatie/laravel-activitylog`
 - `spatie/laravel-permission`
 
