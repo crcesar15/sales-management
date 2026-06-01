@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, InputNumber, Textarea, Select, Button, AutoComplete, ToggleSwitch, useToast } from "primevue";
+import { Card, InputNumber, Textarea, Select, AutoComplete, ToggleSwitch, useToast } from "primevue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string, number } from "yup";
@@ -34,7 +34,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "submit", payload: CatalogPayload): void;
-  (e: "cancel"): void;
 }>();
 
 const toast = useToast();
@@ -239,10 +238,6 @@ const submit = handleSubmit((formValues) => {
   emit("submit", payload);
 });
 
-function handleCancel() {
-  emit("cancel");
-}
-
 function handleError(errs: Record<string, string>) {
   setErrors(errs);
   toast.add({
@@ -254,6 +249,7 @@ function handleError(errs: Record<string, string>) {
 }
 
 defineExpose({
+  submit,
   handleError,
 });
 </script>
@@ -262,7 +258,7 @@ defineExpose({
   <form @submit.prevent="submit">
     <div class="grid grid-cols-12 gap-4">
       <!-- Left column -->
-      <div class="md:col-span-8 col-span-12">
+      <div class="lg:col-span-8 col-span-12">
         <Card class="mb-4">
           <template #title>{{ t("Product & Pricing") }}</template>
           <template #content>
@@ -450,7 +446,7 @@ defineExpose({
       </div>
 
       <!-- Right column -->
-      <div class="md:col-span-4 col-span-12">
+      <div class="lg:col-span-4 col-span-12">
         <Card>
           <template #title>{{ t("Configuration") }}</template>
           <template #content>
@@ -473,12 +469,6 @@ defineExpose({
           </template>
         </Card>
       </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="flex justify-end gap-2 mt-4">
-      <Button :label="t('Cancel')" icon="fa fa-times" outlined @click="handleCancel" />
-      <Button :label="t('Save')" icon="fa fa-save" raised class="uppercase" type="submit" />
     </div>
   </form>
 </template>

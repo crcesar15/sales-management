@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Button, Toast, useToast } from "primevue";
+import { Button, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
+import { ref } from "vue";
 import AppLayout from "@layouts/admin.vue";
 import CatalogEntryForm from "../Components/CatalogEntryForm.vue";
 import type { VendorResponse } from "@/Types/vendor-types";
@@ -16,6 +17,7 @@ const props = defineProps<{
 
 const toast = useToast();
 const { t } = useI18n();
+const formRef = ref<InstanceType<typeof CatalogEntryForm> | null>(null);
 
 const handleSubmit = (payload: CatalogPayload) => {
   router.post(route("vendors.catalog.store", props.vendor.id), payload, {
@@ -28,19 +30,10 @@ const handleSubmit = (payload: CatalogPayload) => {
       });
       router.visit(route("vendors.catalog", props.vendor.id));
     },
-    onError: (_errs: Record<string, string>) => {
-      toast.add({
-        severity: "error",
-        summary: t("Error"),
-        detail: t("Please review the errors in the form"),
-        life: 3000,
-      });
+    onError: (errs: Record<string, string>) => {
+      formRef.value?.handleError(errs);
     },
   });
-};
-
-const handleCancel = () => {
-  router.visit(route("vendors.catalog", props.vendor.id));
 };
 
 const goBack = () => {
@@ -50,27 +43,18 @@ const goBack = () => {
 
 <template>
   <div>
-    <div class="flex flex-row justify-between mb-3">
-      <div class="flex">
-        <Button
-          icon="fa fa-arrow-left"
-          text
-          severity="secondary"
-          class="hover:shadow-md mr-2"
-          @click="goBack"
-        />
-        <h2 class="text-2xl font-bold flex items-center m-0">
-          {{ vendor.fullname }} — {{ t("Add Catalog Entry") }}
-        </h2>
+    <div class="flex justify-between mb-3">
+      <div class="flex items-center gap-3">
+        <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
+        <h2 class="text-2xl font-bold m-0">{{ vendor.fullname }} — {{ t("Add Catalog Entry") }}</h2>
       </div>
+      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" @click="formRef?.submit" />
     </div>
 
-    <Toast />
-
     <CatalogEntryForm
+      ref="formRef"
       :vendor="vendor"
       @submit="handleSubmit"
-      @cancel="handleCancel"
     />
   </div>
 </template>
