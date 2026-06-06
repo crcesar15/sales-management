@@ -90,4 +90,16 @@ enum PermissionsEnum: string
     case CUSTOMERS_DELETE = 'customer.delete';
 
     case POS_ACCESS = 'pos.access';
+
+    case CASH_REGISTERS_VIEW = 'cash_register.view';
+    case CASH_REGISTERS_CREATE = 'cash_register.create';
+    case CASH_REGISTERS_EDIT = 'cash_register.edit';
+    case CASH_REGISTERS_DELETE = 'cash_register.delete';
+
+    case SHIFTS_VIEW = 'shift.view';
+    case SHIFTS_OPEN = 'shift.open';
+    case SHIFTS_CLOSE = 'shift.close';
+    case SHIFTS_MANAGE = 'shift.manage';
+
+    case CASH_MOVEMENTS_CREATE = 'cash_movement.create';
 }

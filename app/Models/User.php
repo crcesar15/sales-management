@@ -79,6 +79,12 @@ final class User extends Authenticatable
         return $this->hasMany(StockTransfer::class, 'requested_by');
     }
 
+    /** @return HasMany<CashRegisterShift, $this> */
+    public function shifts(): HasMany
+    {
+        return $this->hasMany(CashRegisterShift::class);
+    }
+
     protected static function boot(): void
     {
         parent::boot();

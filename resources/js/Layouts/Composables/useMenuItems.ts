@@ -135,6 +135,13 @@ export function useMenuItems() {
           to: "home",
         },
         {
+          key: "sales-cash-registers",
+          label: t("Cash Registers"),
+          icon: "fa fa-cash-register",
+          to: "home",
+          can: "cash_register.view",
+        },
+        {
           key: "sales-customers",
           label: t("Customers"),
           icon: "fa fa-users",

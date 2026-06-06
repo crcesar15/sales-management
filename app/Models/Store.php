@@ -75,6 +75,12 @@ final class Store extends Model
         return $this->hasMany(StockTransfer::class, 'to_store_id');
     }
 
+    /** @return HasMany<CashRegister, $this> */
+    public function cashRegisters(): HasMany
+    {
+        return $this->hasMany(CashRegister::class);
+    }
+
     protected static function boot(): void
     {
         parent::boot();

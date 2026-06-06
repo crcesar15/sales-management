@@ -122,6 +122,21 @@ final class PermissionSeeder extends Seeder
             'pos' => [
                 PermissionsEnum::POS_ACCESS->value,
             ],
+            'cash registers' => [
+                PermissionsEnum::CASH_REGISTERS_VIEW->value,
+                PermissionsEnum::CASH_REGISTERS_CREATE->value,
+                PermissionsEnum::CASH_REGISTERS_EDIT->value,
+                PermissionsEnum::CASH_REGISTERS_DELETE->value,
+            ],
+            'shifts' => [
+                PermissionsEnum::SHIFTS_VIEW->value,
+                PermissionsEnum::SHIFTS_OPEN->value,
+                PermissionsEnum::SHIFTS_CLOSE->value,
+                PermissionsEnum::SHIFTS_MANAGE->value,
+            ],
+            'cash movements' => [
+                PermissionsEnum::CASH_MOVEMENTS_CREATE->value,
+            ],
         ];
 
         $role = Role::query()->where('name', RolesEnum::ADMIN->value)->firstOrFail();
