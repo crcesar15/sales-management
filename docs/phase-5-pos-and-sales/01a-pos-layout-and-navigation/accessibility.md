@@ -15,11 +15,11 @@ The POS interface must meet WCAG 2.1 Level AA standards to ensure usability for 
 **Implementation:**
 
 ```vue
-<!-- Icon buttons must have aria-label -->
+<!-- Icon buttons must have :aria-label binding (not plain aria-label) -->
 <Button 
   icon="fa fa-bars" 
+  :aria-label="t('Exit POS')"
   @click="exitPos"
-  aria-label="t('Exit POS')"
   v-tooltip.right="t('Exit POS')"
 />
 
@@ -34,8 +34,10 @@ The POS interface must meet WCAG 2.1 Level AA standards to ensure usability for 
 <span class="sr-only">{{ t('Store') }}:</span> {{ storeName }}
 ```
 
+> **Important:** Use `:aria-label` (with colon binding) not `aria-label` (plain attribute). Without the binding, Vue treats it as a literal string, so `aria-label="t('Exit POS')"` would render the text `t('Exit POS')` literally instead of the translated string.
+
 **Checklist:**
-- [ ] All icon buttons have `aria-label`
+- [ ] All icon buttons have `:aria-label` (bound, not plain)
 - [ ] Product images have descriptive `alt` text
 - [ ] Decorative icons have `aria-hidden="true"`
 - [ ] Status indicators have screen reader text
@@ -52,11 +54,11 @@ The POS interface must meet WCAG 2.1 Level AA standards to ensure usability for 
 
 ```vue
 <!-- Use semantic HTML -->
-<header class="pos-shift-bar" role="banner">
+<header class="pos-shift-bar" role="banner" :aria-label="t('Point of Sale navigation')">
   <h1 class="sr-only">{{ t('Point of Sale') }}</h1>
 </header>
 
-<main class="pos-main" role="main">
+<main id="pos-main" class="pos-main" role="main">
   <slot />
 </main>
 
@@ -89,24 +91,10 @@ The POS interface must meet WCAG 2.1 Level AA standards to ensure usability for 
 ```vue
 <!-- Status badges use color + text + icon -->
 <Badge 
-  :label="isShiftOpen ? t('Open') : t('Closed')"
+  :value="isShiftOpen ? t('Open') : t('Closed')"
   :severity="isShiftOpen ? 'success' : 'secondary'"
 />
 <span class="sr-only">{{ isShiftOpen ? t('Shift is open') : t('Shift is closed') }}</span>
-
-<!-- Error states use icon + color + text -->
-<div class="error-message" role="alert">
-  <i class="fa fa-exclamation-circle" aria-hidden="true" />
-  <span>{{ errorMessage }}</span>
-</div>
-
-<!-- Payment method selection -->
-<div class="payment-method" :class="{ selected: isSelected }">
-  <RadioButton v-model="selected" :value="method.id" />
-  <i :class="method.icon" aria-hidden="true" />
-  <span>{{ method.name }}</span>
-  <span v-if="isSelected" class="sr-only">{{ t('Selected') }}</span>
-</div>
 ```
 
 **Checklist:**
@@ -117,43 +105,20 @@ The POS interface must meet WCAG 2.1 Level AA standards to ensure usability for 
 
 #### 1.4.3 Contrast (Minimum) (Level AA)
 
-**Requirement:** Text must have a contrast ratio of at least 4.5:1 for normal text, 3:1 for large text (18pt+ or 14pt+ bold).
+**Requirement:** Text must have a contrast ratio of at least 4.5:1 for normal text, 3:1 for large text.
 
-**Implementation:**
-
-```scss
-// Light mode
-.pos-shift-bar {
-  background-color: #ffffff; // var(--surface-overlay)
-  color: #1f2937; // var(--text-color) - contrast ratio 12.6:1
-  
-  &__info {
-    color: #4b5563; // var(--text-color-secondary) - contrast ratio 7.2:1
-  }
-}
-
-// Dark mode
-.app-dark .pos-shift-bar {
-  background-color: #1f2937; // var(--surface-overlay-dark)
-  color: #f9fafb; // var(--text-color-dark) - contrast ratio 12.1:1
-  
-  &__info {
-    color: #9ca3af; // var(--text-color-secondary-dark) - contrast ratio 6.8:1
-  }
-}
-```
-
-**Contrast Ratio Reference:**
+All POS components use Tailwind + PrimeVue design tokens which meet WCAG AA by default. Dark mode uses the `dark:` variant which also maintains contrast.
 
 | Element | Light Mode | Dark Mode | Minimum Ratio |
 |---------|------------|-----------|---------------|
-| Primary text | `#1f2937` on `#ffffff` | `#f9fafb` on `#1f2937` | 4.5:1 |
-| Secondary text | `#4b5563` on `#ffffff` | `#9ca3af` on `#1f2937` | 4.5:1 |
-| Badge text | `#ffffff` on `#22c55e` | `#1f2937` on `#4ade80` | 4.5:1 |
-| Button text | `#ffffff` on `#3b82f6` | `#1f2937` on `#60a5fa` | 4.5:1 |
+| Primary text | `text-surface-900` on `bg-surface-0` | `dark:text-surface-0` on `dark:bg-surface-900` | 4.5:1 |
+| Secondary text | `text-surface-700` on `bg-surface-0` | `dark:text-surface-300` on `dark:bg-surface-900` | 4.5:1 |
+| Muted text | `text-surface-500` on `bg-surface-0` | `dark:text-surface-400` on `dark:bg-surface-900` | 4.5:1 |
+| Badge text (success) | White on PrimeVue success green | Dark on PrimeVue success light | 4.5:1 |
+| Disabled text | PrimeVue disabled state | PrimeVue disabled state dark | 3:1 |
 
 **Checklist:**
-- [ ] All text meets 4.5:1 contrast ratio
+- [ ] All text meets 4.5:1 contrast ratio in both modes
 - [ ] Large text (18pt+) meets 3:1 contrast ratio
 - [ ] Badge text is readable on all severity colors
 - [ ] Disabled state text is still readable
@@ -164,31 +129,20 @@ The POS interface must meet WCAG 2.1 Level AA standards to ensure usability for 
 
 **Implementation:**
 
-```scss
-// Use relative units (rem, em) instead of fixed px
-.pos-shift-bar {
-  font-size: 0.875rem; // 14px base
-  
-  &__info {
-    font-size: 1em; // Inherits from parent
-  }
-}
+```html
+<!-- Use Tailwind's rem-based font sizes -->
+<p class="text-sm">{{ storeName }}</p>
+<p class="text-base">{{ shiftDetails }}</p>
 
-// Ensure containers expand with text
-.pos-main {
-  min-height: 100vh; // Expands with content
-}
-
-// Avoid fixed-height containers that could clip text
-.product-card {
-  height: auto; // Not height: 100px
-  min-height: 120px;
-}
+<!-- Ensure containers use min-height, not fixed height -->
+<div class="min-h-[120px]">
+  <!-- Product card content -->
+</div>
 ```
 
 **Checklist:**
-- [ ] Font sizes use `rem` or `em` units
-- [ ] Containers use `min-height` instead of `height`
+- [ ] Font sizes use Tailwind rem-based classes (`text-sm`, `text-base`, etc.)
+- [ ] Containers use `min-h-` instead of fixed `h-`
 - [ ] Text doesn't clip at 200% zoom
 - [ ] Buttons expand to accommodate larger text
 
@@ -219,46 +173,47 @@ The POS interface must meet WCAG 2.1 Level AA standards to ensure usability for 
 **Implementation:**
 
 ```vue
-<!-- All interactive elements are keyboard accessible -->
+<!-- All interactive elements are keyboard accessible by default with PrimeVue components -->
 <Button 
   @click="exitPos"
-  @keydown.enter="exitPos"
-  @keydown.space="exitPos"
+  :aria-label="t('Exit POS')"
 />
 
-<!-- Custom keyboard shortcuts -->
+<!-- Custom keyboard shortcuts for POS efficiency -->
 <script setup lang="ts">
 function handleKeydown(event: KeyboardEvent): void {
   // F2: Focus search
-  if (event.key === 'F2' && !isInputFocused.value) {
+  if (event.key === "F2" && !isInputFocused.value) {
     event.preventDefault();
     searchInput.value?.focus();
   }
   
-  // Escape: Close dialogs / Exit POS
-  if (event.key === 'Escape') {
+  // Escape: Close dialogs / Exit POS (with confirmation)
+  if (event.key === "Escape") {
     if (dialogOpen.value) {
       dialogOpen.value = false;
-    } else {
-      confirmExit();
     }
+    // Escape on main POS screen does NOT exit — prevents accidental exits
+    // Exit must be via explicit button click
   }
   
   // Enter: Submit forms
-  if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+  if (event.key === "Enter" && event.target instanceof HTMLInputElement) {
     handleSubmit();
   }
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown);
+  window.addEventListener("keydown", handleKeydown);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener("keydown", handleKeydown);
 });
 </script>
 ```
+
+> **Design decision:** The Escape key does NOT exit POS. Cashiers frequently press Escape to close dialogs, and accidentally exiting POS during a transaction would be disruptive. Exit must be via the explicit "Exit POS" button.
 
 **Keyboard Navigation Map:**
 
@@ -268,8 +223,9 @@ onUnmounted(() => {
 | `Shift + Tab` | Move to previous interactive element |
 | `Enter` | Activate focused button/link, submit forms |
 | `Space` | Activate focused button, toggle checkboxes |
-| `Escape` | Close dialogs, exit POS (with confirmation) |
+| `Escape` | Close dialogs (NOT exit POS) |
 | `F2` | Focus search bar |
+| `F10` | Reserved for future: toggle shift bar collapse |
 | `Arrow Up/Down` | Navigate lists, adjust quantities |
 | `Arrow Left/Right` | Navigate tabs, payment methods |
 | `Delete` | Remove item from cart (when focused) |
@@ -278,6 +234,7 @@ onUnmounted(() => {
 - [ ] All buttons are keyboard accessible
 - [ ] All form inputs are keyboard accessible
 - [ ] Dialogs trap focus and close with Escape
+- [ ] Escape does NOT exit POS (only explicit button click exits)
 - [ ] Custom keyboard shortcuts don't conflict with screen readers
 - [ ] Focus is visible on all interactive elements
 
@@ -294,29 +251,22 @@ onUnmounted(() => {
   :modal="true"
   :close-on-escape="true"
   :dismissable-mask="true"
-  :focus-on-show="true"
-  @hide="restoreFocus"
+  @show="handleDialogOpen"
+  @hide="handleDialogClose"
 >
   <!-- Dialog content -->
-  <Button @click="closeDialog" ref="closeButtonRef">
-    {{ t('Close') }}
-  </Button>
 </Dialog>
 
 <script setup lang="ts">
-const closeButtonRef = ref(null);
 const previousFocus = ref<HTMLElement | null>(null);
 
-function openDialog(): void {
+function handleDialogOpen(): void {
   previousFocus.value = document.activeElement as HTMLElement;
-  isOpen.value = true;
+  // PrimeVue Dialog auto-focuses the first interactive element
 }
 
-function closeDialog(): void {
-  isOpen.value = false;
-}
-
-function restoreFocus(): void {
+function handleDialogClose(): void {
+  // Restore focus to trigger element
   previousFocus.value?.focus();
 }
 </script>
@@ -333,32 +283,13 @@ function restoreFocus(): void {
 **Requirement:** If keyboard shortcuts use character keys, there must be a way to turn them off or remap them.
 
 **Implementation:**
-- Use function keys (F2, F10) instead of character keys
-- Provide settings to disable shortcuts
-- Document all shortcuts in a help dialog
-
-```vue
-<template>
-  <Button 
-    icon="fa fa-keyboard" 
-    :label="t('Keyboard Shortcuts')"
-    @click="showShortcutsHelp = true"
-  />
-  
-  <Dialog v-model:visible="showShortcutsHelp" :header="t('Keyboard Shortcuts')">
-    <table>
-      <tr><th>F2</th><td>Focus search bar</td></tr>
-      <tr><th>F10</th><td>Toggle shift bar</td></tr>
-      <tr><th>Escape</th><td>Close dialog / Exit POS</td></tr>
-      <tr><th>Enter</th><td>Submit / Confirm</td></tr>
-    </table>
-  </Dialog>
-</template>
-```
+- Use function keys (F2, F10) instead of character keys — function keys don't conflict with screen readers or typing
+- Document all shortcuts in a help dialog (future enhancement)
+- No character key shortcuts are defined
 
 **Checklist:**
 - [ ] Function keys used instead of character keys
-- [ ] Shortcuts documented in help dialog
+- [ ] Shortcuts documented in help dialog (future)
 - [ ] Option to disable shortcuts (future enhancement)
 
 ### 2.2 Enough Time
@@ -370,73 +301,53 @@ function restoreFocus(): void {
 **Implementation:**
 
 ```vue
-<!-- Toast notifications with extended duration -->
+<!-- Toast notifications with extended duration (5 seconds minimum) -->
 <Toast 
   position="top-center" 
-  :life="5000" 
+  :life="5000"
   :pt="{ root: { class: 'pos-toast-offset' } }"
 />
 
-<!-- No auto-closing for critical messages -->
-<Dialog 
-  v-model:visible="showError"
-  :modal="true"
-  :closable="true"
->
-  <p>{{ errorMessage }}</p>
-  <Button :label="t('OK')" @click="showError = false" />
-</Dialog>
+<!-- Critical errors don't auto-close — user must dismiss -->
+<Toast 
+  v-if="isCriticalError"
+  :life="0"
+/>
 ```
 
 **Checklist:**
 - [ ] Toast notifications last at least 5 seconds
 - [ ] Critical errors don't auto-close
 - [ ] No time limits on completing transactions
-- [ ] Session timeout warning with option to extend
-
-#### 2.2.2 Pause, Stop, Hide (Level A)
-
-**Requirement:** Moving, blinking, or scrolling content must be controllable by the user.
-
-**Implementation:**
-- No auto-scrolling content
-- No blinking animations
-- Loading spinners are decorative (not essential information)
-
-**Checklist:**
-- [ ] No auto-scrolling content
-- [ ] No blinking or flashing content (seizure risk)
-- [ ] Loading indicators are non-essential
+- [ ] Session timeout warning with option to extend (future)
 
 ### 2.3 Seizures and Physical Reactions
-
-#### 2.3.1 Three Flashes or Below Threshold (Level A)
 
 **Requirement:** Content must not flash more than three times per second.
 
 **Implementation:**
 - No animations that flash or blink
-- Transitions are smooth fades (200-300ms)
+- Transitions are smooth fades (150-300ms)
+- All transitions respect `prefers-reduced-motion`
 
-```scss
-// Safe transitions
-.pos-enter {
-  animation: fadeIn 200ms ease-out;
+```css
+/* Safe transitions that respect reduced motion */
+.pos-enter-active {
+  @apply transition-all duration-200 ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .pos-enter-active,
+  .pos-leave-active {
+    @apply transition-none;
+  }
 }
-
-// NO rapid flashing animations
-</style>
 ```
 
 **Checklist:**
 - [ ] No content flashes more than 3 times/second
 - [ ] Animations are smooth transitions
-- [ ] No strobe effects
+- [ ] `prefers-reduced-motion` is respected
 
 ### 2.4 Navigable
 
@@ -447,12 +358,12 @@ function restoreFocus(): void {
 **Implementation:**
 
 ```vue
-<!-- Skip link for keyboard users -->
+<!-- Skip link for keyboard users (in PosLayout.vue) -->
 <a href="#pos-main" class="skip-link sr-only focus:not-sr-only">
   {{ t('Skip to main content') }}
 </a>
 
-<header class="pos-shift-bar" role="banner">
+<header class="pos-shift-bar" role="banner" :aria-label="t('Point of Sale navigation')">
   <!-- Shift bar content -->
 </header>
 
@@ -461,47 +372,20 @@ function restoreFocus(): void {
 </main>
 ```
 
-```scss
+```css
 .skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  z-index: 9999;
-  padding: 8px 16px;
-  background: var(--primary-color);
-  color: white;
-  text-decoration: none;
-  
-  &:focus {
-    top: 0;
-  }
+  @apply absolute -top-10 left-0 z-[9999] px-4 py-2 bg-primary-500 text-white no-underline;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-  
-  &:not(.focus\\:not-sr-only):focus {
-    width: auto;
-    height: auto;
-    padding: 8px 16px;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-  }
+.skip-link:focus {
+  @apply top-0;
 }
 ```
 
 **Checklist:**
 - [ ] Skip link to main content
 - [ ] Skip link visible on focus
-- [ ] Main content has proper `id` for skip link target
+- [ ] Main content has proper `id` for skip link target (`id="pos-main"`)
 
 #### 2.4.2 Page Titled (Level A)
 
@@ -515,14 +399,8 @@ defineOptions({
   layout: PosLayout,
 });
 
-// Page title is set via Inertia
-const props = defineProps<{
-  pageTitle: string;
-}>();
-
-onMounted(() => {
-  document.title = `${props.pageTitle} - ${appName}`;
-});
+// Page title set via Inertia head
+// In the controller: Inertia::render('Pos/Index')->title('Point of Sale')
 ```
 
 **Checklist:**
@@ -539,25 +417,21 @@ onMounted(() => {
 ```vue
 <!-- Logical tab order: left to right, top to bottom -->
 <header>
-  <button>Exit POS</button>  <!-- First -->
+  <button>{{ t('Exit POS') }}</button>  <!-- First -->
 </header>
 
 <main>
   <section aria-label="Products">
     <input type="search" />   <!-- Second -->
-    <DataTable>              <!-- Third: table contents -->
-      <!-- Items tabbled row by row -->
-    </DataTable>
+    <!-- ... -->
   </section>
   
   <section aria-label="Cart">
-    <Button>Hold Order</Button>  <!-- After products -->
-    <Button>Clear Cart</Button>
+    <!-- ... -->
   </section>
   
   <section aria-label="Payment">
-    <InputNumber v-model="amount" />  <!-- Payment inputs -->
-    <Button>Checkout</Button>         <!-- Last: primary action -->
+    <button>{{ t('Checkout') }}</button>  <!-- Last: primary action -->
   </section>
 </main>
 ```
@@ -568,109 +442,20 @@ onMounted(() => {
 - [ ] No elements with positive `tabindex`
 - [ ] Dialog focus starts on first interactive element
 
-#### 2.4.4 Link Purpose (In Context) (Level A)
-
-**Requirement:** Link purpose must be clear from the link text or context.
-
-**Implementation:**
-
-```vue
-<!-- Clear link/button labels -->
-<Button :label="t('Exit POS')" />
-<Button :label="t('Close Shift')" />
-<Link :href="route('customers')" :label="t('View Customers')" />
-
-<!-- Avoid ambiguous labels like "Click here" -->
-```
-
-**Checklist:**
-- [ ] All buttons have descriptive labels
-- [ ] No "Click here" links
-- [ ] Icon-only buttons have `aria-label`
-
 ### 2.5 Input Modalities
 
-#### 2.5.1 Pointer Gestures (Level A)
+#### 2.5.3 Target Size (Level AAA, recommended for POS)
 
-**Requirement:** Functions that use gestures must also be available via single pointer.
-
-**Implementation:**
-- All swipe actions have button alternatives
-- Drag-and-drop has click-to-select alternative
-- Pinch-to-zoom is not required (browser default)
-
-**Checklist:**
-- [ ] No gesture-only interactions
-- [ ] All actions available via click/tap
-- [ ] Touch targets are 44×44px minimum
-
-#### 2.5.2 Pointer Cancellation (Level A)
-
-**Requirement:** Users must be able to cancel pointer input before completing an action.
+**Requirement:** Touch targets must be at least 44×44px.
 
 **Implementation:**
 
-```vue
-<!-- Down-event triggers on mouse-up, not mouse-down -->
-<Button 
-  @click="handleClick"  <!-- Click fires on mouse-up -->
-  @mousedown="handleDown"  <!-- Optional: visual feedback only -->
-/>
-
-<!-- Confirmation for destructive actions -->
-<Button 
-  :label="t('Clear Cart')" 
-  severity="danger"
-  @click="confirmClear"
-/>
-
-<Dialog v-model:visible="showClearConfirm">
-  <p>{{ t('Are you sure you want to clear the cart?') }}</p>
-  <Button :label="t('Cancel')" @click="showClearConfirm = false" />
-  <Button :label="t('Clear')" severity="danger" @click="clearCart" />
-</Dialog>
-```
-
-**Checklist:**
-- [ ] Click actions trigger on mouse-up
-- [ ] Destructive actions have confirmation
-- [ ] Users can move pointer away to cancel
-
-#### 2.5.3 Target Size (Level AAA)
-
-**Requirement:** Touch targets must be at least 44×44px (Level AAA, but recommended for POS).
-
-**Implementation:**
-
-```scss
-.button {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0.5rem 1rem;
-}
-
-.icon-button {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-// For smaller icons, extend hit area
-.small-icon {
-  font-size: 16px;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 44px;
-    height: 44px;
-  }
-}
+```html
+<!-- PrimeVue Button size="small" has adequate touch targets -->
+<!-- For custom buttons, ensure minimum size -->
+<button class="min-w-[44px] min-h-[44px] flex items-center justify-center">
+  <i class="fa fa-bars" aria-hidden="true" />
+</button>
 ```
 
 **Checklist:**
@@ -689,97 +474,13 @@ onMounted(() => {
 
 **Requirement:** Page language must be set.
 
-**Implementation:**
-
-```html
-<!-- In app.blade.php or root layout -->
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-```
-
-```vue
-<!-- For dynamic language changes -->
-<script setup lang="ts">
-const { locale } = useI18n();
-
-watch(locale, (newLocale) => {
-  document.documentElement.lang = newLocale;
-});
-</script>
-```
+The project uses `vue-i18n` and sets the HTML `lang` attribute. This is handled at the app level.
 
 **Checklist:**
-- [ ] HTML `lang` attribute is set
-- [ ] Language matches content language
+- [ ] HTML `lang` attribute is set (already handled by app)
 - [ ] Language changes update `lang` attribute
 
-#### 3.1.2 Language of Parts (Level AA)
-
-**Requirement:** Language of content sections must be identifiable.
-
-**Implementation:**
-- Not typically needed for POS (single language per session)
-- If multi-language content appears, use `lang` attribute:
-
-```html
-<span lang="es">{{ spanishText }}</span>
-```
-
-**Checklist:**
-- [ ] Multi-language content has proper `lang` attributes
-
 ### 3.2 Predictable
-
-#### 3.2.1 On Focus (Level A)
-
-**Requirement:** Components must not change state unexpectedly on focus.
-
-**Implementation:**
-- Focus doesn't trigger actions
-- Focus only provides visual indication
-
-```vue
-<!-- Focus provides visual feedback only -->
-<InputText 
-  :model-value="modelValue"
-  @focus="onFocus"  <!-- Visual feedback only -->
-  @blur="onBlur"
-  @change="onChange"  <!-- State change on change, not focus -->
-/>
-```
-
-**Checklist:**
-- [ ] Focus doesn't submit forms
-- [ ] Focus doesn't open dialogs
-- [ ] Focus provides visual indication only
-
-#### 3.2.2 On Input (Level A)
-
-**Requirement:** Changing input settings must not cause unexpected context changes.
-
-**Implementation:**
-
-```vue
-<!-- Changing input doesn't navigate away -->
-<InputNumber 
-  v-model="quantity"
-  @update:model-value="updateQuantity"
-/>
-
-<!-- Selection changes don't auto-submit -->
-<Dropdown 
-  v-model="selectedMethod"
-  :options="paymentMethods"
-  @change="updateMethod"  <!-- Updates state, doesn't submit -->
-/>
-
-<!-- Explicit submit button for form submission -->
-<Button :label="t('Checkout')" @click="submitOrder" />
-```
-
-**Checklist:**
-- [ ] Input changes don't trigger navigation
-- [ ] Selection changes don't auto-submit
-- [ ] Forms have explicit submit buttons
 
 #### 3.2.3 Consistent Navigation (Level AA)
 
@@ -787,40 +488,13 @@ watch(locale, (newLocale) => {
 
 **Implementation:**
 - Shift bar is consistent across all POS pages
-- "Exit POS" button always in same location
+- "Exit POS" button always in same location (left side of shift bar)
 - Keyboard shortcuts are consistent
 
 **Checklist:**
 - [ ] Shift bar appears on all POS pages
 - [ ] Exit button in consistent location
 - [ ] Keyboard shortcuts work consistently
-
-#### 3.2.4 Consistent Identification (Level AA)
-
-**Requirement:** Components with same function must be consistently identified.
-
-**Implementation:**
-
-```vue
-<!-- "Exit POS" always uses same label and icon -->
-<Button 
-  icon="fa fa-bars" 
-  :label="t('Exit POS')"
-  v-tooltip.right="t('Exit POS')"
-/>
-
-<!-- "Close Shift" always uses lock icon -->
-<Button 
-  icon="fa fa-lock" 
-  :label="t('Close Shift')"
-  severity="danger"
-/>
-```
-
-**Checklist:**
-- [ ] Same function = same label/icon
-- [ ] Icons are consistent across pages
-- [ ] Color meanings are consistent
 
 ### 3.3 Input Assistance
 
@@ -831,19 +505,21 @@ watch(locale, (newLocale) => {
 **Implementation:**
 
 ```vue
-<Form>
-  <label for="barcode">{{ t('Barcode') }}</label>
-  <InputText 
-    id="barcode"
-    v-model="barcode"
-    :class="{ 'p-invalid': errors.barcode }"
-    aria-invalid="errors.barcode ? 'true' : 'false'"
-    aria-describedby="errors.barcode ? 'barcode-error' : null"
+<!-- Using VeeValidate + Yup (project pattern) -->
+<Field
+  name="opening_balance"
+  v-slot="{ field, errorMessage }"
+>
+  <InputNumber
+    v-bind="field"
+    :class="{ 'p-invalid': errorMessage }"
+    :aria-invalid="errorMessage ? 'true' : 'false'"
+    :aria-describedby="errorMessage ? 'opening-balance-error' : undefined"
   />
-  <small v-if="errors.barcode" id="barcode-error" class="p-error" role="alert">
-    {{ errors.barcode }}
+  <small v-if="errorMessage" id="opening-balance-error" class="p-error" role="alert">
+    {{ errorMessage }}
   </small>
-</Form>
+</Field>
 ```
 
 **Checklist:**
@@ -852,56 +528,6 @@ watch(locale, (newLocale) => {
 - [ ] Error messages reference field with `aria-describedby`
 - [ ] Error messages are in text (not just color)
 
-#### 3.3.2 Labels or Instructions (Level A)
-
-**Requirement:** Input fields must have labels or instructions.
-
-**Implementation:**
-
-```vue
-<!-- Visible labels for all inputs -->
-<div class="field">
-  <label for="quantity">{{ t('Quantity') }}</label>
-  <InputNumber id="quantity" v-model="quantity" />
-</div>
-
-<!-- Placeholder is NOT a substitute for label -->
-<InputText 
-  id="search"
-  v-model="search"
-  :placeholder="t('Search products...')"
-/>
-<label for="search" class="sr-only">{{ t('Search products') }}</label>
-```
-
-**Checklist:**
-- [ ] All inputs have visible labels
-- [ ] Placeholders are not used as labels
-- [ ] Required fields are indicated
-- [ ] Input purpose is clear from label
-
-#### 3.3.3 Error Suggestion (Level AA)
-
-**Requirement:** Error messages should suggest how to fix the error.
-
-**Implementation:**
-
-```vue
-<!-- Helpful error messages -->
-<small v-if="errors.email" class="p-error" role="alert">
-  {{ t('Please enter a valid email address (e.g., john@example.com)') }}
-</small>
-
-<small v-if="errors.amount" class="p-error" role="alert">
-  {{ t('Amount must be between $0.01 and $9999.99') }}
-</small>
-```
-
-**Checklist:**
-- [ ] Error messages suggest how to fix
-- [ ] Examples provided where helpful
-- [ ] Valid ranges specified
-
 #### 3.3.4 Error Prevention (Legal, Financial, Data) (Level AA)
 
 **Requirement:** Forms that commit financial transactions must be reversible or confirmable.
@@ -909,65 +535,41 @@ watch(locale, (newLocale) => {
 **Implementation:**
 
 ```vue
-<!-- Confirmation before checkout -->
-<Dialog 
-  v-model:visible="showCheckoutConfirm"
-  :header="t('Confirm Order')"
-  :modal="true"
->
-  <div class="order-summary">
-    <h4>{{ t('Items') }}</h4>
-    <ul>
-      <li v-for="item in cartItems" :key="item.id">
-        {{ item.name }} × {{ item.quantity }} = {{ formatCurrency(item.total) }}
-      </li>
-    </ul>
-    <hr />
-    <p><strong>{{ t('Total') }}: {{ formatCurrency(orderTotal) }}</strong></p>
-  </div>
-  
-  <div class="flex gap-4 justify-end">
-    <Button :label="t('Back')" severity="secondary" @click="showCheckoutConfirm = false" />
-    <Button :label="t('Confirm Order')" @click="confirmCheckout" />
-  </div>
-</Dialog>
+<!-- Shift close uses PrimeVue ConfirmDialog (not native confirm()) -->
+<ConfirmDialog />
+
+<script setup lang="ts">
+import { useConfirm } from "primevue/useconfirm";
+const confirm = useConfirm();
+
+function closeShift(): void {
+  confirm.require({
+    message: t("Are you sure you want to close this shift?"),
+    header: t("Close Shift"),
+    icon: "fa fa-exclamation-triangle",
+    acceptLabel: t("Yes, close shift"),
+    rejectLabel: t("Cancel"),
+    accept: () => {
+      posStore.closeShift(posStore.shift!.id);
+    },
+  });
+}
+</script>
 ```
 
+> **Important:** Use PrimeVue's `useConfirm()` + `ConfirmDialog` instead of the browser's native `confirm()`. The native dialog is not styled, not accessible, and breaks the POS UX.
+
 **Checklist:**
-- [ ] Checkout requires confirmation
-- [ ] Order summary shown before commit
-- [ ] User can go back and modify order
-- [ ] Transaction creates reversible record (void/refund capability)
+- [ ] Shift close requires confirmation (PrimeVue ConfirmDialog)
+- [ ] Order confirmation before checkout (Task 02 scope)
+- [ ] User can go back and modify before committing
+- [ ] Transaction creates reversible record (void/refund capability — future)
 
 ---
 
 ## 4. Robust
 
 ### 4.1 Compatible
-
-#### 4.1.1 Parsing (Level A)
-
-**Requirement:** HTML must be well-formed with unique IDs.
-
-**Implementation:**
-
-```vue
-<!-- Unique IDs for aria-describedby -->
-<InputText 
-  :id="`search-${uniqueId}`"
-  :aria-describedby="`search-help-${uniqueId}`"
-/>
-<small :id="`search-help-${uniqueId}`">{{ t('Search by name or barcode') }}</small>
-
-<script setup lang="ts">
-const uniqueId = computed(() => `pos-${Math.random().toString(36).slice(2)}`);
-</script>
-```
-
-**Checklist:**
-- [ ] All IDs are unique within page
-- [ ] HTML elements are properly nested
-- [ ] No duplicate attributes
 
 #### 4.1.2 Name, Role, Value (Level A)
 
@@ -976,31 +578,67 @@ const uniqueId = computed(() => `pos-${Math.random().toString(36).slice(2)}`);
 **Implementation:**
 
 ```vue
-<!-- Custom components with proper ARIA -->
-<div 
-  class="custom-checkbox"
-  role="checkbox"
-  :aria-checked="isChecked"
-  :aria-label="label"
-  @click="toggle"
-  @keydown.enter="toggle"
-  @keydown.space="toggle"
-  tabindex="0"
->
-  <i v-if="isChecked" class="fa fa-check" aria-hidden="true" />
-</div>
+<!-- Shift bar has banner role and label -->
+<header class="pos-shift-bar" role="banner" :aria-label="t('Point of Sale navigation')">
+  <!-- ... -->
+</header>
 
 <!-- Status updates announced to screen readers -->
 <div aria-live="polite" class="sr-only">
   {{ statusMessage }}
 </div>
+
+<!-- Interactive elements have proper labels -->
+<Button :aria-label="t('Exit POS')" @click="exitPos" />
+<Button :aria-label="t('Close shift')" @click="closeShift" />
 ```
 
 **Checklist:**
 - [ ] Custom components have `role` attributes
-- [ ] Interactive elements have `aria-label` or `aria-labelledby`
+- [ ] Interactive elements have `:aria-label` (bound) or `aria-labelledby`
 - [ ] State changes use `aria-live` regions
 - [ ] Tabindex is 0 or -1 (never positive)
+
+---
+
+## POS-Specific Accessibility Considerations
+
+### Viewport Resize Handling
+
+The viewport check for unsupported screens must be reactive, not a one-time computation:
+
+```typescript
+// CORRECT: Reactive viewport check
+const windowWidth = ref(window.innerWidth);
+onMounted(() => window.addEventListener("resize", updateWidth));
+onUnmounted(() => window.removeEventListener("resize", updateWidth));
+const isViewportUnsupported = computed(() => windowWidth.value < 768);
+
+// WRONG: Static computation that never updates
+const isViewportUnsupported = computed(() => window.innerWidth < 768);
+```
+
+**Reason:** Tablet users may rotate their device between portrait and landscape. A portrait orientation may be < 768px (unsupported) while landscape is ≥ 768px (supported). The UI must react to this change.
+
+### Session Expiry Accessibility
+
+When a POS session expires (401 response), the UI must:
+1. Announce the session expiry via `aria-live="assertive"` region
+2. Provide a clear path to re-authenticate
+3. Not trap keyboard focus in an unusable state
+
+```vue
+<div aria-live="assertive" class="sr-only">
+  {{ sessionExpiredMessage }}
+</div>
+```
+
+### Error Handling Accessibility
+
+All API errors must be accessible:
+- Network errors: Toast notification with `aria-live="polite"`
+- Permission errors: Toast notification with appropriate severity
+- Validation errors: Field-level errors with `role="alert"` and `aria-describedby`
 
 ---
 
@@ -1011,11 +649,14 @@ const uniqueId = computed(() => `pos-${Math.random().toString(36).slice(2)}`);
 - [ ] Navigate entire POS using only keyboard
 - [ ] Test with screen reader (NVDA on Windows, VoiceOver on Mac)
 - [ ] Zoom to 200% and verify no content loss
-- [ ] Verify all color contrast ratios
+- [ ] Verify all color contrast ratios (light and dark mode)
 - [ ] Test with high contrast mode enabled
 - [ ] Verify focus indicators are visible
-- [ ] Test dialog focus trapping
+- [ ] Test dialog focus trapping and restoration
 - [ ] Verify skip link functionality
+- [ ] Test viewport resize (rotate tablet, resize browser window)
+- [ ] Verify Escape key does NOT exit POS (only explicit button click)
+- [ ] Test that `:aria-label` bindings render translated text (not literal `t('...')`)
 
 ### Automated Testing
 
@@ -1024,6 +665,7 @@ const uniqueId = computed(() => `pos-${Math.random().toString(36).slice(2)}`);
 - [ ] Check for missing alt attributes
 - [ ] Check for missing form labels
 - [ ] Verify ARIA attributes are valid
+- [ ] Verify all `aria-label` uses `:` binding (not plain attribute)
 
 ### User Testing
 

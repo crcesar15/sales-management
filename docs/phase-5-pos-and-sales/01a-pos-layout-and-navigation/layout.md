@@ -36,92 +36,109 @@
 
 ```vue
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import Toast from "primevue/toast";
-import PosShiftBar from "./PosShiftBar.vue";
-import { useLayout } from "./Composables/useLayout";
+import PosShiftBar from "@/Layouts/Components/PosShiftBar.vue";
+import { useLayout } from "@/Layouts/Components/Composables/useLayout";
+import { useI18n } from "vue-i18n";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 
 const { isDarkMode } = useLayout();
+const { t } = useI18n();
 
-const containerClass = computed(() => ({
-  "pos-layout": true,
-  "pos-layout--dark": isDarkMode.value,
-  "pos-layout--unsupported": isViewportUnsupported.value,
-}));
+// Reactive viewport check (updates on resize)
+const windowWidth = ref(window.innerWidth);
 
-// Viewport check (768px minimum)
-const isViewportUnsupported = computed(() => {
-  if (typeof window === "undefined") return false;
-  return window.innerWidth < 768;
+const updateWidth = () => {
+  windowWidth.value = window.innerWidth;
+};
+
+onMounted(() => {
+  window.addEventListener("resize", updateWidth);
 });
+
+onUnmounted(() => {
+  window.removeEventListener("resize", updateWidth);
+});
+
+const isViewportUnsupported = computed(() => windowWidth.value < 768);
+
+const containerClass = computed(() => [
+  "pos-layout",
+  { "pos-layout--dark": isDarkMode.value },
+]);
 </script>
 
 <template>
+  <!-- Skip link for keyboard users -->
+  <a href="#pos-main" class="skip-link sr-only focus:not-sr-only">
+    {{ t("Skip to main content") }}
+  </a>
+
   <div :class="containerClass">
     <!-- Unsupported viewport message -->
     <div v-if="isViewportUnsupported" class="pos-unsupported-message">
-      <i class="fa fa-tablet-alt" />
-      <h2>POS requires a tablet or desktop</h2>
-      <p>Please use a device with a screen width of at least 768px.</p>
+      <i class="fa fa-tablet-alt text-6xl text-primary-500 mb-4" aria-hidden="true" />
+      <h2 class="text-xl font-semibold mb-2">{{ t("POS requires a tablet or desktop") }}</h2>
+      <p class="text-surface-500 dark:text-surface-400 mb-4">
+        {{ t("Please use a device with a screen width of at least 768px.") }}
+      </p>
+      <a :href="route('home')" class="text-primary-500 underline">
+        {{ t("Return to Dashboard") }}
+      </a>
     </div>
 
     <!-- Main POS interface -->
     <template v-else>
       <PosShiftBar />
-      <main class="pos-main">
+      <main id="pos-main" class="pos-main" role="main">
         <slot />
       </main>
     </template>
 
-    <Toast position="top-center" :pt="{ root: { class: 'pos-toast-offset' } }" />
+    <Toast position="top-center" :pt="{ root: { class: "pos-toast-offset" } }" />
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style scoped>
 .pos-layout {
-  min-height: 100vh;
-  background-color: var(--surface-ground);
-  color: var(--text-color);
+  @apply min-h-screen bg-surface-ground text-surface-900;
+}
 
-  &--dark {
-    background-color: var(--surface-ground-dark);
-    color: var(--text-color-dark);
-  }
+.pos-layout--dark {
+  @apply bg-surface-900 text-surface-0;
 }
 
 .pos-main {
-  padding-top: 56px; /* Shift bar height */
-  height: 100vh;
-  overflow-y: auto;
+  @apply pt-14 h-screen overflow-y-auto;
 }
 
 .pos-toast-offset {
-  top: 64px !important; /* Shift bar height + 8px spacing */
+  top: 64px !important; /* 56px bar + 8px spacing */
 }
 
 .pos-unsupported-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  text-align: center;
-  padding: 2rem;
+  @apply flex flex-col items-center justify-center h-screen text-center p-8;
+}
 
-  i {
-    font-size: 4rem;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-  }
+/* Skip link for accessibility */
+.skip-link {
+  @apply absolute -top-10 left-0 z-[9999] px-4 py-2 bg-primary-500 text-white no-underline;
+}
 
-  h2 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
+.skip-link:focus {
+  @apply top-0;
+}
 
-  p {
-    color: var(--text-muted-color);
-  }
+.sr-only {
+  @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+  clip: rect(0, 0, 0, 0);
+}
+
+.sr-only:focus {
+  @apply w-auto h-auto p-2 m-0 overflow-visible whitespace-normal;
+  clip: auto;
 }
 </style>
 ```
@@ -136,12 +153,16 @@ import { computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
+import { useConfirm } from "primevue/useconfirm";
 import Button from "primevue/button";
 import Badge from "primevue/badge";
 import { usePosStore } from "@/Composables/usePosStore";
+import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 
 const { t } = useI18n();
+const confirm = useConfirm();
 const posStore = usePosStore();
+const { formatCurrency } = useCurrencyFormatter();
 
 const storeName = computed(() => posStore.store?.name ?? t("Store"));
 const registerName = computed(() => posStore.register?.name ?? t("Register"));
@@ -150,50 +171,56 @@ const isShiftOpen = computed(() => posStore.shift?.status === "open");
 const isCashier = computed(() => posStore.shift?.cashier_id === posStore.userId);
 
 const formattedOpeningBalance = computed(() => {
-  if (!shiftStatus.value) return "$0.00";
-  return formatCurrency(shiftStatus.value.opening_balance);
+  if (!shiftStatus.value) return formatCurrency("0");
+  return formatCurrency(shiftStatus.value.opening_balance.toString());
 });
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-}
-
 function exitPos(): void {
+  // Cart check will be added in Task 02 (POS Interface)
   router.visit(route("home"));
 }
 
-async function closeShift(): Promise<void> {
-  if (!confirm(t("Are you sure you want to close this shift?"))) return;
-  // Dispatch close shift action to posStore
+function closeShift(): void {
+  confirm.require({
+    message: t("Are you sure you want to close this shift?"),
+    header: t("Close Shift"),
+    icon: "fa fa-exclamation-triangle",
+    acceptLabel: t("Yes, close shift"),
+    rejectLabel: t("Cancel"),
+    accept: () => {
+      posStore.closeShift(posStore.shift!.id);
+    },
+  });
 }
 </script>
 
 <template>
-  <header class="pos-shift-bar" role="banner" aria-label="Point of Sale navigation">
+  <header class="pos-shift-bar" role="banner" :aria-label="t('Point of Sale navigation')">
+    <h1 class="sr-only">{{ t("Point of Sale") }}</h1>
+
     <div class="pos-shift-bar__left">
       <!-- Exit button -->
       <Button
         v-tooltip.right="t('Exit POS')"
         icon="fa fa-bars"
+        :aria-label="t('Exit POS')"
         @click="exitPos"
         severity="secondary"
         text
         size="small"
-        aria-label="t('Exit POS')"
       />
 
       <!-- Store name -->
       <span class="pos-shift-bar__info">
-        <i class="fa fa-store" />
+        <i class="fa fa-store" aria-hidden="true" />
+        <span class="sr-only">{{ t("Store") }}:</span>
         {{ storeName }}
       </span>
 
       <!-- Register name -->
       <span class="pos-shift-bar__info">
-        <i class="fa fa-cash-register" />
+        <i class="fa fa-cash-register" aria-hidden="true" />
+        <span class="sr-only">{{ t("Register") }}:</span>
         {{ registerName }}
       </span>
     </div>
@@ -206,17 +233,17 @@ async function closeShift(): Promise<void> {
         aria-live="polite"
       >
         <Badge
-          :label="isShiftOpen ? t('Open') : t('Closed')"
+          :value="isShiftOpen ? t('Open') : t('Closed')"
           :severity="isShiftOpen ? 'success' : 'secondary'"
         />
         <span class="pos-shift-bar__shift-details">
           {{ t("Shift") }} #{{ shiftStatus.shift_number }}
-          <span class="pos-shift-bar__divider">•</span>
+          <span class="pos-shift-bar__divider" aria-hidden="true">&bull;</span>
           {{ t("Opened") }}: {{ formattedOpeningBalance }}
         </span>
       </div>
-      <div v-else class="pos-shift-bar__shift">
-        <Badge :label="t('No shift')" severity="danger" />
+      <div v-else class="pos-shift-bar__shift" aria-live="polite">
+        <Badge :value="t('No shift')" severity="danger" />
       </div>
     </div>
 
@@ -226,6 +253,7 @@ async function closeShift(): Promise<void> {
         v-if="isShiftOpen && isCashier"
         v-tooltip.left="t('Close shift')"
         icon="fa fa-lock"
+        :aria-label="t('Close shift')"
         @click="closeShift"
         severity="danger"
         outlined
@@ -235,89 +263,75 @@ async function closeShift(): Promise<void> {
   </header>
 </template>
 
-<style lang="scss" scoped>
+<style scoped>
 .pos-shift-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 56px;
-  background-color: var(--surface-overlay);
-  border-bottom: 1px solid var(--surface-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1rem;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  @apply fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 z-[1000];
+  @apply bg-surface-0 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700;
+  @apply shadow-sm;
+}
 
-  &__left,
-  &__center,
-  &__right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
+.pos-shift-bar__left,
+.pos-shift-bar__center,
+.pos-shift-bar__right {
+  @apply flex items-center gap-4;
+}
 
-  &__info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--text-color);
+.pos-shift-bar__info {
+  @apply flex items-center gap-2 text-sm text-surface-700 dark:text-surface-300;
+}
 
-    i {
-      color: var(--primary-color);
-    }
-  }
+.pos-shift-bar__info i {
+  @apply text-primary-500;
+}
 
-  &__shift {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.pos-shift-bar__shift {
+  @apply flex items-center gap-2;
+}
 
-    &-details {
-      font-size: 0.875rem;
-      color: var(--text-color-secondary);
-    }
+.pos-shift-bar__shift-details {
+  @apply text-sm text-surface-500 dark:text-surface-400;
+}
 
-    &-divider {
-      margin: 0 0.25rem;
-      color: var(--surface-border);
-    }
-  }
+.pos-shift-bar__divider {
+  @apply mx-1 text-surface-300 dark:text-surface-600;
+}
+
+.sr-only {
+  @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+  clip: rect(0, 0, 0, 0);
 }
 </style>
 ```
 
 ## Design Tokens
 
-### CSS Variables (Tailwind + PrimeVue)
+### Tailwind Classes (Primary Approach)
+
+All styling uses Tailwind CSS utility classes with PrimeVue's design tokens (surface-*, primary-*, text-*). Dark mode is handled via Tailwind's `dark:` variant, which activates when the `app-dark` class is on `<html>` (managed by `useLayout()`).
+
+| Element | Tailwind Classes |
+|---------|---------|
+| Shift bar container | `fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 z-[1000] bg-surface-0 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 shadow-sm` |
+| Info section | `flex items-center gap-4 text-sm text-surface-700 dark:text-surface-300` |
+| Badge | Inherited from PrimeVue Badge component |
+| Button (exit) | PrimeVue Button `text` variant with `severity="secondary"` |
+| Main content area | `pt-14 h-screen overflow-y-auto` |
+| Unsupported message | `flex flex-col items-center justify-center h-screen text-center p-8` |
+
+### z-index Scale
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--pos-bar-height` | `56px` | Fixed header height |
-| `--pos-bar-bg` | `var(--surface-overlay)` | Background color |
-| `--pos-bar-border` | `var(--surface-border)` | Bottom border |
-| `--pos-bar-text` | `var(--text-color)` | Primary text color |
-| `--pos-bar-text-secondary` | `var(--text-color-secondary)` | Secondary text |
-| `--pos-toast-offset` | `64px` | Toast position (bar height + 8px) |
-
-### Tailwind Classes
-
-| Element | Classes |
-|---------|---------|
-| Shift bar container | `fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 z-[1000]` |
-| Info section | `flex items-center gap-3 text-sm` |
-| Badge | `text-xs px-2 py-0.5` |
-| Button (exit) | `p-2 text-secondary hover:text-primary` |
-| Main content area | `pt-14 h-screen overflow-y-auto` |
+| Shift bar | `z-[1000]` | Fixed header above all content |
+| Toast | `z-[1001]` | Toast notifications above shift bar |
+| Dialog/Modal | PrimeVue default (1100+) | Register selection, confirmations |
+| Skip link | `z-[9999]` | Accessibility skip link |
 
 ## Responsive Behavior
 
 | Breakpoint | Behavior |
 |------------|----------|
-| `< 768px` | Show unsupported message, hide POS interface |
+| `< 768px` | Show unsupported message with dashboard link, hide POS interface |
 | `768px - 1023px` | Tablet layout, compact shift bar, stacked content panels |
 | `≥ 1024px` | Desktop layout, full shift bar, side-by-side content panels |
 
@@ -352,102 +366,94 @@ async function closeShift(): Promise<void> {
 ## Layout Transitions
 
 ### Enter POS
-```scss
-.pos-main {
-  animation: posFadeIn 200ms ease-out;
+```css
+.pos-enter-active {
+  @apply transition-all duration-200 ease-out;
 }
-
-@keyframes posFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.pos-enter-from {
+  @apply opacity-0 translate-y-2;
 }
 ```
 
 ### Shift Bar Mount
-```scss
-.pos-shift-bar {
-  animation: slideDown 150ms ease-out;
+```css
+.shift-bar-enter-active {
+  @apply transition-transform duration-150 ease-out;
 }
-
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+.shift-bar-enter-from {
+  @apply -translate-y-full;
 }
 ```
 
-### Exit POS
-```typescript
-function exitPos(): void {
-  // Fade out effect before navigation
-  document.querySelector(".pos-layout")?.classList.add("pos-exiting");
-  setTimeout(() => {
-    router.visit(route("home"));
-  }, 200);
-}
-```
+> **Note:** All transitions respect `prefers-reduced-motion`. See accessibility.md for implementation details.
 
 ## Dark Mode Support
 
 The POS layout inherits dark mode state from the app-wide `useLayout()` composable:
 
 ```typescript
+import { useLayout } from "@/Layouts/Components/Composables/useLayout";
 const { isDarkMode } = useLayout();
 ```
+
+The `useLayout()` composable toggles the `app-dark` CSS class on `<html>`, which PrimeVue uses as its `darkModeSelector`. All POS components use Tailwind's `dark:` variant for dark mode styling — no separate CSS variables needed.
 
 ### Dark Mode Styling
 
 | Element | Light Mode | Dark Mode |
 |---------|------------|-----------|
-| Background | `var(--surface-ground)` | `var(--surface-ground-dark)` |
-| Shift bar bg | `var(--surface-overlay)` | `var(--surface-overlay-dark)` |
-| Text color | `var(--text-color)` | `var(--text-color-dark)` |
-| Border | `var(--surface-border)` | `var(--surface-border-dark)` |
+| Shift bar background | `bg-surface-0` | `dark:bg-surface-900` |
+| Shift bar border | `border-surface-200` | `dark:border-surface-700` |
+| Info text | `text-surface-700` | `dark:text-surface-300` |
+| Secondary text | `text-surface-500` | `dark:text-surface-400` |
+| Layout background | `bg-surface-ground` | `dark:bg-surface-900` |
+| Main text | `text-surface-900` | `dark:text-surface-0` |
 
 ## PrimeVue Integration
 
 ### Toast Positioning
 
-Toast notifications are positioned below the shift bar:
+Toast notifications are positioned below the shift bar using a dedicated Toast instance in `PosLayout.vue`:
 
 ```vue
 <Toast position="top-center" :pt="{ root: { class: 'pos-toast-offset' } }" />
 ```
 
-```scss
+```css
 .pos-toast-offset {
   top: 64px !important; /* 56px bar + 8px spacing */
 }
 ```
 
-### Dialog Integration
+> **Important:** `PosLayout.vue` includes its own `<Toast>` component with the offset. Since POS replaces `AppLayout` entirely, there is no duplicate toast issue. Do NOT render `AppLayout`'s toast inside POS.
 
-Register selection dialog uses PrimeVue Dialog:
+### Confirmation Dialog (Instead of Native `confirm()`)
+
+Use PrimeVue's `useConfirm()` composable instead of the browser's native `confirm()` dialog. The POS layout includes a `<ConfirmDialog>` for shift close confirmations:
 
 ```vue
-<Dialog
-  v-model:visible="dialogVisible"
-  :header="t('Select Register')"
-  :modal="true"
-  :close-on-escape="true"
-  :dismissable-mask="true"
->
-  <!-- Register list -->
-</Dialog>
+<ConfirmDialog />
+```
+
+```typescript
+import { useConfirm } from "primevue/useconfirm";
+const confirm = useConfirm();
+
+confirm.require({
+  message: t("Are you sure you want to close this shift?"),
+  header: t("Close Shift"),
+  icon: "fa fa-exclamation-triangle",
+  acceptLabel: t("Yes, close shift"),
+  rejectLabel: t("Cancel"),
+  accept: () => { /* close shift */ },
+});
 ```
 
 ## Pinia Store: usePosStore
 
 **Location:** `resources/js/Composables/usePosStore.ts`
+
+> **Prerequisite:** Pinia must be initialized in `resources/js/app.ts` with `app.use(createPinia())` before this store can be used.
 
 ```typescript
 import { defineStore } from "pinia";
@@ -504,13 +510,15 @@ export const usePosStore = defineStore("pos", () => {
     userId.value = id;
   }
 
-  async function openShift(registerId: number, openingBalance: number): Promise<void> {
-    // API call to open shift
+  function clearSession(): void {
+    store.value = null;
+    register.value = null;
+    shift.value = null;
   }
 
-  async function closeShift(shiftId: number): Promise<void> {
-    // API call to close shift
-  }
+  // Shift operations delegate to usePosClient (defined in navigation.md)
+  // openShift and closeShift are async actions that call the API
+  // and update local state on success
 
   return {
     // State
@@ -526,23 +534,64 @@ export const usePosStore = defineStore("pos", () => {
     setRegister,
     setShift,
     setUserId,
-    openShift,
-    closeShift,
+    clearSession,
   };
 });
 ```
 
+> **Note:** Shift open/close API calls are handled by `usePosClient` composable (see navigation.md). The store holds the reactive state; the composable handles the network requests. This separation keeps the store testable and the API logic isolated.
+
+## usePosLayout Composable
+
+**Location:** `resources/js/Composables/usePosLayout.ts`
+
+> **Note:** The shift bar collapse feature has been removed from 01a scope. The bar is always visible at 56px. This composable is simplified accordingly — collapse can be added in a future iteration if needed.
+
+```typescript
+import { ref } from "vue";
+
+// Module-level state (shared across all component instances)
+const isShiftBarVisible = ref(true);
+
+export function usePosLayout() {
+  const shiftBarHeight = 56; // Fixed height in pixels
+
+  function hideShiftBar(): void {
+    isShiftBarVisible.value = false;
+  }
+
+  function showShiftBar(): void {
+    isShiftBarVisible.value = true;
+  }
+
+  return {
+    isShiftBarVisible,
+    shiftBarHeight,
+    hideShiftBar,
+    showShiftBar,
+  };
+}
+```
+
+> **Why module-level `ref`?** Using module-level state (outside the function) ensures all components that call `usePosLayout()` share the same reactive state. This is the same pattern used by the project's existing `useLayout()` composable.
+
 ## Implementation Checklist
 
+- [ ] Add `createPinia()` to `resources/js/app.ts`
 - [ ] Create `PosLayout.vue` with full-screen structure
 - [ ] Create `PosShiftBar.vue` with fixed positioning
-- [ ] Implement viewport check (< 768px shows unsupported message)
-- [ ] Add dark mode support via `useLayout()` composable
+- [ ] Implement reactive viewport check (< 768px shows unsupported message with dashboard link)
+- [ ] Add dark mode support via Tailwind `dark:` variant (not custom CSS variables)
 - [ ] Create `usePosStore` Pinia store
+- [ ] Create `usePosLayout` composable (simplified, no collapse)
+- [ ] Use `useCurrencyFormatter()` for currency display (not hardcoded formatter)
+- [ ] Use `useConfirm()` (PrimeVue) instead of native `confirm()` for shift close
 - [ ] Implement shift bar status display
 - [ ] Add "Exit POS" button functionality
 - [ ] Add "Close Shift" button (permission-gated)
-- [ ] Position Toast below shift bar
-- [ ] Add enter/exit transitions
+- [ ] Position Toast below shift bar (dedicated Toast instance in PosLayout)
+- [ ] Add skip link for accessibility
+- [ ] Add enter/exit transitions (respect `prefers-reduced-motion`)
 - [ ] Test responsive behavior at 768px, 1024px
 - [ ] Verify dark mode styling
+- [ ] Add all translation keys to `en.json` and `es.json`

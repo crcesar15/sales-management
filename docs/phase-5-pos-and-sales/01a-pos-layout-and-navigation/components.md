@@ -10,6 +10,8 @@ This document defines the shared components used by the POS layout and interface
 
 **Location:** `resources/js/Layouts/Components/PosShiftBar.vue`
 
+> **Note:** The full implementation code is in `layout.md`. This document covers the component's API contract (props, events, slots).
+
 ### Purpose
 
 Fixed top bar that displays shift information and provides navigation controls for the POS interface.
@@ -38,7 +40,7 @@ interface PosShiftBarProps {
     cashier_id: number;
     cashier_name: string;
     opening_balance: number;
-    status: 'open' | 'closed';
+    status: "open" | "closed";
     opened_at: string;
   } | null;
   
@@ -46,6 +48,8 @@ interface PosShiftBarProps {
   userId?: number | null;
 }
 ```
+
+> **Implementation note:** The current implementation reads from `usePosStore` directly rather than receiving all data via props. The store, register, and shift data come from Pinia. Props are available for overrides or testing.
 
 ### Slots
 
@@ -62,39 +66,13 @@ interface PosShiftBarProps {
 | `close-shift` | N/A | User clicked "Close Shift" button |
 | `shift-click` | `{ shift: Shift }` | User clicked on shift info (for details) |
 
-### Example Usage
+### Key Implementation Details
 
-```vue
-<template>
-  <PosShiftBar
-    :store="posStore.store"
-    :register="posStore.register"
-    :shift="posStore.shift"
-    :user-id="auth.user.id"
-    @exit="exitPos"
-    @close-shift="openCloseShiftDialog"
-  />
-</template>
-```
-
-### Internal Structure
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  [☰ Exit]  [🏪 Store]  [📠 Register]  [Shift Info]  [Actions]  │
-│  │          │           │              │            │           │
-│  │          │           │              │            └─ Close    │
-│  │          │           │              │               Shift    │
-│  │          │           │              │                        │
-│  │          │           │              └─ Badge + Details       │
-│  │          │           │                                        │
-│  │          │           └─ Register name/code                    │
-│  │          │                                                    │
-│  │          └─ Store name                                        │
-│  │                                                               │
-│  └─ Hamburger menu (exit)                                        │
-└─────────────────────────────────────────────────────────────────┘
-```
+1. **Uses `useConfirm()` from PrimeVue** instead of native `confirm()` for the shift close confirmation dialog
+2. **Uses `useCurrencyFormatter()`** for formatting opening balance (respects app currency settings)
+3. **All `aria-label` attributes use `:aria-label` binding** (not plain `aria-label`) to ensure translated strings render correctly
+4. **Decorative icons have `aria-hidden="true"`** with accompanying `sr-only` labels
+5. **Badge uses `value` prop** (PrimeVue 4 convention) instead of `label` prop for text content
 
 ---
 
@@ -127,6 +105,30 @@ interface RegisterSelectDialogProps {
 }
 ```
 
+### CashRegister Type (Enhanced)
+
+```typescript
+interface CashRegister {
+  id: number;
+  name: string;
+  code: string;
+  store_id: number;
+  is_default: boolean;
+  status: "active" | "inactive";
+  // Enhanced for selection dialog:
+  current_shift?: {
+    id: number;
+    cashier_id: number;
+    cashier_name: string;
+    status: "open" | "closed";
+  } | null;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+> **Note:** `current_shift` is included so the dialog can show "In Use by [Cashier Name]" for registers with open shifts by other users. This is not a navigable shift — it's display-only info.
+
 ### Slots
 
 | Slot Name | Props | Description |
@@ -143,6 +145,57 @@ interface RegisterSelectDialogProps {
 | `select` | `{ registerId: number }` | User selected a register |
 | `open-shift` | `{ registerId: number, openingBalance: number }` | User wants to open new shift |
 | `cancel` | N/A | User cancelled selection |
+
+### Key Implementation Details
+
+1. **"In Use" registers are shown but not selectable**: If a register has `current_shift` with status "open" and the cashier is NOT the current user, show it as "In Use by [Name]" and disable the radio button
+2. **"Inactive" registers are shown with disabled state**: Grayed out, radio button disabled, "Inactive" label
+3. **Opening balance input uses VeeValidate + Yup**: Follows the project's form validation pattern
+4. **Error handling with retry**: Network failures show an error state with a "Retry" button that re-fetches the register list
+5. **Empty state**: If the user's store has no registers at all, show a message directing them to contact their manager
+
+### Register Status Logic
+
+```typescript
+function getRegisterStatus(register: CashRegister, currentUserId: number): RegisterStatus {
+  if (register.status === "inactive") {
+    return { state: "inactive", selectable: false, label: t("Inactive") };
+  }
+  if (register.current_shift?.status === "open") {
+    if (register.current_shift.cashier_id === currentUserId) {
+      // User's own open shift — they can continue it
+      return { state: "own-shift", selectable: true, label: t("Continue Shift") };
+    }
+    // Another user's open shift — not selectable
+    return {
+      state: "in-use",
+      selectable: false,
+      label: t("In Use by {name}", { name: register.current_shift.cashier_name }),
+    };
+  }
+  return { state: "available", selectable: true, label: t("Available") };
+}
+```
+
+### User Already Has Open Shift Edge Case
+
+If the user already has an open shift on a **different** register, the dialog should show a warning instead of the register list:
+
+```vue
+<div v-if="userHasOpenShiftElsewhere" class="text-center py-8">
+  <i class="fa fa-exclamation-triangle text-4xl text-yellow-500 mb-4" aria-hidden="true" />
+  <h3 class="text-lg font-semibold mb-2">
+    {{ t("You already have an open shift on Register :name.", { name: existingShiftRegister }) }}
+  </h3>
+  <p class="text-surface-500 dark:text-surface-400 mb-4">
+    {{ t("Please close that shift before opening a new one.") }}
+  </p>
+  <div class="flex gap-4 justify-center">
+    <Button :label="t('Go to My Shift')" @click="navigateToExistingShift" />
+    <Button :label="t('Close My Shift')" severity="danger" @click="closeExistingShift" />
+  </div>
+</div>
+```
 
 ### Example Usage
 
@@ -164,12 +217,25 @@ const dialogVisible = ref(false);
 const registers = ref<CashRegister[]>([]);
 const isLoading = ref(false);
 
-function handleRegisterSelect({ registerId }: { registerId: number }) {
-  // Proceed with selection
+async function handleRegisterSelect({ registerId }: { registerId: number }) {
+  // Proceed with selection — register has existing open shift by this user
+  const session = await posClient.selectRegister(registerId);
+  posStore.setRegister(session.register);
+  posStore.setShift(session.shift);
+  dialogVisible.value = false;
 }
 
-function handleOpenShift({ registerId, openingBalance }: { registerId: number, openingBalance: number }) {
-  // Open new shift
+async function handleOpenShift({ registerId, openingBalance }: { registerId: number; openingBalance: number }) {
+  // Open new shift on selected register
+  const session = await posClient.openShift(registerId, openingBalance);
+  posStore.setRegister(session.register);
+  posStore.setShift(session.shift);
+  dialogVisible.value = false;
+}
+
+function handleCancel() {
+  // Navigate back to home if user cancels
+  router.visit(route("home"));
 }
 </script>
 ```
@@ -187,10 +253,10 @@ function handleOpenShift({ registerId, openingBalance }: { registerId: number, o
 │  │ ○  REG-01 (Main Register)                    Available  │  │
 │  │    Status: Active | Default: Yes                        │  │
 │  ├─────────────────────────────────────────────────────────┤  │
-│  │ ◉  REG-02 (Secondary)                        In Use     │  │
-│  │    Status: Active | Cashier: John D.                    │  │
+│  │ ○  REG-02 (Secondary)                  In Use by John D │  │
+│  │    Status: Active | Cannot select                       │  │
 │  ├─────────────────────────────────────────────────────────┤  │
-│  │ ○  REG-03 (Backup)                         Inactive     │  │
+│  │ ○  REG-03 (Backup)                         Inactive    │  │
 │  │    Status: Inactive | Cannot select                     │  │
 │  └─────────────────────────────────────────────────────────┘  │
 │                                                               │
@@ -208,41 +274,37 @@ function handleOpenShift({ registerId, openingBalance }: { registerId: number, o
 
 #### Loading State
 ```vue
-<template>
-  <Dialog visible :header="t('Select Register')">
-    <div class="flex items-center justify-center py-8">
-      <ProgressSpinner />
-      <span class="ml-2">{{ t('Loading registers...') }}</span>
-    </div>
-  </Dialog>
-</template>
+<Dialog :visible="true" :header="t('Select Register')">
+  <div class="flex items-center justify-center py-8">
+    <ProgressSpinner />
+    <span class="ml-2">{{ t('Loading registers...') }}</span>
+  </div>
+</Dialog>
 ```
 
 #### Empty State (No Registers)
 ```vue
-<template>
-  <Dialog visible :header="t('Select Register')">
-    <div class="text-center py-8">
-      <i class="fa fa-exclamation-triangle text-4xl text-yellow-500 mb-4" />
-      <h3>{{ t('No registers available') }}</h3>
-      <p>{{ t('Please contact your manager to set up a register.') }}</p>
-    </div>
-  </Dialog>
-</template>
+<Dialog :visible="true" :header="t('Select Register')">
+  <div class="text-center py-8">
+    <i class="fa fa-exclamation-triangle text-4xl text-yellow-500 mb-4" aria-hidden="true" />
+    <h3 class="text-lg font-semibold">{{ t('No registers available') }}</h3>
+    <p class="text-surface-500 dark:text-surface-400">
+      {{ t('Please contact your manager to set up a register.') }}
+    </p>
+  </div>
+</Dialog>
 ```
 
 #### Error State
 ```vue
-<template>
-  <Dialog visible :header="t('Select Register')">
-    <div class="text-center py-8">
-      <i class="fa fa-times-circle text-4xl text-red-500 mb-4" />
-      <h3>{{ t('Failed to load registers') }}</h3>
-      <p>{{ errorMessage }}</p>
-      <Button :label="t('Retry')" @click="loadRegisters" />
-    </div>
-  </Dialog>
-</template>
+<Dialog :visible="true" :header="t('Select Register')">
+  <div class="text-center py-8">
+    <i class="fa fa-times-circle text-4xl text-red-500 mb-4" aria-hidden="true" />
+    <h3 class="text-lg font-semibold">{{ t('Failed to load registers') }}</h3>
+    <p class="text-surface-500 dark:text-surface-400">{{ errorMessage }}</p>
+    <Button :label="t('Retry')" @click="loadRegisters" />
+  </div>
+</Dialog>
 ```
 
 ---
@@ -260,7 +322,7 @@ Reusable badge component for displaying shift status with consistent styling.
 ```typescript
 interface ShiftStatusBadgeProps {
   /** Shift status: 'open' | 'closed' */
-  status: 'open' | 'closed';
+  status: "open" | "closed";
   
   /** Optional: Show additional details */
   showDetails?: boolean;
@@ -296,8 +358,10 @@ interface ShiftStatusBadgeProps {
 Basic:  [ Open ]  (green badge)
         [ Closed ]  (gray badge)
 
-With details:  [ Open ] Shift #00123 • Opened: $500.00
+With details:  [ Open ] Shift #00123 • Opened: Bs 500,00
 ```
+
+> **Note:** Currency formatting uses `useCurrencyFormatter()` which respects the app's currency settings (BOB/Bs by default), not hardcoded USD.
 
 ---
 
@@ -307,20 +371,22 @@ With details:  [ Open ] Shift #00123 • Opened: $500.00
 
 **Location:** `resources/js/Composables/usePosStore.ts`
 
-```typescript
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type { CashRegister, CashRegisterShift, Store } from '@/Types/pos';
+> **Prerequisite:** Pinia must be initialized in `resources/js/app.ts` with `app.use(createPinia())` before this store can be used.
 
-export const usePosStore = defineStore('pos', () => {
+```typescript
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import type { Store, Register, Shift } from "@/Types/pos";
+
+export const usePosStore = defineStore("pos", () => {
   // ========== State ==========
   const store = ref<Store | null>(null);
-  const register = ref<CashRegister | null>(null);
-  const shift = ref<CashRegisterShift | null>(null);
+  const register = ref<Register | null>(null);
+  const shift = ref<Shift | null>(null);
   const userId = ref<number | null>(null);
   
   // ========== Getters ==========
-  const isShiftOpen = computed(() => shift.value?.status === 'open');
+  const isShiftOpen = computed(() => shift.value?.status === "open");
   const isCashier = computed(() => shift.value?.cashier_id === userId.value);
   const hasRegister = computed(() => register.value !== null);
   const hasShift = computed(() => shift.value !== null);
@@ -330,11 +396,11 @@ export const usePosStore = defineStore('pos', () => {
     store.value = data;
   }
   
-  function setRegister(data: CashRegister): void {
+  function setRegister(data: Register): void {
     register.value = data;
   }
   
-  function setShift(data: CashRegisterShift | null): void {
+  function setShift(data: Shift | null): void {
     shift.value = data;
   }
   
@@ -369,42 +435,36 @@ export const usePosStore = defineStore('pos', () => {
 });
 ```
 
+> **Note:** Shift open/close API calls are handled by `usePosClient`. The store holds reactive state; the composable handles network requests. This separation keeps the store testable and the API logic isolated. See `navigation.md` for the `usePosClient` implementation.
+
 ### usePosLayout
 
 **Location:** `resources/js/Composables/usePosLayout.ts`
 
+> **Simplified for 01a scope.** The shift bar collapse feature has been removed — the bar stays at 56px. Collapse can be added in a future iteration if needed.
+
 ```typescript
-import { ref, computed } from 'vue';
+import { ref } from "vue";
+
+// Module-level state (shared across all component instances, same pattern as useLayout)
+const isShiftBarVisible = ref(true);
 
 export function usePosLayout() {
-  const isShiftBarVisible = ref(true);
-  const isShiftBarCollapsed = ref(false);
-  
-  const shiftBarHeight = computed(() => {
-    if (!isShiftBarVisible.value) return '0px';
-    if (isShiftBarCollapsed.value) return '32px';
-    return '56px';
-  });
-  
-  function toggleShiftBar(): void {
-    isShiftBarVisible.value = !isShiftBarVisible.value;
+  const shiftBarHeight = 56; // Fixed height in pixels
+
+  function hideShiftBar(): void {
+    isShiftBarVisible.value = false;
   }
-  
-  function collapseShiftBar(): void {
-    isShiftBarCollapsed.value = true;
+
+  function showShiftBar(): void {
+    isShiftBarVisible.value = true;
   }
-  
-  function expandShiftBar(): void {
-    isShiftBarCollapsed.value = false;
-  }
-  
+
   return {
     isShiftBarVisible,
-    isShiftBarCollapsed,
     shiftBarHeight,
-    toggleShiftBar,
-    collapseShiftBar,
-    expandShiftBar,
+    hideShiftBar,
+    showShiftBar,
   };
 }
 ```
@@ -413,66 +473,16 @@ export function usePosLayout() {
 
 **Location:** `resources/js/Composables/usePosClient.ts`
 
-```typescript
-import { useApi } from './useApi';
-import { route } from 'ziggy-js';
-import type { PosSession, CashRegister } from '@/Types/pos';
+> **Full implementation with error handling is in `navigation.md`.** This composable wraps all POS API calls and handles network errors, permission errors, and session expiry.
 
-export function usePosClient() {
-  const api = useApi();
-  
-  async function getSession(): Promise<PosSession> {
-    const { data } = await api.get<PosSession>(route('api.v1.pos.session'));
-    return data;
-  }
-  
-  async function getRegisters(storeId?: number): Promise<CashRegister[]> {
-    const { data } = await api.get<CashRegister[]>(
-      route('api.v1.pos.registers'),
-      { params: { store_id: storeId } }
-    );
-    return data;
-  }
-  
-  async function selectRegister(registerId: number): Promise<PosSession> {
-    const { data } = await api.post<PosSession>(
-      route('api.v1.pos.session.register'),
-      { register_id: registerId }
-    );
-    return data;
-  }
-  
-  async function openShift(
-    registerId: number,
-    openingBalance: number
-  ): Promise<PosSession> {
-    const { data } = await api.post<PosSession>(
-      route('api.v1.pos.session.shift.open'),
-      { register_id: registerId, opening_balance: openingBalance }
-    );
-    return data;
-  }
-  
-  async function closeShift(
-    shiftId: number,
-    closingBalance?: number
-  ): Promise<PosSession> {
-    const { data } = await api.post<PosSession>(
-      route('api.v1.pos.session.shift.close'),
-      { shift_id: shiftId, closing_balance: closingBalance }
-    );
-    return data;
-  }
-  
-  return {
-    getSession,
-    getRegisters,
-    selectRegister,
-    openShift,
-    closeShift,
-  };
-}
-```
+Key methods:
+- `getSession()` — GET current POS session state
+- `getRegisters(storeId?)` — GET registers for selection dialog
+- `selectRegister(registerId)` — POST select a register
+- `openShift(registerId, openingBalance)` — POST open new shift
+- `closeShift(shiftId, closingBalance?)` — POST close shift
+
+All methods throw typed errors (`PosPermissionError`, `PosNetworkError`) that callers can catch and display appropriately.
 
 ---
 
@@ -483,24 +493,27 @@ export function usePosClient() {
 | `Button` | Exit button, action buttons |
 | `Badge` | Shift status indicator |
 | `Dialog` | Register selection modal |
+| `ConfirmDialog` | Shift close confirmation |
 | `Toast` | Success/error notifications |
 | `ProgressSpinner` | Loading state |
 | `InputNumber` | Opening balance input |
 | `RadioButton` | Register selection |
-| `Tooltip` | Button labels on hover |
 
 ### Import Examples
 
 ```typescript
 // Direct imports from primevue
-import Button from 'primevue/button';
-import Badge from 'primevue/badge';
-import Dialog from 'primevue/dialog';
-import Toast from 'primevue/toast';
-import ProgressSpinner from 'primevue/progressspinner';
-import InputNumber from 'primevue/inputnumber';
-import RadioButton from 'primevue/radiobutton';
+import Button from "primevue/button";
+import Badge from "primevue/badge";
+import Dialog from "primevue/dialog";
+import ConfirmDialog from "primevue/confirmdialog";
+import Toast from "primevue/toast";
+import ProgressSpinner from "primevue/progressspinner";
+import InputNumber from "primevue/inputnumber";
+import RadioButton from "primevue/radiobutton";
 ```
+
+> **Note:** `ConfirmDialog` must be included in `PosLayout.vue` to support the shift close confirmation. The `useConfirm()` composable provides the programmatic API.
 
 ---
 
@@ -510,10 +523,12 @@ import RadioButton from 'primevue/radiobutton';
 - [ ] Create component with fixed positioning
 - [ ] Implement store, register, shift display
 - [ ] Add "Exit POS" button
-- [ ] Add "Close Shift" button (conditional)
-- [ ] Add aria-labels for accessibility
+- [ ] Add "Close Shift" button (conditional, uses PrimeVue `useConfirm()`)
+- [ ] Add `:aria-label` bindings (not plain `aria-label`) for all icon buttons
 - [ ] Implement shift status badge
 - [ ] Add slot for custom shift status
+- [ ] Use `useCurrencyFormatter()` for opening balance
+- [ ] Add `sr-only` labels next to decorative icons
 - [ ] Test dark mode compatibility
 
 ### RegisterSelectDialog
@@ -521,20 +536,23 @@ import RadioButton from 'primevue/radiobutton';
 - [ ] Implement register list rendering
 - [ ] Add radio button selection
 - [ ] Disable inactive registers
-- [ ] Add opening balance input
+- [ ] Show "In Use by [Name]" for registers with other cashiers' shifts
+- [ ] Handle "user already has open shift elsewhere" edge case
+- [ ] Add opening balance input (VeeValidate + Yup validation)
 - [ ] Implement loading state
 - [ ] Implement empty state
-- [ ] Implement error state
-- [ ] Add keyboard navigation (Enter to select)
+- [ ] Implement error state with retry
+- [ ] Add keyboard navigation (Enter to select, Escape to cancel)
 
 ### ShiftStatusBadge
 - [ ] Create badge component
 - [ ] Add status-based styling (open=green, closed=gray)
 - [ ] Add optional details display
-- [ ] Format currency for opening balance
+- [ ] Format currency using `useCurrencyFormatter()`
 
 ### Composables
-- [ ] Create `usePosStore` Pinia store
-- [ ] Create `usePosLayout` composable
-- [ ] Create `usePosClient` API client
+- [ ] Initialize Pinia in `resources/js/app.ts`
+- [ ] Create `usePosStore` Pinia store (state only — API calls in `usePosClient`)
+- [ ] Create `usePosLayout` composable (simplified, no collapse)
+- [ ] Create `usePosClient` composable with error handling
 - [ ] Test state persistence across navigation
