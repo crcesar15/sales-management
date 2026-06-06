@@ -110,7 +110,7 @@ export default [
       // --- Vue: Style / Consistency ---
       "vue/multi-word-component-names": [
         "error",
-        { ignores: ["Index", "Home", "Login", "Error"] },
+        { ignores: ["Index", "Home", "Login", "Error", "Admin", "Pos"] },
       ],
       "vue/require-default-prop": "off",
       "vue/attribute-hyphenation": ["error", "always"],

@@ -5,6 +5,7 @@
  */
 
 import { createApp, type DefineComponent, h } from "vue";
+import { createPinia } from "pinia";
 import { createI18n } from "vue-i18n";
 import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
@@ -96,6 +97,7 @@ createInertiaApp({
   setup({ el, App, props, plugin }) {
     createApp({ setup: () => () => h(App, props) })
       .use(plugin)
+      .use(createPinia())
       .use(i18n)
       .use(ZiggyVue)
       .use(PrimeVue, {

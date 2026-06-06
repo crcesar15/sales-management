@@ -22,12 +22,6 @@ export function useMenuItems() {
       icon: "fa fa-gauge",
       to: "home",
     },
-    {
-      key: "pos",
-      label: t("Point of Sale"),
-      icon: "fa fa-cash-register",
-      to: "home",
-    },
     // ========== MANAGEMENT ==========
     {
       key: "products",
@@ -126,6 +120,14 @@ export function useMenuItems() {
       label: t("Sales"),
       icon: "fa fa-receipt",
       items: [
+        {
+          key: "sales-pos",
+          label: t("Point of Sale"),
+          icon: "fa fa-cash-register",
+          to: "pos",
+          can: "pos.access",
+          routeUrl: route("pos"),
+        },
         {
           key: "sales-orders",
           label: t("Sales Orders"),
