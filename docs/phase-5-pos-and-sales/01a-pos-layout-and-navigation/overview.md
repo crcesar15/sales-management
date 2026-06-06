@@ -51,14 +51,17 @@ Before implementing this task, the following must be set up:
 - Content area scrolls independently below shift bar
 - Works on desktop and tablet viewports (≥768px)
 - Shows "unsupported" message on screens < 768px (with link back to dashboard)
-- Dark mode support (inherits from app-wide theme via `useLayout()`)
+- Dark mode support (inherits from app-wide theme; `PosLayout` only needs the color mode parts of `useLayout()` — it must not depend on sidebar-specific state like menu toggle or sidebar collapsed)
 
 ### Navigation Requirements
-- POS entry point in sidebar under "Sales" section
+- POS entry point in sidebar under "Sales" section (the `pos` menu item already exists as a stub in `useMenuItems.ts` — it needs a route and `can` property wired up)
 - Permission-gated: requires `pos.access` permission
 - Register selection required before entering POS if no open shift exists
+- The register selection dialog is a **POS-page concern**, not a sidebar intercept: the sidebar `<Link>` navigates to `/pos` normally, then the POS page's `onMounted` (or `PosLayout`) checks shift state and shows the dialog if needed
+- Direct URL access to `/pos` (bookmarks, refresh) must also trigger the shift check — the POS page must always validate shift state on mount, not assume the user arrived via the sidebar
 - "Exit POS" button in shift bar returns to admin dashboard
 - Browser back button also returns to admin (standard Inertia behavior — no manual `pushState` needed)
+- Consider adding a visual indicator (e.g., badge) on the sidebar "Point of Sale" item when a shift is still active, so cashiers who accidentally exit can see they have an open session (future iteration — not blocking for 01a)
 
 ### Shift Bar Requirements
 - Fixed/sticky position at top of viewport
@@ -101,12 +104,14 @@ Before implementing this task, the following must be set up:
 - [ ] Viewport check is reactive (updates on window resize)
 
 ### Navigation
-- [ ] "Point of Sale" menu item appears under "Sales" section in sidebar
+- [ ] "Point of Sale" menu item appears under "Sales" section in sidebar (existing stub in `useMenuItems.ts` is wired with route and `can` property)
 - [ ] Menu item requires `pos.access` permission
-- [ ] Clicking "Point of Sale" without open shift shows register selection dialog
+- [ ] Clicking "Point of Sale" navigates to `/pos` via Inertia `<Link>`; the POS page checks shift state on mount and shows register selection dialog if no open shift exists
+- [ ] Direct URL access to `/pos` (bookmark, refresh) also triggers shift state check — POS page always validates on mount
 - [ ] Register selection dialog filters by user's store
 - [ ] "Exit POS" button navigates to admin dashboard via `router.visit(route('home'))`
 - [ ] Exit does NOT close the shift (shift remains open)
+- [ ] Pinia store state persists across admin ↔ POS navigation (Pinia is a global Vue plugin, not component-scoped, so shift data in `usePosStore` survives layout switches)
 
 ### Shift Bar
 - [ ] Store name, register name, shift status displayed correctly
@@ -165,7 +170,7 @@ Before implementing this task, the following must be set up:
 - **PrimeVue** — Dialog, Button, Toast, ConfirmationService components
 - **Tailwind CSS** — Layout utilities, dark mode via `dark:` variant
 - **Vue Router / Inertia** — Navigation between admin and POS
-- **`useLayout()` composable** — Dark mode inheritance (located at `resources/js/Layouts/Components/Composables/useLayout.ts`)
+- **`useLayout()` composable** — Dark mode inheritance (located at `resources/js/Layouts/Components/Composables/useLayout.ts`). `PosLayout` only needs the color mode parts (`layoutColorMode`, `changeLayoutColorMode`); it must not depend on sidebar-specific state
 - **`useCurrencyFormatter()` composable** — Currency display (located at `resources/js/Composables/useCurrencyFormatter.ts`)
 
 ## File Locations
@@ -224,3 +229,6 @@ Before implementing this task, the following must be set up:
 - All monetary values formatted using `useCurrencyFormatter()` composable (respects user's currency settings)
 - Cart-related logic (checking for items in cart before exit) is **not in scope for 01a** — it will be added in Task 02 (POS Interface)
 - Shift bar **collapse feature** is removed from 01a scope — the bar stays fixed at 56px. Collapse can be added in a future iteration if needed.
+- The sidebar "Point of Sale" menu item **already exists as a stub** in `useMenuItems.ts` — it currently has no `to` route or `can` property. 01a wires it up; it does not create it from scratch.
+- **Pinia state persists** across admin ↔ POS layout switches because Pinia is a global Vue plugin (not component-scoped). Shift data stored in `usePosStore` survives when Inertia unmounts `PosLayout` and remounts `AppLayout` (and vice versa). This is a feature, not a bug — it's what allows "Exit POS" to not close the shift.
+- A **visual indicator** (e.g., badge) on the sidebar "Point of Sale" item showing an active shift is a nice-to-have but **not in 01a scope**. It can be added in a future iteration to help cashiers who accidentally exit find their way back.
