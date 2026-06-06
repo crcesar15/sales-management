@@ -561,7 +561,7 @@ function closeShift(): void {
 
 **Checklist:**
 - [ ] Shift close requires confirmation (PrimeVue ConfirmDialog)
-- [ ] Order confirmation before checkout (Task 02 scope)
+- [ ] Order confirmation before checkout (Task 03 scope)
 - [ ] User can go back and modify before committing
 - [ ] Transaction creates reversible record (void/refund capability — future)
 

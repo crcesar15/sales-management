@@ -17,19 +17,14 @@ All routes registered in `routes/web.php` under the `auth` middleware group.
 | `PATCH` | `/shifts/{shift}/force-close` | Force-close a shift | `shift.manage` |
 | `GET` | `/shifts/{shift}` | Shift detail page | `shift.view` |
 
-## API Routes (JSON)
-All routes registered in `routes/api.php` under `v1` prefix with `auth:sanctum` middleware.
+## Web Route Naming
+- `cash-registers`, `cash-registers.create`, `cash-registers.store`, `cash-registers.edit`, `cash-registers.update`, `cash-registers.destroy`
+- `shifts`, `shifts.open`, `shifts.close`, `shifts.force-close`, `shifts.show`
 
-| Method | Path | Description | Permission |
-|---|---|---|---|
-| `GET` | `/api/v1/cash-registers` | List registers for user's store | `cash_register.view` |
-| `GET` | `/api/v1/cash-registers/{id}` | Register detail | `cash_register.view` |
-| `GET` | `/api/v1/cash-registers/{id}/open-shift` | Get current open shift for register | `sales.create` |
-| `POST` | `/api/v1/shifts/{id}/movements` | Add cash in/out movement | `cash_movement.create` |
+## No API Routes (Inertia-Only Module)
+This module uses Inertia for all management pages (CRUD, shift open/close/force-close). No API controllers are needed — the management interface uses server-side rendering with Inertia redirects.
 
-## API Route Naming
-- Web routes: `cash-registers`, `cash-registers.create`, `cash-registers.store`, `cash-registers.edit`, `cash-registers.update`, `cash-registers.destroy`, `shifts`, `shifts.open`, `shifts.close`, `shifts.force-close`, `shifts.show`
-- API routes: `api.v1.cash-registers`, `api.v1.cash-registers.show`, `api.v1.cash-registers.open-shift`, `api.v1.shifts.movements.store`
+POS-specific API endpoints for shift management (open shift, close shift, get session info, list registers) are defined in **Task 03 (POS Interface)** under the `api.v1.pos.*` route group, since they are consumed exclusively by the POS single-page interface.
 
 ## Inertia Page Props (Register List)
 ```json

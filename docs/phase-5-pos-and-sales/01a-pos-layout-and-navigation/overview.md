@@ -227,7 +227,7 @@ Before implementing this task, the following must be set up:
 - Exit POS does **not** close the shift — cashier can re-enter POS and continue same shift
 - POS does **not** support mobile viewports (< 768px) — show informative message with a link back to the dashboard
 - All monetary values formatted using `useCurrencyFormatter()` composable (respects user's currency settings)
-- Cart-related logic (checking for items in cart before exit) is **not in scope for 01a** — it will be added in Task 02 (POS Interface)
+- Cart-related logic (checking for items in cart before exit) is **not in scope for 01a** — it will be added in Task 03 (POS Interface)
 - Shift bar **collapse feature** is removed from 01a scope — the bar stays fixed at 56px. Collapse can be added in a future iteration if needed.
 - The sidebar "Point of Sale" menu item **already exists as a stub** in `useMenuItems.ts` — it currently has no `to` route or `can` property. 01a wires it up; it does not create it from scratch.
 - **Pinia state persists** across admin ↔ POS layout switches because Pinia is a global Vue plugin (not component-scoped). Shift data stored in `usePosStore` survives when Inertia unmounts `PosLayout` and remounts `AppLayout` (and vice versa). This is a feature, not a bug — it's what allows "Exit POS" to not close the shift.

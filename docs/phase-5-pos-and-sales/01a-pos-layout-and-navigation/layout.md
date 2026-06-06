@@ -176,7 +176,7 @@ const formattedOpeningBalance = computed(() => {
 });
 
 function exitPos(): void {
-  // Cart check will be added in Task 02 (POS Interface)
+  // Cart check will be added in Task 03 (POS Interface)
   router.visit(route("home"));
 }
 

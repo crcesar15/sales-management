@@ -1,5 +1,8 @@
 # Task 01b — Cash Registers & Shifts
 
+## Prerequisites
+- No prerequisites — this task is standalone, building on existing `stores` and `users` tables
+
 ## What
 Cash register and shift management for the POS. Registers represent physical tills in a store. Shifts track when a cashier opens a register, how much cash starts in the drawer, and all movements during the shift until close.
 
@@ -48,6 +51,6 @@ A cashier-facing POS needs accountability for cash handling. Without register an
 - `spatie/laravel-activitylog` — audit trail for shift events
 
 ## Notes
-- The expected closing calculation references `sales_order_payments` where `payment_method = 'cash'`. Since `sales_order_payments` is created in Task 03 (Sales Orders), the shift service should calculate this as: `opening_balance + (cash_in movements) − (cash_out movements)` initially, and extend with cash sales once that table exists.
+- The expected closing calculation references `sales_order_payments` where `payment_method = 'cash'`. Since `sales_order_payments` is created in Task 02 (Sales Orders), the shift service should calculate this as: `opening_balance + (cash_in movements) − (cash_out movements)` initially, and extend with cash sales once that table exists.
 - `is_default` ensures one register per store is pre-selected in the POS. Setting a new default clears the previous default for that store.
 - A register can be deactivated (status = inactive) but not deleted if it has shifts. Deactivation prevents new shifts from being opened.

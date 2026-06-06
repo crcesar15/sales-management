@@ -78,7 +78,7 @@ CashRegisterMovement belongsTo User
 
 ## Migration Notes
 - Create three new migrations: `create_cash_registers_table`, `create_cash_register_shifts_table`, `create_cash_register_movements_table`
-- The `cash_register_shift_id` column on `sales_orders` is added in a separate migration as part of Task 03 (Sales Orders)
+- The `cash_register_shift_id` column on `sales_orders` is added in a separate migration as part of Task 02 (Sales Orders)
 - `is_default` enforcement: at the application level, when setting `is_default = true`, clear `is_default` on all other registers for the same store first
 - The `opening_balance` and `closing_balance` use `decimal(12,2)` for currency precision — consistent with the `sales_orders` columns
 

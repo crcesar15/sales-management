@@ -235,13 +235,13 @@ Located in the shift bar (left side), the Exit button:
 
 ```typescript
 function exitPos(): void {
-  // Cart check will be added in Task 02 (POS Interface)
+  // Cart check will be added in Task 03 (POS Interface)
   // For now, just navigate back
   router.visit(route("home"));
 }
 ```
 
-> **Scope note:** The cart-has-items confirmation check is **not in scope for Task 01a** since the cart doesn't exist yet. It will be added in Task 02 (POS Interface).
+> **Scope note:** The cart-has-items confirmation check is **not in scope for Task 01a** since the cart doesn't exist yet. It will be added in Task 03 (POS Interface).
 
 ### Browser Back Button
 
@@ -677,7 +677,7 @@ All new translation keys that must be added to `resources/lang/en.json` and `res
 
 ### Exit Navigation
 - [ ] Implement "Exit POS" button in shift bar
-- [ ] Cart check will be added in Task 02 (not 01a scope)
+- [ ] Cart check will be added in Task 03 (not 01a scope)
 - [ ] Ensure shift is NOT closed on exit
 - [ ] Let Inertia handle browser back/forward (no manual pushState)
 

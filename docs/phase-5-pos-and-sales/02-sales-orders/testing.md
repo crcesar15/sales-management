@@ -107,3 +107,7 @@ tests/Unit/Services/FifoStockDeductionTest.php
 - Visibility scope enforcement
 - FIFO deduction edge cases
 - Permission gating on all mutations
+
+## Cross-Task Integration Tests
+- `CashRegisterShiftService::closeShift()` includes cash sales from `sales_order_payments` in `expected_closing` calculation
+- `CashRegisterShift` model has `salesOrders()` HasMany relationship working correctly

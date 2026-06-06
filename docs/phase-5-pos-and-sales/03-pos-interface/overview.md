@@ -1,4 +1,8 @@
-# Task 02 — POS Interface
+# Task 03 — POS Interface
+
+## Prerequisites
+- **Task 01b (Cash Registers & Shifts)** must be complete — shift management, register listing
+- **Task 02 (Sales Orders)** must be complete — `SalesOrder`, `SalesOrderItem`, `SalesOrderPayment` models, `SalesOrderService` (for `create()`, `holdOrder()`, `resumeOrder()`, `calculateTotals()`), `FifoStockDeductionService`, `InsufficientStockException`, `SalesOrderStatus`, `DiscountType`, `PaymentMethod` enums, `sales_orders`/`sales_order_items`/`sales_order_payments` tables
 
 ## What
 The primary point-of-sale screen where Sales Reps process transactions. Combines product search, cart management, customer selection, discount/tax calculation, split payments, and checkout into a single reactive interface. Requires an open cash register shift to operate.
@@ -40,14 +44,22 @@ Replaces manual order entry with a fast, keyboard-and-scanner-friendly UI that r
 - `batches` — FIFO deduction (note: actual table name is `batches`, not `inventory_batches`)
 - `customers` — optional search
 - `settings` — tax rate (`tax_rate` in group `tax`), store info
-- `sales_orders`, `sales_order_items`, `sales_order_payments` — created on checkout
-- `cash_registers`, `cash_register_shifts` — shift must be open to sell
+- `cash_registers`, `cash_register_shifts` — shift must be open to sell (from Task 01b)
+- `SalesOrder`, `SalesOrderItem`, `SalesOrderPayment` models (from Task 02)
+- `SalesOrderService` — `create()`, `holdOrder()`, `resumeOrder()`, `calculateTotals()` (from Task 02)
+- `FifoStockDeductionService` — called by `SalesOrderService::transitionStatus()` when order transitions to `paid` (from Task 02)
+- `SalesOrderStatus`, `DiscountType`, `PaymentMethod` enums (from Task 02)
+- `sales_orders`, `sales_order_items`, `sales_order_payments` tables (from Task 02)
 - Pinia store for cart state
 
 ## Notes
 - POS does not use the standard Inertia page layout (full-screen, no sidebar)
 - Cart state is ephemeral (Pinia, not persisted to DB until checkout)
-- FIFO deduction must be wrapped in a DB transaction with pessimistic locking
+- `CheckoutService` is a thin coordinator that validates the shift gate and delegates to `SalesOrderService::create()` for order creation
+- `PosController::holdOrder()` delegates to `SalesOrderService::holdOrder()`
+- `PosController::resumeOrder()` delegates to `SalesOrderService::resumeOrder()`
+- FIFO deduction is handled by `FifoStockDeductionService` (from Task 02), called via `SalesOrderService::transitionStatus()`
 - `sale_units` refers to `product_variant_units` with `type='sale'` in the codebase
 - `inventory_batches` refers to the `batches` table in the codebase
 - Held orders are stored in `sales_orders` with `status='held'`; items are stored in `sales_order_items` but no stock is deducted until checkout
+- POS session API routes (`api.v1.pos.*`) handle shift management, product search, and checkout — all other CRUD uses Inertia web routes

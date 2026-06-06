@@ -2,18 +2,22 @@
 
 ## Implementation Steps
 1. Create migrations: `alter_sales_orders_table_add_columns`, `create_sales_order_items_table`, `create_sales_order_payments_table`
-2. Update `SalesOrder` model — add `$fillable`, `$casts`, relationships, `LogsActivity`, token auto-generation
-3. Create `SalesOrderItem` model with `$fillable`, `$casts`, relationships
-4. Create `SalesOrderPayment` model with `$fillable`, `$casts`, relationships
-5. Create `SalesOrderService` — status transitions, totals calculation, hold/resume, FIFO integration
-6. Create `FifoStockDeductionService` — FIFO batch selection and deduction with pessimistic locking
-7. Create `InsufficientStockException` custom exception
-8. Create `SalesOrderController` (web) and `Api\SalesOrderController` (API)
-9. Create form requests: `StoreSalesOrderRequest`, `UpdateSalesOrderRequest`, `TransitionStatusRequest`
-10. Create API resources: `SalesOrderResource`, `SalesOrderCollection`, `SalesOrderItemResource`, `SalesOrderPaymentResource`
-11. Register `sales.view`, `sales.view_all`, `sales.create`, `sales.manage` permissions
-12. Update `PaymentMethod` enum to `{cash, credit_card, qr, transfer}`
-13. Add `salesOrders()` relationship to `CashRegisterShift` model
+2. Create enums: `SalesOrderStatus`, `DiscountType`; update `PaymentMethod` enum to `{cash, credit_card, qr, transfer}`
+3. Update `SalesOrder` model — add `$fillable`, `$casts`, relationships, `LogsActivity`, token auto-generation
+4. Create `SalesOrderItem` model with `$fillable`, `$casts`, relationships
+5. Create `SalesOrderPayment` model with `$fillable`, `$casts`, relationships
+6. Create `SalesOrderService` — status transitions, totals calculation, hold/resume, FIFO integration
+7. Create `FifoStockDeductionService` — FIFO batch selection and deduction with pessimistic locking
+8. Create `InsufficientStockException` custom exception
+9. Create `SalesOrderController` (web) and `Api\SalesOrderController` (API)
+10. Create form requests: `StoreSalesOrderRequest`, `UpdateSalesOrderRequest`, `TransitionStatusRequest`
+11. Create API resources: `SalesOrderResource`, `SalesOrderCollection`, `SalesOrderItemResource`, `SalesOrderPaymentResource`
+12. Register `sales.view`, `sales.view_all`, `sales.create`, `sales.manage` permissions
+13. Add `salesOrders()` HasMany relationship to `CashRegisterShift` model
+14. Add `shift()` BelongsTo relationship to `SalesOrder` model (linking to `CashRegisterShift` via `cash_register_shift_id`)
+15. Update `CashRegisterShiftService::closeShift()` to include cash sales from `sales_order_payments` in `expected_closing` calculation
+
+> **Note**: `FifoStockDeductionService` and `InsufficientStockException` are defined in this task and also used by Task 03 (POS Interface) via `SalesOrderService::transitionStatus()` when an order transitions to `paid`. `SalesOrderService::create()` is used by both manual orders (this task's controllers) and POS checkout (Task 03's `PosController`).
 
 ## Key Files to Create/Modify
 ```
@@ -109,8 +113,10 @@ final class SalesOrderService
     // Creates order with items and payments
     // Calculates totals server-side from items
     // Sets store_id from actor's store
-    // If status = 'paid', triggers FIFO deduction
+    // Accepts optional `cash_register_shift_id` for POS orders
+    // If status = 'paid', triggers FIFO deduction via FifoStockDeductionService
     // Wraps in DB::transaction
+    // Used by: this task's SalesOrderController AND Task 03's PosController/CheckoutService
 
     public function transitionStatus(SalesOrder $order, string $newStatus, User $actor): SalesOrder
     // Validates allowed transitions per the map above
@@ -136,6 +142,9 @@ final class SalesOrderService
 ```
 
 ## FifoStockDeductionService
+
+> **Note**: This service is defined in this task and also used by Task 03 (POS Interface). The POS checkout calls `SalesOrderService::create()` with `status = 'paid'`, which internally calls `FifoStockDeductionService::deductForOrder()`.
+
 ```php
 final class FifoStockDeductionService
 {

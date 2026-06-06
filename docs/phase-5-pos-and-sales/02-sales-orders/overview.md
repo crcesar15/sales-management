@@ -1,4 +1,7 @@
-# Task 03 — Sales Orders
+# Task 02 — Sales Orders
+
+## Prerequisites
+- **Task 01b (Cash Registers & Shifts)** must be complete — this task depends on `cash_registers`, `cash_register_shifts`, and `cash_register_movements` tables and models
 
 ## What
 The core sales transaction record. Covers POS-generated orders (instant checkout), manually created orders (quote → paid workflow), held orders (parked for later), and split payments across multiple methods.
@@ -50,8 +53,12 @@ Provides a complete, auditable record of every sale, linking products, quantitie
 - `customers`, `users`, `stores` tables
 - `product_variants`, `product_variant_units` (sale units) tables
 - `batches` — FIFO deduction on paid
-- `cash_registers`, `cash_register_shifts` — shift linking for POS orders
+- `cash_registers`, `cash_register_shifts` — shift linking for POS orders (from Task 01b)
 - `spatie/laravel-activitylog` — status change audit
+
+## Follow-Up for Task 01b
+- Add `salesOrders()` HasMany relationship to `CashRegisterShift` model
+- Update `CashRegisterShiftService::closeShift()` to include cash sales from `sales_order_payments` in `expected_closing` calculation
 
 ## Notes
 - `sent` status = order sent to customer as quote/invoice before payment
@@ -61,3 +68,4 @@ Provides a complete, auditable record of every sale, linking products, quantitie
 - `payment_method` on `sales_orders` serves as a default/informational field; the actual payment breakdown is in `sales_order_payments`
 - **PaymentMethod enum discrepancy**: `App\Enums\PaymentMethod` currently defines `{bank_transfer, cash, check, credit_card}` but needs to be updated to `{cash, credit_card, qr, transfer}` to match the database and POS requirements. This is a code change to be done during implementation.
 - **Table name clarifications**: `inventory_batches` in earlier docs refers to the `batches` table; `sale_units` refers to `product_variant_units` with `type='sale'`
+- **FifoStockDeductionService** and **InsufficientStockException** are defined in this task and used by both this task (manual order status transitions) and Task 03 (POS Interface) via `SalesOrderService::transitionStatus()`

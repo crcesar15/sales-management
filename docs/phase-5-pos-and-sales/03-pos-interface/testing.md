@@ -5,11 +5,22 @@
 tests/Feature/PosCheckoutTest.php
 tests/Feature/PosProductSearchTest.php
 tests/Feature/PosHoldResumeTest.php
+tests/Feature/PosSessionTest.php
 tests/Unit/Services/CheckoutServiceTest.php
-tests/Unit/Services/FifoStockDeductionTest.php
 ```
 
+> **Note**: `FifoStockDeductionService` unit tests are in Task 02 (Sales Orders), not here. `CheckoutService` tests focus on shift gate validation and delegation to `SalesOrderService`.
+
 ## Feature Test Cases
+
+### Session Management (`GET/POST/PATCH /api/v1/pos/session/*`)
+- Authenticated user can get current POS session
+- User can list registers for their store
+- User can select a register for the session
+- User with `shift.open` permission can open a shift
+- User with `shift.close` permission can close their own shift
+- User with `cash_movement.create` can add cash in/out movements
+- User without `pos.access` gets 403 on session endpoints
 
 ### Product Search (`GET /api/v1/pos/products/search`)
 - Returns products matching partial name
@@ -25,7 +36,7 @@ tests/Unit/Services/FifoStockDeductionTest.php
 - Valid cart creates correct `sales_order_items` records with snapshotted `conversion_factor`
 - Valid cart creates correct `sales_order_payments` records for each payment method
 - `cash_register_shift_id` is stored on the `sales_order`
-- Stock is deducted from oldest batch first (FIFO)
+- Stock is deducted from oldest batch first (FIFO) — via `SalesOrderService::create()` which calls `FifoStockDeductionService`
 - Walk-in checkout (no `customer_id`) succeeds
 - Checkout with known `customer_id` attaches customer
 - Flat discount reduces total correctly
@@ -63,21 +74,18 @@ tests/Unit/Services/FifoStockDeductionTest.php
 ## Unit Test Cases
 
 ### CheckoutService
-- Totals calculated correctly for flat discount
-- Totals calculated correctly for percentage discount
-- Tax calculation uses server-side rate from settings, not client value
-- Split payment total validation matches computed order total
+- Shift gate validation: rejects checkout when no shift is open
+- Shift gate validation: rejects checkout when shift belongs to another user
+- Shift gate validation: rejects checkout when shift is closed
+- Delegates to `SalesOrderService::create()` with correct data for checkout
+- Delegates to `SalesOrderService::holdOrder()` for hold orders
+- Delegates to `SalesOrderService::resumeOrder()` for resume operations
 
-### FifoStockDeductionService
-- Deducts from oldest batch first
-- Spans multiple batches when first is insufficient
-- Throws `InsufficientStockException` when total stock is insufficient
-- Does not mutate batches if stock insufficient (transaction rollback)
-- Calls `ProductVariant::recalculateStock()` for affected variants after deduction
+> Total calculation tests (`calculateTotals`) and FIFO deduction tests are in Task 02 (Sales Orders) since `SalesOrderService` and `FifoStockDeductionService` are defined there.
 
 ## Coverage Goals
 - All checkout paths: with/without customer, both discount types, single and split payments
-- FIFO edge cases: single batch, multi-batch, exact depletion, shortage
-- Permission enforcement on all endpoints
 - Shift gate validation: no shift, closed shift, wrong user's shift
 - Hold/resume lifecycle: create held, resume, complete checkout
+- Permission enforcement on all endpoints
+- Session management: register selection, shift open/close, movements

@@ -7,11 +7,13 @@
 4. Create `CashRegisterService` — CRUD, `is_default` enforcement, deletion guard
 5. Create `CashRegisterShiftService` — open/close/forceClose/addMovement, expected closing calculation
 6. Create web controllers: `CashRegisterController`, `CashRegisterShiftController`
-7. Create API controllers: `CashRegisterController` (list, detail, openShift), `CashRegisterShiftController` (movements)
-8. Create form requests: `StoreCashRegisterRequest`, `UpdateCashRegisterRequest`, `OpenShiftRequest`, `CloseShiftRequest`, `ForceCloseShiftRequest`, `StoreMovementRequest`
-9. Create API resources: `CashRegisterResource`, `CashRegisterShiftResource`, `CashRegisterMovementResource`
-10. Register permissions in `PermissionsEnum` and `PermissionSeeder`
-11. Add menu entries in `useMenuItems.ts`
+7. Create form requests: `StoreCashRegisterRequest`, `UpdateCashRegisterRequest`, `OpenShiftRequest`, `CloseShiftRequest`, `ForceCloseShiftRequest`, `StoreMovementRequest`
+8. Create Inertia resources: `CashRegisterResource`, `CashRegisterShiftResource`, `CashRegisterMovementResource`
+9. Register permissions in `PermissionsEnum` and `PermissionSeeder`
+10. Add menu entries in `useMenuItems.ts`
+11. After Task 02 (Sales Orders) is complete: add `salesOrders()` HasMany relationship to `CashRegisterShift` model and update `CashRegisterShiftService::closeShift()` to include cash sales from `sales_order_payments` in the `expected_closing` calculation
+
+> **Note**: API controllers are not needed for this task. The management pages use Inertia (web controllers with redirects). POS-specific API endpoints for shift management (open shift, close shift, get session info, list registers) are defined in Task 03 (POS Interface) under the `api.v1.pos.*` route group.
 
 ## Key Files to Create
 ```
@@ -25,8 +27,6 @@ app/Services/CashRegisterService.php
 app/Services/CashRegisterShiftService.php
 app/Http/Controllers/CashRegisterController.php
 app/Http/Controllers/CashRegisterShiftController.php
-app/Http/Controllers/Api/CashRegisterController.php
-app/Http/Controllers/Api/CashRegisterShiftController.php
 app/Http/Requests/CashRegisters/StoreCashRegisterRequest.php
 app/Http/Requests/CashRegisters/UpdateCashRegisterRequest.php
 app/Http/Requests/CashRegisterShifts/OpenShiftRequest.php
@@ -62,7 +62,7 @@ database/migrations/xxxx_create_cash_register_movements_table.php
 **`CashRegisterShift`** — `final class`, uses `HasFactory`, `LogsActivity`:
 - `$fillable`: `cash_register_id`, `user_id`, `status`, `opening_balance`, `closing_balance`, `expected_closing`, `difference`, `opened_at`, `closed_at`, `notes`
 - `$casts`: `status` → `ShiftStatus::class`, `opening_balance` → `decimal:2`, `closing_balance` → `decimal:2`, `expected_closing` → `decimal:2`, `difference` → `decimal:2`, `opened_at` → `datetime`, `closed_at` → `datetime`
-- Relationships: `cashRegister()` BelongsTo, `user()` BelongsTo, `movements()` HasMany, `salesOrders()` HasMany
+- Relationships: `cashRegister()` BelongsTo, `user()` BelongsTo, `movements()` HasMany. (Note: `salesOrders()` HasMany will be added in Task 02 when the `SalesOrder` model is created)
 - Scope: `scopeOpen($query)` → where status = open
 
 **`CashRegisterMovement`** — `final class`, uses `HasFactory`, `LogsActivity`:
@@ -109,13 +109,13 @@ $expectedClosing = $shift->opening_balance
     - $shift->movements()->where('type', 'cash_out')->sum('amount');
 ```
 
-Since `sales_order_payments` does not exist yet (created in Task 03), the initial implementation should calculate:
+Since `sales_order_payments` does not exist yet (created in Task 02), the initial implementation should calculate:
 ```php
 $expectedClosing = $shift->opening_balance
     + $shift->movements()->where('type', 'cash_in')->sum('amount')
     - $shift->movements()->where('type', 'cash_out')->sum('amount');
 ```
-And add the cash sales component once Task 03 is complete.
+And add the cash sales component once Task 02 is complete.
 
 ## Form Request Validation
 
@@ -169,12 +169,6 @@ And add the cash sales component once Task 03 is complete.
 - `closeShift(CloseShiftRequest, CashRegisterShift)` — call service, redirect
 - `forceCloseShift(ForceCloseShiftRequest, CashRegisterShift)` — call service, redirect
 - `show(CashRegisterShift)` — authorize `SHIFT_VIEW`, render `CashRegisterShifts/Show/Index` with movements
-
-**API Controllers** — return JSON via Resources:
-- `GET /api/v1/cash-registers` — list registers for the user's store
-- `GET /api/v1/cash-registers/{id}` — register detail
-- `GET /api/v1/cash-registers/{id}/open-shift` — return the currently open shift for a register (used by POS)
-- `POST /api/v1/shifts/{id}/movements` — add a cash in/out movement
 
 ## Gotchas
 - The `is_default` flag must be managed carefully: when setting a register as default, clear `is_default` on all other registers in the same store within the same DB transaction

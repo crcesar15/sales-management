@@ -13,11 +13,32 @@ All under `routes/api.php` with `v1` prefix and `auth:sanctum`.
 
 | Method | Path | Description | Permission |
 |---|---|---|---|
+| `GET` | `/pos/session` | Get current POS session (store, register, shift) | `pos.access` |
+| `GET` | `/pos/registers` | List registers for user's store | `pos.access` |
+| `POST` | `/pos/session/register` | Select a register for the session | `pos.access` |
+| `POST` | `/pos/session/shift` | Open a shift (select register, enter opening balance) | `shift.open` |
+| `PATCH` | `/pos/session/shift` | Close the current shift | `shift.close` |
+| `POST` | `/pos/shifts/{shift}/movements` | Add cash in/out movement | `cash_movement.create` |
 | `GET` | `/pos/products/search` | Product typeahead for POS | `sales.create` |
 | `POST` | `/pos/checkout` | Create paid order from cart | `sales.create` |
 | `POST` | `/pos/hold` | Create held order (park cart) | `sales.create` |
 | `GET` | `/pos/held-orders` | List held orders for current shift | `sales.create` |
 | `POST` | `/pos/resume/{salesOrder}` | Resume a held order | `sales.create` |
+
+> The session and shift management endpoints (`/pos/session/*`, `/pos/registers`, `/pos/shifts/*/movements`) replace the API routes that were previously defined in Task 01b. Cash register and shift CRUD uses Inertia web routes (Task 01b), while POS-interactive operations use these API routes.
+
+## API Route Naming
+- `api.v1.pos.session` — GET session
+- `api.v1.pos.registers` — GET registers
+- `api.v1.pos.session.register` — POST select register
+- `api.v1.pos.session.shift.open` — POST open shift
+- `api.v1.pos.session.shift.close` — PATCH close shift
+- `api.v1.pos.shifts.movements.store` — POST add movement
+- `api.v1.pos.products.search` — GET product search
+- `api.v1.pos.checkout` — POST checkout
+- `api.v1.pos.hold` — POST hold order
+- `api.v1.pos.held-orders` — GET held orders
+- `api.v1.pos.resume` — POST resume order
 
 ## Product Search Response
 ```

@@ -1,5 +1,7 @@
 # API — Sales Orders
 
+> **Note**: POS checkout, hold, and resume endpoints are defined in Task 03 (POS Interface) — they use `SalesOrderService` methods from this task (`create`, `holdOrder`, `resumeOrder`, `calculateTotals`).
+
 ## Web Routes (Inertia)
 All routes registered in `routes/web.php` under the `auth` middleware group.
 
@@ -136,7 +138,7 @@ All under `routes/api.php` with `v1` prefix and `auth:sanctum`.
 Custom validation: the transition must be allowed per the status transition map. Invalid transitions return 422 with a message like `"Cannot transition from paid to draft"`.
 
 ## Notes
-- POS checkout endpoint (`POST /pos/checkout`) is documented in `02-pos-interface/api.md`
+- POS checkout endpoint (`POST /pos/checkout`) is documented in `03-pos-interface/api.md`
 - `sales_order_payments` is included in order detail responses via `whenLoaded('payments')`
 - `cash_register_shift_id` is null for manually created orders (non-POS)
 - The `payment_method` on `sales_orders` is the default/primary method; actual payment breakdown is in `sales_order_payments`

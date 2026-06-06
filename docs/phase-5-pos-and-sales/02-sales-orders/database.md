@@ -98,6 +98,7 @@ CashRegisterShift hasMany SalesOrder (via cash_register_shift_id on sales_orders
 3. `create_sales_order_payments_table` — new table
 4. Since this is a development environment, the migration can use `DB::statement` for the enum changes, or `change()` with `doctrine/dbal` for column type modifications
 5. The existing `sales_orders` table has 0 rows in development (no data to migrate), making the enum and column type changes safe
+6. After running these migrations, add the `salesOrders()` HasMany relationship to `CashRegisterShift` model (from Task 01b)
 
 ## PaymentMethod Enum Discrepancy
 The `App\Enums\PaymentMethod` PHP enum currently defines:
