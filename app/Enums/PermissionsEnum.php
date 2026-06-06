@@ -88,4 +88,6 @@ enum PermissionsEnum: string
     case CUSTOMERS_CREATE = 'customer.create';
     case CUSTOMERS_EDIT = 'customer.edit';
     case CUSTOMERS_DELETE = 'customer.delete';
+
+    case POS_ACCESS = 'pos.access';
 }

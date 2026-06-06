@@ -119,6 +119,9 @@ final class PermissionSeeder extends Seeder
                 PermissionsEnum::CUSTOMERS_EDIT->value,
                 PermissionsEnum::CUSTOMERS_DELETE->value,
             ],
+            'pos' => [
+                PermissionsEnum::POS_ACCESS->value,
+            ],
         ];
 
         $role = Role::query()->where('name', RolesEnum::ADMIN->value)->firstOrFail();

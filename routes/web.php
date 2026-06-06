@@ -15,6 +15,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\OptionValueController;
+use App\Http\Controllers\Pos\PosController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductMediaController;
 use App\Http\Controllers\ProductOptionController;
@@ -88,6 +89,9 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // Home Routes
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+
+    // POS Routes
+    Route::get('/pos', [PosController::class, 'index'])->name('pos');
 
     // Products Routes
     Route::post('/products/media/pending', [ProductMediaController::class, 'store'])->name('products.media.store');
