@@ -13,6 +13,7 @@ use App\Http\Resources\CashRegisterShift\CashRegisterShiftCollection;
 use App\Http\Resources\CashRegisterShift\CashRegisterShiftResource;
 use App\Models\CashRegister;
 use App\Models\CashRegisterShift;
+use App\Models\User;
 use App\Services\CashRegisterShiftService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -35,7 +36,7 @@ final class CashRegisterShiftController extends Controller
         $filters = [
             'cash_register_id' => request()->integer('cash_register_id') ?: null,
             'user_id' => request()->integer('user_id') ?: null,
-            'status' => request()->string('status', 'all')->value(),
+            'status' => request()->string('status')->value() ?: null,
             'date_from' => request()->string('date_from')->value() ?: null,
             'date_to' => request()->string('date_to')->value() ?: null,
         ];
@@ -47,7 +48,9 @@ final class CashRegisterShiftController extends Controller
 
         return Inertia::render('CashRegisterShifts/Index', [
             'shifts' => new CashRegisterShiftCollection($shifts),
-            'filters' => $filters,
+            'registers' => CashRegister::where('status', 'active')->orderBy('name')->get(['id', 'name', 'code']),
+            'cashiers' => User::orderBy('first_name')->get(['id', 'first_name', 'last_name'])->map(fn (User $u) => ['id' => $u->id, 'full_name' => $u->first_name . ' ' . $u->last_name]),
+            'filters' => array_merge($filters, ['per_page' => request()->integer('per_page', 20)]),
         ]);
     }
 

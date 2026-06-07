@@ -143,6 +143,14 @@ export function useMenuItems() {
           routeUrl: route("cash-registers"),
         },
         {
+          key: "sales-shifts",
+          label: t("Shifts"),
+          icon: "fa fa-clock",
+          to: "shifts",
+          can: "shift.view",
+          routeUrl: route("shifts"),
+        },
+        {
           key: "sales-customers",
           label: t("Customers"),
           icon: "fa fa-users",

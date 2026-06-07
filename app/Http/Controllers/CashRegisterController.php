@@ -10,6 +10,7 @@ use App\Http\Requests\CashRegisters\UpdateCashRegisterRequest;
 use App\Http\Resources\CashRegister\CashRegisterCollection;
 use App\Http\Resources\CashRegister\CashRegisterResource;
 use App\Models\CashRegister;
+use App\Models\Store;
 use App\Services\CashRegisterService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -41,6 +42,7 @@ final class CashRegisterController extends Controller
 
         return Inertia::render('CashRegisters/Index', [
             'registers' => new CashRegisterCollection($registers),
+            'stores' => Store::orderBy('name')->get(['id', 'name', 'code']),
             'filters' => [
                 'store_id' => $storeId,
                 'status' => $status,
