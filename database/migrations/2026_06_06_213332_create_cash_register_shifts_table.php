@@ -13,7 +13,7 @@ return new class extends Migration
         Schema::create('cash_register_shifts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cash_register_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('status', ['open', 'closed', 'forced_close'])->default('open');
             $table->decimal('opening_balance', 12, 2)->default(0);
             $table->decimal('closing_balance', 12, 2)->nullable();
