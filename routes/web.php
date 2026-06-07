@@ -103,12 +103,13 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::put('/cash-registers/{cashRegister}', [CashRegisterController::class, 'update'])->name('cash-registers.update');
     Route::delete('/cash-registers/{cashRegister}', [CashRegisterController::class, 'destroy'])->name('cash-registers.destroy');
 
-    // Cash Register Shift Routes
-    Route::get('/cash-registers/{cashRegister}/shifts', [CashRegisterShiftController::class, 'index'])->name('cash-registers.shifts.index');
-    Route::get('/shifts/{shift}', [CashRegisterShiftController::class, 'show'])->name('cash-registers.shifts.show');
-    Route::post('/shifts/open', [CashRegisterShiftController::class, 'openShift'])->name('cash-registers.shifts.open');
-    Route::post('/shifts/{shift}/close', [CashRegisterShiftController::class, 'closeShift'])->name('cash-registers.shifts.close');
-    Route::post('/shifts/{shift}/force-close', [CashRegisterShiftController::class, 'forceCloseShift'])->name('cash-registers.shifts.force-close');
+    // Shift Routes
+    Route::get('/shifts', [CashRegisterShiftController::class, 'index'])->name('shifts');
+    Route::post('/shifts/open', [CashRegisterShiftController::class, 'openShift'])->name('shifts.open');
+    Route::patch('/shifts/{shift}/close', [CashRegisterShiftController::class, 'closeShift'])->name('shifts.close');
+    Route::patch('/shifts/{shift}/force-close', [CashRegisterShiftController::class, 'forceCloseShift'])->name('shifts.force-close');
+    Route::get('/shifts/{shift}', [CashRegisterShiftController::class, 'show'])->name('shifts.show');
+    Route::post('/shifts/{shift}/movements', [CashRegisterShiftController::class, 'addMovement'])->name('shifts.movements.store');
 
     // Products Routes
     Route::post('/products/media/pending', [ProductMediaController::class, 'store'])->name('products.media.store');

@@ -8,11 +8,13 @@ use App\Enums\PermissionsEnum;
 use App\Http\Requests\CashRegisters\StoreCashRegisterRequest;
 use App\Http\Requests\CashRegisters\UpdateCashRegisterRequest;
 use App\Http\Resources\CashRegister\CashRegisterCollection;
+use App\Http\Resources\CashRegister\CashRegisterResource;
 use App\Models\CashRegister;
 use App\Services\CashRegisterService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use InvalidArgumentException;
 
 final class CashRegisterController extends Controller
 {
@@ -27,7 +29,7 @@ final class CashRegisterController extends Controller
     {
         $this->authorize(PermissionsEnum::CASH_REGISTERS_VIEW);
 
-        $storeId = request()->integer('store_id');
+        $storeId = request()->integer('store_id') ?: null;
         $status = request()->string('status', 'all')->value();
 
         $registers = $this->cashRegisterService->list(
@@ -38,7 +40,7 @@ final class CashRegisterController extends Controller
         );
 
         return Inertia::render('CashRegisters/Index', [
-            'cashRegisters' => new CashRegisterCollection($registers),
+            'registers' => new CashRegisterCollection($registers),
             'filters' => [
                 'store_id' => $storeId,
                 'status' => $status,
@@ -69,7 +71,7 @@ final class CashRegisterController extends Controller
         $cashRegister->load(['store', 'currentShift']);
 
         return Inertia::render('CashRegisters/Edit/Index', [
-            'cashRegister' => $cashRegister,
+            'cashRegister' => (new CashRegisterResource($cashRegister))->resolve(),
         ]);
     }
 
@@ -84,7 +86,11 @@ final class CashRegisterController extends Controller
     {
         $this->authorize(PermissionsEnum::CASH_REGISTERS_DELETE);
 
-        $this->cashRegisterService->delete($cashRegister);
+        try {
+            $this->cashRegisterService->delete($cashRegister);
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['register' => $e->getMessage()]);
+        }
 
         return redirect()->route('cash-registers');
     }

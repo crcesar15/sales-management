@@ -12,19 +12,22 @@ use InvalidArgumentException;
 final class CashRegisterService
 {
     /**
-     * Paginated, filtered list of cash registers for a store.
+     * Paginated, filtered list of cash registers.
      *
      * @return LengthAwarePaginator<int, CashRegister>
      */
     public function list(
-        int $storeId,
+        ?int $storeId = null,
         string $status = 'all',
         int $perPage = 20,
         ?string $filter = null,
     ): LengthAwarePaginator {
         return CashRegister::query()
-            ->with('currentShift')
-            ->where('store_id', $storeId)
+            ->with(['store', 'currentShift'])
+            ->when(
+                $storeId !== null,
+                fn ($q) => $q->where('store_id', $storeId),
+            )
             ->when(
                 $filter !== null && $filter !== '',
                 fn ($q) => $q->where(fn ($q) => $q

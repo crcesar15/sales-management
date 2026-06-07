@@ -21,7 +21,6 @@ final class StoreMovementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cash_register_shift_id' => ['required', 'exists:cash_register_shifts,id'],
             'type' => ['required', 'string', 'in:cash_in,cash_out'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'reason' => ['required', 'string', 'max:255'],
