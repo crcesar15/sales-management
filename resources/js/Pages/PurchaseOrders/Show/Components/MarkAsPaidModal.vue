@@ -24,10 +24,10 @@ const proofFile = ref<File | null>(null);
 const submitting = ref(false);
 
 const paymentMethodOptions = computed(() => [
-  { label: t("Bank Transfer"), value: "bank_transfer" },
   { label: t("Cash"), value: "cash" },
-  { label: t("Check"), value: "check" },
   { label: t("Credit Card"), value: "credit_card" },
+  { label: t("QR"), value: "qr" },
+  { label: t("Transfer"), value: "transfer" },
 ]);
 
 function onFileSelect(event: { files: File[] }) {

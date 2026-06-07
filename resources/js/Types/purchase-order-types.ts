@@ -5,7 +5,7 @@ import type { ReceptionOrder } from "./reception-order-types";
 
 export type PurchaseOrderStatus = "draft" | "awaiting_approval" | "approved" | "sent" | "partially_received" | "received" | "cancelled";
 
-export type PaymentMethod = "bank_transfer" | "cash" | "check" | "credit_card";
+export type PaymentMethod = "cash" | "credit_card" | "qr" | "transfer";
 
 export interface CatalogEntry {
   id: number;

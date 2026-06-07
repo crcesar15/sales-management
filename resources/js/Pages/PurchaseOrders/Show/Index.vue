@@ -161,10 +161,10 @@ function hasExpandableData(item: PurchaseOrderResponse["line_items"][number]): b
 function paymentMethodLabel(type: string | null): string | null {
   if (!type) return null;
   const labels: Record<string, string> = {
-    bank_transfer: t("Bank Transfer"),
     cash: t("Cash"),
-    check: t("Check"),
     credit_card: t("Credit Card"),
+    qr: t("QR"),
+    transfer: t("Transfer"),
   };
   return labels[type] ?? type;
 }
