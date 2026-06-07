@@ -81,6 +81,12 @@ final class Store extends Model
         return $this->hasMany(CashRegister::class);
     }
 
+    /** @return HasMany<SalesOrder, $this> */
+    public function salesOrders(): HasMany
+    {
+        return $this->hasMany(SalesOrder::class);
+    }
+
     protected static function boot(): void
     {
         parent::boot();

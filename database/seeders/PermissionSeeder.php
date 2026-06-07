@@ -137,6 +137,12 @@ final class PermissionSeeder extends Seeder
             'cash movements' => [
                 PermissionsEnum::CASH_MOVEMENTS_CREATE->value,
             ],
+            'sales' => [
+                PermissionsEnum::SALES_VIEW->value,
+                PermissionsEnum::SALES_VIEW_ALL->value,
+                PermissionsEnum::SALES_CREATE->value,
+                PermissionsEnum::SALES_MANAGE->value,
+            ],
         ];
 
         $role = Role::query()->where('name', RolesEnum::ADMIN->value)->firstOrFail();

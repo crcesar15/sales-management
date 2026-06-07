@@ -102,4 +102,9 @@ enum PermissionsEnum: string
     case SHIFTS_MANAGE = 'shift.manage';
 
     case CASH_MOVEMENTS_CREATE = 'cash_movement.create';
+
+    case SALES_VIEW = 'sales.view';
+    case SALES_VIEW_ALL = 'sales.view_all';
+    case SALES_CREATE = 'sales.create';
+    case SALES_MANAGE = 'sales.manage';
 }
