@@ -63,7 +63,7 @@ final class CashRegisterShiftService
         float $openingBalance,
         ?string $notes = null,
     ): CashRegisterShift {
-        if ($register->status !== CashRegisterStatus::ACTIVE->value) {
+        if ($register->status->value !== CashRegisterStatus::ACTIVE->value) {
             throw new InvalidArgumentException('Cannot open a shift on an inactive register.');
         }
 
@@ -98,7 +98,7 @@ final class CashRegisterShiftService
      */
     public function closeShift(CashRegisterShift $shift, float $closingBalance, ?string $notes = null): CashRegisterShift
     {
-        if ($shift->status !== CashRegisterShiftStatus::OPEN->value) {
+        if ($shift->status->value !== CashRegisterShiftStatus::OPEN->value) {
             throw new InvalidArgumentException('Only an open shift can be closed.');
         }
 
@@ -132,7 +132,7 @@ final class CashRegisterShiftService
      */
     public function forceCloseShift(CashRegisterShift $shift, User $manager, float $closingBalance, ?string $notes = null): CashRegisterShift
     {
-        if ($shift->status !== CashRegisterShiftStatus::OPEN->value) {
+        if ($shift->status->value !== CashRegisterShiftStatus::OPEN->value) {
             throw new InvalidArgumentException('Only an open shift can be force-closed.');
         }
 
@@ -166,7 +166,7 @@ final class CashRegisterShiftService
      */
     public function addMovement(CashRegisterShift $shift, string $type, float $amount, string $reason, User $user): CashRegisterMovement
     {
-        if ($shift->status !== CashRegisterShiftStatus::OPEN->value) {
+        if ($shift->status->value !== CashRegisterShiftStatus::OPEN->value) {
             throw new InvalidArgumentException('Movements can only be added to an open shift.');
         }
 

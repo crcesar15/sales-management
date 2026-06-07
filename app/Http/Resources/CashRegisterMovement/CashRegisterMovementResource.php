@@ -24,7 +24,7 @@ final class CashRegisterMovementResource extends JsonResource
             'type' => $this->type ?? null,
             'amount' => $this->amount ?? null,
             'reason' => $this->reason ?? null,
-            'user' => new UserResource($this->whenLoaded('user')),
+            'user' => $this->whenLoaded('user', fn ($user) => (new UserResource($user))->resolve()),
             'created_at' => ! empty($this->created_at) ? $this->created_at->toISOString() : null,
             'updated_at' => ! empty($this->updated_at) ? $this->updated_at->toISOString() : null,
         ];

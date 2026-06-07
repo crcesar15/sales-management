@@ -25,8 +25,8 @@ final class CashRegisterResource extends JsonResource
             'code' => $this->code ?? null,
             'status' => $this->status ?? null,
             'is_default' => $this->is_default ?? null,
-            'store' => new StoreResource($this->whenLoaded('store')),
-            'current_shift' => new CashRegisterShiftResource($this->whenLoaded('currentShift')),
+            'store' => $this->whenLoaded('store', fn ($store) => (new StoreResource($store))->resolve()),
+            'current_shift' => $this->whenLoaded('currentShift', fn ($shift) => (new CashRegisterShiftResource($shift))->resolve()),
             'created_at' => ! empty($this->created_at) ? $this->created_at->toISOString() : null,
             'updated_at' => ! empty($this->updated_at) ? $this->updated_at->toISOString() : null,
         ];
