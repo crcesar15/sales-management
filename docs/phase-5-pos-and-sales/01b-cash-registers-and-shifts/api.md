@@ -16,10 +16,11 @@ All routes registered in `routes/web.php` under the `auth` middleware group.
 | `PATCH` | `/shifts/{shift}/close` | Close a shift | `shift.close` |
 | `PATCH` | `/shifts/{shift}/force-close` | Force-close a shift | `shift.manage` |
 | `GET` | `/shifts/{shift}` | Shift detail page | `shift.view` |
+| `POST` | `/shifts/{shift}/movements` | Add a movement to a shift | `cash_movement.create` |
 
 ## Web Route Naming
 - `cash-registers`, `cash-registers.create`, `cash-registers.store`, `cash-registers.edit`, `cash-registers.update`, `cash-registers.destroy`
-- `shifts`, `shifts.open`, `shifts.close`, `shifts.force-close`, `shifts.show`
+- `shifts`, `shifts.open`, `shifts.close`, `shifts.force-close`, `shifts.show`, `shifts.movements.store`
 
 ## No API Routes (Inertia-Only Module)
 This module uses Inertia for all management pages (CRUD, shift open/close/force-close). No API controllers are needed — the management interface uses server-side rendering with Inertia redirects.
@@ -43,7 +44,7 @@ POS-specific API endpoints for shift management (open shift, close shift, get se
     ],
     "meta": { "current_page": 1, "last_page": 1, "per_page": 20, "total": 1 }
   },
-  "filters": { "status": "active" }
+  "filters": { "store_id": null, "status": "active" }
 }
 ```
 
@@ -68,7 +69,7 @@ POS-specific API endpoints for shift management (open shift, close shift, get se
     ],
     "meta": { ... }
   },
-  "filters": { "status": "open", "register_id": null }
+  "filters": { "status": "open", "cash_register_id": null }
 }
 ```
 
@@ -120,10 +121,11 @@ POS-specific API endpoints for shift management (open shift, close shift, get se
 ## Validation Rules (Add Movement)
 | Field | Rules |
 |---|---|
-| `cash_register_shift_id` | `required\|exists:cash_register_shifts,id` |
-| `type` | `required\|in:cash_in,cash_out` |
+| `type` | `required\|string\|in:cash_in,cash_out` |
 | `amount` | `required\|numeric\|min:0.01` |
 | `reason` | `required\|string\|max:255` |
+
+> **Note:** The shift ID is determined by the route parameter `/shifts/{shift}/movements`, not by a request body field.
 
 ## Error Responses
 - 422: Attempting to open a shift on a register that already has an open shift
