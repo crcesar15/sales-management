@@ -8,6 +8,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CashRegisterController;
+use App\Http\Controllers\CashRegisterShiftController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
@@ -92,6 +94,21 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // POS Routes
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
+
+    // Cash Register Routes
+    Route::get('/cash-registers', [CashRegisterController::class, 'index'])->name('cash-registers');
+    Route::get('/cash-registers/create', [CashRegisterController::class, 'create'])->name('cash-registers.create');
+    Route::post('/cash-registers', [CashRegisterController::class, 'store'])->name('cash-registers.store');
+    Route::get('/cash-registers/{cashRegister}/edit', [CashRegisterController::class, 'edit'])->name('cash-registers.edit');
+    Route::put('/cash-registers/{cashRegister}', [CashRegisterController::class, 'update'])->name('cash-registers.update');
+    Route::delete('/cash-registers/{cashRegister}', [CashRegisterController::class, 'destroy'])->name('cash-registers.destroy');
+
+    // Cash Register Shift Routes
+    Route::get('/cash-registers/{cashRegister}/shifts', [CashRegisterShiftController::class, 'index'])->name('cash-registers.shifts.index');
+    Route::get('/shifts/{shift}', [CashRegisterShiftController::class, 'show'])->name('cash-registers.shifts.show');
+    Route::post('/shifts/open', [CashRegisterShiftController::class, 'openShift'])->name('cash-registers.shifts.open');
+    Route::post('/shifts/{shift}/close', [CashRegisterShiftController::class, 'closeShift'])->name('cash-registers.shifts.close');
+    Route::post('/shifts/{shift}/force-close', [CashRegisterShiftController::class, 'forceCloseShift'])->name('cash-registers.shifts.force-close');
 
     // Products Routes
     Route::post('/products/media/pending', [ProductMediaController::class, 'store'])->name('products.media.store');

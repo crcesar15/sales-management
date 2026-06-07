@@ -138,8 +138,9 @@ export function useMenuItems() {
           key: "sales-cash-registers",
           label: t("Cash Registers"),
           icon: "fa fa-cash-register",
-          to: "home",
+          to: "cash-registers",
           can: "cash_register.view",
+          routeUrl: route("cash-registers"),
         },
         {
           key: "sales-customers",
