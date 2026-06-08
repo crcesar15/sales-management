@@ -7,10 +7,12 @@ namespace App\Models;
 use App\Enums\DiscountType;
 use App\Enums\SalesOrderStatus;
 use Database\Factories\SalesOrderFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -73,6 +75,26 @@ final class SalesOrder extends Model
         return $this->hasMany(SalesOrderPayment::class);
     }
 
+    // ─── Scopes ────────────────────────────────────────────────────────────────
+
+    /** @param  Builder<self>  $query */
+    public function scopeHeld(Builder $query): void
+    {
+        $query->where('status', SalesOrderStatus::HELD);
+    }
+
+    /** @param  Builder<self>  $query */
+    public function scopeNotHeld(Builder $query): void
+    {
+        $query->where('status', '!=', SalesOrderStatus::HELD->value);
+    }
+
+    /** @param  Builder<self>  $query */
+    public function scopeStatus(Builder $query, string $status): void
+    {
+        $query->where('status', $status);
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -80,6 +102,13 @@ final class SalesOrder extends Model
             ->logOnlyDirty()
             ->useLogName('sales_order')
             ->dontSubmitEmptyLogs();
+    }
+
+    protected static function booted(): void
+    {
+        self::creating(function (self $order): void {
+            $order->token = (string) Str::uuid();
+        });
     }
 
     /**

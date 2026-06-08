@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\CashMovementType;
 use App\Enums\CashRegisterShiftStatus;
 use App\Enums\CashRegisterStatus;
+use App\Enums\PaymentMethod;
 use App\Models\CashRegister;
 use App\Models\CashRegisterMovement;
 use App\Models\CashRegisterShift;
@@ -191,9 +192,7 @@ final class CashRegisterShiftService
 
     /**
      * Calculate the expected closing balance for a shift.
-     * opening_balance + cash_in movements - cash_out movements.
-     *
-     * Note: cash sales from sales_order_payments will be added once Task 02 (Sales Orders) is complete.
+     * opening_balance + cash_in movements - cash_out movements + cash sales.
      */
     private function calculateExpectedClosing(CashRegisterShift $shift): float
     {
@@ -205,6 +204,11 @@ final class CashRegisterShiftService
             ->where('type', CashMovementType::CASH_OUT->value)
             ->sum('amount');
 
-        return round((float) $shift->opening_balance + $cashIn - $cashOut, 2);
+        $cashSales = (float) $shift->salesOrders()
+            ->join('sales_order_payments', 'sales_orders.id', '=', 'sales_order_payments.sales_order_id')
+            ->where('sales_order_payments.payment_method', PaymentMethod::CASH->value)
+            ->sum('sales_order_payments.amount');
+
+        return round((float) $shift->opening_balance + $cashIn - $cashOut + $cashSales, 2);
     }
 }

@@ -132,7 +132,9 @@ export function useMenuItems() {
           key: "sales-orders",
           label: t("Sales Orders"),
           icon: "fa fa-file-invoice-dollar",
-          to: "home",
+          to: "sales-orders",
+          can: "sales.view",
+          routeUrl: route("sales-orders"),
         },
         {
           key: "sales-cash-registers",

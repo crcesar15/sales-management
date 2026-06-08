@@ -19,6 +19,11 @@ export interface SalesOrderItem {
     id: number;
     name: string;
     identifier: string;
+    sku?: string;
+    product?: {
+      id: number;
+      name: string;
+    };
   };
   sale_unit?: {
     id: number;
@@ -63,6 +68,8 @@ export interface SalesOrder {
   payments?: SalesOrderPayment[];
 }
 
+// NOTE: payment_method is NOT on the SalesOrder header — derive from payments if needed for display
+
 export interface SalesOrderResponse extends SalesOrder {}
 
 export interface SalesOrderListResponse {
@@ -76,11 +83,33 @@ export interface SalesOrderListResponse {
 }
 
 export interface SalesOrderFilters {
-  status: string;
-  store_id: number | null;
-  customer_id: number | null;
-  filter?: string;
-  order_by?: string;
-  order_direction?: string;
-  per_page?: number;
+  search?: string;
+  status?: string;
+  from?: string;
+  to?: string;
+}
+
+// Payload interfaces for create/update operations
+
+export interface SalesOrderItemPayload {
+  product_variant_id: number;
+  sale_unit_id?: number | null;
+  quantity: number;
+  unit_price: number;
+  conversion_factor?: number;
+}
+
+export interface SalesOrderPaymentPayload {
+  payment_method: PaymentMethod;
+  amount: number;
+  reference?: string | null;
+}
+
+export interface SalesOrderPayload {
+  customer_id?: number | null;
+  discount_type: DiscountType;
+  discount_value: number;
+  notes?: string | null;
+  items: SalesOrderItemPayload[];
+  payments: SalesOrderPaymentPayload[];
 }

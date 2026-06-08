@@ -26,6 +26,7 @@ use App\Http\Controllers\ProductVariantUnitController;
 use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\ReceptionOrderController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SalesOrderController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockAlertController;
@@ -271,6 +272,15 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
     Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
     Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+
+    // Sales Orders Routes
+    Route::get('/sales-orders', [SalesOrderController::class, 'index'])->name('sales-orders');
+    Route::get('/sales-orders/create', [SalesOrderController::class, 'create'])->name('sales-orders.create');
+    Route::post('/sales-orders', [SalesOrderController::class, 'store'])->name('sales-orders.store');
+    Route::get('/sales-orders/{salesOrder}', [SalesOrderController::class, 'show'])->name('sales-orders.show');
+    Route::get('/sales-orders/{salesOrder}/edit', [SalesOrderController::class, 'edit'])->name('sales-orders.edit');
+    Route::put('/sales-orders/{salesOrder}', [SalesOrderController::class, 'update'])->name('sales-orders.update');
+    Route::patch('/sales-orders/{salesOrder}/status', [SalesOrderController::class, 'transitionStatus'])->name('sales-orders.status');
 
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('settings');
