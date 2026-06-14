@@ -63,7 +63,7 @@ final class SalesOrderController extends Controller
             'customers' => Customer::query()
                 ->orderBy('first_name')
                 ->where('status', 'active')
-                ->get(['id', 'first_name', 'last_name', 'email']),
+                ->get(['id', 'first_name', 'last_name', 'email', 'phone', 'tax_id']),
         ]);
     }
 
@@ -122,7 +122,7 @@ final class SalesOrderController extends Controller
             'customers' => Customer::query()
                 ->orderBy('first_name')
                 ->where('status', 'active')
-                ->get(['id', 'first_name', 'last_name', 'email']),
+                ->get(['id', 'first_name', 'last_name', 'email', 'phone', 'tax_id']),
         ]);
     }
 

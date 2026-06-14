@@ -97,9 +97,11 @@ final class VariantsController extends Controller
     public function search(Request $request): JsonResponse
     {
         $filter = $request->string('filter', '')->value();
+        $includes = $request->string('includes', '')->value();
+        $includeList = array_filter(explode(',', $includes));
 
         $query = ProductVariant::query()
-            ->with(['product'])
+            ->with(['product.brand', 'activeSaleUnits', ...in_array('saleUnits', $includeList) ? ['activeSaleUnits'] : []])
             ->whereHas('product', function ($q) use ($filter): void {
                 $q->where('name', 'like', "%{$filter}%");
             })
@@ -111,13 +113,37 @@ final class VariantsController extends Controller
             ->get()
             ->map(function ($variant) {
                 $productName = $variant->product !== null ? $variant->product->name : '';
+                $brandName = $variant->product?->brand?->name;
 
-                return [
+                $data = [
                     'id' => $variant->id,
                     'name' => $productName,
                     'identifier' => $variant->identifier,
                     'label' => $productName . ' - ' . $variant->identifier,
+                    'price' => (float) $variant->price,
+                    'stock' => $variant->stock,
+                    'minimum_stock_level' => $variant->minimum_stock_level,
+                    'product' => $variant->product ? [
+                        'id' => $variant->product->id,
+                        'name' => $variant->product->name,
+                        'brand' => $brandName ? ['id' => $variant->product->brand->id, 'name' => $brandName] : null,
+                        'measurement_unit' => $variant->product->measurementUnit ? [
+                            'id' => $variant->product->measurementUnit->id,
+                            'name' => $variant->product->measurementUnit->name,
+                        ] : null,
+                    ] : null,
                 ];
+
+                if ($variant->relationLoaded('activeSaleUnits') && $variant->activeSaleUnits->isNotEmpty()) {
+                    $data['sale_units'] = $variant->activeSaleUnits->map(fn ($unit) => [
+                        'id' => $unit->id,
+                        'name' => $unit->name,
+                        'conversion_factor' => $unit->conversion_factor,
+                        'price' => (float) $unit->price,
+                    ])->values()->toArray();
+                }
+
+                return $data;
             });
 
         return response()->json(['data' => $variants], 200);
