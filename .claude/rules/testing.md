@@ -22,6 +22,19 @@ php artisan test --compact --filter=UsersTest        # Single file
 - Use `fake()` or `$this->faker` for test data — follow existing conventions in the test file
 - For API tests, use `getJson()`, `postJson()`, `putJson()`, `deleteJson()` (not `get()`, `post()`)
 
+## Seeder Dependencies
+
+- Pest auto-seeds `RoleSeeder` and `PermissionSeeder` before every test (configured in `tests/Pest.php`)
+- When creating test users, assign permissions explicitly: `$user->givePermissionTo(PermissionsEnum::X)`
+- When testing authorization, create a user and assign only the permissions needed for the test
+
+## Factory Conventions
+
+- All factories are `final class` with `@extends Factory<Model>` PHPDoc annotation
+- Use enum values in factories: `'status' => SalesOrderStatus::DRAFT->value`
+- Use nested factory calls for required relationships: `'customer_id' => Customer::factory()`
+- Use factory states for specific scenarios (e.g., `User::factory()->inactive()->create()`)
+
 ## Known Issues
 
 - `storage/logs/laravel.log` has permission issues — use `getJson()` instead of `get()` for forbidden assertions to avoid log write failures

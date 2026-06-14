@@ -22,12 +22,22 @@
 
 ## Enforcement Points
 
-### Backend — Controllers
+### Backend — Web Controllers
+
 ```php
-$this->authorize(PermissionsEnum::USERS_VIEW, auth()->user());
+$this->authorize(PermissionsEnum::USERS_VIEW);
 ```
+Note: No user parameter needed — uses the authenticated user automatically.
+
+### Backend — API Controllers
+
+```php
+$this->authorize(PermissionsEnum::USERS_VIEW->value, auth()->user());
+```
+Note: Requires `->value` and explicit user parameter. This is different from Web controllers.
 
 ### Backend — Form Requests
+
 ```php
 public function authorize(): bool
 {
@@ -35,12 +45,30 @@ public function authorize(): bool
 }
 ```
 
+### Backend — Policies
+
+All policies are `final class` using `PermissionsEnum` for authorization. Standard methods: `viewAny`, `view`, `create`, `update`, `delete`, `restore`. Auto-discovered (not registered in `AuthServiceProvider`). No ownership-based logic except `UserPolicy` which adds `$user->id !== $target->id` checks.
+
 ### Frontend — Vue Templates
+
 ```vue
 <Button v-can="'user.create'" :label="t('Add User')" />
 ```
 
+The `v-can` directive is **reactive** — it watches permissions from `useAuth()` and dynamically shows/hides elements. Supports:
+- Single permission: `v-can="'user.create'"`
+- Any permission: `v-can="['user.create', 'user.edit']"`
+- Always show: `v-can="true"`
+
+### Frontend — Composables
+
+```typescript
+const { can, canAny, canAll } = useAuth();
+if (can('user.create')) { /* ... */ }
+```
+
 ### Frontend — Sidebar Menu
+
 ```typescript
 {
   key: "users",

@@ -5,7 +5,15 @@
 - All web routes render Inertia pages — no Blade views for application pages
 - Use resource-style naming: `users.index`, `users.create`, `users.edit`
 - Auth routes use `guest` middleware, protected routes use `auth` middleware
-- RESTful actions only: `index`, `create`, `store`, `edit`, `update`, `destroy`
+- RESTful actions: `index`, `create`, `store`, `edit`, `update`, `destroy`
+- Non-RESTful actions use custom verbs for state transitions and domain operations:
+  - `updateStatus`, `transitionStatus` — status changes
+  - `openShift`, `closeShift`, `forceCloseShift` — shift management
+  - `submit`, `approve`, `pay`, `cancel`, `complete` — workflow actions
+  - `addMovement` — adding child records
+  - `generate`, `syncImages` — generation/sync operations
+- Restore routes for soft-deleted models: `Route::put('/users/{user}/restore', ...)->withTrashed()`
+- Nested resources use `Route::scopeBindings()->group(...)` for implicit route model binding
 
 ## API Routes (`routes/api.php`)
 
@@ -14,6 +22,7 @@
 - All protected by `auth:sanctum` middleware
 - Standard CRUD actions: `index`, `show`, `store`, `update`, `destroy`
 - Include `restore` endpoint for soft-deleted resources
+- Nested resources use `scopeBindings()` for route model binding
 
 ## API Response Format
 
@@ -44,3 +53,10 @@
   route("users.edit", user.id)       // Web page with param
   ```
 - Named routes only — never hardcode URLs
+
+## Authentication
+
+- Login uses `username` field (not `email`)
+- `LoginController::username()` returns `'username'`
+- Web authentication uses session-based `auth` middleware
+- API authentication uses `auth:sanctum` middleware with Laravel Sanctum tokens
