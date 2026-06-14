@@ -1,4 +1,3 @@
-import type { CustomerResponse } from "./customer-types";
 import type { UserResponse } from "./user-types";
 import type { StoreResponse } from "./store-types";
 import type { PaymentMethod } from "./purchase-order-types";
@@ -57,12 +56,22 @@ export interface SalesOrder {
   notes: string | null;
   created_at: string | null;
   updated_at: string | null;
-  customer?: CustomerResponse;
+  customer?: {
+    id: number | null;
+    display_name: string | null;
+    email: string | null;
+  } | null;
   user?: Pick<UserResponse, "id" | "full_name">;
   store?: Pick<StoreResponse, "id" | "name" | "code">;
   cash_register_shift?: {
     id: number;
-    status: string;
+    status: string | null;
+    opened_at: string | null;
+    cash_register?: {
+      id: number;
+      name: string;
+      code: string;
+    } | null;
   } | null;
   items?: SalesOrderItem[];
   payments?: SalesOrderPayment[];
@@ -70,7 +79,7 @@ export interface SalesOrder {
 
 // NOTE: payment_method is NOT on the SalesOrder header — derive from payments if needed for display
 
-export interface SalesOrderResponse extends SalesOrder {}
+export type SalesOrderResponse = SalesOrder;
 
 export interface SalesOrderListResponse {
   data: SalesOrderResponse[];
@@ -112,4 +121,71 @@ export interface SalesOrderPayload {
   notes?: string | null;
   items: SalesOrderItemPayload[];
   payments: SalesOrderPaymentPayload[];
+}
+
+// Line item type for create/edit form (local state, not persisted)
+export interface SalesOrderLineItemForm {
+  id: string;
+  product_variant_id: number;
+  product_name: string;
+  variant_label: string;
+  sale_unit_id: number | null;
+  quantity: number;
+  unit_price: number;
+  conversion_factor: number;
+  line_total: number;
+  stock?: number | null;
+  minimum_stock_level?: number | null;
+  sale_units?: Array<{
+    id: number;
+    name: string;
+    conversion_factor: number;
+    price: number;
+  }>;
+  sale_unit?: {
+    id: number;
+    name: string;
+    conversion_factor: number;
+  } | null;
+}
+
+// Payment form type for create/edit (local state)
+export interface SalesOrderPaymentForm {
+  id?: number;
+  payment_method: PaymentMethod;
+  amount: number;
+  reference: string | null;
+}
+
+// Variant search result from the enriched search API
+export interface VariantSearchResult {
+  id: number;
+  name: string;
+  identifier: string;
+  label: string;
+  price: number;
+  stock: number | null;
+  minimum_stock_level: number | null;
+  product?: {
+    id: number;
+    name: string;
+    brand?: { id: number; name: string } | null;
+    measurement_unit?: { id: number; name: string } | null;
+  } | null;
+  sale_units?: Array<{
+    id: number;
+    name: string;
+    conversion_factor: number;
+    price: number;
+  }>;
+}
+
+// Customer option for select/autocomplete
+export interface CustomerOption {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  phone: string | null;
+  tax_id: string | null;
 }
