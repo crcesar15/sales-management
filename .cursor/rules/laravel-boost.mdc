@@ -267,4 +267,158 @@ Vue components must have a single root element.
 - Always use existing Tailwind conventions; check project patterns before adding new ones.
 - IMPORTANT: Always use `search-docs` tool for version-specific Tailwind CSS documentation and updated code examples. Never rely on training data.
 - IMPORTANT: Activate `tailwindcss-development` every time you're working with a Tailwind CSS or styling-related task.
+
+=== project-specific rules ===
+
+# Project Conventions (sales-management)
+
+These rules are specific to this repository and take precedence over generic Laravel Boost guidance where they differ.
+
+## Application Architecture
+
+- This project upgraded from Laravel 10 to Laravel 12 **without** migrating to the new Laravel 12 file structure. Keep the Laravel 10 structure:
+  - Middleware live in `app/Http/Middleware/`
+  - Kernel lives in `app/Http/Kernel.php`
+  - Exception handler lives in `app/Exceptions/Handler.php`
+  - Console kernel lives in `app/Console/Kernel.php`
+  - Service providers live in `app/Providers/`
+- Do not migrate to the new Laravel 12 structure unless the user explicitly asks.
+
+## Module Pattern
+
+Every module follows the same full-stack pattern. Check sibling files before creating new ones:
+
+| Layer | Location |
+|-------|----------|
+| Web Controller | `app/Http/Controllers/{Module}/` or `app/Http/Controllers/{Module}Controller.php` |
+| API Controller | `app/Http/Controllers/Api/{Module}/` |
+| Service | `app/Services/{Module}Service.php` |
+| Web Form Request | `app/Http/Requests/{Module}/` |
+| API Form Request | `app/Http/Requests/Api/{Module}/` |
+| Resource | `app/Http/Resources/{Module}/` |
+| Vue Pages | `resources/js/Pages/{Module}/` (`Index.vue`, `Create/Index.vue`, `Edit/Index.vue`) |
+| Composable | `resources/js/Composables/use{Module}Client.ts` |
+| TypeScript Types | `resources/js/Types/{module}-types.ts` |
+
+## Controllers
+
+- Mark controller classes `final`.
+- Web controllers render Inertia pages with `Inertia::render()` and redirect after mutations using `redirect()->route('route.name')`.
+- API controllers return Eloquent Resources with proper status codes: `(new Resource($model))->response()->setStatusCode(201)`.
+- Authorize actions via `PermissionsEnum`:
+  ```php
+  $this->authorize(PermissionsEnum::USERS_VIEW, auth()->user());
+  ```
+- Controllers must NOT contain business logic — delegate to service classes.
+
+## Services
+
+- Mark service classes `final`.
+- Use constructor property promotion for dependencies.
+- Wrap critical database operations in `DB::transaction()`.
+- Use `when()` for conditional query building.
+- Eager load relationships needed by the caller with `->load([...])` or `->with([...])`.
+
+## Form Requests
+
+- Always use Form Request classes — never inline validation in controllers.
+- Use array-format validation rules (not pipe-delimited strings).
+- Authorize using `PermissionsEnum` values:
+  ```php
+  public function authorize(): bool
+  {
+      return $this->user()?->can(PermissionsEnum::USERS_CREATE->value) ?? false;
+  }
+  ```
+- Use `Rule::unique()->ignore()` for unique validation on updates.
+
+## Models
+
+- Define casts in a `casts()` method, not the `$casts` property.
+- Use PHPDoc generics for relationship return types:
+  ```php
+  /** @return HasMany<PurchaseOrder, $this> */
+  public function purchaseOrders(): HasMany
+  {
+      return $this->hasMany(PurchaseOrder::class);
+  }
+  ```
+- Use Laravel Attributes for accessors/mutators.
+- Soft-deleted models use route binding with `withTrashed()` in `boot()`.
+
+## Permissions
+
+- Permission cases live in `app/Enums/PermissionsEnum.php` using `{MODULE}_{ACTION}` format.
+- Standard actions per module: `VIEW`, `CREATE`, `EDIT`, `DELETE`, `RESTORE`.
+- Register new permissions in `database/seeders/PermissionSeeder.php`.
+- Add sidebar entries in `resources/js/Layouts/Composables/useMenuItems.ts` with a `can` property.
+- Re-seed permissions after enum changes: `php artisan db:seed --class=PermissionSeeder`.
+
+## API Design
+
+- API routes are grouped under `v1` prefix: `Route::prefix('v1')`.
+- API routes are named with `api.v1.` prefix: `api.v1.users.index`.
+- API routes are protected by `auth:sanctum` middleware.
+- Include `restore` endpoints for soft-deleted resources.
+- Collections return pagination metadata:
+  ```json
+  {
+    "data": [...],
+    "meta": {
+      "current_page": 1,
+      "last_page": 5,
+      "per_page": 10,
+      "total": 48
+    }
+  }
+  ```
+
+## Frontend Conventions
+
+- Vue pages use `<script setup lang="ts">` and Composition API.
+- Set layout via `defineOptions({ layout: AppLayout })` where `AppLayout` is imported from `@layouts/admin.vue`.
+- Module pages live in `resources/js/Pages/{Module}/` with subdirectories `Create/` and `Edit/`.
+- **Forms use VeeValidate + Yup, not Inertia's `useForm`**. Example pattern:
+  ```ts
+  import { useForm } from "vee-validate";
+  import { toTypedSchema } from "@vee-validate/yup";
+  import { object, string } from "yup";
+
+  const schema = toTypedSchema(
+    object({
+      first_name: string().required().max(50),
+    })
+  );
+
+  const { handleSubmit, errors, defineField, setErrors } = useForm({
+    validationSchema: schema,
+    initialValues: { first_name: "" },
+  });
+
+  const [firstName, firstNameAttrs] = defineField("first_name");
+  ```
+- Submit via Inertia `router.post()` / `router.put()` inside `handleSubmit`.
+- On error, show a toast and call `setErrors()` to display field errors.
+- Use PrimeVue components imported directly from `primevue`.
+- Use `router.visit()` for server-side pagination/sorting/filtering.
+- Use Ziggy's `route()` helper for all URL generation.
+- Use `vue-i18n`'s `t()` for all user-visible text.
+- TypeScript types are in `resources/js/Types/` and use named exports.
+
+## Verification & Quality
+
+- Run `composer lint` after all PHP changes are complete. Do not run it mid-implementation.
+- Run `npm run type-check` after TypeScript changes.
+- Run `npm run lint` / `npm run format` after Vue changes when appropriate.
+- Use Pest for tests: `php artisan make:test --pest {name}` and run with `php artisan test --compact`.
+- Use `php artisan make:` commands with `--no-interaction` to create new files.
+- Do not create extra migrations for modifications; modify existing migrations during development.
+
+## Skill Activation
+
+Activate the relevant skill whenever working in that domain:
+- `inertia-vue-development` — Inertia/Vue client-side work
+- `tailwindcss-development` — styling/Tailwind
+- `pest-testing` — Pest tests
+- `module-scaffold` — scaffolding a new module
 </laravel-boost-guidelines>

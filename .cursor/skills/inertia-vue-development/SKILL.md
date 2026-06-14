@@ -2,9 +2,10 @@
 name: inertia-vue-development
 description: >-
   Develops Inertia.js v2 Vue client-side applications. Activates when creating
-  Vue pages, forms, or navigation; using <Link>, <Form>, useForm, or router;
-  working with deferred props, prefetching, or polling; or when user mentions
-  Vue with Inertia, Vue pages, Vue forms, or Vue navigation.
+  Vue pages, forms, or navigation; using <Link> or router; working with deferred
+  props, prefetching, or polling; or when user mentions Vue with Inertia, Vue pages,
+  Vue forms, or Vue navigation. Note: forms in this project use VeeValidate + Yup, not
+  Inertia's form helpers.
 ---
 
 # Inertia Vue Development
@@ -14,10 +15,10 @@ description: >-
 Activate this skill when:
 
 - Creating or modifying Vue page components for Inertia
-- Working with forms in Vue (using `<Form>` or `useForm`)
-- Implementing client-side navigation with `<Link>` or `router`
+- Working with Inertia client-side navigation using `<Link>` or `router`
 - Using v2 features: deferred props, prefetching, or polling
 - Building Vue-specific features with the Inertia protocol
+- Note: form validation guidance is in the `inertia-vue-development` skill's Form Handling section; it uses VeeValidate + Yup, not Inertia's form helpers
 
 ## Documentation
 
@@ -66,11 +67,16 @@ Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
 import { Link } from '@inertiajs/vue3'
 </script>
 
+<script setup>
+import { Link } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
+</script>
+
 <template>
     <div>
-        <Link href="/">Home</Link>
-        <Link href="/users">Users</Link>
-        <Link :href="`/users/${user.id}`">View User</Link>
+        <Link :href="route('home')">Home</Link>
+        <Link :href="route('users')">Users</Link>
+        <Link :href="route('users.edit', user.id)">View User</Link>
     </div>
 </template>
 
@@ -82,10 +88,11 @@ import { Link } from '@inertiajs/vue3'
 
 <script setup>
 import { Link } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 </script>
 
 <template>
-    <Link href="/logout" method="post" as="button">
+    <Link :href="route('logout')" method="post" as="button">
         Logout
     </Link>
 </template>
@@ -100,10 +107,11 @@ Prefetch pages to improve perceived performance:
 
 <script setup>
 import { Link } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 </script>
 
 <template>
-    <Link href="/users" prefetch>
+    <Link :href="route('users')" prefetch>
         Users
     </Link>
 </template>
@@ -115,181 +123,122 @@ import { Link } from '@inertiajs/vue3'
 <code-snippet name="Router Visit" lang="vue">
 
 <script setup>
-import { router } from '@inertiajs/vue3'
+import { router, Link } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 
 function handleClick() {
-    router.visit('/users')
+    router.visit(route('users'))
 }
 
 // Or with options
 function createUser() {
-    router.visit('/users', {
-        method: 'post',
-        data: { name: 'John' },
+    router.post(route('users.store'), { name: 'John' }, {
         onSuccess: () => console.log('Done'),
     })
 }
 </script>
 
 <template>
-    <Link href="/users">Users</Link>
-    <Link href="/logout" method="post" as="button">Logout</Link>
+    <Link :href="route('users')">Users</Link>
+    <Link :href="route('logout')" method="post" as="button">Logout</Link>
 </template>
 
 </code-snippet>
 
 ## Form Handling
 
-### Form Component (Recommended)
+This project uses **VeeValidate + Yup** for form validation, not Inertia's `<Form>` component or `useForm` composable. Submit the validated payload with Inertia's `router`.
 
-The recommended way to build forms is with the `<Form>` component:
+### VeeValidate + Yup
 
-<code-snippet name="Form Component Example" lang="vue">
+<code-snippet name="VeeValidate Form Example" lang="vue">
 
-<script setup>
-import { Form } from '@inertiajs/vue3'
-</script>
+<script setup lang="ts">
+import { router } from '@inertiajs/vue3'
+import { useForm } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/yup'
+import { object, string, number } from 'yup'
+import { Button, InputText } from 'primevue'
+import { useToast } from 'primevue/usetoast'
+import { route } from 'ziggy-js'
+import { useI18n } from 'vue-i18n'
 
-<template>
-    <Form action="/users" method="post" #default="{ errors, processing, wasSuccessful }">
-        <input type="text" name="name" />
-        <div v-if="errors.name">{{ errors.name }}</div>
+const toast = useToast()
+const { t } = useI18n()
 
-        <input type="email" name="email" />
-        <div v-if="errors.email">{{ errors.email }}</div>
+const schema = toTypedSchema(
+    object({
+        name: string().required().max(50),
+        email: string().required().email(),
+        age: number().nullable().optional().min(0),
+    })
+)
 
-        <button type="submit" :disabled="processing">
-            {{ processing ? 'Creating...' : 'Create User' }}
-        </button>
-
-        <div v-if="wasSuccessful">User created!</div>
-    </Form>
-</template>
-
-</code-snippet>
-
-### Form Component With All Props
-
-<code-snippet name="Form Component Full Example" lang="vue">
-
-<script setup>
-import { Form } from '@inertiajs/vue3'
-</script>
-
-<template>
-    <Form
-        action="/users"
-        method="post"
-        #default="{
-            errors,
-            hasErrors,
-            processing,
-            progress,
-            wasSuccessful,
-            recentlySuccessful,
-            setError,
-            clearErrors,
-            resetAndClearErrors,
-            defaults,
-            isDirty,
-            reset,
-            submit
-        }"
-    >
-        <input type="text" name="name" :value="defaults.name" />
-        <div v-if="errors.name">{{ errors.name }}</div>
-
-        <button type="submit" :disabled="processing">
-            {{ processing ? 'Saving...' : 'Save' }}
-        </button>
-
-        <progress v-if="progress" :value="progress.percentage" max="100">
-            {{ progress.percentage }}%
-        </progress>
-
-        <div v-if="wasSuccessful">Saved!</div>
-    </Form>
-</template>
-
-</code-snippet>
-
-### Form Component Reset Props
-
-The `<Form>` component supports automatic resetting:
-
-- `resetOnError` - Reset form data when the request fails
-- `resetOnSuccess` - Reset form data when the request succeeds
-- `setDefaultsOnSuccess` - Update default values on success
-
-Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
-
-<code-snippet name="Form with Reset Props" lang="vue">
-
-<script setup>
-import { Form } from '@inertiajs/vue3'
-</script>
-
-<template>
-    <Form
-        action="/users"
-        method="post"
-        reset-on-success
-        set-defaults-on-success
-        #default="{ errors, processing, wasSuccessful }"
-    >
-        <input type="text" name="name" />
-        <div v-if="errors.name">{{ errors.name }}</div>
-
-        <button type="submit" :disabled="processing">
-            Submit
-        </button>
-    </Form>
-</template>
-
-</code-snippet>
-
-Forms can also be built using the `useForm` composable for more programmatic control. Use the `search-docs` tool with a query of `useForm helper` for guidance.
-
-### `useForm` Composable
-
-For more programmatic control or to follow existing conventions, use the `useForm` composable:
-
-<code-snippet name="useForm Composable Example" lang="vue">
-
-<script setup>
-import { useForm } from '@inertiajs/vue3'
-
-const form = useForm({
-    name: '',
-    email: '',
-    password: '',
+const { handleSubmit, errors, defineField, setErrors, values } = useForm({
+    validationSchema: schema,
+    initialValues: {
+        name: '',
+        email: '',
+        age: null,
+    },
 })
 
-function submit() {
-    form.post('/users', {
-        onSuccess: () => form.reset('password'),
+const [name, nameAttrs] = defineField('name')
+const [email, emailAttrs] = defineField('email')
+const [age, ageAttrs] = defineField('age')
+
+const onSubmit = handleSubmit((values) => {
+    router.post(route('users.store'), values, {
+        onSuccess: () => {
+            toast.add({
+                severity: 'success',
+                summary: t('Saved'),
+                detail: t('User created successfully'),
+                life: 3000,
+            })
+        },
+        onError: (serverErrors) => {
+            setErrors(serverErrors)
+        },
     })
-}
+})
 </script>
 
 <template>
-    <form @submit.prevent="submit">
-        <input type="text" v-model="form.name" />
-        <div v-if="form.errors.name">{{ form.errors.name }}</div>
+    <form @submit="onSubmit">
+        <div class="field">
+            <label for="name">{{ t('Name') }}</label>
+            <InputText id="name" v-model="name" v-bind="nameAttrs" :invalid="!!errors.name" />
+            <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+        </div>
 
-        <input type="email" v-model="form.email" />
-        <div v-if="form.errors.email">{{ form.errors.email }}</div>
+        <div class="field">
+            <label for="email">{{ t('Email') }}</label>
+            <InputText id="email" v-model="email" v-bind="emailAttrs" :invalid="!!errors.email" />
+            <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
+        </div>
 
-        <input type="password" v-model="form.password" />
-        <div v-if="form.errors.password">{{ form.errors.password }}</div>
+        <div class="field">
+            <label for="age">{{ t('Age') }}</label>
+            <InputText id="age" v-model="age" v-bind="ageAttrs" :invalid="!!errors.age" type="number" />
+            <small v-if="errors.age" class="p-error">{{ errors.age }}</small>
+        </div>
 
-        <button type="submit" :disabled="form.processing">
-            Create User
-        </button>
+        <Button type="submit" :label="t('Create User')" />
     </form>
 </template>
 
 </code-snippet>
+
+### Important Form Notes
+
+- Import `useForm` from `vee-validate`, not `@inertiajs/vue3`.
+- Build the schema with `toTypedSchema()` from `@vee-validate/yup`.
+- Use `defineField()` to bind PrimeVue inputs.
+- Pass `:invalid="!!errors.fieldName"` to PrimeVue inputs.
+- Submit inside `handleSubmit()` using `router.post()` / `router.put()` and `route()` from Ziggy.
+- Always handle `onError` by calling `setErrors(serverErrors)` and showing a toast.
+- Localize all user-visible strings with `t()` from `vue-i18n`.
 
 ## Inertia v2 Features
 

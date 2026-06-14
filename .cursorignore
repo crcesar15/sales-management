@@ -1,0 +1,50 @@
+# Dependencies
+/node_modules
+/vendor
+
+# Build artifacts
+/public/build
+/public/hot
+/public/storage
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+auth.json
+
+# Storage
+/storage/*.key
+/storage/app
+/storage/framework
+/storage/logs
+
+# Caches
+/.phpunit.cache
+.phpunit.result.cache
+/.fleet
+/.idea
+/.vscode
+/.tinkerun
+/.claude
+/.agents
+/.windsurf
+
+# Logs
+npm-debug.log
+yarn-error.log
+*.log
+
+# Documentation workspace
+/docs/.obsidian
+
+# IDE helpers
+_ide_helper.php
+_ide_helper_models.php
+
+# Git
+.git
+.gitattributes
+
+# Composer
+composer.lock

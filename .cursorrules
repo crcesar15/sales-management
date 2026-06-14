@@ -1,0 +1,50 @@
+# Project Context
+
+This is a sales management application. Always follow the conventions in `CLAUDE.md` and `.cursor/rules/laravel-boost.mdc`.
+
+## Stack
+
+- Laravel 12 (kept Laravel 10 directory structure)
+- Inertia.js v1 server + v2 client
+- Vue 3 + TypeScript
+- PrimeVue 4
+- Tailwind CSS 3
+- Pest 3
+- spatie/laravel-permission + spatie/laravel-activitylog + spatie/laravel-medialibrary
+
+## Module Pattern
+
+Every module follows the same full-stack pattern. When working on a feature, check sibling files and mirror this structure:
+
+| Layer | Location |
+|-------|----------|
+| Web Controller | `app/Http/Controllers/{Module}/` |
+| API Controller | `app/Http/Controllers/Api/{Module}/` |
+| Service | `app/Services/{Module}Service.php` |
+| Web Form Request | `app/Http/Requests/{Module}/` |
+| API Form Request | `app/Http/Requests/Api/{Module}/` |
+| Resource | `app/Http/Resources/{Module}/` |
+| Vue Pages | `resources/js/Pages/{Module}/` |
+| Composable | `resources/js/Composables/use{Module}Client.ts` |
+| TypeScript Types | `resources/js/Types/{module}-types.ts` |
+
+## Non-Negotiable Conventions
+
+- Keep Laravel 10 structure: middleware in `app/Http/Middleware/`, kernel in `app/Http/Kernel.php`, providers in `app/Providers/`. Do not migrate to the Laravel 12 streamlined structure.
+- Mark controller and service classes `final`.
+- Use Form Request classes for all validation; never inline validation in controllers.
+- Authorize via `PermissionsEnum` in controllers and form requests.
+- Put business logic in services, wrap critical operations in `DB::transaction()`.
+- Use `casts()` method on models, not the `$casts` property.
+- Vue forms use VeeValidate + Yup (`useForm` from `vee-validate`, `toTypedSchema` from `@vee-validate/yup`), not Inertia's `useForm`.
+- PrimeVue components are imported directly from `primevue`.
+- Use Ziggy's `route()` helper; never hardcode URLs.
+- TypeScript types mirror API resources and use named exports.
+- Run `composer lint` after all PHP changes are complete.
+- Do not add extra migrations for modifications; modify existing migrations during development.
+
+## Documentation
+
+- Read `CLAUDE.md` for the full project guide.
+- Read `.cursor/rules/laravel-boost.mdc` for Laravel Boost + project-specific rules.
+- Activate the relevant `.cursor/skills/` file when working in that domain.
