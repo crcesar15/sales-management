@@ -1,10 +1,62 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "tools": {
-    "read": true,
-    "write": true,
-    "edit": true,
-    "bash": true,
-    "skill": true
+  "instructions": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".claude/rules/*.md"
+  ],
+  "mcp": {
+    "laravel-boost": {
+      "type": "local",
+      "command": ["php", "artisan", "boost:mcp"]
+    }
+  },
+  "permission": {
+    "read": "allow",
+    "edit": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "todowrite": "allow",
+    "task": "allow",
+    "skill": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "bash": {
+      "*": "ask",
+      "php artisan *": "allow",
+      "php *": "allow",
+      "composer *": "allow",
+      "composer run *": "allow",
+      "npm run *": "allow",
+      "npm *": "allow",
+      "npx *": "allow",
+      "vendor/bin/pint *": "allow",
+      "vendor/bin/pint": "allow",
+      "vendor/bin/phpstan *": "allow",
+      "vendor/bin/phpstan analyse *": "allow",
+      "vendor/bin/pest *": "allow",
+      "./vendor/bin/pint *": "allow",
+      "./vendor/bin/pest *": "allow",
+      "git status *": "allow",
+      "git status": "allow",
+      "git diff *": "allow",
+      "git diff": "allow",
+      "git log *": "allow",
+      "git log": "allow",
+      "git add *": "allow",
+      "git commit *": "allow",
+      "git branch *": "allow",
+      "git checkout *": "allow",
+      "git show *": "allow",
+      "ls *": "allow",
+      "ls": "allow",
+      "grep *": "allow",
+      "find *": "allow",
+      "cat *": "allow",
+      "mkdir *": "allow",
+      "chmod *": "allow",
+      "node *": "allow"
+    }
   }
 }
