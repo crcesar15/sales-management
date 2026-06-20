@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\MarginType;
 use App\Models\Product;
 use App\Models\ProductOption;
 use App\Models\ProductOptionValue;
@@ -169,21 +168,14 @@ final class ProductVariantService
     }
 
     /**
-     * Update variant fields. When purchase_price and margin_value are provided, the selling price is auto-calculated.
+     * Update variant fields. The selling price is stored as provided; auto-calculation
+     * from purchase price and margin is handled entirely on the frontend.
      *
      * @param  array<string, mixed>  $data
      */
     public function update(ProductVariant $variant, array $data): ProductVariant
     {
         return DB::transaction(function () use ($variant, $data): ProductVariant {
-            if (isset($data['purchase_price']) && isset($data['margin_value'])) {
-                $data['price'] = $this->calculateSellingPrice(
-                    (float) $data['purchase_price'],
-                    MarginType::from($data['margin_type'] ?? 'percent'),
-                    (float) $data['margin_value'],
-                );
-            }
-
             $updateData = collect($data)->only(['identifier', 'price', 'barcode', 'purchase_price', 'margin_type', 'margin_value', 'minimum_stock_level', 'has_expiration', 'status'])->toArray();
 
             $variant->update($updateData);
@@ -326,21 +318,6 @@ final class ProductVariantService
         }
 
         DB::transaction(fn () => $value->delete());
-    }
-
-    /**
-     * Calculate the selling price from purchase price and margin.
-     *
-     * Percent margin: selling = purchase / (1 - margin/100)
-     * Amount margin: selling = purchase + margin
-     */
-    private function calculateSellingPrice(float $purchasePrice, MarginType $marginType, float $marginValue): float
-    {
-        if ($marginType === MarginType::PERCENT) {
-            return round($purchasePrice / (1 - $marginValue / 100), 2);
-        }
-
-        return round($purchasePrice + $marginValue, 2);
     }
 
     /**
