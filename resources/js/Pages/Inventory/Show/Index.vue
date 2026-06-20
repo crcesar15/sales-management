@@ -137,6 +137,7 @@ const handleSave = () => {
               :purchase-price="variant.purchase_price"
               :margin-type="variant.margin_type"
               :margin-value="variant.margin_value"
+              :price="variant.price"
               :can-edit="canEdit"
             />
           </template>

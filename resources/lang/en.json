@@ -924,18 +924,18 @@
   "Token": "Token",
   "Select customer": "Select customer",
   "Search customer...": "Search customer...",
-  "Search product...": "Search product...",
   "Add Payment": "Add Payment",
   "Remove Payment": "Remove Payment",
   "Payment Total": "Payment Total",
   "Order Total": "Order Total",
   "Payments must equal order total": "Payments must equal order total",
-  "At least one item is required": "At least one item is required",
   "At least one payment is required": "At least one payment is required",
-  "No items": "No items",
   "No payments": "No payments",
   "QR": "QR",
   "Transfer": "Transfer",
-  "Cash": "Cash",
-  "No customer (Walk-in)": "No customer (Walk-in)"
+  "No customer (Walk-in)": "No customer (Walk-in)",
+  "Set purchase price to enable auto-calculation": "Set purchase price to enable auto-calculation",
+  "Enter margin or selling price to calculate": "Enter margin or selling price to calculate",
+  "Enter selling price or margin to calculate": "Enter selling price or margin to calculate",
+  "Auto-calculated from purchase price and margin. Edit to override.": "Auto-calculated from purchase price and margin. Edit to override."
 }

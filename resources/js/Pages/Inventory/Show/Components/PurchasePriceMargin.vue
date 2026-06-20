@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { InputNumber, SelectButton, Button, useToast } from "primevue";
 import Chart from "primevue/chart";
 import { useI18n } from "vue-i18n";
@@ -14,14 +14,8 @@ const props = defineProps<{
   purchasePrice: number | null;
   marginType: "percent" | "amount";
   marginValue: number | null;
+  price: number;
   canEdit: boolean;
-}>();
-
-const emit = defineEmits<{
-  (e: "update:purchasePrice", value: number | null): void;
-  (e: "update:marginType", value: "percent" | "amount"): void;
-  (e: "update:marginValue", value: number | null): void;
-  (e: "loaded", data: PurchasePriceHistory): void;
 }>();
 
 const { t } = useI18n();
@@ -36,7 +30,11 @@ const priceHistory = ref<PurchasePriceHistory | null>(null);
 const localPurchasePrice = ref<number | null>(props.purchasePrice);
 const localMarginType = ref<"percent" | "amount">(props.marginType);
 const localMarginValue = ref<number | null>(props.marginValue);
+const localPrice = ref<number>(props.price);
 const showHistory = ref(false);
+
+// Prevents infinite watcher loops during programmatic updates
+let isProgrammatic = false;
 
 const stats = computed(() => priceHistory.value?.stats ?? null);
 const hasStats = computed(
@@ -48,7 +46,13 @@ const marginTypeOptions = computed(() => [
   { label: currency, value: "amount" },
 ]);
 
-const calculatedPrice = computed(() => {
+const canCalculateMargin = computed(
+  () => localPurchasePrice.value !== null && localPurchasePrice.value > 0,
+);
+
+// selling = purchase / (1 - margin/100)  [percent]
+// selling = purchase + margin            [amount]
+const computePriceFromMargin = (): number | null => {
   if (localPurchasePrice.value === null || localPurchasePrice.value <= 0 || localMarginValue.value === null) {
     return null;
   }
@@ -57,27 +61,72 @@ const calculatedPrice = computed(() => {
     return Math.round((localPurchasePrice.value / (1 - localMarginValue.value / 100)) * 100) / 100;
   }
   return Math.round((localPurchasePrice.value + localMarginValue.value) * 100) / 100;
-});
+};
 
-const canCalculateMargin = computed(
-  () => localPurchasePrice.value !== null && localPurchasePrice.value > 0,
-);
+// Reverse: derive margin from purchase price + selling price
+// margin = (1 - purchase/price) * 100  [percent]
+// margin = price - purchase              [amount]
+const computeMarginFromPrice = (): number | null => {
+  if (localPurchasePrice.value === null || localPurchasePrice.value <= 0 || localPrice.value <= 0) {
+    return null;
+  }
+  if (localMarginType.value === "percent") {
+    const margin = (1 - localPurchasePrice.value / localPrice.value) * 100;
+    return Math.round(margin * 100) / 100;
+  }
+  return Math.round((localPrice.value - localPurchasePrice.value) * 100) / 100;
+};
+
+// purchase price change → hold margin, recompute price
+watch(localPurchasePrice, () => {
+  if (isProgrammatic) return;
+  const newPrice = computePriceFromMargin();
+  if (newPrice !== null) {
+    isProgrammatic = true;
+    localPrice.value = newPrice;
+    isProgrammatic = false;
+  }
+}, { flush: "sync" });
+
+// margin change → hold purchase, recompute price
+watch(localMarginValue, () => {
+  if (isProgrammatic) return;
+  const newPrice = computePriceFromMargin();
+  if (newPrice !== null) {
+    isProgrammatic = true;
+    localPrice.value = newPrice;
+    isProgrammatic = false;
+  }
+}, { flush: "sync" });
+
+// selling price change → hold purchase, recompute margin
+watch(localPrice, () => {
+  if (isProgrammatic) return;
+  const newMargin = computeMarginFromPrice();
+  if (newMargin !== null) {
+    isProgrammatic = true;
+    localMarginValue.value = newMargin;
+    isProgrammatic = false;
+  }
+}, { flush: "sync" });
 
 const onPurchasePriceUpdate = (value: number | null) => {
   localPurchasePrice.value = value;
-  emit("update:purchasePrice", value);
 };
 
 const onMarginUpdate = (value: number | null) => {
   localMarginValue.value = value;
-  emit("update:marginValue", value);
+};
+
+const onPriceUpdate = (value: number | null) => {
+  localPrice.value = value ?? 0;
 };
 
 const onMarginTypeChange = () => {
-  emit("update:marginType", localMarginType.value);
-
+  // Convert margin value to keep the selling price constant
   if (canCalculateMargin.value && localPurchasePrice.value !== null && localMarginValue.value !== null) {
     const purchasePrice = localPurchasePrice.value;
+    isProgrammatic = true;
     if (localMarginType.value === "amount") {
       const percent = localMarginValue.value;
       if (percent < 100) {
@@ -87,7 +136,7 @@ const onMarginTypeChange = () => {
       const amount = localMarginValue.value;
       localMarginValue.value = Math.round((amount / (purchasePrice + amount)) * 10000) / 100;
     }
-    emit("update:marginValue", localMarginValue.value);
+    isProgrammatic = false;
   }
 };
 
@@ -104,10 +153,7 @@ onMounted(async () => {
 
     if (localPurchasePrice.value === null && response.data.data.latest_purchase_price !== null) {
       localPurchasePrice.value = response.data.data.latest_purchase_price;
-      emit("update:purchasePrice", localPurchasePrice.value);
     }
-
-    emit("loaded", response.data.data);
   } catch {
     toast.add({
       severity: "error",
@@ -165,11 +211,28 @@ const chartOptions = computed(() => ({
   },
 }));
 
+const breakdownText = computed(() => {
+  if (!canCalculateMargin.value) {
+    return t("Set purchase price to enable auto-calculation");
+  }
+  if (localMarginValue.value === null) {
+    return t("Enter margin or selling price to calculate");
+  }
+  if (localPrice.value <= 0) {
+    return t("Enter selling price or margin to calculate");
+  }
+  const marginDisplay = localMarginType.value === "percent"
+    ? `${localMarginValue.value}%`
+    : formatCurrency(String(localMarginValue.value));
+  return `${formatCurrency(String(localPurchasePrice.value))} + ${marginDisplay} = ${formatCurrency(String(localPrice.value))}`;
+});
+
 defineExpose({
   getValues: () => ({
     purchase_price: localPurchasePrice.value,
     margin_type: localMarginType.value,
     margin_value: localMarginValue.value,
+    price: localPrice.value,
   }),
 });
 </script>
@@ -261,29 +324,26 @@ defineExpose({
       </div>
     </div>
 
-    <!-- Selling Price (Calculated, Read-Only) -->
+    <!-- Selling Price (Editable, auto-linked to margin) -->
     <div class="flex flex-col gap-2">
       <div class="flex items-center gap-2">
-        <label class="font-semibold">{{ t("Selling Price") }}</label>
+        <label for="selling-price" class="font-semibold">{{ t("Selling Price") }}</label>
         <i
           class="fa-solid fa-calculator text-sm text-surface-400"
-          v-tooltip="t('Calculated from purchase price and margin')"
+          v-tooltip="t('Auto-calculated from purchase price and margin. Edit to override.')"
         />
       </div>
-      <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-3 bg-surface-50 dark:bg-surface-800">
-        <div v-if="calculatedPrice !== null" class="text-2xl font-bold text-surface-900 dark:text-surface-0">
-          {{ formatCurrency(String(calculatedPrice)) }}
-        </div>
-        <div v-else class="text-surface-400 italic">
-          {{ t("Enter purchase price and margin to calculate") }}
-        </div>
-        <div v-if="calculatedPrice !== null && localPurchasePrice" class="text-xs text-surface-500 mt-1">
-          {{ formatCurrency(String(localPurchasePrice)) }}
-          +
-          {{ localMarginType === "percent" ? localMarginValue + "%" : formatCurrency(String(localMarginValue)) }}
-          = {{ formatCurrency(String(calculatedPrice)) }}
-        </div>
-      </div>
+      <InputNumber
+        id="selling-price"
+        :model-value="localPrice"
+        mode="currency"
+        :currency="currency"
+        :min="0"
+        :disabled="!canEdit"
+        placeholder="0"
+        @update:model-value="onPriceUpdate"
+      />
+      <small class="text-surface-500">{{ breakdownText }}</small>
     </div>
 
     <!-- Price History Toggle -->
