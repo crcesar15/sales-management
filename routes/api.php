@@ -114,6 +114,8 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
 
     // Routes for Customers
     Route::get('/customers/search', [ApiCustomerController::class, 'search'])->name('customers.search');
+    Route::get('/customers/find-by-tax-id', [ApiCustomerController::class, 'findByTaxId'])->name('customers.find-by-tax-id');
+    Route::post('/customers', [ApiCustomerController::class, 'store'])->name('customers.store');
 
     // Routes for Activity Logs
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs');

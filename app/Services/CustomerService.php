@@ -78,4 +78,14 @@ final class CustomerService
             ->paginate($perPage)
             ->withQueryString();
     }
+
+    /**
+     * Find a customer by exact tax_id match.
+     */
+    public function findByTaxId(string $taxId): ?Customer
+    {
+        return Customer::query()
+            ->where('tax_id', $taxId)
+            ->first();
+    }
 }
