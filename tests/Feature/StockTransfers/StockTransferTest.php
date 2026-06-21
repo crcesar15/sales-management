@@ -11,9 +11,9 @@ use App\Models\StockTransfer;
 use App\Models\StockTransferItem;
 use App\Models\Store;
 use App\Models\User;
-
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
+use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
     $this->admin = User::factory()->create();
@@ -26,6 +26,9 @@ beforeEach(function () {
     ]);
 });
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function createTransfer(Store $from, Store $to, User $requestedBy, array $overrides = []): StockTransfer
 {
     $transfer = StockTransfer::create([
@@ -73,8 +76,7 @@ it('admin can view transfer detail', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('StockTransfers/Show/Index')
-            ->has('transfer')
-        );
+            ->has('transfer'));
 });
 
 it('admin can view create form', function () {
@@ -83,8 +85,7 @@ it('admin can view create form', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('StockTransfers/Create/Index')
-            ->has('stores')
-        );
+            ->has('stores'));
 });
 
 it('salesman without permission is denied transfer list', function () {
@@ -121,14 +122,14 @@ it('admin can create a transfer', function () {
                 ['product_variant_id' => $variant->id, 'quantity_requested' => 5],
             ],
         ])
-        ->assertRedirect(route('stock-transfers.show', StockTransfer::first()->id));
+        ->assertRedirect(route('stock-transfers.show', StockTransfer::first()?->id));
 
     $transfer = StockTransfer::first();
-    expect($transfer->status)->toBe('requested');
-    expect($transfer->from_store_id)->toBe($this->storeA->id);
-    expect($transfer->to_store_id)->toBe($this->storeB->id);
-    expect($transfer->items)->toHaveCount(1);
-    expect($transfer->items->first()->quantity_requested)->toBe(5);
+    expect($transfer?->status)->toBe('requested');
+    expect($transfer?->from_store_id)->toBe($this->storeA->id);
+    expect($transfer?->to_store_id)->toBe($this->storeB->id);
+    expect($transfer?->items)->toHaveCount(1);
+    expect($transfer?->items?->first()?->quantity_requested)->toBe(5);
 });
 
 it('creating a transfer logs activity', function () {
@@ -146,9 +147,13 @@ it('creating a transfer logs activity', function () {
         ]);
 
     $transfer = StockTransfer::first();
-    $activity = $transfer->activities->first(fn ($a) => $a->description === 'created');
+    /** @var Illuminate\Support\Collection<int, Activity> $activities */
+    $activities = $transfer?->activities;
+
+    /** @var Activity|null $activity */
+    $activity = $activities->first(fn ($a) => $a->description === 'created');
     expect($activity)->not->toBeNull();
-    expect($activity->causer->id)->toBe($this->admin->id);
+    expect($activity?->causer_id)->toBe($this->admin->id);
 });
 
 /*
@@ -212,13 +217,13 @@ it('can transition from requested to picked', function () {
         ->patch(route('stock-transfers.update-status', $transfer), [
             'status' => 'picked',
             'items' => [
-                ['id' => $transfer->items->first()->id, 'quantity_sent' => 10],
+                ['id' => $transfer->items->first()?->id, 'quantity_sent' => 10],
             ],
         ])
         ->assertRedirect();
 
-    expect($transfer->fresh()->status)->toBe('picked');
-    expect($transfer->items->first()->fresh()->quantity_sent)->toBe(10);
+    expect($transfer->fresh()?->status)->toBe('picked');
+    expect($transfer->items->first()?->fresh()?->quantity_sent)->toBe(10);
 });
 
 it('can transition from picked to in_transit', function () {
@@ -230,7 +235,7 @@ it('can transition from picked to in_transit', function () {
         ])
         ->assertRedirect();
 
-    expect($transfer->fresh()->status)->toBe('in_transit');
+    expect($transfer->fresh()?->status)->toBe('in_transit');
 });
 
 it('can transition from in_transit to received', function () {
@@ -240,13 +245,13 @@ it('can transition from in_transit to received', function () {
         ->patch(route('stock-transfers.update-status', $transfer), [
             'status' => 'received',
             'items' => [
-                ['id' => $transfer->items->first()->id, 'quantity_received' => 8],
+                ['id' => $transfer->items->first()?->id, 'quantity_received' => 8],
             ],
         ])
         ->assertRedirect();
 
-    expect($transfer->fresh()->status)->toBe('received');
-    expect($transfer->items->first()->fresh()->quantity_received)->toBe(8);
+    expect($transfer->fresh()?->status)->toBe('received');
+    expect($transfer->items->first()?->fresh()?->quantity_received)->toBe(8);
 });
 
 it('rejects invalid status transition', function () {
@@ -268,9 +273,13 @@ it('status transition is logged in activity log', function () {
         ]);
 
     $transfer->refresh();
-    $activity = $transfer->activities->first(fn ($a) => $a->description === 'Status changed to picked');
+
+    /** @var Illuminate\Support\Collection<int, Activity> $activities */
+    $activities = $transfer->activities;
+    /** @var Activity|null $activity */
+    $activity = $activities->first(fn ($a) => $a->description === 'Status changed to picked');
     expect($activity)->not->toBeNull();
-    expect($activity->causer->id)->toBe($this->admin->id);
+    expect($activity?->causer_id)->toBe($this->admin->id);
 });
 
 /*
@@ -318,21 +327,21 @@ it('completing a transfer deducts source batches and creates destination batch',
         ->where('product_variant_id', $this->variant->id)
         ->first();
 
-    expect($sourceBatch->fresh()->remaining_quantity)->toBe(12);
-    expect($sourceBatch->fresh()->transferred_quantity)->toBe(8);
+    expect($sourceBatch?->fresh()?->remaining_quantity)->toBe(12);
+    expect($sourceBatch?->fresh()?->transferred_quantity)->toBe(8);
 
     $destBatch = Batch::where('store_id', $this->storeB->id)
         ->where('product_variant_id', $this->variant->id)
         ->first();
 
     expect($destBatch)->not->toBeNull();
-    expect($destBatch->initial_quantity)->toBe(8);
-    expect($destBatch->remaining_quantity)->toBe(8);
-    expect($destBatch->reception_order_id)->toBeNull();
-    expect($destBatch->status)->toBe('active');
+    expect($destBatch?->initial_quantity)->toBe(8);
+    expect($destBatch?->remaining_quantity)->toBe(8);
+    expect($destBatch?->reception_order_id)->toBeNull();
+    expect($destBatch?->status)->toBe('active');
 
-    expect($transfer->fresh()->status)->toBe('completed');
-    expect($transfer->fresh()->completed_at)->not->toBeNull();
+    expect($transfer->fresh()?->status)->toBe('completed');
+    expect($transfer->fresh()?->completed_at)->not->toBeNull();
 });
 
 /*
@@ -368,9 +377,12 @@ it('cancel is logged in activity log', function () {
         ->patch(route('stock-transfers.cancel', $transfer), ['reason' => 'Wrong store']);
 
     $transfer->refresh();
-    $activity = $transfer->activities->first(fn ($a) => $a->description === 'cancelled');
+    /** @var Illuminate\Support\Collection<int, Activity> $activities */
+    $activities = $transfer->activities;
+    /** @var Activity|null $activity */
+    $activity = $activities->first(fn ($a) => $a->description === 'cancelled');
     expect($activity)->not->toBeNull();
-    expect($activity->properties['reason'])->toBe('Wrong store');
+    expect($activity?->properties['reason'] ?? '')->toBe('Wrong store');
 });
 
 /*

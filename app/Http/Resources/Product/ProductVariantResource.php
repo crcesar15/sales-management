@@ -73,19 +73,20 @@ final class ProductVariantResource extends JsonResource
             'pivot' => $this->when(
                 $this->relationLoaded('vendors') && $this->vendors->isNotEmpty(),
                 function () {
-                    $vendorPivot = $this->vendors->first()->pivot;
-                    $purchaseUnit = $vendorPivot->unit_id
-                        ? $this->activePurchaseUnits?->first(fn ($u) => $u->id === $vendorPivot->unit_id)
+                    $vendor = $this->vendors->first();
+                    $vendorPivot = $vendor?->pivot;
+                    $purchaseUnit = $vendorPivot?->unit_id
+                        ? $this->activePurchaseUnits->first(fn ($u) => $u->id === $vendorPivot->unit_id)
                         : null;
 
                     return [
-                        'price' => (float) $vendorPivot->price,
-                        'payment_terms' => $vendorPivot->payment_terms,
-                        'details' => $vendorPivot->details,
-                        'status' => $vendorPivot->status,
-                        'unit_id' => $vendorPivot->unit_id,
-                        'minimum_order_quantity' => $vendorPivot->minimum_order_quantity,
-                        'lead_time_days' => $vendorPivot->lead_time_days,
+                        'price' => (float) ($vendorPivot->price ?? 0),
+                        'payment_terms' => $vendorPivot?->payment_terms,
+                        'details' => $vendorPivot?->details,
+                        'status' => $vendorPivot?->status,
+                        'unit_id' => $vendorPivot?->unit_id,
+                        'minimum_order_quantity' => $vendorPivot?->minimum_order_quantity,
+                        'lead_time_days' => $vendorPivot?->lead_time_days,
                         'purchase_unit' => $purchaseUnit ? [
                             'id' => $purchaseUnit->id,
                             'name' => $purchaseUnit->name,

@@ -17,7 +17,7 @@ it('casts additional_contacts to array', function () {
     ]);
 
     expect($vendor->additional_contacts)->toBeArray()
-        ->and($vendor->additional_contacts[0]['name'])->toBe('Jane');
+        ->and($vendor->additional_contacts[0]['name'] ?? null)->toBe('Jane');
 });
 
 it('casts meta to array', function () {
@@ -26,7 +26,7 @@ it('casts meta to array', function () {
     ]);
 
     expect($vendor->meta)->toBeArray()
-        ->and($vendor->meta['tax_id'])->toBe('12-3456789');
+        ->and($vendor->meta['tax_id'] ?? null)->toBe('12-3456789');
 });
 
 it('has purchaseOrders relationship', function () {
@@ -42,5 +42,5 @@ it('has variants relationship via catalog pivot', function () {
     $variant = ProductVariant::factory()->create(['product_id' => $product->id]);
     $vendor->variants()->attach($variant->id, ['price' => 50]);
 
-    expect($vendor->fresh()->variants)->toHaveCount(1);
+    expect($vendor->fresh()?->variants)->toHaveCount(1);
 });

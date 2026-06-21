@@ -81,7 +81,7 @@ final class ProductVariantService
      * lookup map, then creates each variant with its specific price/barcode.
      *
      * @param  array<int, array{name: string, values: array<int, string>}>  $optionsData
-     * @param  array<int, array{option_values: array<string, string>, price: float|int, barcode: string|null, pending_media_ids?: array<int, int>}>  $variantsData
+     * @param  array<int, array{option_values: array<string, string>, identifier?: string|null, price?: float|int, barcode?: string|null, pending_media_ids?: array<int, int>}>  $variantsData
      * @param  array<int, int>  $pendingMediaMap  Mapping of pending_media_uploads.id → media.id
      */
     public function createVariantsFromData(Product $product, array $optionsData, array $variantsData, array $pendingMediaMap = []): void

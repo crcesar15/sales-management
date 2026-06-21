@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * @property-read Pivots\CatalogPivot $pivot
+ */
 final class Vendor extends Model
 {
     /** @use HasFactory<VendorFactory> */
@@ -71,7 +74,7 @@ final class Vendor extends Model
     }
 
     /**
-     * @return array{additional_contacts: string, created_at: string, meta: string, updated_at: string}
+     * @return array<string, string>
      */
     protected function casts(): array
     {

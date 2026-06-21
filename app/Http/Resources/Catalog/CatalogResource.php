@@ -30,32 +30,37 @@ final class CatalogResource extends JsonResource
                 'id' => $this->vendor?->id,
                 'fullname' => $this->vendor?->fullname,
             ]),
-            'product_variant' => $this->whenLoaded('productVariant', fn () => [
-                'id' => $this->productVariant->id,
-                'name' => $this->productVariant->name,
-                'identifier' => $this->productVariant->identifier,
-                'product' => $this->productVariant->product ? [
-                    'id' => $this->productVariant->product->id,
-                    'name' => $this->productVariant->product->name,
-                    'brand' => $this->productVariant->product->brand ? [
-                        'id' => $this->productVariant->product->brand->id,
-                        'name' => $this->productVariant->product->brand->name,
+            'product_variant' => $this->whenLoaded('productVariant', function () {
+                $variant = $this->productVariant;
+                $product = $variant?->product;
+
+                return [
+                    'id' => $variant?->id,
+                    'name' => $variant?->name,
+                    'identifier' => $variant?->identifier,
+                    'product' => $product ? [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'brand' => $product->brand ? [
+                            'id' => $product->brand->id,
+                            'name' => $product->brand->name,
+                        ] : null,
+                        'measurement_unit' => $product->measurementUnit ? [
+                            'id' => $product->measurementUnit->id,
+                            'name' => $product->measurementUnit->name,
+                            'abbreviation' => $product->measurementUnit->abbreviation,
+                        ] : null,
                     ] : null,
-                    'measurement_unit' => $this->productVariant->product->measurementUnit ? [
-                        'id' => $this->productVariant->product->measurementUnit->id,
-                        'name' => $this->productVariant->product->measurementUnit->name,
-                        'abbreviation' => $this->productVariant->product->measurementUnit->abbreviation,
-                    ] : null,
-                ] : null,
-                'values' => $this->productVariant->values->map(fn ($value) => [
-                    'option_name' => $value->option?->name,
-                    'value' => $value->value,
-                ])->toArray(),
-                'purchase_units' => $this->productVariant->activePurchaseUnits->map(fn ($unit) => [
-                    'id' => $unit->id,
-                    'name' => $unit->name,
-                ])->toArray(),
-            ]),
+                    'values' => $variant?->values->map(fn ($value) => [
+                        'option_name' => $value->option?->name,
+                        'value' => $value->value,
+                    ])->toArray() ?? [],
+                    'purchase_units' => $variant?->activePurchaseUnits->map(fn ($unit) => [
+                        'id' => $unit->id,
+                        'name' => $unit->name,
+                    ])->toArray() ?? [],
+                ];
+            }),
             'purchase_unit' => $this->whenLoaded('unit', fn () => [
                 'id' => $this->unit?->id,
                 'name' => $this->unit?->name,

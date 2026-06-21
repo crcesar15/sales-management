@@ -16,6 +16,9 @@ beforeEach(function () {
     $this->receptionOrder = ReceptionOrder::factory()->create();
 });
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function makeBatch(ProductVariant $variant, Store $store, ReceptionOrder $receptionOrder, array $overrides = []): Batch
 {
     return Batch::factory()->create([
@@ -81,8 +84,8 @@ it('scopeAvailable returns active batches ordered by created_at', function () {
     $results = Batch::available($this->variant->id, $this->store->id)->get();
 
     expect($results)->toHaveCount(2);
-    expect($results->first()->id)->toBe($old->id);
-    expect($results->last()->id)->toBe($new->id);
+    expect($results->first()?->id)->toBe($old->id);
+    expect($results->last()?->id)->toBe($new->id);
 });
 
 it('scopeExpiringSoon returns batches within threshold', function () {

@@ -55,10 +55,11 @@ final class ProductVariant extends Model
         return $this->belongsTo(Product::class);
     }
 
-    /** @return BelongsToMany<Vendor, $this, Pivot> */
+    /** @return BelongsToMany<Vendor, $this, Pivots\CatalogPivot> */
     public function vendors(): BelongsToMany
     {
         return $this->belongsToMany(Vendor::class, 'catalog', 'product_variant_id', 'vendor_id')
+            ->using(Pivots\CatalogPivot::class)
             ->withPivot('price', 'payment_terms', 'details', 'status', 'unit_id', 'minimum_order_quantity', 'lead_time_days');
     }
 

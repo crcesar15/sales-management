@@ -9,12 +9,14 @@ use App\Models\Category;
 use App\Models\Customer;
 use App\Models\MeasurementUnit;
 use App\Models\Product;
+use App\Models\StockAdjustment;
 use App\Models\User;
 use App\Policies\BrandPolicy;
 use App\Policies\CategoryPolicy;
 use App\Policies\CustomerPolicy;
 use App\Policies\MeasurementUnitPolicy;
 use App\Policies\ProductPolicy;
+use App\Policies\StockAdjustmentPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 

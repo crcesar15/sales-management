@@ -53,7 +53,7 @@ final class StockTransferResource extends JsonResource
                         'product_variant' => [
                             'id' => $item->productVariant?->id,
                             'name' => $item->productVariant?->name,
-                            'sku' => $item->productVariant?->sku,
+                            'barcode' => $item->productVariant?->barcode,
                             'product' => [
                                 'id' => $item->productVariant?->product?->id,
                                 'name' => $item->productVariant?->product?->name,

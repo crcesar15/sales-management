@@ -149,7 +149,7 @@ final class SalesOrderService
      */
     public function update(SalesOrder $order, array $data, User $actor): SalesOrder
     {
-        if ($order->status !== SalesOrderStatus::DRAFT->value) {
+        if ($order->status !== SalesOrderStatus::DRAFT) {
             throw new InvalidArgumentException('Only draft orders can be updated.');
         }
 
@@ -279,7 +279,7 @@ final class SalesOrderService
 
     public function cancel(SalesOrder $order, ?string $reason, User $actor): void
     {
-        if ($order->status === SalesOrderStatus::CANCELLED->value) {
+        if ($order->status === SalesOrderStatus::CANCELLED) {
             throw new InvalidArgumentException('Order is already cancelled.');
         }
 

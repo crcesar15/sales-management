@@ -12,6 +12,7 @@ use App\Models\StockAdjustment;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\StockAdjustmentService;
+use Spatie\Activitylog\Models\Activity;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -26,6 +27,9 @@ beforeEach(function () {
     ]);
 });
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function createActiveBatch(ProductVariant $variant, Store $store, int $remaining = 50, array $overrides = []): Batch
 {
     return Batch::factory()->create([
@@ -38,6 +42,10 @@ function createActiveBatch(ProductVariant $variant, Store $store, int $remaining
     ]);
 }
 
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
 function adjustmentPayload(ProductVariant $variant, Store $store, array $overrides = []): array
 {
     return [
@@ -255,9 +263,9 @@ it('positive adjustment increases batch remaining_quantity', function () {
             'quantity_change' => 10,
             'batch_id' => $batch->id,
         ]))
-        ->assertRedirect(route('stock-adjustments.show', StockAdjustment::first()->id));
+        ->assertRedirect(route('stock-adjustments.show', StockAdjustment::first()?->id));
 
-    expect($batch->fresh()->remaining_quantity)->toBe(60);
+    expect($batch->fresh()?->remaining_quantity)->toBe(60);
 });
 
 it('creates adjustment record with correct attributes', function () {
@@ -273,13 +281,13 @@ it('creates adjustment record with correct attributes', function () {
 
     $adjustment = StockAdjustment::first();
     expect($adjustment)->not->toBeNull();
-    expect($adjustment->product_variant_id)->toBe($this->variant->id);
-    expect($adjustment->store_id)->toBe($this->store->id);
-    expect($adjustment->user_id)->toBe($this->admin->id);
-    expect($adjustment->batch_id)->toBe($batch->id);
-    expect($adjustment->quantity_change)->toBe(10);
-    expect($adjustment->reason->value)->toBe(AdjustmentReason::DAMAGE->value);
-    expect($adjustment->notes)->toBe('Damaged goods found');
+    expect($adjustment?->product_variant_id)->toBe($this->variant->id);
+    expect($adjustment?->store_id)->toBe($this->store->id);
+    expect($adjustment?->user_id)->toBe($this->admin->id);
+    expect($adjustment?->batch_id)->toBe($batch->id);
+    expect($adjustment?->quantity_change)->toBe(10);
+    expect($adjustment?->reason?->value)->toBe(AdjustmentReason::DAMAGE->value);
+    expect($adjustment?->notes)->toBe('Damaged goods found');
 });
 
 it('logs activity when creating adjustment', function () {
@@ -291,12 +299,16 @@ it('logs activity when creating adjustment', function () {
         ]));
 
     $adjustment = StockAdjustment::first();
-    $activity = $adjustment->activities->last(fn ($a) => $a->description === 'created');
+    /** @var Illuminate\Support\Collection<int, Activity> $activities */
+    $activities = $adjustment?->activities;
+
+    /** @var Activity|null $activity */
+    $activity = $activities->last(fn ($a) => $a->description === 'created');
 
     expect($activity)->not->toBeNull();
-    expect($activity->causer->id)->toBe($this->admin->id);
-    expect($activity->properties['delta'])->toBe(10);
-    expect($activity->properties['batch_id'])->toBe($batch->id);
+    expect($activity?->causer_id)->toBe($this->admin->id);
+    expect($activity?->properties['delta'] ?? 0)->toBe(10);
+    expect($activity?->properties['batch_id'] ?? 0)->toBe($batch->id);
 });
 
 /*
@@ -315,8 +327,8 @@ it('negative adjustment decreases batch remaining_quantity', function () {
         ]))
         ->assertRedirect();
 
-    expect($batch->fresh()->remaining_quantity)->toBe(30);
-    expect(StockAdjustment::first()->quantity_change)->toBe(-20);
+    expect($batch->fresh()?->remaining_quantity)->toBe(30);
+    expect(StockAdjustment::first()?->quantity_change)->toBe(-20);
 });
 
 it('closes batch when remaining_quantity reaches zero', function () {
@@ -329,8 +341,8 @@ it('closes batch when remaining_quantity reaches zero', function () {
         ]));
 
     $batch = $batch->fresh();
-    expect($batch->remaining_quantity)->toBe(0);
-    expect($batch->status)->toBe('closed');
+    expect($batch?->remaining_quantity)->toBe(0);
+    expect($batch?->status)->toBe('closed');
 });
 
 it('returns error when negative adjustment exceeds available stock', function () {
@@ -344,7 +356,7 @@ it('returns error when negative adjustment exceeds available stock', function ()
         ->assertSessionHasErrors(['quantity_change']);
 
     expect(StockAdjustment::count())->toBe(0);
-    expect($batch->fresh()->remaining_quantity)->toBe(10);
+    expect($batch->fresh()?->remaining_quantity)->toBe(10);
 });
 
 /*
@@ -363,9 +375,9 @@ it('auto-selects oldest active batch when batch_id is omitted', function () {
         ]));
 
     $adjustment = StockAdjustment::first();
-    expect($adjustment->batch_id)->toBe($olderBatch->id);
-    expect($olderBatch->fresh()->remaining_quantity)->toBe(35);
-    expect($newerBatch->fresh()->remaining_quantity)->toBe(50);
+    expect($adjustment?->batch_id)->toBe($olderBatch->id);
+    expect($olderBatch->fresh()?->remaining_quantity)->toBe(35);
+    expect($newerBatch->fresh()?->remaining_quantity)->toBe(50);
 });
 
 it('returns error when no active batch exists and delta is negative', function () {
@@ -388,11 +400,11 @@ it('creates new batch when no active batch exists and delta is positive', functi
         ->first();
 
     expect($batch)->not->toBeNull();
-    expect($batch->initial_quantity)->toBe(15);
-    expect($batch->remaining_quantity)->toBe(15);
-    expect($batch->reception_order_id)->toBeNull();
-    expect($batch->status)->toBe('active');
-    expect(StockAdjustment::first()->batch_id)->toBe($batch->id);
+    expect($batch?->initial_quantity)->toBe(15);
+    expect($batch?->remaining_quantity)->toBe(15);
+    expect($batch?->reception_order_id)->toBeNull();
+    expect($batch?->status)->toBe('active');
+    expect(StockAdjustment::first()?->batch_id)->toBe($batch?->id);
 });
 
 it('keeps batch active when adjustment is applied', function () {
@@ -405,8 +417,8 @@ it('keeps batch active when adjustment is applied', function () {
         ]));
 
     $batch = $batch->fresh();
-    expect($batch->status)->toBe('active');
-    expect($batch->remaining_quantity)->toBe(45);
+    expect($batch?->status)->toBe('active');
+    expect($batch?->remaining_quantity)->toBe(45);
 });
 
 /*

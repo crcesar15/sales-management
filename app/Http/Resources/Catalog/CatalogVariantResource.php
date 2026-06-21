@@ -23,19 +23,23 @@ final class CatalogVariantResource extends JsonResource
             'stock' => $this->stock,
             'status' => $this->status,
             'name' => $this->name,
-            'product' => $this->whenLoaded('product') ? [
-                'id' => $this->product->id,
-                'name' => $this->product->name,
-                'brand' => $this->product->brand ? [
-                    'id' => $this->product->brand->id,
-                    'name' => $this->product->brand->name,
-                ] : null,
-                'measurement_unit' => $this->product->measurementUnit ? [
-                    'id' => $this->product->measurementUnit->id,
-                    'name' => $this->product->measurementUnit->name,
-                    'abbreviation' => $this->product->measurementUnit->abbreviation,
-                ] : null,
-            ] : null,
+            'product' => $this->whenLoaded('product') ? (function () {
+                $product = $this->product;
+
+                return [
+                    'id' => $product?->id,
+                    'name' => $product?->name,
+                    'brand' => $product?->brand ? [
+                        'id' => $product->brand->id,
+                        'name' => $product->brand->name,
+                    ] : null,
+                    'measurement_unit' => $product?->measurementUnit ? [
+                        'id' => $product->measurementUnit->id,
+                        'name' => $product->measurementUnit->name,
+                        'abbreviation' => $product->measurementUnit->abbreviation,
+                    ] : null,
+                ];
+            })() : null,
             'values' => $this->whenLoaded('values')
                 ? $this->values->map(fn ($v) => [
                     'option_name' => $v->option?->name,

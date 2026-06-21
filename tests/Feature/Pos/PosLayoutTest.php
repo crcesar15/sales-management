@@ -7,6 +7,7 @@ use App\Models\User;
 use Spatie\Permission\Models\Permission;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\get;
 
 it('renders POS page for authorized user', function () {
     $user = User::factory()->create();
@@ -31,6 +32,6 @@ it('forbids POS access without pos.access permission', function () {
 });
 
 it('redirects guest to login', function () {
-    $this->get(route('pos'))
+    get(route('pos'))
         ->assertRedirect(route('login'));
 });

@@ -81,33 +81,35 @@ final class InventoryController extends Controller
 
         $breakdown = $this->stockService->getVariantStockBreakdown($variant);
 
+        $product = $variant->product;
+
         return Inertia::render('Inventory/Show/Index', [
             'measurementUnits' => MeasurementUnit::query()->orderBy('name')->get(['id', 'name', 'abbreviation']),
             'product' => [
-                'id' => $variant->product->id,
-                'name' => $variant->product->name,
-                'description' => $variant->product->description,
-                'status' => $variant->product->status,
-                'brand' => $variant->product->brand ? [
-                    'id' => $variant->product->brand->id,
-                    'name' => $variant->product->brand->name,
+                'id' => $product?->id,
+                'name' => $product?->name,
+                'description' => $product?->description,
+                'status' => $product?->status,
+                'brand' => $product?->brand ? [
+                    'id' => $product->brand->id,
+                    'name' => $product->brand->name,
                 ] : null,
-                'categories' => $variant->product->categories->map(fn ($c) => [
+                'categories' => $product?->categories->map(fn ($c) => [
                     'id' => $c->id,
                     'name' => $c->name,
-                ]),
-                'measurement_unit' => $variant->product->measurementUnit ? [
-                    'id' => $variant->product->measurementUnit->id,
-                    'name' => $variant->product->measurementUnit->name,
-                    'abbreviation' => $variant->product->measurementUnit->abbreviation,
+                ]) ?? [],
+                'measurement_unit' => $product?->measurementUnit ? [
+                    'id' => $product->measurementUnit->id,
+                    'name' => $product->measurementUnit->name,
+                    'abbreviation' => $product->measurementUnit->abbreviation,
                 ] : null,
-                'media' => $variant->product->getMedia('images')->map(fn ($m) => [
+                'media' => $product?->getMedia('images')->map(fn ($m) => [
                     'id' => $m->id,
                     'thumb_url' => $m->getUrl('thumb'),
                     'full_url' => $m->getUrl(),
-                ]),
-                'deleted_at' => $variant->product->deleted_at?->toISOString(),
-                'created_at' => $variant->product->created_at?->toISOString(),
+                ]) ?? [],
+                'deleted_at' => $product?->deleted_at?->toISOString(),
+                'created_at' => $product?->created_at?->toISOString(),
             ],
             'variant' => [
                 'id' => $variant->id,

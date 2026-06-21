@@ -52,7 +52,7 @@ final class UpdateSalesOrderRequest extends FormRequest
                 return;
             }
 
-            if ($salesOrder->status !== SalesOrderStatus::DRAFT->value) {
+            if ($salesOrder->status !== SalesOrderStatus::DRAFT) {
                 $validator->errors()->add(
                     'status',
                     'Only draft orders can be updated.'

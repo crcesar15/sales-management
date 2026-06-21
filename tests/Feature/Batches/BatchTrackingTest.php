@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\ReceptionOrder;
 use App\Models\Store;
 use App\Models\User;
+use Spatie\Activitylog\Models\Activity;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -24,6 +25,9 @@ beforeEach(function () {
     $this->receptionOrder = ReceptionOrder::factory()->create();
 });
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function createBatch(ProductVariant $variant, Store $store, ReceptionOrder $receptionOrder, array $overrides = []): Batch
 {
     return Batch::factory()->create([
@@ -185,7 +189,7 @@ it('admin with stock.adjust can close an active batch', function () {
         ->patch(route('batches.close', $batch))
         ->assertRedirect();
 
-    expect($batch->fresh()->status)->toBe('closed');
+    expect($batch->fresh()?->status)->toBe('closed');
 });
 
 it('admin can close an active batch', function () {
@@ -195,7 +199,7 @@ it('admin can close an active batch', function () {
         ->patch(route('batches.close', $batch))
         ->assertRedirect();
 
-    expect($batch->fresh()->status)->toBe('closed');
+    expect($batch->fresh()?->status)->toBe('closed');
 });
 
 it('closing an already closed batch returns error', function () {
@@ -213,10 +217,13 @@ it('close action is recorded in activity log', function () {
         ->patch(route('batches.close', $batch), ['notes' => 'Audit close']);
 
     $batch->refresh();
-    $closedActivity = $batch->activities->first(fn ($a) => $a->description === 'closed');
+    /** @var Illuminate\Support\Collection<int, Activity> $activities */
+    $activities = $batch->activities;
+    /** @var Activity|null $closedActivity */
+    $closedActivity = $activities->first(fn (Activity $activity): bool => $activity->description === 'closed');
     expect($closedActivity)->not->toBeNull();
-    expect($closedActivity->causer->id)->toBe($this->admin->id);
-    expect($closedActivity->properties['notes'])->toBe('Audit close');
+    expect($closedActivity?->causer_id)->toBe($this->admin->id);
+    expect($closedActivity?->properties['notes'] ?? '')->toBe('Audit close');
 });
 
 it('user without stock.adjust cannot close a batch', function () {

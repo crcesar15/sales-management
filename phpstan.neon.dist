@@ -1,9 +1,13 @@
 includes:
     - ./vendor/larastan/larastan/extension.neon
     - ./vendor/nesbot/carbon/extension.neon
+    - ./vendor/pestphp/pest/extension.neon
 
 parameters:
     level: 8
+    parseModelCastsMethod: true
+    universalObjectCratesClasses:
+        - PHPUnit\Framework\TestCase
     paths:
         - app
         - bootstrap

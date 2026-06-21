@@ -24,6 +24,9 @@ beforeEach(function () {
     $this->store = Store::factory()->create(['status' => 'active']);
 });
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function createVariantWithMinimumStock(int $minimumStock, array $overrides = []): ProductVariant
 {
     return ProductVariant::factory()->create([
@@ -33,6 +36,9 @@ function createVariantWithMinimumStock(int $minimumStock, array $overrides = [])
     ]);
 }
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function createVariantWithoutMinimumStock(array $overrides = []): ProductVariant
 {
     return ProductVariant::factory()->create([
@@ -42,6 +48,9 @@ function createVariantWithoutMinimumStock(array $overrides = []): ProductVariant
     ]);
 }
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function createActiveBatch(ProductVariant $variant, Store $store, int $remaining = 50, array $overrides = []): Batch
 {
     return Batch::factory()->create([

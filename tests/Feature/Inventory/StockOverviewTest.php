@@ -14,7 +14,10 @@ use App\Models\User;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
-function createVariant(?array $overrides = []): ProductVariant
+/**
+ * @param  array<string, mixed>  $overrides
+ */
+function createVariant(array $overrides = []): ProductVariant
 {
     $product = Product::factory()->create();
 

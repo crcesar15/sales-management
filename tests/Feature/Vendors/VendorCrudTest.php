@@ -145,7 +145,7 @@ it('additional_contacts JSON is persisted correctly', function () {
         ->assertRedirect(route('vendors'));
 
     $vendor = Vendor::where('fullname', 'Acme Corp')->first();
-    expect($vendor->additional_contacts)->toBe($contacts);
+    expect($vendor?->additional_contacts)->toBe($contacts);
 });
 
 it('missing fullname returns validation error', function () {

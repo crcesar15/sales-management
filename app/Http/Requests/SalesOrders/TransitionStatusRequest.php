@@ -49,7 +49,7 @@ final class TransitionStatusRequest extends FormRequest
 
             $newStatus = (string) $this->input('status');
             $currentStatus = $salesOrder->status->value;
-            $allowed = self::TRANSITION_MAP[$currentStatus] ?? [];
+            $allowed = self::TRANSITION_MAP[$currentStatus];
 
             if (! in_array($newStatus, $allowed, true)) {
                 $validator->errors()->add(
