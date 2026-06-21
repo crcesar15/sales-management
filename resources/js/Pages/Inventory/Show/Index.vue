@@ -8,6 +8,7 @@ import { computed, ref } from "vue";
 import { route } from "ziggy-js";
 import type { InventoryVariantDetail, InventoryProductDetail } from "@/Types/inventory-variant-types";
 import type { StockStoreBreakdown } from "@/Types/stock-overview-types";
+import type { MeasurementUnitResponse } from "@/Types/measurement-unit-types";
 import { useAuth } from "@/Composables/useAuth";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
@@ -22,6 +23,7 @@ const props = defineProps<{
   product: InventoryProductDetail;
   variant: InventoryVariantDetail;
   stores: StockStoreBreakdown[];
+  measurementUnits: Pick<MeasurementUnitResponse, "id" | "name" | "abbreviation">[];
 }>();
 const { t } = useI18n();
 const toast = useToast();
@@ -146,7 +148,7 @@ const handleSave = () => {
         <Card>
           <template #title>{{ t("Units") }}</template>
           <template #content>
-            <UnitsTab :product="product" :variant="variant" />
+            <UnitsTab :product="product" :variant="variant" :measurement-units="measurementUnits" />
           </template>
         </Card>
 
@@ -185,7 +187,9 @@ const handleSave = () => {
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Purchase Price") }}</span>
-                <span class="font-medium">{{ variant.purchase_price !== null ? formatCurrency(String(variant.purchase_price)) : "—" }}</span>
+                <span class="font-medium">
+                  {{ variant.purchase_price !== null ? formatCurrency(String(variant.purchase_price)) : "—" }}
+                </span>
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Stock") }}</span>
@@ -215,14 +219,7 @@ const handleSave = () => {
               <div v-if="product.categories?.length" class="flex justify-between">
                 <span class="text-surface-500 block mb-2">{{ t("Categories") }}</span>
                 <div class="flex flex-wrap gap-2">
-                  <Badge
-                    v-for="c in product.categories"
-                    :key="c.id"
-                    size="large"
-                    severity="secondary"
-                    class="!capitalize"
-                    rounded
-                  >
+                  <Badge v-for="c in product.categories" :key="c.id" size="large" severity="secondary" class="!capitalize" rounded>
                     <i class="fa fa-tag mr-1.5" />
                     {{ c.name }}
                   </Badge>
@@ -235,16 +232,6 @@ const handleSave = () => {
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Updated") }}</span>
                 <span class="font-medium">{{ formatDatetime(variant.updated_at) }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-surface-500">{{ t("Product") }}</span>
-                <a
-                  class="text-primary hover:underline cursor-pointer font-medium"
-                  @click="router.visit(route('products.edit', { product: props.product.id }))"
-                >
-                  {{ product.name }}
-                  <i class="fa fa-arrow-up-right-from-square text-xs ml-1" />
-                </a>
               </div>
             </div>
           </template>

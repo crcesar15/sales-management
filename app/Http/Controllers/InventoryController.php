@@ -9,6 +9,7 @@ use App\Http\Requests\Inventory\UpdateVariantDetailRequest;
 use App\Http\Resources\Inventory\StockOverviewCollection;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\MeasurementUnit;
 use App\Models\ProductVariant;
 use App\Models\Store;
 use App\Services\ProductVariantService;
@@ -81,6 +82,7 @@ final class InventoryController extends Controller
         $breakdown = $this->stockService->getVariantStockBreakdown($variant);
 
         return Inertia::render('Inventory/Show/Index', [
+            'measurementUnits' => MeasurementUnit::query()->orderBy('name')->get(['id', 'name', 'abbreviation']),
             'product' => [
                 'id' => $variant->product->id,
                 'name' => $variant->product->name,
