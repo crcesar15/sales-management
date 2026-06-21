@@ -143,17 +143,107 @@ Deferred to future milestone:
 
 ## Traceability
 
-Updated during roadmap creation.
+Updated 2026-06-21 during roadmap creation. Every v1 requirement maps to exactly one phase; Phase 7 (Test Coverage) introduces no new requirements but verifies FIX/POS/DASH/REP end-to-end.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | — | Pending |
+| FIX-01 | Phase 1 | Pending |
+| FIX-02 | Phase 1 | Pending |
+| FIX-03 | Phase 1 | Pending |
+| FIX-04 | Phase 1 | Pending |
+| FIX-05 | Phase 1 | Pending |
+| FIX-06 | Phase 1 | Pending |
+| FIX-07 | Phase 1 | Pending |
+| FIX-08 | Phase 1 | Pending |
+| FIX-09 | Phase 1 | Pending |
+| FIX-10 | Phase 1 | Pending |
+| FIX-11 | Phase 1 | Pending |
+| FIX-12 | Phase 1 | Pending |
+| FIX-13 | Phase 1 | Pending |
+| FIX-14 | Phase 1 | Pending |
+| FIX-15 | Phase 1 | Pending |
+| FIX-16 | Phase 1 | Pending |
+| FIX-17 | Phase 1 | Pending |
+| FIX-18 | Phase 1 | Pending |
+| FIX-19 | Phase 1 | Pending |
+| FIX-20 | Phase 1 | Pending |
+| FIX-21 | Phase 1 | Pending |
+| FIX-22 | Phase 1 | Pending |
+| API-01 | Phase 2 | Pending |
+| API-02 | Phase 2 | Pending |
+| API-03 | Phase 2 | Pending |
+| API-04 | Phase 2 | Pending |
+| API-05 | Phase 2 | Pending |
+| API-06 | Phase 2 | Pending |
+| API-07 | Phase 2 | Pending |
+| API-08 | Phase 2 | Pending |
+| CONV-01 | Phase 3 | Pending |
+| CONV-02 | Phase 3 | Pending |
+| CONV-03 | Phase 3 | Pending |
+| CONV-04 | Phase 3 | Pending |
+| CONV-05 | Phase 3 | Pending |
+| CONV-06 | Phase 3 | Pending |
+| CONV-07 | Phase 3 | Pending |
+| POS-01 | Phase 4 | Pending |
+| POS-02 | Phase 4 | Pending |
+| POS-03 | Phase 4 | Pending |
+| POS-04 | Phase 4 | Pending |
+| POS-05 | Phase 4 | Pending |
+| POS-06 | Phase 4 | Pending |
+| POS-07 | Phase 4 | Pending |
+| POS-08 | Phase 4 | Pending |
+| POS-09 | Phase 4 | Pending |
+| POS-10 | Phase 4 | Pending |
+| POS-11 | Phase 4 | Pending |
+| POS-12 | Phase 4 | Pending |
+| POS-13 | Phase 4 | Pending |
+| POS-14 | Phase 4 | Pending |
+| POS-15 | Phase 4 | Pending |
+| POS-16 | Phase 4 | Pending |
+| POS-17 | Phase 4 | Pending |
+| DASH-01 | Phase 5 | Pending |
+| DASH-02 | Phase 5 | Pending |
+| DASH-03 | Phase 5 | Pending |
+| DASH-04 | Phase 5 | Pending |
+| DASH-05 | Phase 5 | Pending |
+| DASH-06 | Phase 5 | Pending |
+| DASH-07 | Phase 5 | Pending |
+| DASH-08 | Phase 5 | Pending |
+| DASH-09 | Phase 5 | Pending |
+| DASH-10 | Phase 5 | Pending |
+| REP-01 | Phase 6 | Pending |
+| REP-02 | Phase 6 | Pending |
+| REP-03 | Phase 6 | Pending |
+| REP-04 | Phase 6 | Pending |
+| REP-05 | Phase 6 | Pending |
+| REP-06 | Phase 6 | Pending |
+| REP-07 | Phase 6 | Pending |
+| REP-08 | Phase 6 | Pending |
+| REP-09 | Phase 6 | Pending |
+| REP-10 | Phase 6 | Pending |
+| REP-11 | Phase 6 | Pending |
+| REP-12 | Phase 6 | Pending |
+| REP-13 | Phase 6 | Pending |
+| REP-14 | Phase 6 | Pending |
+| REP-15 | Phase 6 | Pending |
+| REP-16 | Phase 6 | Pending |
+| REP-17 | Phase 6 | Pending |
+| REP-18 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 73 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 73 ⚠️ (pending)
+- v1 requirements: 82 total (FIX-22, API-08, CONV-07, POS-17, DASH-10, REP-18 — not 73; the prior count undercounted by 9)
+- Mapped to phases: 82 ✓
+- Unmapped: 0 ✓
+
+**Phase mapping summary:**
+- Phase 1 — Critical Fixes & Refactor: 22 (FIX-01..22)
+- Phase 2 — API Layer Removal: 8 (API-01..08)
+- Phase 3 — Convention Alignment: 7 (CONV-01..07)
+- Phase 4 — POS Module: 17 (POS-01..17)
+- Phase 5 — Manager Dashboard: 10 (DASH-01..10)
+- Phase 6 — Reports Module: 18 (REP-01..18)
+- Phase 7 — Test Coverage: 0 new (verifies FIX/POS/DASH/REP end-to-end)
 
 ---
 *Requirements defined: 2026-06-21*
-*Last updated: 2026-06-21 after initial definition*
+*Last updated: 2026-06-21 after roadmap creation (traceability populated)*
