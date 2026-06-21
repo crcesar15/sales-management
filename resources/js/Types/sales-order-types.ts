@@ -60,6 +60,11 @@ export interface SalesOrder {
     id: number | null;
     display_name: string | null;
     email: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    tax_id: string | null;
+    tax_id_name: string | null;
   } | null;
   user?: Pick<UserResponse, "id" | "full_name">;
   store?: Pick<StoreResponse, "id" | "name" | "code">;
@@ -187,5 +192,6 @@ export interface CustomerOption {
   last_name: string;
   email: string | null;
   phone: string | null;
-  tax_id: string | null;
+  tax_id: string;
+  tax_id_name: string;
 }

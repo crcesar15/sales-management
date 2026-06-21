@@ -10,7 +10,6 @@ use App\Http\Requests\SalesOrders\TransitionStatusRequest;
 use App\Http\Requests\SalesOrders\UpdateSalesOrderRequest;
 use App\Http\Resources\SalesOrder\SalesOrderCollection;
 use App\Http\Resources\SalesOrder\SalesOrderResource;
-use App\Models\Customer;
 use App\Models\SalesOrder;
 use App\Services\SalesOrderService;
 use Illuminate\Http\RedirectResponse;
@@ -59,12 +58,7 @@ final class SalesOrderController extends Controller
     {
         $this->authorize(PermissionsEnum::SALES_MANAGE);
 
-        return Inertia::render('SalesOrders/Create/Index', [
-            'customers' => Customer::query()
-                ->orderBy('first_name')
-                ->where('status', 'active')
-                ->get(['id', 'first_name', 'last_name', 'email', 'phone', 'tax_id']),
-        ]);
+        return Inertia::render('SalesOrders/Create/Index');
     }
 
     public function store(StoreSalesOrderRequest $request): RedirectResponse
@@ -119,10 +113,6 @@ final class SalesOrderController extends Controller
 
         return Inertia::render('SalesOrders/Edit/Index', [
             'order' => (new SalesOrderResource($salesOrder))->resolve(),
-            'customers' => Customer::query()
-                ->orderBy('first_name')
-                ->where('status', 'active')
-                ->get(['id', 'first_name', 'last_name', 'email', 'phone', 'tax_id']),
         ]);
     }
 

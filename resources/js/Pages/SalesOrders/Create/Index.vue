@@ -13,13 +13,9 @@ import SOFinancialSummary from "../Components/SOFinancialSummary.vue";
 import SOPaymentsPanel from "../Components/SOPaymentsPanel.vue";
 import CustomerSelect from "../Components/CustomerSelect.vue";
 import type { LineItem } from "../Components/SOLineItemsTable.vue";
-import type { SalesOrderPaymentForm, CustomerOption } from "@/Types/sales-order-types";
+import type { SalesOrderPaymentForm } from "@/Types/sales-order-types";
 
 defineOptions({ layout: AppLayout });
-
-defineProps<{
-  customers: CustomerOption[];
-}>();
 
 const toast = useToast();
 const { t } = useI18n();
@@ -129,7 +125,7 @@ function goBack() {
         <Card class="mb-4">
           <template #title>{{ t("Order Details") }}</template>
           <template #content>
-            <CustomerSelect v-model="selectedCustomerId" :customers="customers" />
+            <CustomerSelect v-model="selectedCustomerId" />
           </template>
         </Card>
 

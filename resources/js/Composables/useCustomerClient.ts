@@ -12,6 +12,12 @@ export function useCustomerClient() {
     });
   };
 
+  const findByTaxIdApi = async <T = unknown>(taxId: string): Promise<AxiosResponse<T>> => {
+    return await apiClient.get(route("api.v1.customers.find-by-tax-id"), {
+      params: { tax_id: taxId },
+    });
+  };
+
   const fetchCustomersApi = async <T = unknown>(queryParameters?: string): Promise<AxiosResponse<T>> => {
     let url: string = route("api.v1.customers");
     if (queryParameters) {
@@ -35,6 +41,7 @@ export function useCustomerClient() {
   return {
     loading,
     searchCustomersApi,
+    findByTaxIdApi,
     fetchCustomersApi,
     storeCustomerApi,
     updateCustomerApi,
