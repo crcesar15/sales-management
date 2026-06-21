@@ -30,8 +30,8 @@ const schema = toTypedSchema(
     last_name: string().nullable().max(100),
     email: string().nullable().email().max(255),
     phone: string().nullable().max(50),
-    tax_id: string().nullable().max(50),
-    tax_id_name: string().nullable().max(100),
+    tax_id: string().required().max(50),
+    tax_id_name: string().required().max(100),
     status: string().required().oneOf(["active", "inactive"]),
   }),
 );
@@ -74,8 +74,8 @@ const submit = handleSubmit((formValues) => {
     last_name: formValues.last_name || null,
     email: formValues.email || null,
     phone: formValues.phone || null,
-    tax_id: formValues.tax_id || null,
-    tax_id_name: formValues.tax_id_name || null,
+    tax_id: formValues.tax_id,
+    tax_id_name: formValues.tax_id_name,
   };
 
   router.put(route("customers.update", props.customer.id), payload, {

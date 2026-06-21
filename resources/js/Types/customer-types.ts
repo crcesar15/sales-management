@@ -4,8 +4,8 @@ export interface Customer {
   last_name: string | null;
   email: string | null;
   phone: string | null;
-  tax_id: string | null;
-  tax_id_name: string | null;
+  tax_id: string;
+  tax_id_name: string;
   status: "active" | "inactive";
   created_at: string | null;
   updated_at: string | null;
@@ -18,8 +18,8 @@ export interface CustomerResponse {
   last_name: string | null;
   email: string | null;
   phone: string | null;
-  tax_id: string | null;
-  tax_id_name: string | null;
+  tax_id: string;
+  tax_id_name: string;
   status: "active" | "inactive";
   sales_orders_count: number;
   created_at: string | null;
@@ -31,7 +31,7 @@ export interface CustomerPayload {
   last_name?: string | null;
   email?: string | null;
   phone?: string | null;
-  tax_id?: string | null;
-  tax_id_name?: string | null;
+  tax_id: string;
+  tax_id_name: string;
   status: string;
 }

@@ -26,8 +26,8 @@ final class UpdateCustomerRequest extends FormRequest
             'last_name' => ['nullable', 'string', 'max:100'],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('customers', 'email')->ignore($this->route('customer'))],
             'phone' => ['nullable', 'string', 'max:50'],
-            'tax_id' => ['nullable', 'string', 'max:50'],
-            'tax_id_name' => ['nullable', 'string', 'max:100'],
+            'tax_id' => ['required', 'string', 'max:50', Rule::unique('customers', 'tax_id')->ignore($this->route('customer'))],
+            'tax_id_name' => ['required', 'string', 'max:100'],
             'status' => ['required', 'string', 'in:active,inactive'],
         ];
     }

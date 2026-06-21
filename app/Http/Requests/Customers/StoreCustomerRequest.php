@@ -7,6 +7,7 @@ namespace App\Http\Requests\Customers;
 use App\Enums\PermissionsEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class StoreCustomerRequest extends FormRequest
 {
@@ -25,8 +26,8 @@ final class StoreCustomerRequest extends FormRequest
             'last_name' => ['nullable', 'string', 'max:100'],
             'email' => ['nullable', 'email', 'max:255', 'unique:customers,email'],
             'phone' => ['nullable', 'string', 'max:50'],
-            'tax_id' => ['nullable', 'string', 'max:50'],
-            'tax_id_name' => ['nullable', 'string', 'max:100'],
+            'tax_id' => ['required', 'string', 'max:50', Rule::unique('customers', 'tax_id')],
+            'tax_id_name' => ['required', 'string', 'max:100'],
             'status' => ['required', 'string', 'in:active,inactive'],
         ];
     }
