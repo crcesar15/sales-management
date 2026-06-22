@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
 use Illuminate\Http\Request;
@@ -13,6 +14,8 @@ final class PermissionsController extends Controller
 {
     public function index(Request $request): ApiCollection
     {
+        $this->authorize(PermissionsEnum::ROLES_VIEW->value, auth()->user());
+
         $query = Permission::query();
 
         $filter = $request->string('filter', '')->value();

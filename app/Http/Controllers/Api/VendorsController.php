@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Vendors\StoreVendorRequest;
+use App\Http\Requests\Api\Vendors\UpdateVendorRequest;
 use App\Http\Resources\ApiCollection;
 use App\Http\Resources\Vendor\VendorCatalogCollection;
 use App\Models\ProductVariant;
@@ -57,24 +59,20 @@ final class VendorsController extends Controller
         return response()->json($vendor, 200);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreVendorRequest $request): JsonResponse
     {
-        $this->authorize(PermissionsEnum::VENDORS_CREATE, auth()->user());
+        $this->authorize(PermissionsEnum::VENDORS_CREATE->value, auth()->user());
 
-        // TODO Develop fromRequest
-        // @phpstan-ignore-next-line
-        $vendor = Vendor::query()->create($request->all());
+        $vendor = Vendor::query()->create($request->validated());
 
         return response()->json($vendor, 201);
     }
 
-    public function update(Request $request, Vendor $vendor): JsonResponse
+    public function update(UpdateVendorRequest $request, Vendor $vendor): JsonResponse
     {
-        $this->authorize(PermissionsEnum::VENDORS_EDIT, auth()->user());
+        $this->authorize(PermissionsEnum::VENDORS_EDIT->value, auth()->user());
 
-        // TODO Develop formRequest
-        // @phpstan-ignore-next-line
-        $vendor->update($request->all());
+        $vendor->update($request->validated());
 
         return response()->json($vendor, 200);
     }

@@ -43,7 +43,7 @@ final class UpdatePurchaseOrderRequest extends FormRequest
     {
         $validator->after(function ($validator): void {
             /** @var \App\Models\PurchaseOrder $po */
-            $po = $this->route('purchaseOrder');
+            $po = $this->route('order');
 
             if ($po->status !== 'draft') {
                 $validator->errors()->add('status', 'Only draft purchase orders can be updated.');

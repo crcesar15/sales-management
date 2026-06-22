@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
 use App\Models\Setting;
@@ -15,6 +16,8 @@ final class SettingsController extends Controller
 {
     public function index(Request $request): ApiCollection
     {
+        $this->authorize(PermissionsEnum::SETTINGS_MANAGE->value, auth()->user());
+
         $query = Setting::query();
 
         $response = $query->orderBy(
@@ -27,6 +30,8 @@ final class SettingsController extends Controller
 
     public function update(Request $request): JsonResponse
     {
+        $this->authorize(PermissionsEnum::SETTINGS_MANAGE->value, auth()->user());
+
         /** @var array<array<string>> $settings */
         $settings = $request->array('settings');
 

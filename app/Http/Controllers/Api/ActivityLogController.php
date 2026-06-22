@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ActivityLogs\ListActivityLogRequest;
 use App\Http\Resources\ActivityLog\ActivityLogResource;
@@ -14,6 +15,8 @@ final class ActivityLogController extends Controller
 {
     public function index(ListActivityLogRequest $request): AnonymousResourceCollection
     {
+        $this->authorize(PermissionsEnum::ACTIVITY_LOGS_VIEW->value, auth()->user());
+
         $request->validated();
 
         $query = Activity::query()->with('causer');

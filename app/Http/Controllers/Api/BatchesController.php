@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use Illuminate\Http\JsonResponse;
@@ -13,6 +14,8 @@ final class BatchesController extends Controller
 {
     public function available(Request $request): JsonResponse
     {
+        $this->authorize(PermissionsEnum::BATCHES_VIEW->value, auth()->user());
+
         $request->validate([
             'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'store_id' => ['required', 'integer', 'exists:stores,id'],
