@@ -18,6 +18,12 @@ use InvalidArgumentException;
 
 final class CashRegisterShiftService
 {
+    private const TRANSITION_MAP = [
+        'open' => ['closed', 'forced_close'],
+        'closed' => [],
+        'forced_close' => [],
+    ];
+
     /**
      * Paginated, filtered list of shifts.
      *
@@ -64,11 +70,11 @@ final class CashRegisterShiftService
         float $openingBalance,
         ?string $notes = null,
     ): CashRegisterShift {
-        if ($register->status->value !== CashRegisterStatus::ACTIVE->value) {
+        if ($register->status !== CashRegisterStatus::ACTIVE) {
             throw new InvalidArgumentException('Cannot open a shift on an inactive register.');
         }
 
-        if (CashRegisterShift::where('cash_register_id', $register->id)->where('status', CashRegisterShiftStatus::OPEN->value)->exists()) {
+        if (CashRegisterShift::where('cash_register_id', $register->id)->where('status', CashRegisterShiftStatus::OPEN)->exists()) {
             throw new InvalidArgumentException('A shift is already open on this register.');
         }
 
@@ -76,7 +82,7 @@ final class CashRegisterShiftService
             $shift = CashRegisterShift::create([
                 'cash_register_id' => $register->id,
                 'user_id' => $cashier->id,
-                'status' => CashRegisterShiftStatus::OPEN->value,
+                'status' => CashRegisterShiftStatus::OPEN,
                 'opening_balance' => $openingBalance,
                 'opened_at' => now(),
                 'notes' => $notes,
@@ -99,16 +105,14 @@ final class CashRegisterShiftService
      */
     public function closeShift(CashRegisterShift $shift, float $closingBalance, ?string $notes = null): CashRegisterShift
     {
-        if ($shift->status->value !== CashRegisterShiftStatus::OPEN->value) {
-            throw new InvalidArgumentException('Only an open shift can be closed.');
-        }
+        $this->validateTransition($shift->status->value, CashRegisterShiftStatus::CLOSED->value);
 
         return DB::transaction(function () use ($shift, $closingBalance, $notes): CashRegisterShift {
             $expectedClosing = $this->calculateExpectedClosing($shift);
             $difference = round($closingBalance - $expectedClosing, 2);
 
             $shift->update([
-                'status' => CashRegisterShiftStatus::CLOSED->value,
+                'status' => CashRegisterShiftStatus::CLOSED,
                 'closing_balance' => $closingBalance,
                 'expected_closing' => $expectedClosing,
                 'difference' => $difference,
@@ -133,16 +137,14 @@ final class CashRegisterShiftService
      */
     public function forceCloseShift(CashRegisterShift $shift, User $manager, float $closingBalance, ?string $notes = null): CashRegisterShift
     {
-        if ($shift->status->value !== CashRegisterShiftStatus::OPEN->value) {
-            throw new InvalidArgumentException('Only an open shift can be force-closed.');
-        }
+        $this->validateTransition($shift->status->value, CashRegisterShiftStatus::FORCED_CLOSE->value);
 
         return DB::transaction(function () use ($shift, $manager, $closingBalance, $notes): CashRegisterShift {
             $expectedClosing = $this->calculateExpectedClosing($shift);
             $difference = round($closingBalance - $expectedClosing, 2);
 
             $shift->update([
-                'status' => CashRegisterShiftStatus::FORCED_CLOSE->value,
+                'status' => CashRegisterShiftStatus::FORCED_CLOSE,
                 'closing_balance' => $closingBalance,
                 'expected_closing' => $expectedClosing,
                 'difference' => $difference,
@@ -167,9 +169,7 @@ final class CashRegisterShiftService
      */
     public function addMovement(CashRegisterShift $shift, string $type, float $amount, string $reason, User $user): CashRegisterMovement
     {
-        if ($shift->status->value !== CashRegisterShiftStatus::OPEN->value) {
-            throw new InvalidArgumentException('Movements can only be added to an open shift.');
-        }
+        $this->validateTransition($shift->status->value, CashRegisterShiftStatus::OPEN->value);
 
         return DB::transaction(function () use ($shift, $type, $amount, $reason, $user): CashRegisterMovement {
             $movement = CashRegisterMovement::create([
@@ -188,6 +188,15 @@ final class CashRegisterShiftService
 
             return $movement->load('user');
         });
+    }
+
+    private function validateTransition(string $from, string $to): void
+    {
+        $allowed = self::TRANSITION_MAP[$from] ?? [];
+
+        if (! in_array($to, $allowed, true)) {
+            throw new InvalidArgumentException("Cannot transition shift from {$from} to {$to}.");
+        }
     }
 
     /**
