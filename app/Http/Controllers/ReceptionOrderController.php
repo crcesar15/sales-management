@@ -75,17 +75,11 @@ final class ReceptionOrderController extends Controller
 
         $purchaseOrders = PurchaseOrder::query()
             ->whereIn('status', ['sent', 'partially_received'])
-            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit', 'lineItems.catalog.unit', 'receptionOrders.lineItems' => fn ($q) => $q->whereHas('receptionOrder', fn ($q) => $q->where('status', '!=', 'cancelled'))])
+            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit', 'lineItems.catalog.unit'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function (PurchaseOrder $po) {
-                $claimedQuantities = [];
-                foreach ($po->receptionOrders as $ro) {
-                    foreach ($ro->lineItems as $item) {
-                        $poItemId = (int) $item->purchase_order_item_id;
-                        $claimedQuantities[$poItemId] = bcadd((string) ($claimedQuantities[$poItemId] ?? '0'), (string) $item->quantity, 4);
-                    }
-                }
+                $claimedQuantities = $this->receptionService->getClaimedQuantities($po);
 
                 $po->lineItems->each(function (PurchaseOrderProduct $item) use ($claimedQuantities) {
                     $ordered = (float) $item->quantity;
@@ -158,20 +152,13 @@ final class ReceptionOrderController extends Controller
         $receptionOrder->load([
             'purchaseOrder.lineItems.productVariant.product',
             'purchaseOrder.lineItems.catalog.unit',
-            'purchaseOrder.receptionOrders.lineItems' => fn ($q) => $q->whereHas('receptionOrder', fn ($q) => $q->where('status', '!=', 'cancelled')->where('id', '!=', $receptionOrder->id)),
             'lineItems.productVariant.product.measurementUnit',
         ]);
 
         /** @var PurchaseOrder $purchaseOrder */
         $purchaseOrder = $receptionOrder->purchaseOrder;
 
-        $claimedQuantities = [];
-        foreach ($purchaseOrder->receptionOrders as $ro) {
-            foreach ($ro->lineItems as $item) {
-                $poItemId = (int) $item->purchase_order_item_id;
-                $claimedQuantities[$poItemId] = bcadd((string) ($claimedQuantities[$poItemId] ?? '0'), (string) $item->quantity, 4);
-            }
-        }
+        $claimedQuantities = $this->receptionService->getClaimedQuantities($purchaseOrder, $receptionOrder->id);
 
         $purchaseOrder->lineItems->each(function (PurchaseOrderProduct $item) use ($claimedQuantities) {
             $ordered = (float) $item->quantity;

@@ -318,9 +318,11 @@ final class ReceptionOrderService
     /**
      * Get the total claimed quantities per PO line item for a PO, from all non-cancelled reception orders.
      *
+     * Public so ReceptionOrderController can reuse it in create()/edit() instead of duplicating the bcadd loop.
+     *
      * @return array<int, string> keyed by purchase_order_item_id
      */
-    private function getClaimedQuantities(PurchaseOrder $po, ?int $excludeReceptionOrderId = null): array
+    public function getClaimedQuantities(PurchaseOrder $po, ?int $excludeReceptionOrderId = null): array
     {
         $receptionOrders = $po->receptionOrders()
             ->where('status', '!=', 'cancelled')
