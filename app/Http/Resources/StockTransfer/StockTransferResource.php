@@ -23,9 +23,10 @@ final class StockTransferResource extends JsonResource
             'id' => $transfer->id,
             'status' => $transfer->status,
             'notes' => $transfer->notes,
-            'cancelled_at' => $transfer->cancelled_at?->toISOString(),
-            'completed_at' => $transfer->completed_at?->toISOString(),
+            'cancelled_at' => $transfer->getAttribute('cancelled_at')?->toISOString(),
+            'completed_at' => $transfer->getAttribute('completed_at')?->toISOString(),
             'created_at' => $transfer->getAttribute('created_at')?->toISOString(),
+            'updated_at' => $transfer->getAttribute('updated_at')?->toISOString(),
             'from_store_id' => $transfer->from_store_id,
             'to_store_id' => $transfer->to_store_id,
             'from_store' => $this->whenLoaded('fromStore', fn () => [
@@ -53,6 +54,7 @@ final class StockTransferResource extends JsonResource
                         'product_variant' => [
                             'id' => $item->productVariant?->id,
                             'name' => $item->productVariant?->name,
+                            'identifier' => $item->productVariant?->identifier,
                             'barcode' => $item->productVariant?->barcode,
                             'product' => [
                                 'id' => $item->productVariant?->product?->id,

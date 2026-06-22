@@ -34,9 +34,7 @@ final class CashRegisterShiftResource extends JsonResource
             'notes' => $this->notes ?? null,
             'cash_register' => $this->whenLoaded('register', fn ($register) => (new CashRegisterResource($register))->resolve()),
             'user' => $this->whenLoaded('cashier', fn ($cashier) => (new UserResource($cashier))->resolve()),
-            'movements' => $this->relationLoaded('movements')
-                ? CashRegisterMovementResource::collection($this->movements)->resolve()
-                : [],
+            'movements' => $this->whenLoaded('movements', fn () => CashRegisterMovementResource::collection($this->movements)->resolve(), []),
             'created_at' => ! empty($this->created_at) ? $this->created_at->toISOString() : null,
             'updated_at' => ! empty($this->updated_at) ? $this->updated_at->toISOString() : null,
         ];
