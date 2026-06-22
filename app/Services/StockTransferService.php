@@ -152,9 +152,15 @@ final class StockTransferService
                 ]);
             }
 
-            $variantIds = $transfer->items->pluck('product_variant_id')->unique();
+            $variantIds = $transfer->items->pluck('product_variant_id')->unique()->map(fn ($id) => (int) $id);
             foreach ($variantIds as $variantId) {
-                ProductVariant::where('id', $variantId)->firstOrFail()->recalculateStock();
+                $variant = ProductVariant::find($variantId);
+
+                if ($variant === null) {
+                    throw new InvalidArgumentException("Product variant ID {$variantId} not found.");
+                }
+
+                $variant->recalculateStock();
             }
 
             $transfer->update([

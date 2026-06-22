@@ -24,7 +24,14 @@ final class ReceptionOrderService
     public function list(array $filters, int $perPage): LengthAwarePaginator
     {
         return ReceptionOrder::query()
-            ->with(['purchaseOrder', 'vendor', 'store', 'user', 'lineItems.productVariant.product'])
+            ->with([
+                'purchaseOrder',
+                'vendor',
+                'store',
+                'user',
+                'lineItems.productVariant.product.measurementUnit',
+                'lineItems.catalogEntry.unit',
+            ])
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
             ->when($filters['purchase_order_id'] ?? null, fn ($q, $poId) => $q->where('purchase_order_id', $poId))
             ->when($filters['vendor_id'] ?? null, fn ($q, $vendorId) => $q->where('vendor_id', $vendorId))
@@ -199,9 +206,15 @@ final class ReceptionOrderService
                 $stockChanges[$lineItem->product_variant_id] = $baseQuantity;
             }
 
-            $variantIds = $receptionOrder->lineItems->pluck('product_variant_id')->unique();
+            $variantIds = $receptionOrder->lineItems->pluck('product_variant_id')->unique()->map(fn ($id) => (int) $id);
             foreach ($variantIds as $variantId) {
-                ProductVariant::where('id', $variantId)->firstOrFail()->recalculateStock();
+                $variant = ProductVariant::find($variantId);
+
+                if ($variant === null) {
+                    throw new InvalidArgumentException("Product variant ID {$variantId} not found.");
+                }
+
+                $variant->recalculateStock();
             }
 
             $receptionOrder->update(['status' => 'completed']);

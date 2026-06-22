@@ -36,7 +36,7 @@ final class SalesOrderService
     public function list(array $filters, User $actor, int $perPage = 20): LengthAwarePaginator
     {
         $query = SalesOrder::query()
-            ->with(['customer', 'user', 'store', 'cashRegisterShift'])
+            ->with(['customer', 'user', 'store', 'cashRegisterShift', 'items', 'items.productVariant.product'])
             ->where('store_id', $actor->stores()->first()->id ?? 0);
 
         if (! $actor->can('sales.view_all')) {

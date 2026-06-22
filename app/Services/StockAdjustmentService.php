@@ -44,7 +44,7 @@ final class StockAdjustmentService
     public function apply(array $data, User $actor): StockAdjustment
     {
         return DB::transaction(function () use ($data, $actor): StockAdjustment {
-            $variantId = $data['product_variant_id'];
+            $variantId = (int) $data['product_variant_id'];
             $storeId = $data['store_id'];
             $delta = $data['quantity_change'];
 
@@ -83,7 +83,13 @@ final class StockAdjustmentService
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            ProductVariant::where('id', $variantId)->firstOrFail()->recalculateStock();
+            $variant = ProductVariant::find($variantId);
+
+            if ($variant === null) {
+                throw new InvalidArgumentException("Product variant ID {$variantId} not found.");
+            }
+
+            $variant->recalculateStock();
 
             activity()
                 ->causedBy($actor)
