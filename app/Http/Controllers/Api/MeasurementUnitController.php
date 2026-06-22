@@ -19,8 +19,6 @@ final class MeasurementUnitController extends Controller
 {
     public function index(ListMeasurementUnitRequest $request): ApiCollection
     {
-        $request->validated();
-
         $query = MeasurementUnit::query();
 
         if ($request->has('filter')) {

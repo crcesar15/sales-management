@@ -18,8 +18,6 @@ final class RoleController extends Controller
 {
     public function index(ListRoleRequest $request): ApiCollection
     {
-        $request->validated();
-
         $query = Role::query();
 
         if ($request->has('filter')) {
@@ -51,8 +49,6 @@ final class RoleController extends Controller
 
     public function store(StoreRoleRequest $request): JsonResponse
     {
-        $request->validated();
-
         $role = DB::transaction(function () use ($request): Role {
             $role = new Role([
                 'name' => $request->input('name'),
@@ -74,8 +70,6 @@ final class RoleController extends Controller
 
     public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
-        $request->validated();
-
         $updatedRole = DB::transaction(function () use ($request, $role): Role {
             $role->update([
                 'name' => $request->input('name'),
