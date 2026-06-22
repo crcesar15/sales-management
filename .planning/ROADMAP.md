@@ -32,7 +32,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Selling a `ProductVariant` to zero via POS-style deduction **and** transferring it to zero via `StockTransfer` both leave the batch `status='closed'`, and both throw `InvalidArgumentException` (not `RuntimeException`) on insufficient stock
   4. `CashRegisterShiftService::open()` / `close()` / `forceClose()` / `addMovement()` route every status change through a `TRANSITION_MAP` + `validateTransition()`, and a Pest test asserts each valid transition passes and each invalid one throws `InvalidArgumentException`
   5. `CashRegisterShiftResource` returns non-empty `movements` for a shift that has movements, `StockTransferResource` serializes all four date fields, and a product search via `useApi()` returns 200 (not 419) — the CSRF header bug is gone
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 01-01-PLAN.md — Repair the financial core (FIX-01..FIX-22) across six waves: FIFO consolidation, shift state machine, settings cache, API auth/mass-assignment, frontend tax parity, and Pest verification
 
 ### Phase 2: API Layer Removal
 **Goal**: The API surface is trimmed to only the ~10 endpoints actually called by Inertia composables, eliminating the mass-assignment and missing-`authorize()` bugs by deletion rather than patching, so no new feature is built on dead code.
