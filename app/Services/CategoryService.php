@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Category;
-use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 final class CategoryService
 {
@@ -59,7 +59,7 @@ final class CategoryService
     public function delete(Category $category): void
     {
         if ($category->hasActiveProducts()) {
-            throw new Exception('Cannot delete category: it is assigned to one or more active products.');
+            throw new InvalidArgumentException('Cannot delete category: it is assigned to one or more active products.');
         }
 
         DB::transaction(fn () => $category->delete());

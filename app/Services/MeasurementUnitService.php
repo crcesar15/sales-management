@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\MeasurementUnit;
-use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 final class MeasurementUnitService
 {
@@ -60,7 +60,7 @@ final class MeasurementUnitService
     public function delete(MeasurementUnit $measurementUnit): void
     {
         if ($measurementUnit->hasActiveProducts()) {
-            throw new Exception('Cannot delete measurement unit: it is assigned to one or more active products.');
+            throw new InvalidArgumentException('Cannot delete measurement unit: it is assigned to one or more active products.');
         }
 
         DB::transaction(fn () => $measurementUnit->delete());

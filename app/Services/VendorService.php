@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Vendor;
-use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 final class VendorService
 {
@@ -61,11 +61,11 @@ final class VendorService
     public function delete(Vendor $vendor): void
     {
         if ($vendor->hasPurchaseOrders()) {
-            throw new Exception('Cannot delete vendor: it has associated purchase orders.');
+            throw new InvalidArgumentException('Cannot delete vendor: it has associated purchase orders.');
         }
 
         if ($vendor->hasCatalogEntries()) {
-            throw new Exception('Cannot delete vendor: it has associated catalog entries.');
+            throw new InvalidArgumentException('Cannot delete vendor: it has associated catalog entries.');
         }
 
         DB::transaction(fn () => $vendor->delete());

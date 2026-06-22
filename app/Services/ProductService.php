@@ -6,9 +6,9 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
-use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 final class ProductService
 {
@@ -159,7 +159,7 @@ final class ProductService
     public function delete(Product $product): void
     {
         if ($product->hasActiveVariants()) {
-            throw new Exception('Cannot delete product: it has active variants.');
+            throw new InvalidArgumentException('Cannot delete product: it has active variants.');
         }
 
         DB::transaction(fn () => $product->delete());

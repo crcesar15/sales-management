@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Brand;
-use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 final class BrandService
 {
@@ -59,7 +59,7 @@ final class BrandService
     public function delete(Brand $brand): void
     {
         if ($brand->hasActiveProducts()) {
-            throw new Exception('Cannot delete brand: it is assigned to one or more active products.');
+            throw new InvalidArgumentException('Cannot delete brand: it is assigned to one or more active products.');
         }
 
         DB::transaction(fn () => $brand->delete());

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Customer;
-use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 final class CustomerService
 {
@@ -58,7 +58,7 @@ final class CustomerService
     public function delete(Customer $customer): void
     {
         if ($customer->hasSalesOrders()) {
-            throw new Exception('Cannot delete customer: it has associated sales orders.');
+            throw new InvalidArgumentException('Cannot delete customer: it has associated sales orders.');
         }
 
         DB::transaction(fn () => $customer->delete());
