@@ -231,11 +231,11 @@ const onSubmit = handleSubmit(async (values) => {
   };
 
   if (isEditing.value) {
-    router.put(route("variant.units.update", [props.product.id, props.variant.id, editing.value!.id]), payload, { onSuccess, onError });
+    router.put(route("variant.units.update", [props.product.id, props.variant.id, editing.value!.id]), payload as any, { onSuccess, onError });
     return;
   }
 
-  router.post(route("variant.units.store", [props.product.id, props.variant.id]), payload, {
+  router.post(route("variant.units.store", [props.product.id, props.variant.id]), payload as any, {
     onSuccess,
     onError,
   });

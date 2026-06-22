@@ -150,7 +150,7 @@ const onSubmit = handleSubmit((values) => {
     payload.identifier = values.identifier || null;
   }
 
-  router.put(route("products.update", props.product.id), payload, {
+  router.put(route("products.update", props.product.id), payload as any, {
     onSuccess: () => {
       toast.add({
         severity: "success",

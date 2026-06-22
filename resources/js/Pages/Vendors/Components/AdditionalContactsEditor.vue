@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, Button, InputText } from "primevue";
+import { Button, InputText } from "primevue";
 import { useI18n } from "vue-i18n";
 import type { AdditionalContact } from "@/Types/vendor-types";
 

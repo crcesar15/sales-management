@@ -21,8 +21,6 @@ import {
 
 import AppLayout from "@layouts/admin.vue";
 import RegisterEditor from "@pages/CashRegisters/List/RegisterEditor.vue";
-import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
-import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { computed, ref, watch } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
@@ -44,8 +42,6 @@ const props = defineProps<{
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
-const { formatCurrencySymbol } = useCurrencyFormatter();
-const { formatDatetime } = useDatetimeFormatter();
 
 const ALL = "__all__";
 

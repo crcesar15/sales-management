@@ -228,7 +228,7 @@ const formattedQuantity = computed(() => {
 });
 
 const submit = handleSubmit((formValues) => {
-  if (showNewBatchFields && requiresExpiration.value && !formValues.expiry_date) {
+  if (showNewBatchFields.value && requiresExpiration.value && !formValues.expiry_date) {
     setErrors({ expiry_date: t("Expiry date is required for this product") });
     return;
   }
@@ -454,7 +454,7 @@ const submit = handleSubmit((formValues) => {
                     show-icon
                     :placeholder="requiresExpiration ? t('Select expiry date') : t('Select expiry date (optional)')"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.expiry_date }"
-                    @update:model-value="setFieldValue('expiry_date', $event ? $event.toISOString().split('T')[0] : null)"
+                    @update:model-value="setFieldValue('expiry_date', $event && $event instanceof Date ? $event.toISOString().split('T')[0] : null)"
                   />
                   <small v-if="submitCount > 0 && errors.expiry_date" class="text-red-400 dark:text-red-300">
                     {{ errors.expiry_date }}

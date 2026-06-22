@@ -25,6 +25,9 @@ export interface PurchaseOrderLineItem {
   purchase_order_id: number;
   product_variant_id: number;
   catalog_id: number | null;
+  catalog: Pick<CatalogEntry, "id" | "price" | "payment_terms" | "details" | "unit_id" | "minimum_order_quantity" | "lead_time_days"> & {
+    unit?: { id: number; name: string; conversion_factor: number } | null;
+  };
   unit_id: number | null;
   quantity: number;
   received_quantity: number;

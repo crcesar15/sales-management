@@ -10,7 +10,6 @@ import {
   Popover,
   Badge,
   Tag,
-  useToast,
   type DataTablePageEvent,
 } from "primevue";
 
@@ -37,7 +36,6 @@ const props = defineProps<{
   cashiers: Array<{ id: number; full_name: string }>;
 }>();
 
-const toast = useToast();
 const { t } = useI18n();
 const { formatCurrencySymbol } = useCurrencyFormatter();
 

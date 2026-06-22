@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "skipLibCheck": true,
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
@@ -23,11 +24,6 @@
       "@plugins/*": ["resources/js/Plugins/*"]
     }
   },
-  "include": [
-    "resources/js/**/*",
-    "resources/js/**/*.vue",
-    "eslint.config.js",
-    "tests/**/*"
-  ],
+  "include": ["resources/js/**/*", "resources/js/**/*.vue", "eslint.config.js", "tests/**/*"],
   "exclude": ["node_modules", "vendor"]
 }

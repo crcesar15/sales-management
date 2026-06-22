@@ -1,4 +1,4 @@
-import type { Role } from "@app-types/role-types";
+import type { RolePayload } from "@app-types/role-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
 import type { AxiosResponse } from "axios";
@@ -20,11 +20,11 @@ export function useRoleClient() {
     return await apiClient.get(route("api.v1.roles.show", id));
   };
 
-  const storeRoleApi = async (role: Pick<Role, "name">) => {
+  const storeRoleApi = async (role: Pick<RolePayload, "name">) => {
     return await apiClient.post(route("api.v1.roles.store"), role);
   };
 
-  const updateRoleApi = async (id: number, role: Role) => {
+  const updateRoleApi = async (id: number, role: RolePayload) => {
     return await apiClient.put(route("api.v1.roles.update", id), role);
   };
 

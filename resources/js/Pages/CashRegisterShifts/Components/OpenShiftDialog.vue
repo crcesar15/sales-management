@@ -8,7 +8,6 @@ import { route } from "ziggy-js";
 import { watch, nextTick, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
-import type { CashRegisterResponse } from "@/Types/cash-register-types";
 
 const props = defineProps<{
   visible: boolean;

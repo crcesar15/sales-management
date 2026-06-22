@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, Button, Tag, DataTable, Column, Toast, useToast } from "primevue";
+import { Card, Button, Tag, DataTable, Column, Toast } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import MovementForm from "@pages/CashRegisterShifts/Components/MovementForm.vue";
 import CloseShiftDialog from "@pages/CashRegisterShifts/Components/CloseShiftDialog.vue";
@@ -18,7 +18,6 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const toast = useToast();
 const { formatCurrencySymbol } = useCurrencyFormatter();
 const { formatDatetime } = useDatetimeFormatter();
 

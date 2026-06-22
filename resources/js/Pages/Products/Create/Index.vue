@@ -167,7 +167,7 @@ const onSubmit = handleSubmit((values) => {
     payload.identifier = values.identifier || null;
   }
 
-  router.post(route("products.store"), payload, {
+  router.post(route("products.store"), payload as any, {
     onSuccess: () => {
       toast.add({
         severity: "success",
