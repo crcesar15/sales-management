@@ -52,7 +52,7 @@ const paymentsError = ref("");
 // Totals computation — must mirror SalesOrderService::calculateTotals()
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.line_total, 0));
 const discountAmount = computed(() => values.discount_value ?? 0);
-const taxRate = computed(() => Number(getSetting("sales", "tax_rate", 0) ?? 0) / 100);
+const taxRate = computed(() => Number(getSetting("sales", "tax_rate", "0") ?? 0) / 100);
 const taxAmount = computed(() => Math.round((subTotal.value - discountAmount.value) * taxRate.value * 100) / 100);
 const totalAmount = computed(
   () => Math.round((subTotal.value - discountAmount.value + taxAmount.value) * 100) / 100,
