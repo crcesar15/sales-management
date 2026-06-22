@@ -15,8 +15,8 @@ use App\Models\Catalog;
 use App\Models\ProductVariant;
 use App\Models\Vendor;
 use App\Services\CatalogService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
+use InvalidArgumentException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -141,7 +141,7 @@ final class CatalogController extends Controller
 
         try {
             $this->catalogService->delete($catalog);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 

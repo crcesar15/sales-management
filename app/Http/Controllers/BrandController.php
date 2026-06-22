@@ -10,8 +10,8 @@ use App\Http\Requests\Brands\UpdateBrandRequest;
 use App\Http\Resources\Brand\BrandCollection;
 use App\Models\Brand;
 use App\Services\BrandService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
+use InvalidArgumentException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -70,7 +70,7 @@ final class BrandController extends Controller
 
         try {
             $this->brandService->delete($brand);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 

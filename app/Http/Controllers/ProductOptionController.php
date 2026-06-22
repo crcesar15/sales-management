@@ -9,9 +9,9 @@ use App\Http\Requests\Products\StoreProductOptionRequest;
 use App\Models\Product;
 use App\Models\ProductOption;
 use App\Services\ProductVariantService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 final class ProductOptionController extends Controller
 {
@@ -26,7 +26,7 @@ final class ProductOptionController extends Controller
     {
         try {
             $this->variantService->storeOption($product, $request->validated());
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors($e->getMessage());
         }
 
@@ -52,7 +52,7 @@ final class ProductOptionController extends Controller
 
         try {
             $this->variantService->destroyOption($option);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors($e->getMessage());
         }
 

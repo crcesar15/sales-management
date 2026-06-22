@@ -10,8 +10,8 @@ use App\Http\Requests\Vendors\UpdateVendorRequest;
 use App\Http\Resources\Vendor\VendorCollection;
 use App\Models\Vendor;
 use App\Services\VendorService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
+use InvalidArgumentException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -84,7 +84,7 @@ final class VendorsController extends Controller
 
         try {
             $this->vendorService->delete($vendor);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 

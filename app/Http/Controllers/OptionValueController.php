@@ -10,8 +10,8 @@ use App\Models\Product;
 use App\Models\ProductOption;
 use App\Models\ProductOptionValue;
 use App\Services\ProductVariantService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
+use InvalidArgumentException;
 
 final class OptionValueController extends Controller
 {
@@ -35,7 +35,7 @@ final class OptionValueController extends Controller
 
         try {
             $this->variantService->destroyOptionValue($value);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors($e->getMessage());
         }
 

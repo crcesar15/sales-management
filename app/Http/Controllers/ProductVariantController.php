@@ -12,8 +12,8 @@ use App\Http\Requests\Products\UpdateVariantRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\ProductVariantService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
+use InvalidArgumentException;
 
 final class ProductVariantController extends Controller
 {
@@ -28,7 +28,7 @@ final class ProductVariantController extends Controller
     {
         try {
             $this->variantService->generateVariants($product, $request->validated()['options']);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors($e->getMessage());
         }
 
@@ -39,7 +39,7 @@ final class ProductVariantController extends Controller
     {
         try {
             $this->variantService->storeManual($product, $request->validated());
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors($e->getMessage());
         }
 

@@ -10,8 +10,8 @@ use App\Http\Requests\Customers\UpdateCustomerRequest;
 use App\Http\Resources\Customer\CustomerCollection;
 use App\Models\Customer;
 use App\Services\CustomerService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
+use InvalidArgumentException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -84,7 +84,7 @@ final class CustomerController extends Controller
 
         try {
             $this->customerService->delete($customer);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 

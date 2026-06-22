@@ -10,8 +10,8 @@ use App\Http\Requests\Categories\UpdateCategoryRequest;
 use App\Http\Resources\Category\CategoryCollection;
 use App\Models\Category;
 use App\Services\CategoryService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
+use InvalidArgumentException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -70,7 +70,7 @@ final class CategoryController extends Controller
 
         try {
             $this->categoryService->delete($category);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 

@@ -10,8 +10,8 @@ use App\Http\Requests\MeasurementUnits\UpdateMeasurementUnitRequest;
 use App\Http\Resources\MeasurementUnit\MeasurementUnitCollection;
 use App\Models\MeasurementUnit;
 use App\Services\MeasurementUnitService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
+use InvalidArgumentException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -70,7 +70,7 @@ final class MeasurementUnitController extends Controller
 
         try {
             $this->measurementUnitService->delete($measurementUnit);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 

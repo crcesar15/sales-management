@@ -13,8 +13,8 @@ use App\Models\Category;
 use App\Models\MeasurementUnit;
 use App\Models\Product;
 use App\Services\ProductService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
+use InvalidArgumentException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -160,7 +160,7 @@ final class ProductController extends Controller
 
         try {
             $this->productService->delete($product);
-        } catch (Exception $e) {
+        } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors($e->getMessage());
         }
 
