@@ -31,44 +31,45 @@ Existing capabilities inferred from the codebase map (`.planning/codebase/`):
 - ✓ Inertia.js + Vue 3 + PrimeVue + Tailwind admin layout with sidebar, v-can directive, i18n — existing
 - ✓ Media management (product images via spatie/laravel-medialibrary two-phase upload) — existing
 
+Phase 1 — Critical Fixes & Refactor (UAT 19/19 passed, 2026-06-22):
+
+- ✓ API mass-assignment in `Api/VendorsController` / `Api/PurchaseOrdersController` — Phase 1 (FIX-01/02)
+- ✓ Missing `authorize()` on 5 API controllers (ActivityLog, Batches, Permissions, PurchaseOrders, Settings) — Phase 1 (FIX-03/04/05)
+- ✓ `CashRegisterShiftResource` `relationLoaded()` → `whenLoaded()` — Phase 1 (FIX-09)
+- ✓ `StockTransferResource` date serialization + `productVariant identifier` — Phase 1 (FIX-10)
+- ✓ Status enum vs string comparisons standardized — Phase 1 (FIX-06)
+- ✓ Frontend `taxRate = 0` → reads `sales.tax_rate` setting with backend parity — Phase 1 (FIX-07)
+- ✓ `useApi.ts` broken `X-XSRF-TOKEN` DOM-element header removed — Phase 1 (FIX-08)
+- ✓ `Api/PurchaseOrdersController` returns `PurchaseOrderResource` with 200/201 — Phase 1 (FIX-05)
+- ✓ `ApiCollection` `{data, meta}` pagination shape — Phase 1 (FIX-10)
+- ✓ `TRANSITION_MAP` + `validateTransition()` on `CashRegisterShiftService` — Phase 1 (FIX-12)
+- ✓ Consolidated FIFO deduction into `FifoStockDeductionService` (sale + transfer paths, auto-close-at-zero) — Phase 1 (FIX-11)
+- ✓ `SORT_COLUMN_MAP` whitelist on 11 services — Phase 1 (FIX-13)
+- ✓ Narrowed `catch (Exception)` → `catch (InvalidArgumentException)` in 10 web controllers — Phase 1 (FIX-15)
+- ✓ `AuthServiceProvider` dead `StockAdjustmentPolicy` mapping removed — Phase 1 (FIX-17)
+- ✓ `ReceptionOrderController` claimed-quantities extracted to public service helper — Phase 1 (FIX-18)
+- ✓ Dead `$request->validated();` calls removed from `Api/RoleController` / `Api/MeasurementUnitController` — Phase 1 (FIX-17)
+- ✓ Six service delete guards throw `InvalidArgumentException` — Phase 1 (FIX-14)
+- ✓ `Cache::tags()` → driver-agnostic key-based `Setting` cache invalidation — Phase 1 (FIX-16)
+- ✓ `SalesOrderResource` N+1 — eager load `items.productVariant.product`, `items.saleUnit`, `payments` — Phase 1 (FIX-20)
+- ✓ `ReceptionOrderService::list()` eager loads verified — Phase 1 (FIX-19)
+- ✓ `recalculateStock()` call sites use `find()` + null check instead of `firstOrFail()` — Phase 1 (FIX-21)
+- ✓ Daily log rotation + bounded `browser` channel; 310MB `browser.log` truncated — Phase 1 (FIX-22)
+- ✓ Targeted Pest coverage for FIFO, shift transitions, settings cache, sales-order tax — Phase 1 (FIX-07/08/11/12/18)
+
 ### Active
 
-**Critical fixes & refactor (from CONCERNS.md):**
+**Critical fixes & refactor (from CONCERNS.md) — remaining:**
 
-- [ ] Fix API mass-assignment in `Api/VendorsController` and `Api/PurchaseOrdersController` (`$request->all()`)
-- [ ] Add missing `authorize()` calls to 5 API controllers (ActivityLog, Batches, Permissions, PurchaseOrders, Settings)
-- [ ] Fix `CashRegisterShiftResource` calling nonexistent `relationLoaded()` / `$movements` on the resource wrapper
-- [ ] Fix `StockTransferResource` calling `toISOString()` on string-cast dates
-- [ ] Fix `ProductVariant::$sku` referenced in resource but missing from model
-- [ ] Standardize status comparison (enum vs string) across `SalesOrderService`, `CashRegisterShiftService`, and resources
-- [ ] Fix hardcoded `taxRate = 0` and units mismatch in sales order frontend (Create/Edit)
-- [ ] Fix `useApi.ts` setting `X-XSRF-TOKEN` to a DOM element instead of a string
-- [ ] Fix `Api/PurchaseOrdersController` returning raw Eloquent models instead of a Resource
-- [ ] Fix `ApiCollection` dropping pagination metadata
 - [ ] Remove unused API layer (controllers, routes, resources, requests, axios composables) — keep only endpoints actually used by Inertia pages
 - [ ] Convert `ProductVariant` and `ProductVariantUnit` from `$casts` property to `casts()` method
 - [ ] Add `LogsActivity` trait + `getActivitylogOptions()` to 7 models missing it
-- [ ] Add `TRANSITION_MAP` + `validateTransition()` to `CashRegisterShiftService`
-- [ ] Consolidate duplicate FIFO deduction logic (`FifoStockDeductionService` vs `BatchService::deductFIFO*`)
-- [ ] Add `SORT_COLUMN_MAP` whitelist to the 11 services passing user input to `->orderBy()`
-- [ ] Narrow `catch (Exception $e)` to `InvalidArgumentException` in 12 web controllers
-- [ ] Fix `AuthServiceProvider` missing imports / dead policy mapping
-- [ ] Extract `ReceptionOrderController` claimed-quantities logic into the service
-- [ ] Remove dead `$request->validated()` calls in `Api/RoleController`, `Api/MeasurementUnitController`
 
 **Convention alignment (TypeScript & tests):**
 
 - [ ] Fix 9 application TypeScript errors (useRoleClient import, axios response typing, Inertia RequestPayload casts, PurchaseOrderLineItem.catalog, DatePicker array value)
 - [ ] Wire Pest test property access via `uses()->property()` or `@property` PHPDoc
 - [ ] Convert non-JSON forbidden assertions to `*Json()` variants
-
-**Performance & infrastructure:**
-
-- [ ] Fix N+1 in `ReceptionOrderResource` (eager load `lineItems.productVariant.product.measurementUnit`, `lineItems.catalogEntry.unit`)
-- [ ] Fix N+1 in `SalesOrderResource` (eager load `items` and `items.productVariant.product`)
-- [ ] Replace `Cache::tags()` in `Setting` with key-based invalidation (default `file` driver doesn't support tags)
-- [ ] Pass loaded `ProductVariant` into `recalculateStock()` instead of re-querying via `firstOrFail()`
-- [ ] Configure log rotation; investigate 310MB `browser.log`
 
 **New features — POS interface (full):**
 
@@ -169,4 +170,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-21 after initialization*
+*Last updated: 2026-06-22 after Phase 1*
