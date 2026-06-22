@@ -12,6 +12,17 @@ use InvalidArgumentException;
 
 final class ProductService
 {
+    /**
+     * Whitelist of user-facing sort keys mapped to real DB columns.
+     * Unknown keys fall back to a safe default column.
+     */
+    private const SORT_COLUMN_MAP = [
+        'name' => 'name',
+        'status' => 'status',
+        'created_at' => 'created_at',
+        'updated_at' => 'updated_at',
+    ];
+
     private readonly PendingMediaService $pendingMediaService;
 
     public function __construct(PendingMediaService $pendingMediaService)
@@ -31,6 +42,9 @@ final class ProductService
         string $orderDirection = 'asc',
         int $perPage = 20,
     ): LengthAwarePaginator {
+        $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'created_at';
+        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'asc';
+
         return Product::query()
             ->with([
                 'brand:id,name',
@@ -51,7 +65,7 @@ final class ProductService
             ->when($status === 'active', fn ($q) => $q->where('status', 'active'))
             ->when($status === 'inactive', fn ($q) => $q->where('status', 'inactive'))
             ->when($status === 'archived', fn ($q) => $q->onlyTrashed())
-            ->orderBy($orderBy, $orderDirection)
+            ->orderBy($sortColumn, $direction)
             ->paginate($perPage)
             ->withQueryString();
     }

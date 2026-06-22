@@ -12,6 +12,18 @@ use InvalidArgumentException;
 final class VendorService
 {
     /**
+     * Whitelist of user-facing sort keys mapped to real DB columns.
+     * Unknown keys fall back to a safe default column.
+     */
+    private const SORT_COLUMN_MAP = [
+        'fullname' => 'fullname',
+        'email' => 'email',
+        'status' => 'status',
+        'created_at' => 'created_at',
+        'updated_at' => 'updated_at',
+    ];
+
+    /**
      * @return LengthAwarePaginator<int, Vendor>
      */
     public function list(
@@ -21,6 +33,9 @@ final class VendorService
         int $perPage = 20,
         ?string $filter = null,
     ): LengthAwarePaginator {
+        $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'created_at';
+        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'asc';
+
         return Vendor::query()
             ->when(
                 $filter !== null && $filter !== '',
@@ -31,7 +46,7 @@ final class VendorService
             )
             ->when($status !== 'all', fn ($q) => $q->where('status', $status))
             ->withCount(['variants', 'purchaseOrders'])
-            ->orderBy($orderBy, $orderDirection)
+            ->orderBy($sortColumn, $direction)
             ->paginate($perPage)
             ->withQueryString();
     }

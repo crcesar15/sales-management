@@ -12,6 +12,17 @@ use InvalidArgumentException;
 final class MeasurementUnitService
 {
     /**
+     * Whitelist of user-facing sort keys mapped to real DB columns.
+     * Unknown keys fall back to a safe default column.
+     */
+    private const SORT_COLUMN_MAP = [
+        'name' => 'name',
+        'abbreviation' => 'abbreviation',
+        'created_at' => 'created_at',
+        'updated_at' => 'updated_at',
+    ];
+
+    /**
      * @return LengthAwarePaginator<int, MeasurementUnit>
      */
     public function list(
@@ -21,6 +32,9 @@ final class MeasurementUnitService
         int $perPage = 20,
         ?string $filter = null,
     ): LengthAwarePaginator {
+        $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'created_at';
+        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'asc';
+
         return MeasurementUnit::query()
             ->when(
                 $filter !== null && $filter !== '',
@@ -30,7 +44,7 @@ final class MeasurementUnitService
             ->when($status === 'all', fn ($q) => $q->withTrashed())
             ->when($status === 'archived', fn ($q) => $q->onlyTrashed())
             ->withCount('products')
-            ->orderBy($orderBy, $orderDirection)
+            ->orderBy($sortColumn, $direction)
             ->paginate($perPage)
             ->withQueryString();
     }

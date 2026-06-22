@@ -12,6 +12,20 @@ use Illuminate\Support\Facades\DB;
 final class UserService
 {
     /**
+     * Whitelist of user-facing sort keys mapped to real DB columns.
+     * Unknown keys fall back to a safe default column.
+     */
+    private const SORT_COLUMN_MAP = [
+        'first_name' => 'first_name',
+        'last_name' => 'last_name',
+        'email' => 'email',
+        'username' => 'username',
+        'status' => 'status',
+        'created_at' => 'created_at',
+        'updated_at' => 'updated_at',
+    ];
+
+    /**
      * Paginated, filtered and sorted list of users.
      *
      * @return LengthAwarePaginator<int, User>
@@ -23,6 +37,9 @@ final class UserService
         int $perPage = 10,
         ?string $filter = null,
     ): LengthAwarePaginator {
+        $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'created_at';
+        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'asc';
+
         return User::query()
             ->with(['roles'])
             ->when(
@@ -35,7 +52,7 @@ final class UserService
             )
             ->when($status === 'archived', fn ($q) => $q->onlyTrashed())
             ->when($status !== 'all' && $status !== 'archived', fn ($q) => $q->where('status', $status))
-            ->orderBy($orderBy, $orderDirection)
+            ->orderBy($sortColumn, $direction)
             ->paginate($perPage)
             ->withQueryString();
     }

@@ -12,6 +12,23 @@ use Illuminate\Support\Facades\DB;
 final class CatalogService
 {
     /**
+     * Whitelist of user-facing sort keys mapped to real DB columns.
+     * Unknown keys fall back to a safe default column.
+     */
+    private const SORT_COLUMN_MAP = [
+        'product_name' => 'products.name',
+        'brand_name' => 'brands.name',
+        'name' => 'products.name',
+        'identifier' => 'product_variants.identifier',
+        'vendor_count' => 'vendor_count',
+        'price' => 'catalog.price',
+        'status' => 'catalog.status',
+        'created_at' => 'catalog.created_at',
+        'updated_at' => 'catalog.updated_at',
+        'id' => 'catalog.id',
+    ];
+
+    /**
      * @return LengthAwarePaginator<int, Catalog>
      */
     public function list(
@@ -22,7 +39,9 @@ final class CatalogService
         ?string $filter = null,
         ?int $vendorId = null,
     ): LengthAwarePaginator {
-        $needsProductJoin = $orderBy === 'product_name';
+        $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'catalog.created_at';
+        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'desc';
+        $needsProductJoin = $sortColumn === 'products.name';
 
         return Catalog::query()
             ->select('catalog.*')
@@ -39,7 +58,7 @@ final class CatalogService
                         ->orWhereHas('productVariant', fn ($vq) => $vq->where('identifier', 'like', "%{$filter}%"));
                 })
             )
-            ->orderBy($needsProductJoin ? 'products.name' : $orderBy, $orderDirection)
+            ->orderBy($sortColumn, $direction)
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -55,7 +74,9 @@ final class CatalogService
         ?string $filter = null,
         ?int $vendorId = null,
     ): LengthAwarePaginator {
-        $needsProductJoin = $orderBy === 'product_name';
+        $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'catalog.created_at';
+        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'asc';
+        $needsProductJoin = $sortColumn === 'products.name';
 
         return Catalog::query()
             ->select('catalog.*')
@@ -72,7 +93,7 @@ final class CatalogService
                         ->orWhereHas('productVariant', fn ($vq) => $vq->where('identifier', 'like', "%{$filter}%"));
                 })
             )
-            ->orderBy($needsProductJoin ? 'products.name' : $orderBy, $orderDirection)
+            ->orderBy($sortColumn, $direction)
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -129,7 +150,9 @@ final class CatalogService
         ?string $filter = null,
         ?int $vendorId = null,
     ): LengthAwarePaginator {
-        $needsProductJoin = in_array($orderBy, ['product_name', 'brand_name']);
+        $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'product_variants.created_at';
+        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'asc';
+        $needsProductJoin = in_array($orderBy, ['product_name', 'brand_name'], true);
         $needsBrandJoin = $orderBy === 'brand_name';
 
         return ProductVariant::query()
@@ -161,13 +184,7 @@ final class CatalogService
                         ->orWhere('product_variants.identifier', 'like', "%{$filter}%");
                 })
             )
-            ->orderBy(match ($orderBy) {
-                'product_name' => 'products.name',
-                'brand_name' => 'brands.name',
-                'identifier' => 'product_variants.identifier',
-                'vendor_count' => 'vendor_count',
-                default => 'product_variants.created_at',
-            }, $orderDirection)
+            ->orderBy($sortColumn, $direction)
             ->paginate($perPage)
             ->withQueryString();
     }
