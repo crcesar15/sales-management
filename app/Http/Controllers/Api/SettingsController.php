@@ -7,9 +7,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiCollection;
 use App\Models\Setting;
-use Cache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 final class SettingsController extends Controller
 {
@@ -31,10 +31,11 @@ final class SettingsController extends Controller
         $settings = $request->array('settings');
 
         foreach ($settings as $setting) {
-            Setting::query()->updateOrCreate(['key' => $setting['key']], ['value' => $setting['value']]);
-        }
+            $model = Setting::query()->updateOrCreate(['key' => $setting['key']], ['value' => $setting['value']]);
 
-        Cache::forget('settings');
+            Cache::forget("settings.{$setting['key']}");
+            Cache::forget("settings.group.{$model->group}");
+        }
 
         return response()->json(['message' => 'Settings updated successfully'], 200);
     }

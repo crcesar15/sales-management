@@ -12,8 +12,7 @@ final class SettingsService
     /**
      * Update settings for a specific group.
      * Only updates keys that already exist in the database.
-     */
-    /**
+     *
      * @param  array<string, mixed>  $data
      */
     public function updateGroup(string $group, array $data): void
@@ -24,9 +23,10 @@ final class SettingsService
 
         foreach ($validKeys as $key) {
             Setting::where('key', $key)->update(['value' => (string) $data[$key]]);
+            Cache::forget("settings.{$key}");
         }
 
-        Cache::tags(['settings'])->flush();
+        Cache::forget("settings.group.{$group}");
     }
 
     /**

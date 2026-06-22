@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\SettingFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use InvalidArgumentException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 final class Setting extends Model
 {
+    /** @use HasFactory<SettingFactory> */
+    use HasFactory;
     use LogsActivity;
 
     protected $fillable = [
@@ -38,7 +43,7 @@ final class Setting extends Model
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        $value = Cache::tags(['settings'])->rememberForever(
+        $value = Cache::rememberForever(
             "settings.{$key}",
             fn () => self::where('key', $key)->value('value')
         );
@@ -51,12 +56,22 @@ final class Setting extends Model
     }
 
     /**
-     * Set a setting value by key and flush the cache.
+     * Set a setting value by key and flush the per-key and per-group caches.
+     *
+     * @throws InvalidArgumentException When the setting key does not exist.
      */
     public static function set(string $key, mixed $value): void
     {
-        self::where('key', $key)->update(['value' => (string) $value]);
-        Cache::tags(['settings'])->flush();
+        $setting = self::where('key', $key)->first();
+
+        if ($setting === null) {
+            throw new InvalidArgumentException("Setting {$key} not found.");
+        }
+
+        $setting->update(['value' => (string) $value]);
+
+        Cache::forget("settings.{$key}");
+        Cache::forget("settings.group.{$setting->group}");
     }
 
     /**
@@ -66,7 +81,7 @@ final class Setting extends Model
      */
     public static function group(string $group): array
     {
-        return Cache::tags(['settings'])->rememberForever(
+        return Cache::rememberForever(
             "settings.group.{$group}",
             fn () => self::where('group', $group)->pluck('value', 'key')->toArray()
         );
