@@ -8,6 +8,7 @@ import { object, number, string } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
+import { useAuth } from "@composables/useAuth";
 import SOLineItemsTable from "../Components/SOLineItemsTable.vue";
 import SOFinancialSummary from "../Components/SOFinancialSummary.vue";
 import SOPaymentsPanel from "../Components/SOPaymentsPanel.vue";
@@ -19,6 +20,7 @@ defineOptions({ layout: AppLayout });
 
 const toast = useToast();
 const { t } = useI18n();
+const { getSetting } = useAuth();
 
 const schema = toTypedSchema(
   object({
@@ -47,12 +49,14 @@ const payments = ref<SalesOrderPaymentForm[]>([
 const itemsError = ref("");
 const paymentsError = ref("");
 
-// Totals computation
+// Totals computation — must mirror SalesOrderService::calculateTotals()
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.line_total, 0));
 const discountAmount = computed(() => values.discount_value ?? 0);
-const taxRate = 0; // TODO: read from settings
-const taxAmount = computed(() => (subTotal.value - discountAmount.value) * taxRate);
-const totalAmount = computed(() => subTotal.value - discountAmount.value + taxAmount.value);
+const taxRate = computed(() => Number(getSetting("sales", "tax_rate", 0) ?? 0) / 100);
+const taxAmount = computed(() => Math.round((subTotal.value - discountAmount.value) * taxRate.value * 100) / 100);
+const totalAmount = computed(
+  () => Math.round((subTotal.value - discountAmount.value + taxAmount.value) * 100) / 100,
+);
 
 const submit = handleSubmit((formValues) => {
   itemsError.value = "";
