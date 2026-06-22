@@ -9,7 +9,6 @@ export function useApi() {
     headers: {
       Accept: "application/json",
       "X-Requested-With": "XMLHttpRequest",
-      "X-XSRF-TOKEN": document.head.querySelector('meta[name="csrf-token"]'),
     },
     withCredentials: true,
     withXSRFToken: true,
