@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, DatePicker, Select, Popover, useToast, ConfirmDialog } from "primevue";
+import { Button, Card, DatePicker, Select, Popover, useToast, useConfirm, ConfirmDialog } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -34,7 +34,9 @@ interface AdditionalContact {
 }
 
 const toast = useToast();
+const confirm = useConfirm();
 const { t } = useI18n();
+const submitting = ref(false);
 
 const vendorOptions = computed(() => props.vendors.map((v) => ({ name: v.fullname, value: v.id })));
 const vendorInfoPopover = ref();
@@ -78,12 +80,37 @@ function toggleVendorInfo(event: Event) {
   vendorInfoPopover.value.toggle(event);
 }
 
+function onVendorChange(newVendorId: number | undefined) {
+  if (!newVendorId || newVendorId === values.vendor_id) {
+    setFieldValue("vendor_id", newVendorId);
+    return;
+  }
+
+  if (lineItems.value.length === 0) {
+    setFieldValue("vendor_id", newVendorId);
+    return;
+  }
+
+  confirm.require({
+    message: t("Changing the vendor will remove all added items. Continue?"),
+    header: t("Confirm Vendor Change"),
+    icon: "fa fa-triangle-exclamation",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Change Vendor"),
+    rejectClass: "p-button-secondary",
+    acceptClass: "p-button-primary",
+    accept: () => setFieldValue("vendor_id", newVendorId),
+  });
+}
+
 const submit = handleSubmit((formValues) => {
   itemsError.value = "";
   if (lineItems.value.length === 0) {
     itemsError.value = t("At least one item is required");
     return;
   }
+
+  submitting.value = true;
 
   const payload = {
     vendor_id: formValues.vendor_id,
@@ -111,6 +138,9 @@ const submit = handleSubmit((formValues) => {
         document.querySelector<HTMLInputElement>(".p-invalid")?.focus();
       });
     },
+    onFinish: () => {
+      submitting.value = false;
+    },
   });
 });
 
@@ -120,13 +150,13 @@ function goBack() {
 </script>
 
 <template>
-  <div>
+  <form class="flex flex-col" @submit.prevent="submit" @keydown.ctrl.enter.prevent="submit" @keydown.meta.enter.prevent="submit">
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
-        <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
+        <Button icon="fa fa-arrow-left" text rounded severity="secondary" :disabled="submitting" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Create Purchase Order") }}</h2>
       </div>
-      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="false" @click="submit" />
+      <Button type="submit" icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="submitting" />
     </div>
 
     <ConfirmDialog />
@@ -154,7 +184,7 @@ function goBack() {
                       :class="{ 'p-invalid': submitCount > 0 && !!errors.vendor_id }"
                       filter
                       class="w-full"
-                      @update:model-value="setFieldValue('vendor_id', $event)"
+                      @update:model-value="onVendorChange"
                     />
                     <small v-if="submitCount > 0 && errors.vendor_id" class="text-red-400 dark:text-red-300">{{ errors.vendor_id }}</small>
                   </div>
@@ -249,5 +279,5 @@ function goBack() {
         />
       </div>
     </div>
-  </div>
+  </form>
 </template>
