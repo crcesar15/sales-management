@@ -1,0 +1,7 @@
+{
+  "files": ["resources/views/layouts/app.blade.php", "resources/views/layouts/login.blade.php"],
+  "exclude": [],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}

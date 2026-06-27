@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-27T00:00:00Z",
+  "title": "Design System: Sales Management System",
+  "extensions": {
+    "colorMeta": {
+      "operational-navy": {
+        "role": "primary",
+        "displayName": "Operational Navy",
+        "canonical": "#00539b",
+        "tonalRamp": ["#000c19", "#00162b", "#00213f", "#002d57", "#003d74", "#00539b", "#156fa8", "#4f8dbc", "#92b8da", "#cddcee", "#edf3fa"]
+      },
+      "trust-blue-600": {
+        "role": "primary",
+        "displayName": "Trust Blue 600",
+        "canonical": "#003d74",
+        "tonalRamp": ["#000c19", "#00162b", "#00213f", "#002d57", "#003d74", "#00539b", "#156fa8", "#4f8dbc", "#92b8da", "#cddcee", "#edf3fa"]
+      },
+      "trust-blue-700": {
+        "role": "primary",
+        "displayName": "Trust Blue 700",
+        "canonical": "#002d57",
+        "tonalRamp": ["#000c19", "#00162b", "#00213f", "#002d57", "#003d74", "#00539b", "#156fa8", "#4f8dbc", "#92b8da", "#cddcee", "#edf3fa"]
+      },
+      "instrument-50": {
+        "role": "primary",
+        "displayName": "Instrument 50",
+        "canonical": "#edf3fa",
+        "tonalRamp": ["#000c19", "#00162b", "#00213f", "#002d57", "#003d74", "#00539b", "#156fa8", "#4f8dbc", "#92b8da", "#cddcee", "#edf3fa"]
+      },
+      "surface-ground-light": { "role": "neutral", "displayName": "Surface Ground Light", "canonical": "#f1f5f9", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "surface-ground-dark": { "role": "neutral", "displayName": "Surface Ground Dark", "canonical": "#020617", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "surface-card-light": { "role": "neutral", "displayName": "Surface Card Light", "canonical": "#ffffff", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#ffffff"] },
+      "surface-card-dark": { "role": "neutral", "displayName": "Surface Card Dark", "canonical": "#1e293b", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "ink-light": { "role": "neutral", "displayName": "Ink Light", "canonical": "#1e293b", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "ink-dark": { "role": "neutral", "displayName": "Ink Dark", "canonical": "#f8fafc", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "muted-light": { "role": "neutral", "displayName": "Muted Light", "canonical": "#64748b", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "muted-dark": { "role": "neutral", "displayName": "Muted Dark", "canonical": "#94a3b8", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "border-light": { "role": "neutral", "displayName": "Border Light", "canonical": "#e2e8f0", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "border-dark": { "role": "neutral", "displayName": "Border Dark", "canonical": "#334155", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "status-success": { "role": "status", "displayName": "Success", "canonical": "#22c55e", "tonalRamp": ["#052e16", "#14532d", "#166534", "#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac", "#bbf7d0", "#dcfce7", "#f0fdf4"] },
+      "status-warn": { "role": "status", "displayName": "Warn", "canonical": "#f59e0b", "tonalRamp": ["#451a03", "#7c2d12", "#9a3412", "#c2410c", "#d97706", "#f59e0b", "#fbbf24", "#fcd34d", "#fde68a", "#fef3c7", "#fffbeb"] },
+      "status-danger": { "role": "status", "displayName": "Danger", "canonical": "#ef4444", "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5", "#fecaca", "#fee2e2", "#fef2f2"] },
+      "noir-ink": { "role": "neutral", "displayName": "Noir Ink", "canonical": "#18181b", "tonalRamp": ["#09090b", "#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#f4f4f5", "#fafafa"] },
+      "noir-paper": { "role": "neutral", "displayName": "Noir Paper", "canonical": "#fafafa", "tonalRamp": ["#09090b", "#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#f4f4f5", "#fafafa"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles on admin list pages. Once per screen." },
+      "headline": { "displayName": "Headline", "purpose": "Dashboard and section-level headings." },
+      "title": { "displayName": "Title", "purpose": "Card titles, POS section headings." },
+      "body": { "displayName": "Body", "purpose": "All default text, table cells, form labels. Cap 65-75ch in prose." },
+      "label": { "displayName": "Label", "purpose": "Filter labels, column headers, small captions. Sentence-case, not uppercase." }
+    },
+    "shadows": [
+      { "name": "overlay-lift", "value": "var(--p-overlay-popover-shadow, 0 0 1px rgba(0,0,0,0.08))", "purpose": "Popovers, dropdowns, dialogs. The only structural shadow." }
+    ],
+    "motion": [
+      { "name": "state-transition", "value": "var(--p-transition-duration, 0.2s) ease", "purpose": "Hover/active/focus state changes on controls." },
+      { "name": "instant", "value": "0s", "purpose": "POS-critical paths and prefers-reduced-motion default." },
+      { "name": "crossfade", "value": "0.15s linear", "purpose": "Reduced-motion-safe content swaps on POS surface." }
+    ],
+    "breakpoints": [
+      { "name": "pos-floor", "value": "768px" },
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary page action (e.g. Add Brand). Operational Navy fill, white text, raised, uppercase label.",
+      "html": "<button class=\"ds-btn-primary\">ADD BRAND</button>",
+      "css": ".ds-btn-primary { background: #00539b; color: #ffffff; padding: 10px 18px; border: none; border-radius: 6px; font-family: Lato, system-ui, sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0; transition: background 0.2s ease; cursor: pointer; } .ds-btn-primary:hover { background: #003d74; } .ds-btn-primary:active { background: #002d57; } .ds-btn-primary:focus-visible { outline: 2px solid #00539b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Outlined Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Filter toggle and secondary actions. Transparent ground, ink text, outlined. Switches to primary severity when a filter is active.",
+      "html": "<button class=\"ds-btn-secondary\">FILTERS</button>",
+      "css": ".ds-btn-secondary { background: transparent; color: #1e293b; padding: 10px 18px; border: 1px solid #334155; border-radius: 6px; font-family: Lato, system-ui, sans-serif; font-weight: 500; font-size: 14px; transition: background 0.2s ease, border-color 0.2s ease; cursor: pointer; } .ds-btn-secondary:hover { background: #f1f5f9; border-color: #00539b; } .ds-btn-secondary:focus-visible { outline: 2px solid #00539b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Icon Row Action",
+      "kind": "button",
+      "refersTo": "button-icon-row",
+      "description": "Edit / delete / restore actions inside table rows. Text + rounded + large, muted icon. Tactile but restrained.",
+      "html": "<button class=\"ds-btn-icon\" aria-label=\"Edit\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7\"/><path d=\"M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z\"/></svg></button>",
+      "css": ".ds-btn-icon { background: transparent; color: #64748b; padding: 8px; border: none; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s ease, color 0.2s ease; } .ds-btn-icon:hover { background: #f1f5f9; color: #00539b; } .ds-btn-icon:focus-visible { outline: 2px solid #00539b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Canonical list-page search. Leading Font Awesome icon, field fills available width.",
+      "html": "<div class=\"ds-search\"><span class=\"ds-search-icon\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg></span><input type=\"text\" class=\"ds-search-input\" placeholder=\"Search\"/></div>",
+      "css": ".ds-search { position: relative; display: inline-flex; align-items: center; width: 320px; } .ds-search-icon { position: absolute; left: 10px; color: #64748b; display: inline-flex; } .ds-search-input { background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px 8px 32px; font-family: Lato, system-ui, sans-serif; font-size: 14px; width: 100%; transition: border-color 0.2s ease; } .ds-search-input::placeholder { color: #64748b; } .ds-search-input:focus { outline: none; border-color: #00539b; box-shadow: 0 0 0 1px #00539b; }"
+    },
+    {
+      "name": "Surface Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Wraps DataTable on list pages. White (light) / surface-800 (dark), 8px radius, 1px border, 16px padding, no shadow at rest.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-body\">Card content</div></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; } .ds-card-body { color: #1e293b; font-family: Lato, system-ui, sans-serif; font-size: 16px; line-height: 1.5; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-sidebar-item",
+      "description": "Admin sidebar item. Transparent ground, ink text, 10px 14px padding, 6px radius. Active route uses Instrument 50 background + Trust Blue 700 text.",
+      "html": "<a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><span class=\"ds-nav-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4.9 19.1C1 15.2 1 8.8 4.9 4.9\"/><path d=\"M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5\"/><path d=\"M19.1 4.9C23 8.8 23 15.2 19.1 19.1\"/></span><span class=\"ds-nav-label\">Brands</span></a>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; background: transparent; color: #1e293b; padding: 10px 14px; border-radius: 6px; text-decoration: none; font-family: Lato, system-ui, sans-serif; font-size: 14px; font-weight: 500; transition: background 0.2s ease; cursor: pointer; } .ds-nav-item:hover { background: #f1f5f9; } .ds-nav-item-active { background: #edf3fa; color: #002d57; } .ds-nav-icon { display: inline-flex; } .ds-nav-label { line-height: 1; }"
+    },
+    {
+      "name": "Count Tag",
+      "kind": "chip",
+      "refersTo": "card-surface",
+      "description": "Rounded secondary-severity Tag for counts (e.g. products-per-brand). Small, tonal, never decorative.",
+      "html": "<span class=\"ds-tag\">12</span>",
+      "css": ".ds-tag { display: inline-flex; align-items: center; justify-content: center; background: #475569; color: #ffffff; border-radius: 9999px; padding: 2px 10px; font-family: Lato, system-ui, sans-serif; font-size: 12px; font-weight: 600; min-width: 24px; height: 20px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shop Floor Instrument",
+    "overview": "This is the instrument panel of a well-run shop. Each reading is precise, each control has a clear next action, and nothing on screen is decorative. The operator — admin in the back office, sales rep at the counter — should feel they are looking at the truth of the operation, not a presentation about it. Every visual decision answers the question: does this help the next action happen faster, or does it compete with the data?\n\nThe system is built on PrimeVue 4 with a custom Aura preset; the library owns component-level styling and this spec does not re-spec what PrimeVue already commits. What this spec owns is the brand layer on top: the custom Operational Navy primary ramp, the surface-token bridge into Tailwind, the two-register divergence between admin density and POS speed, the reduced-motion budget, and the anti-references that keep the tool from drifting toward consumer-app or legacy-POS territory. The login surface is a separate Vue application with its own Noir (zinc-based) theme and is documented here as a named exception, not a second system.",
+    "keyCharacteristics": [
+      "Instrument-grade, not decorative: data and status carry the interface; chrome recedes.",
+      "Two registers share tokens, diverge in layout: admin (dense, sidebar) and POS (large hit targets, motion-reduced, tablet-first, 768px floor).",
+      "One primary color, used sparingly: Operational Navy #00539b appears on primary actions, active state, and key status — never as background wash or atmosphere.",
+      "Light and dark themes are first-class; dark mode via .app-dark dual trigger.",
+      "Motion is a budget, not a feature: state transitions only, instant on POS-critical paths, prefers-reduced-motion respected everywhere."
+    ],
+    "rules": [
+      { "name": "The One Instrument Rule", "body": "Operational Navy appears on primary actions, active state, and key status only — never as atmosphere. If the primary color covers more than ~10% of a screen, the screen is shouting, not designing.", "section": "colors" },
+      { "name": "The No-Wash Rule", "body": "Never use Operational Navy (or any primary ramp step) as a full-bleed section background, a gradient, or a decorative tint. The only permitted tinted background is Instrument 50 for the active sidebar route.", "section": "colors" },
+      { "name": "The Status-Pairs Rule", "body": "Color is never the sole carrier of state. Every status indicator pairs its color with a label, icon, or shape so it survives color-blindness and grayscale printing.", "section": "colors" },
+      { "name": "The One-Family Rule", "body": "Lato only. Never introduce a second family for emphasis. Emphasis is weight and size, not a different typeface.", "section": "typography" },
+      { "name": "The No-Kicker Rule", "body": "Do not add tiny uppercase tracked eyebrows above sections. Labels are sentence-case at 14px/500.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Resting surfaces are flat. A shadow on a resting card is a bug, not a design choice. Shadows appear only when an element is elevated above the surface.", "section": "elevation" },
+      { "name": "The Tonal-Layering Rule", "body": "When you need to separate two surfaces, change the surface token before reaching for a border, and reach for a border before reaching for a shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Operational Navy (#00539b) only for primary actions, active state, and key status — and keep it under ~10% of any screen (The One Instrument Rule).",
+      "Do darken on hover/active (#003d74 -> #002d57). Primary controls depress; they never glow or scale.",
+      "Do pair every status color with a label or icon. Color confirms; it never carries state alone (The Status-Pairs Rule).",
+      "Do separate surfaces by surface token first, border second, shadow last (The Tonal-Layering Rule). Resting cards are flat with a 1px border.",
+      "Do keep hit targets large on the POS surface and respect the 768px floor — the POS unsupported-viewport message is a feature, not a fallback.",
+      "Do respect prefers-reduced-motion on every transition; POS-critical paths default to instant or crossfade regardless of the user setting.",
+      "Do use Lato in weight and size for hierarchy. One family, multiple weights (The One-Family Rule).",
+      "Do use sentence-case 14px/500 for labels. Labels read like labels, not kickers (The No-Kicker Rule).",
+      "Do keep body text at >=7:1 (Ink) and muted text at >=4.5:1 (Muted) against surface-card in both themes.",
+      "Do import PrimeVue components directly from primevue and use Ziggy's route() for URLs — never hardcode."
+    ],
+    "donts": [
+      "Don't use Operational Navy as a full-bleed background, gradient, or decorative tint (The No-Wash Rule). The only tinted background is Instrument 50 on the active sidebar route.",
+      "Don't ship a shadow on a resting card (The Flat-By-Default Rule). Shadows are for overlays and dialogs only.",
+      "Don't nest cards. A card inside a card is always wrong on this surface.",
+      "Don't add a side-stripe border (border-left / border-right > 1px) as a colored accent on cards, list items, or alerts. Use a full border, a background tint, or nothing.",
+      "Don't use gradient text (background-clip: text + gradient). Emphasis is weight or size, in Operational Navy.",
+      "Don't add a tiny uppercase tracked eyebrow above every section. The all-caps kicker is the AI scaffold this system rejects (The No-Kicker Rule).",
+      "Don't build the hero-metric template (big number, small label, supporting stats, gradient accent) on the dashboard. That is the generic-SaaS anti-reference from PRODUCT.md.",
+      "Don't ship the cluttered legacy POS look: tiny fonts, dense unstyled tables, chrome competing with content. The POS is a modern instrument, not a cash-register emulator.",
+      "Don't ship over-designed consumer-app flourish: playful animations, large decorative illustrations, gradient hero blobs. This is a tool, not a vibe.",
+      "Don't introduce a second typeface for emphasis (The One-Family Rule) or a serif/display sans on the app surface.",
+      "Don't mix Noir (login) tokens into the app surface, or Operational Navy into the login surface. The two themes are a deliberate tonal contrast.",
+      "Don't use color as the sole carrier of state. A red border without a label fails the audit trail this product exists to provide.",
+      "Don't animate layout properties (width, height, padding) where a transform or opacity will do. Motion is a budget, not a feature."
+    ]
+  }
+}
