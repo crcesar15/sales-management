@@ -31,17 +31,32 @@ const addedKeys = computed(
   () => new Set(items.value.map((i) => `${i.product_variant_id}:${i.sale_unit_id ?? "base"}`)),
 );
 
-function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" {
-  if (stock === null || stock === undefined) return "success";
-  if (stock === 0) return "danger";
-  if (minStock && stock <= minStock) return "warn";
+function availableInSaleUnit(item: LineItem): number | null {
+  if (item.stock === null || item.stock === undefined) return null;
+  const cf = item.conversion_factor > 0 ? item.conversion_factor : 1;
+  return Math.floor(item.stock / cf);
+}
+
+function getStockSeverity(
+  convertedAvail: number | null | undefined,
+  baseStock: number | null | undefined,
+  minStock: number | null | undefined,
+): "success" | "warn" | "danger" {
+  if (convertedAvail === null || convertedAvail === undefined) return "success";
+  if (convertedAvail === 0) return "danger";
+  if (minStock && baseStock !== null && baseStock !== undefined && baseStock <= minStock) return "warn";
   return "success";
 }
 
-function getStockLabel(stock: number | null | undefined): string {
-  if (stock === null || stock === undefined) return "—";
-  if (stock === 0) return t("Out of stock");
-  return `${t("In stock")}: ${String(stock)}`;
+function getStockLabel(convertedAvail: number | null | undefined): string {
+  if (convertedAvail === null || convertedAvail === undefined) return "—";
+  if (convertedAvail === 0) return t("Out of stock");
+  return `${t("In stock")}: ${String(convertedAvail)}`;
+}
+
+function maxQtyFor(item: LineItem): number {
+  const avail = availableInSaleUnit(item);
+  return avail === null ? 99999 : Math.max(1, avail);
 }
 
 function hasExpandableData(item: LineItem): boolean {
@@ -129,8 +144,8 @@ function confirmRemoveItem(index: number) {
       <Column :header="t('Stock')" style="min-width: 90px">
         <template #body="{ data }">
           <Tag
-            :value="getStockLabel(data.stock)"
-            :severity="getStockSeverity(data.stock, data.minimum_stock_level)"
+            :value="getStockLabel(availableInSaleUnit(data))"
+            :severity="getStockSeverity(availableInSaleUnit(data), data.stock, data.minimum_stock_level)"
             class="text-xs"
             rounded
           />
@@ -168,7 +183,7 @@ function confirmRemoveItem(index: number) {
           <InputNumber
             :model-value="data.quantity"
             :min="1"
-            :max="99999"
+            :max="maxQtyFor(data)"
             :step="1"
             :min-fraction-digits="0"
             show-buttons
