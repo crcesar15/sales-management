@@ -166,7 +166,9 @@ export interface SalesOrderPaymentForm {
 export interface VariantSearchResult {
   id: number;
   name: string;
-  identifier: string;
+  identifier: string | null;
+  variant_label: string | null;
+  option_values: string | null;
   label: string;
   price: number;
   stock: number | null;
