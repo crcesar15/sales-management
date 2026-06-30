@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DataTable, Column, Button, InputNumber, Tag, Select, useConfirm } from "primevue";
+import { DataTable, Column, Button, InputNumber, Tag, useConfirm } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { ref, computed } from "vue";
@@ -72,23 +72,6 @@ function updatePrice(index: number, price: number) {
   emit("update:modelValue", updated);
 }
 
-function updateSaleUnit(index: number, saleUnitId: number) {
-  const updated = [...items.value];
-  const item = updated[index];
-  const saleUnit = item.sale_units?.find((u) => u.id === saleUnitId);
-  if (!saleUnit) return;
-
-  updated[index] = {
-    ...updated[index],
-    sale_unit_id: saleUnit.id,
-    unit_price: saleUnit.price,
-    conversion_factor: saleUnit.conversion_factor,
-    sale_unit: { id: saleUnit.id, name: saleUnit.name, conversion_factor: saleUnit.conversion_factor },
-    line_total: item.quantity * saleUnit.price,
-  };
-  emit("update:modelValue", updated);
-}
-
 function removeItem(index: number) {
   const updated = items.value.filter((_, i) => i !== index);
   emit("update:modelValue", updated);
@@ -109,12 +92,7 @@ function confirmRemoveItem(index: number) {
   });
 }
 
-const saleUnitOptions = computed(() => {
-  return (item: LineItem) => {
-    if (!item.sale_units || item.sale_units.length === 0) return [];
-    return item.sale_units.map((u) => ({ name: u.name, value: u.id }));
-  };
-});
+
 </script>
 
 <template>
@@ -159,19 +137,13 @@ const saleUnitOptions = computed(() => {
         </template>
       </Column>
 
-      <Column :header="t('Sale Unit')" style="min-width: 140px">
-        <template #body="{ data, index }">
-          <Select
-            v-if="data.sale_units && data.sale_units.length > 0"
-            :model-value="data.sale_unit_id"
-            :options="saleUnitOptions(data)"
-            option-label="name"
-            option-value="value"
-            size="small"
-            class="w-full"
-            @update:model-value="updateSaleUnit(index, $event)"
-          />
-          <span v-else class="text-surface-400">—</span>
+      <Column :header="t('Sale Unit')" style="min-width: 120px">
+        <template #body="{ data }">
+          <span v-if="data.sale_unit" class="font-medium">
+            {{ data.sale_unit.name }}
+            <span v-if="data.sale_unit.conversion_factor !== 1" class="text-surface-500 font-normal ml-1">×{{ data.sale_unit.conversion_factor }}</span>
+          </span>
+          <span v-else class="text-surface-500">{{ t("Unit") }}</span>
         </template>
       </Column>
 
