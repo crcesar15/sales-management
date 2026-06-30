@@ -101,7 +101,7 @@ final class VariantsController extends Controller
         $includeList = array_filter(explode(',', $includes));
 
         $query = ProductVariant::query()
-            ->with(['product.brand', 'activeSaleUnits', ...in_array('saleUnits', $includeList) ? ['activeSaleUnits'] : []])
+            ->with(['product.brand', 'activeSaleUnits', 'values.option', ...in_array('saleUnits', $includeList) ? ['activeSaleUnits'] : []])
             ->whereHas('product', function ($q) use ($filter): void {
                 $q->where('name', 'like', "%{$filter}%");
             })
@@ -115,11 +115,19 @@ final class VariantsController extends Controller
                 $productName = $variant->product !== null ? $variant->product->name : '';
                 $brandName = $variant->product?->brand?->name;
 
+                $optionValues = $variant->values->isNotEmpty()
+                    ? $variant->values->map(fn ($v) => $v->value)->implode(' / ')
+                    : null;
+
+                $variantLabel = $variant->identifier ?: $optionValues;
+
                 $data = [
                     'id' => $variant->id,
                     'name' => $productName,
                     'identifier' => $variant->identifier,
-                    'label' => $productName . ' - ' . $variant->identifier,
+                    'variant_label' => $variantLabel,
+                    'option_values' => $optionValues,
+                    'label' => $productName . ' - ' . $variantLabel,
                     'price' => (float) $variant->price,
                     'stock' => $variant->stock,
                     'minimum_stock_level' => $variant->minimum_stock_level,

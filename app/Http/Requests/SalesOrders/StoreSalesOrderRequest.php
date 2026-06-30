@@ -30,6 +30,7 @@ final class StoreSalesOrderRequest extends FormRequest
             'items.*.sale_unit_id' => ['nullable', 'integer', 'exists:product_variant_units,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.conversion_factor' => ['required', 'integer', 'min:1'],
             'payments' => ['required', 'array', 'min:1'],
             'payments.*.payment_method' => ['required', 'string', 'in:cash,credit_card,qr,transfer'],
             'payments.*.amount' => ['required', 'numeric', 'min:0.01'],
