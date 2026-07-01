@@ -109,7 +109,7 @@ function updateNotes(val: string | null) {
           <span class="text-surface-500 text-sm">{{ t("Discount Applied") }}</span>
           <div class="text-right">
             <span class="text-red-500 dark:text-red-400 font-medium">-{{ formatCurrency(String(discountValue)) }}</span>
-            <span v-if="discountPercentage && discountMode === 'amount'" class="text-surface-400 text-sm ml-1">
+            <span v-if="discountPercentage && discountMode === 'amount'" class="text-surface-500 dark:text-surface-400 text-sm ml-1">
               ({{ discountPercentage }}%)
             </span>
           </div>
@@ -137,7 +137,7 @@ function updateNotes(val: string | null) {
             :class="{ 'p-invalid': submitCount > 0 && !!errors.notes }"
             @update:model-value="updateNotes($event)"
           />
-          <small v-if="submitCount > 0 && errors.notes" class="text-red-400 dark:text-red-300">{{ errors.notes }}</small>
+          <small v-if="submitCount > 0 && errors.notes" class="text-red-500 dark:text-red-400">{{ errors.notes }}</small>
         </div>
       </div>
     </template>

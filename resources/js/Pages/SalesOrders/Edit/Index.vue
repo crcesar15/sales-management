@@ -89,6 +89,20 @@ const payments = ref<SalesOrderPaymentForm[]>(
 
 const itemsError = ref("");
 const paymentsError = ref("");
+const submitting = ref(false);
+
+// Surface a client-side validation failure with the same feedback layer as
+// server errors: a warn toast + scroll/focus to the first invalid field.
+// The caller still sets the relevant error ref so the inline caption renders.
+function failValidation(setter: () => void, reasonKey: string): false {
+  setter();
+  toast.add({ severity: "warn", summary: t("Cannot save"), detail: t(reasonKey), life: 3000 });
+  nextTick(() => {
+    document.querySelector<HTMLElement>(".text-red-500, .p-invalid")?.scrollIntoView({ block: "center" });
+    document.querySelector<HTMLInputElement>(".text-red-500, .p-invalid")?.focus();
+  });
+  return false;
+}
 
 // Live per-variant base-stock ledger. On Edit, pre-populated items carry
 // stock=null (no fresh snapshot), so the ledger returns null for those
@@ -108,19 +122,25 @@ const submit = handleSubmit((formValues) => {
   paymentsError.value = "";
 
   if (lineItems.value.length === 0) {
-    itemsError.value = t("At least one item is required");
+    failValidation(() => {
+      itemsError.value = t("At least one item is required");
+    }, "At least one item is required");
     return;
   }
 
   if (hasOversell.value) {
-    itemsError.value = t("One or more items exceeds available stock");
+    failValidation(() => {
+      itemsError.value = t("One or more items exceeds available stock");
+    }, "One or more items exceeds available stock");
     return;
   }
 
   const paymentsTotal = payments.value.reduce((sum, p) => sum + p.amount, 0);
   const paymentsDifference = Math.abs(paymentsTotal - totalAmount.value);
   if (paymentsDifference > 0.01) {
-    paymentsError.value = t("Payments must equal order total");
+    failValidation(() => {
+      paymentsError.value = t("Payments must equal order total");
+    }, "Payments must equal order total");
     return;
   }
 
@@ -143,11 +163,14 @@ const submit = handleSubmit((formValues) => {
     })),
   };
 
+  submitting.value = true;
   router.put(route("sales-orders.update", props.order.id), payload, {
     onSuccess: () => {
+      submitting.value = false;
       toast.add({ severity: "success", summary: t("Success"), detail: t("Sales order updated successfully"), life: 3000 });
     },
     onError: (errs: Record<string, string>) => {
+      submitting.value = false;
       setErrors(errs);
       toast.add({ severity: "error", summary: t("Error"), detail: t("Please review the errors in the form"), life: 3000 });
       nextTick(() => {
@@ -169,7 +192,7 @@ function goBack() {
         <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Edit Sales Order") }} #{{ order.id }}</h2>
       </div>
-      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" @click="submit" />
+      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="submitting" :disabled="submitting" @click="submit" />
     </div>
 
     <ConfirmDialog />
@@ -218,7 +241,7 @@ function goBack() {
               :get-remaining-base-excluding-line="getRemainingBaseExcludingLine"
               :store-id="orderStoreId"
             />
-            <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
+            <small v-if="itemsError" class="text-red-500 dark:text-red-400 mt-2 block">{{ itemsError }}</small>
           </template>
         </Card>
 

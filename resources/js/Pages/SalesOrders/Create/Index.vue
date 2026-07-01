@@ -57,6 +57,20 @@ const lineItems = ref<LineItem[]>([]);
 const payments = ref<SalesOrderPaymentForm[]>([{ payment_method: "cash", amount: 0, reference: null }]);
 const itemsError = ref("");
 const paymentsError = ref("");
+const submitting = ref(false);
+
+// Surface a client-side validation failure with the same feedback layer as
+// server errors: a warn toast + scroll/focus to the first invalid field.
+// The caller still sets the relevant error ref so the inline caption renders.
+function failValidation(setter: () => void, reasonKey: string): false {
+  setter();
+  toast.add({ severity: "warn", summary: t("Cannot save"), detail: t(reasonKey), life: 3000 });
+  nextTick(() => {
+    document.querySelector<HTMLElement>(".text-red-500, .p-invalid")?.scrollIntoView({ block: "center" });
+    document.querySelector<HTMLInputElement>(".text-red-500, .p-invalid")?.focus();
+  });
+  return false;
+}
 
 // Clear line items if the store changes mid-order — stock snapshots are
 // store-scoped and would otherwise be stale.
@@ -83,24 +97,32 @@ const submit = handleSubmit((formValues) => {
   storeError.value = "";
 
   if (selectedStoreId.value === null) {
-    storeError.value = t("Select a store first");
+    failValidation(() => {
+      storeError.value = t("Select a store first");
+    }, "Select a store first");
     return;
   }
 
   if (lineItems.value.length === 0) {
-    itemsError.value = t("At least one item is required");
+    failValidation(() => {
+      itemsError.value = t("At least one item is required");
+    }, "At least one item is required");
     return;
   }
 
   if (hasOversell.value) {
-    itemsError.value = t("One or more items exceeds available stock");
+    failValidation(() => {
+      itemsError.value = t("One or more items exceeds available stock");
+    }, "One or more items exceeds available stock");
     return;
   }
 
   const paymentsTotal = payments.value.reduce((sum, p) => sum + p.amount, 0);
   const paymentsDifference = Math.abs(paymentsTotal - totalAmount.value);
   if (paymentsDifference > 0.01) {
-    paymentsError.value = t("Payments must equal order total");
+    failValidation(() => {
+      paymentsError.value = t("Payments must equal order total");
+    }, "Payments must equal order total");
     return;
   }
 
@@ -124,11 +146,14 @@ const submit = handleSubmit((formValues) => {
     })),
   };
 
+  submitting.value = true;
   router.post(route("sales-orders.store"), payload, {
     onSuccess: () => {
+      submitting.value = false;
       toast.add({ severity: "success", summary: t("Success"), detail: t("Sales order created successfully"), life: 3000 });
     },
     onError: (errs: Record<string, string>) => {
+      submitting.value = false;
       setErrors(errs);
       toast.add({ severity: "error", summary: t("Error"), detail: t("Please review the errors in the form"), life: 3000 });
       nextTick(() => {
@@ -150,7 +175,7 @@ function goBack() {
         <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Create Sales Order") }}</h2>
       </div>
-      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" @click="submit" />
+      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="submitting" :disabled="submitting" @click="submit" />
     </div>
 
     <ConfirmDialog />
@@ -172,7 +197,7 @@ function goBack() {
                 :class="{ 'p-invalid': !!storeError }"
                 @update:model-value="onStoreChange"
               />
-              <small v-if="storeError" class="text-red-400 dark:text-red-300">{{ storeError }}</small>
+              <small v-if="storeError" class="text-red-500 dark:text-red-400">{{ storeError }}</small>
             </div>
             <CustomerSelect v-model="selectedCustomerId" />
           </template>
@@ -181,7 +206,7 @@ function goBack() {
         <Card class="mb-4">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <div v-if="selectedStoreId === null" class="flex flex-col items-center justify-center py-10 text-surface-400">
+            <div v-if="selectedStoreId === null" class="flex flex-col items-center justify-center py-10 text-surface-500 dark:text-surface-400">
               <i class="fa fa-store text-4xl mb-3"></i>
               <span class="font-medium text-lg mb-1">{{ t("Select a store to add products") }}</span>
               <small>{{ t("Stock availability depends on the selected store") }}</small>
@@ -193,7 +218,7 @@ function goBack() {
                 :get-remaining-base-excluding-line="getRemainingBaseExcludingLine"
                 :store-id="selectedStoreId"
               />
-              <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
+              <small v-if="itemsError" class="text-red-500 dark:text-red-400 mt-2 block">{{ itemsError }}</small>
             </template>
           </template>
         </Card>

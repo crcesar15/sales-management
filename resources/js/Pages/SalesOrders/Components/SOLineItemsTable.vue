@@ -160,7 +160,7 @@ function confirmRemoveItem(index: number) {
       scroll-direction="both"
     >
       <template #empty>
-        <div class="flex flex-col items-center justify-center py-10 text-surface-400">
+        <div class="flex flex-col items-center justify-center py-10 text-surface-500 dark:text-surface-400">
           <i class="fa fa-cart-plus text-4xl mb-3"></i>
           <span class="font-medium text-lg mb-1">{{ t("No items added yet") }}</span>
           <small>{{ t("Use the search above to add products") }}</small>
