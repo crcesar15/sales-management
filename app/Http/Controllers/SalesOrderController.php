@@ -11,6 +11,7 @@ use App\Http\Requests\SalesOrders\UpdateSalesOrderRequest;
 use App\Http\Resources\SalesOrder\SalesOrderCollection;
 use App\Http\Resources\SalesOrder\SalesOrderResource;
 use App\Models\SalesOrder;
+use App\Models\Store;
 use App\Services\SalesOrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -54,11 +55,20 @@ final class SalesOrderController extends Controller
         ]);
     }
 
-    public function create(): InertiaResponse
+    public function create(Request $request): InertiaResponse
     {
         $this->authorize(PermissionsEnum::SALES_MANAGE);
 
-        return Inertia::render('SalesOrders/Create/Index');
+        $actor = $request->user() ?? throw new RuntimeException('Unauthenticated.');
+
+        $stores = Store::query()
+            ->where('status', 'active')
+            ->whereHas('users', fn ($q) => $q->where('users.id', $actor->id))
+            ->get(['id', 'name', 'code']);
+
+        return Inertia::render('SalesOrders/Create/Index', [
+            'stores' => $stores,
+        ]);
     }
 
     public function store(StoreSalesOrderRequest $request): RedirectResponse
@@ -106,6 +116,7 @@ final class SalesOrderController extends Controller
 
         $salesOrder->load([
             'customer',
+            'store',
             'items.productVariant.product',
             'items.saleUnit',
             'payments',

@@ -100,7 +100,7 @@ final class SalesOrderService
             $order = SalesOrder::create([
                 'customer_id' => $data['customer_id'] ?? null,
                 'user_id' => $actor->id,
-                'store_id' => $actor->stores()->first()?->id,
+                'store_id' => $data['store_id'],
                 'cash_register_shift_id' => $data['cash_register_shift_id'] ?? null,
                 'status' => $status,
                 'discount_type' => $discountType,

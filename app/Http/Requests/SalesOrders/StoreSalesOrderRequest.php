@@ -21,6 +21,7 @@ final class StoreSalesOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'store_id' => ['required', 'integer', 'exists:stores,id'],
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'discount_type' => ['required', 'string', 'in:flat,percentage'],
             'discount_value' => ['required', 'numeric', 'min:0'],
@@ -44,6 +45,16 @@ final class StoreSalesOrderRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator): void {
+            // Ensure the chosen store is one the actor is assigned to.
+            $storeId = $this->integer('store_id', 0);
+            $user = $this->user();
+            if ($storeId > 0 && $user !== null && ! $user->stores()->where('stores.id', $storeId)->exists()) {
+                $validator->errors()->add(
+                    'store_id',
+                    'The selected store is not available for this user.'
+                );
+            }
+
             $items = $this->array('items');
             $payments = $this->array('payments');
 

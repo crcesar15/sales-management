@@ -8,6 +8,7 @@ use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Catalog\VariantVendorResource;
 use App\Http\Resources\Product\ProductVariantCollection;
+use App\Models\Batch;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
@@ -99,6 +100,7 @@ final class VariantsController extends Controller
         $filter = $request->string('filter', '')->value();
         $includes = $request->string('includes', '')->value();
         $includeList = array_filter(explode(',', $includes));
+        $storeId = $request->integer('store_id', 0);
 
         $query = ProductVariant::query()
             ->with(['product.brand', 'activeSaleUnits', 'values.option', ...in_array('saleUnits', $includeList) ? ['activeSaleUnits'] : []])
@@ -113,7 +115,7 @@ final class VariantsController extends Controller
         $variants = $query->orderBy('identifier')
             ->limit(20)
             ->get()
-            ->map(function ($variant) {
+            ->map(function ($variant) use ($storeId) {
                 $productName = $variant->product !== null ? $variant->product->name : '';
                 $brandName = $variant->product?->brand?->name;
 
@@ -123,6 +125,17 @@ final class VariantsController extends Controller
 
                 $variantLabel = $variant->identifier ?: $optionValues;
 
+                // When a store is specified, compute stock from that store's
+                // active batches only — the variant's aggregate `stock` column
+                // sums across all stores and would mislead the sales UI.
+                $stock = $storeId > 0
+                    ? (int) Batch::query()
+                        ->where('product_variant_id', $variant->id)
+                        ->where('store_id', $storeId)
+                        ->active()
+                        ->sum('remaining_quantity')
+                    : $variant->stock;
+
                 $data = [
                     'id' => $variant->id,
                     'name' => $productName,
@@ -131,7 +144,7 @@ final class VariantsController extends Controller
                     'option_values' => $optionValues,
                     'label' => $productName . ' - ' . $variantLabel,
                     'price' => (float) $variant->price,
-                    'stock' => $variant->stock,
+                    'stock' => $stock,
                     'minimum_stock_level' => $variant->minimum_stock_level,
                     'product' => $variant->product ? [
                         'id' => $variant->product->id,
