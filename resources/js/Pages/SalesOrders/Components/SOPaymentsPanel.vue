@@ -2,7 +2,8 @@
 import { Card, Button, Select, InputNumber, InputText, Divider } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import { computed } from "vue";
+import { usePaymentsTotals } from "@/Composables/usePaymentsTotals";
+import { computed, toRef } from "vue";
 import type { SalesOrderPaymentForm } from "@/Types/sales-order-types";
 
 const props = defineProps<{
@@ -30,15 +31,15 @@ const payments = computed({
   set: (val) => emit("update:modelValue", val),
 });
 
-const paymentsTotal = computed(() => payments.value.reduce((sum, p) => sum + p.amount, 0));
-const paymentsDifference = computed(() => Math.abs(paymentsTotal.value - props.totalAmount));
+const { paymentsTotal, paymentsDifference, paymentsShortfall, isShortfall } = usePaymentsTotals(
+  payments,
+  toRef(() => props.totalAmount),
+);
 
 // Direction-aware mismatch callout: positive shortfall = underpaid ("Short",
 // sale can't close balanced — warn); negative = overpaid ("Over", operator
 // owes change — not an error). Icon + label + amount = three carriers so
 // color is never the sole state indicator (DESIGN.md Status-Pairs Rule).
-const paymentsShortfall = computed(() => props.totalAmount - paymentsTotal.value);
-const isShortfall = computed(() => paymentsShortfall.value > 0);
 const mismatchLabel = computed(() => (isShortfall.value ? t("Short") : t("Over")));
 const mismatchAmount = computed(() => formatCurrency(String(Math.abs(paymentsShortfall.value))));
 const mismatchIcon = computed(() => (isShortfall.value ? "fa fa-circle-exclamation" : "fa fa-circle-check"));
@@ -70,6 +71,21 @@ function removePayment(index: number) {
   const updated = payments.value.filter((_, i) => i !== index);
   emit("update:modelValue", updated);
 }
+
+// One-tap quick-fill: sets a row's amount to whatever is still owed after the
+// other rows. Serves the 60-second sale target — no manual subtraction.
+function applyRemaining(index: number) {
+  const othersTotal = payments.value.reduce((sum, p, i) => (i === index ? sum : sum + p.amount), 0);
+  const remaining = props.totalAmount - othersTotal;
+  updatePaymentAmount(index, Math.max(0, remaining));
+}
+
+function showApplyRemaining(index: number): boolean {
+  if (paymentsDifference.value <= 0.01) return false;
+  const othersTotal = payments.value.reduce((sum, p, i) => (i === index ? sum : sum + p.amount), 0);
+  const remaining = props.totalAmount - othersTotal;
+  return remaining > 0.01;
+}
 </script>
 
 <template>
@@ -82,8 +98,12 @@ function removePayment(index: number) {
     </template>
     <template #content>
       <div class="flex flex-col gap-3">
-        <div v-for="(payment, index) in payments" :key="index" class="flex items-end gap-3">
-          <div class="flex-1 flex flex-col gap-1">
+        <div
+          v-for="(payment, index) in payments"
+          :key="index"
+          class="flex flex-col gap-3 sm:flex-row sm:items-end"
+        >
+          <div class="flex flex-col gap-1 sm:flex-1 min-w-0">
             <label :for="`payment-method-${index}`" class="text-sm">{{ t("Payment Method") }}</label>
             <Select
               :id="`payment-method-${index}`"
@@ -95,7 +115,7 @@ function removePayment(index: number) {
               @update:model-value="updatePaymentMethod(index, $event)"
             />
           </div>
-          <div class="flex flex-col gap-1" style="min-width: 140px">
+          <div class="flex flex-col gap-1 w-full sm:w-auto sm:flex-1 sm:min-w-[140px]">
             <label :for="`payment-amount-${index}`" class="text-sm">{{ t("Amount") }}</label>
             <InputNumber
               :id="`payment-amount-${index}`"
@@ -106,7 +126,7 @@ function removePayment(index: number) {
               @update:model-value="updatePaymentAmount(index, $event ?? 0)"
             />
           </div>
-          <div class="flex-1 flex flex-col gap-1">
+          <div class="flex flex-col gap-1 sm:flex-1 min-w-0">
             <label :for="`payment-reference-${index}`" class="text-sm">{{ t("Reference") }}</label>
             <InputText
               :id="`payment-reference-${index}`"
@@ -116,15 +136,25 @@ function removePayment(index: number) {
               @update:model-value="updatePaymentReference(index, $event || null)"
             />
           </div>
-          <Button
-            v-if="payments.length > 1"
-            icon="fa fa-trash"
-            text
-            severity="danger"
-            size="small"
-            class="mb-1"
-            @click="removePayment(index)"
-          />
+          <div class="flex items-center gap-1 self-end sm:mb-1">
+            <Button
+              v-if="showApplyRemaining(index)"
+              v-tooltip.top="t('Apply remaining')"
+              icon="fa fa-fill-drip"
+              size="small"
+              text
+              @click="applyRemaining(index)"
+            />
+            <Button
+              v-if="payments.length > 1"
+              v-tooltip.top="t('Delete')"
+              icon="fa fa-trash"
+              text
+              severity="danger"
+              size="small"
+              @click="removePayment(index)"
+            />
+          </div>
         </div>
         <Divider class="!my-1" />
         <div class="flex justify-between">

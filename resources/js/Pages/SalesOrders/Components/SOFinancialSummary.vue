@@ -62,6 +62,22 @@ const discountPercentage = computed(() => {
   return ((props.discountValue / props.subTotal) * 100).toFixed(1);
 });
 
+const discountAmountEquivalent = computed(() => {
+  if (!props.discountValue || props.discountValue <= 0) return null;
+  return formatCurrency(String(props.discountValue));
+});
+
+// Symmetric cross-mode hint: in amount mode show the percentage equivalent,
+// in percentage mode show the amount equivalent. One row, one hint — no
+// duplicate "Discount Applied" row below.
+const discountHint = computed(() => {
+  if (!props.discountValue || props.discountValue <= 0) return null;
+  if (discountMode.value === "amount") {
+    return discountPercentage.value ? `(${discountPercentage.value}%)` : null;
+  }
+  return discountAmountEquivalent.value ? `(${discountAmountEquivalent.value})` : null;
+});
+
 function onModeChange(mode: "amount" | "percentage") {
   discountMode.value = mode;
 }
@@ -102,15 +118,8 @@ function updateNotes(val: string | null) {
               input-class="w-28 text-right"
               @update:model-value="discountDisplayValue = $event"
             />
-          </div>
-        </div>
-
-        <div v-if="discountValue && discountValue > 0" class="flex justify-between items-center">
-          <span class="text-surface-500 text-sm">{{ t("Discount Applied") }}</span>
-          <div class="text-right">
-            <span class="text-red-500 dark:text-red-400 font-medium">-{{ formatCurrency(String(discountValue)) }}</span>
-            <span v-if="discountPercentage && discountMode === 'amount'" class="text-surface-500 dark:text-surface-400 text-sm ml-1">
-              ({{ discountPercentage }}%)
+            <span v-if="discountHint" class="text-surface-500 dark:text-surface-400 text-sm whitespace-nowrap">
+              {{ discountHint }}
             </span>
           </div>
         </div>

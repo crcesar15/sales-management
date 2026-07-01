@@ -10,6 +10,7 @@ import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
 import { useAuth } from "@composables/useAuth";
 import { useStockLedger } from "@composables/useStockLedger";
+import { usePaymentsTotals } from "@composables/usePaymentsTotals";
 import SOLineItemsTable from "../Components/SOLineItemsTable.vue";
 import SOFinancialSummary from "../Components/SOFinancialSummary.vue";
 import SOPaymentsPanel from "../Components/SOPaymentsPanel.vue";
@@ -117,6 +118,10 @@ const taxRate = computed(() => Number(getSetting("sales", "tax_rate", "0") ?? 0)
 const taxAmount = computed(() => Math.round((subTotal.value - discountAmount.value) * taxRate.value * 100) / 100);
 const totalAmount = computed(() => Math.round((subTotal.value - discountAmount.value + taxAmount.value) * 100) / 100);
 
+// Single-sourced payment totals — shared with SOPaymentsPanel so the submit
+// guard and the live mismatch callout cannot drift apart.
+const { isBalanced: paymentsAreBalanced } = usePaymentsTotals(payments, totalAmount);
+
 const submit = handleSubmit((formValues) => {
   itemsError.value = "";
   paymentsError.value = "";
@@ -135,9 +140,7 @@ const submit = handleSubmit((formValues) => {
     return;
   }
 
-  const paymentsTotal = payments.value.reduce((sum, p) => sum + p.amount, 0);
-  const paymentsDifference = Math.abs(paymentsTotal - totalAmount.value);
-  if (paymentsDifference > 0.01) {
+  if (!paymentsAreBalanced.value) {
     failValidation(() => {
       paymentsError.value = t("Payments must equal order total");
     }, "Payments must equal order total");
