@@ -50,19 +50,9 @@ const missingPercent = computed(() => {
       </div>
       <div class="flex items-center gap-2">
         <template v-if="batch.status !== 'closed'">
-          <Button
-            v-can="'batch.edit'"
-            :label="t('Edit')"
-            icon="fa-solid fa-pen"
-            @click="editModalVisible = true"
-          />
+          <Button v-can="'batch.edit'" :label="t('Edit')" icon="fa-solid fa-pen" @click="editModalVisible = true" />
         </template>
-        <Tag
-          v-else
-          :value="t('Locked')"
-          icon="fa-solid fa-lock"
-          severity="info"
-        />
+        <Tag v-else :value="t('Locked')" icon="fa-solid fa-lock" severity="info" />
       </div>
     </div>
 
@@ -174,30 +164,22 @@ const missingPercent = computed(() => {
           </template>
         </Card>
         <div class="mt-4 flex justify-end gap-2">
-            <template v-if="batch.status !== 'closed'">
-              <Button
-                :label="t('Close Batch')"
-                icon="fa-solid fa-xmark"
-                class="block w-full"
-                @click="closeModalVisible = true"
-              />
-            </template>
-            <Button
-              v-if="batch.product_variant?.id"
-              :label="t('View Variant')"
-              icon="fa-solid fa-arrow-up-right-from-square"
-              class="block w-full"
-              outlined
-              @click="router.visit(route('inventory.variants.show', { variant: batch.product_variant.id }))"
-            />
+          <template v-if="batch.status !== 'closed'">
+            <Button :label="t('Close Batch')" icon="fa-solid fa-xmark" class="block w-full" @click="closeModalVisible = true" />
+          </template>
+          <Button
+            v-if="batch.product_variant?.id"
+            :label="t('View Variant')"
+            icon="fa-solid fa-arrow-up-right-from-square"
+            class="block w-full"
+            outlined
+            @click="router.visit(route('inventory.variants.show', { variant: batch.product_variant.id }))"
+          />
         </div>
       </div>
     </div>
 
-    <CloseBatchModal
-      v-model:visible="closeModalVisible"
-      :batch-id="batch.id"
-    />
+    <CloseBatchModal v-model:visible="closeModalVisible" :batch-id="batch.id" />
 
     <EditBatchModal
       v-model:visible="editModalVisible"

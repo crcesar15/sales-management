@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-  Dialog,
-  Galleria,
-  Button,
-  Tag,
-  DataTable,
-  Column,
-  Card,
-} from "primevue";
+import { Dialog, Galleria, Button, Tag, DataTable, Column, Card } from "primevue";
 import { computed } from "vue";
 import type { ProductListResponse } from "@/Types/product-types";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
@@ -51,7 +43,6 @@ const statusLabel = computed(() => {
   if (props.product?.status === "inactive") return t("Inactive");
   return t("Archived");
 });
-
 </script>
 
 <template>
@@ -145,13 +136,7 @@ const statusLabel = computed(() => {
               <div>
                 <span class="text-surface-500 text-sm block mb-1">{{ t("Category", 2) }}</span>
                 <div v-if="product.categories.length" class="flex flex-wrap gap-1.5">
-                  <Tag
-                    v-for="category in product.categories"
-                    :key="category.id"
-                    :value="category.name"
-                    severity="secondary"
-                    rounded
-                  />
+                  <Tag v-for="category in product.categories" :key="category.id" :value="category.name" severity="secondary" rounded />
                 </div>
                 <span v-else class="text-muted-color">&mdash;</span>
               </div>

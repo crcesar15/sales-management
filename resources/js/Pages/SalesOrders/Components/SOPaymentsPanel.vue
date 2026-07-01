@@ -72,11 +72,7 @@ function removePayment(index: number) {
     </template>
     <template #content>
       <div class="flex flex-col gap-3">
-        <div
-          v-for="(payment, index) in payments"
-          :key="index"
-          class="flex items-end gap-3"
-        >
+        <div v-for="(payment, index) in payments" :key="index" class="flex items-end gap-3">
           <div class="flex-1 flex flex-col gap-1">
             <label :for="`payment-method-${index}`" class="text-sm">{{ t("Payment Method") }}</label>
             <Select

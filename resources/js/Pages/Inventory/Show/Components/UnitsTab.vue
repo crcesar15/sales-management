@@ -231,7 +231,10 @@ const onSubmit = handleSubmit(async (values) => {
   };
 
   if (isEditing.value) {
-    router.put(route("variant.units.update", [props.product.id, props.variant.id, editing.value!.id]), payload as any, { onSuccess, onError });
+    router.put(route("variant.units.update", [props.product.id, props.variant.id, editing.value!.id]), payload as any, {
+      onSuccess,
+      onError,
+    });
     return;
   }
 
@@ -287,17 +290,13 @@ watch(formType, () => {
           },
         }"
       >
-        <Tab
-          value="sale"
-        >
+        <Tab value="sale">
           <div class="flex items-center gap-2">
             <span>{{ t("Sale Units") }}</span>
             <Tag :value="saleUnitsCount" severity="secondary" rounded />
           </div>
         </Tab>
-        <Tab
-          value="purchase"
-        >
+        <Tab value="purchase">
           <div class="flex items-center gap-2">
             <span>{{ t("Purchase Units") }}</span>
             <Tag :value="purchaseUnitsCount" severity="secondary" rounded />

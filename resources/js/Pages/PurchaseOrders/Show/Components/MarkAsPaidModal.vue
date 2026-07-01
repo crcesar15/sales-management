@@ -83,13 +83,7 @@ function onVisibleChange(val: boolean) {
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    modal
-    :header="t('Mark as Paid')"
-    :style="{ width: '500px' }"
-    @update:visible="onVisibleChange"
-  >
+  <Dialog :visible="visible" modal :header="t('Mark as Paid')" :style="{ width: '500px' }" @update:visible="onVisibleChange">
     <div class="flex flex-col gap-4">
       <p class="m-0 text-surface-500">{{ t("Provide payment details to mark this purchase order as paid.") }}</p>
 

@@ -227,12 +227,12 @@ const onSubmitFinance = handleSubmitFinance((values) => {
 
     <Card>
       <template #content>
-        <Tabs  v-model:value="activeTab">
+        <Tabs v-model:value="activeTab">
           <TabList
             :pt="{
               activeBar: {
-                class: 'border-2 border-primary'
-              }
+                class: 'border-2 border-primary',
+              },
             }"
           >
             <Tab

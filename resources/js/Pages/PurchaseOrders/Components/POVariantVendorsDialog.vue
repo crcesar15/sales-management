@@ -64,21 +64,11 @@ function formatPaymentTerms(terms: string | null): string {
     <template #header>
       <div>
         <span class="font-semibold text-lg">{{ t("Vendors") }}</span>
-        <div class="text-sm text-surface-500 mt-1">
-          {{ productName }} &mdash; {{ variantLabel }}
-        </div>
+        <div class="text-sm text-surface-500 mt-1">{{ productName }} &mdash; {{ variantLabel }}</div>
       </div>
     </template>
 
-    <DataTable
-      :value="vendors"
-      :loading="loading"
-      striped-rows
-      row-hover
-      sort-field="price"
-      :sort-order="1"
-      class="border-t-2"
-    >
+    <DataTable :value="vendors" :loading="loading" striped-rows row-hover sort-field="price" :sort-order="1" class="border-t-2">
       <template #empty>
         <div class="flex flex-col items-center py-8 text-surface-400">
           <i class="fa fa-store-slash text-4xl mb-3"></i>
@@ -106,7 +96,12 @@ function formatPaymentTerms(terms: string | null): string {
 
       <Column field="unit.name" :header="t('Purchase Unit')">
         <template #body="{ data }">
-          <Badge class="capitalize" size="xlarge" severity="secondary" :value="data.unit?.name ?? data.measurement_unit?.name ?? '\u2014'" />
+          <Badge
+            class="capitalize"
+            size="xlarge"
+            severity="secondary"
+            :value="data.unit?.name ?? data.measurement_unit?.name ?? '\u2014'"
+          />
         </template>
       </Column>
 

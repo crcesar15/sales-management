@@ -23,9 +23,7 @@ const toast = useToast();
 const { t } = useI18n();
 const { currencyCode } = useCurrencyFormatter();
 
-const registerOptions = computed(() =>
-  props.registers.map((r) => ({ label: r.name, value: r.id })),
-);
+const registerOptions = computed(() => props.registers.map((r) => ({ label: r.name, value: r.id })));
 
 const schema = toTypedSchema(
   object({
@@ -134,12 +132,7 @@ const submit = handleSubmit((values) => {
 
       <div class="flex flex-col gap-2">
         <label for="notes">{{ t("Notes") }} ({{ t("Optional") }})</label>
-        <InputText
-          id="notes"
-          v-model="notes"
-          v-bind="notesAttrs"
-          autocomplete="off"
-        />
+        <InputText id="notes" v-model="notes" v-bind="notesAttrs" autocomplete="off" />
       </div>
     </div>
     <template #footer>

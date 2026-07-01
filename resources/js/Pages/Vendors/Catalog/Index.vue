@@ -230,7 +230,12 @@ const goBack = () => {
             <template #body="{ data }">
               <span class="text-900 font-medium">{{ data.product_variant?.product?.name ?? "—" }}</span>
               <div v-if="data.product_variant?.values?.length" class="flex flex-wrap gap-1 mt-1">
-                <Badge v-for="opt in data.product_variant.values" :key="opt.option_name" :value="`${opt.option_name}: ${opt.value}`" severity="secondary" />
+                <Badge
+                  v-for="opt in data.product_variant.values"
+                  :key="opt.option_name"
+                  :value="`${opt.option_name}: ${opt.value}`"
+                  severity="secondary"
+                />
               </div>
             </template>
           </Column>

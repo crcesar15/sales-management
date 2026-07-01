@@ -84,7 +84,14 @@ defineExpose({
 
         <div class="md:col-span-6 col-span-12 flex flex-col gap-2">
           <label for="barcode">{{ t("Barcode") }}</label>
-          <InputText id="barcode" v-model="barcode" v-bind="barcodeAttrs" autocomplete="off" :disabled="!props.canEdit" :class="{ 'p-invalid': submitCount > 0 && !!errors.barcode }" />
+          <InputText
+            id="barcode"
+            v-model="barcode"
+            v-bind="barcodeAttrs"
+            autocomplete="off"
+            :disabled="!props.canEdit"
+            :class="{ 'p-invalid': submitCount > 0 && !!errors.barcode }"
+          />
           <small v-if="submitCount > 0 && errors.barcode" class="text-red-400 dark:text-red-300">{{ errors.barcode }}</small>
         </div>
       </div>
@@ -122,18 +129,15 @@ defineExpose({
             placeholder="—"
             :class="{ 'p-invalid': submitCount > 0 && !!errors.minimum_stock_level }"
           />
-          <small v-if="submitCount > 0 && errors.minimum_stock_level" class="text-red-400 dark:text-red-300">{{ errors.minimum_stock_level }}</small>
+          <small v-if="submitCount > 0 && errors.minimum_stock_level" class="text-red-400 dark:text-red-300">
+            {{ errors.minimum_stock_level }}
+          </small>
         </div>
 
         <div class="lg:col-span-4 md:col-span-6 col-span-12 flex flex-col gap-2">
           <label for="has-expiration">{{ t("Requires Expiration Date") }}</label>
           <div class="flex items-center gap-3 mt-1">
-            <ToggleSwitch
-              id="has-expiration"
-              v-model="hasExpiration"
-              v-bind="hasExpirationAttrs"
-              :disabled="!props.canEdit"
-            />
+            <ToggleSwitch id="has-expiration" v-model="hasExpiration" v-bind="hasExpirationAttrs" :disabled="!props.canEdit" />
             <span class="text-sm text-surface-500">{{ hasExpiration ? t("Yes") : t("No") }}</span>
           </div>
           <small class="text-surface-500">{{ t("When enabled, expiry date will be required when receiving or editing batches") }}</small>

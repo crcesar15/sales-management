@@ -134,82 +134,80 @@ function confirmRemoveItem(index: number) {
     <div class="flex flex-col gap-2 mb-3">
       <label for="product-search">{{ t("Search Product") }}</label>
       <AutoComplete
-            id="product-search"
-            :key="autocompleteKey"
-            v-model="selectedVariant"
-            :suggestions="variantSearchResults"
-            :loading="variantSearchLoading"
-            option-label="label"
-            :placeholder="t('Type to search products...')"
-            :empty-search-message="t('No results found')"
-            dropdown
-            force-selection
-            class="w-full"
-            input-class="w-full"
-            @complete="searchVariants"
-            @item-select="onVariantSelect"
+        id="product-search"
+        :key="autocompleteKey"
+        v-model="selectedVariant"
+        :suggestions="variantSearchResults"
+        :loading="variantSearchLoading"
+        option-label="label"
+        :placeholder="t('Type to search products...')"
+        :empty-search-message="t('No results found')"
+        dropdown
+        force-selection
+        class="w-full"
+        input-class="w-full"
+        @complete="searchVariants"
+        @item-select="onVariantSelect"
+      >
+        <template #header>
+          <div
+            class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 text-sm font-semibold text-surface-500 uppercase tracking-wide border-b border-surface-200 dark:border-surface-700"
           >
-            <template #header>
-              <div
-                class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 text-sm font-semibold text-surface-500 uppercase tracking-wide border-b border-surface-200 dark:border-surface-700"
-              >
-                <span class="col-span-4">{{ t("Product") }}</span>
-                <span class="col-span-2">{{ t("Brand") }}</span>
-                <span class="col-span-2">{{ t("Unit") }}</span>
-                <span class="col-span-2">{{ t("Stock") }}</span>
-                <span class="col-span-2">{{ t("Identifier") }}</span>
+            <span class="col-span-4">{{ t("Product") }}</span>
+            <span class="col-span-2">{{ t("Brand") }}</span>
+            <span class="col-span-2">{{ t("Unit") }}</span>
+            <span class="col-span-2">{{ t("Stock") }}</span>
+            <span class="col-span-2">{{ t("Identifier") }}</span>
+          </div>
+        </template>
+        <template #option="{ option }">
+          <!-- Desktop: grid row -->
+          <div class="hidden lg:grid grid-cols-12 gap-2 items-center w-full py-1">
+            <div class="col-span-4 flex flex-col gap-0.5 min-w-0">
+              <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
+              <span v-if="option.name" class="text-sm text-surface-500 truncate">{{ option.name }}</span>
+            </div>
+            <div class="col-span-2 text-sm text-surface-500 truncate">
+              {{ option.product?.brand?.name ?? "—" }}
+            </div>
+            <div class="col-span-2">
+              <span v-if="option.product?.measurement_unit" class="text-sm">
+                {{ option.product.measurement_unit.name }}
+              </span>
+            </div>
+            <div class="col-span-2">
+              <Tag
+                :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
+                :severity="option.stock === 0 ? 'danger' : 'success'"
+                class="text-sm"
+                rounded
+              />
+            </div>
+            <div class="col-span-2 text-sm text-surface-500 truncate">
+              {{ option.identifier }}
+            </div>
+          </div>
+          <!-- Mobile: card layout -->
+          <div class="lg:hidden flex flex-col gap-1.5 py-2 w-full">
+            <div class="flex items-center justify-between">
+              <div class="flex flex-col gap-0.5 min-w-0 flex-1">
+                <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
+                <span class="text-xs text-surface-500 truncate">
+                  <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} ·</span>
+                  <span v-if="option.name">{{ option.name }}</span>
+                  <span v-if="option.product?.measurement_unit" class="ml-1">({{ option.product.measurement_unit.name }})</span>
+                </span>
               </div>
-            </template>
-            <template #option="{ option }">
-              <!-- Desktop: grid row -->
-              <div class="hidden lg:grid grid-cols-12 gap-2 items-center w-full py-1">
-                <div class="col-span-4 flex flex-col gap-0.5 min-w-0">
-                  <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
-                  <span v-if="option.name" class="text-sm text-surface-500 truncate">{{ option.name }}</span>
-                </div>
-                <div class="col-span-2 text-sm text-surface-500 truncate">
-                  {{ option.product?.brand?.name ?? "—" }}
-                </div>
-                <div class="col-span-2">
-                  <span v-if="option.product?.measurement_unit" class="text-sm">
-                    {{ option.product.measurement_unit.name }}
-                  </span>
-                </div>
-                <div class="col-span-2">
-                  <Tag
-                    :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
-                    :severity="option.stock === 0 ? 'danger' : 'success'"
-                    class="text-sm"
-                    rounded
-                  />
-                </div>
-                <div class="col-span-2 text-sm text-surface-500 truncate">
-                  {{ option.identifier }}
-                </div>
-              </div>
-              <!-- Mobile: card layout -->
-              <div class="lg:hidden flex flex-col gap-1.5 py-2 w-full">
-                <div class="flex items-center justify-between">
-                  <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                    <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
-                    <span class="text-xs text-surface-500 truncate">
-                      <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} · </span>
-                      <span v-if="option.name">{{ option.name }} </span>
-                      <span v-if="option.product?.measurement_unit" class="ml-1">
-                        ({{ option.product.measurement_unit.name }})
-                      </span>
-                    </span>
-                  </div>
-                  <Tag
-                    :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
-                    :severity="option.stock === 0 ? 'danger' : 'success'"
-                    class="text-xs"
-                    rounded
-                  />
-                </div>
-              </div>
-            </template>
-          </AutoComplete>
+              <Tag
+                :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
+                :severity="option.stock === 0 ? 'danger' : 'success'"
+                class="text-xs"
+                rounded
+              />
+            </div>
+          </div>
+        </template>
+      </AutoComplete>
     </div>
 
     <DataTable :value="items" data-key="id" striped-rows row-hover>

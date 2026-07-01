@@ -51,12 +51,8 @@ const [notes, notesAttrs] = defineField("notes");
 const lineItems = ref<TransferLineItem[]>([]);
 const itemsError = ref("");
 
-const selectedFromStoreName = computed(
-  () => props.stores.find((s) => s.id === values.from_store_id)?.name ?? null,
-);
-const selectedToStoreName = computed(
-  () => props.stores.find((s) => s.id === values.to_store_id)?.name ?? null,
-);
+const selectedFromStoreName = computed(() => props.stores.find((s) => s.id === values.from_store_id)?.name ?? null);
+const selectedToStoreName = computed(() => props.stores.find((s) => s.id === values.to_store_id)?.name ?? null);
 const totalItems = computed(() => lineItems.value.length);
 const totalQuantityRequested = computed(() => lineItems.value.reduce((sum, i) => sum + i.quantity_requested, 0));
 
@@ -103,14 +99,7 @@ function goBack() {
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
-        <Button
-          icon="fa fa-arrow-left"
-          text
-          rounded
-          severity="secondary"
-          :aria-label="t('Back')"
-          @click="goBack"
-        />
+        <Button icon="fa fa-arrow-left" text rounded severity="secondary" :aria-label="t('Back')" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">
           {{ t("Create Transfer") }}
         </h2>
@@ -171,13 +160,7 @@ function goBack() {
               <div class="col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
                   <label for="notes">{{ t("Notes") }}</label>
-                  <Textarea
-                    id="notes"
-                    v-model="notes"
-                    v-bind="notesAttrs"
-                    :auto-resize="true"
-                    rows="3"
-                  />
+                  <Textarea id="notes" v-model="notes" v-bind="notesAttrs" :auto-resize="true" rows="3" />
                 </div>
               </div>
             </div>

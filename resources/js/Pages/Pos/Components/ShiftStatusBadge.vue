@@ -26,9 +26,7 @@ const { formatCurrency } = useCurrencyFormatter();
 
 const severity = computed(() => (props.status === "open" ? "success" : "secondary"));
 const label = computed(() => (props.status === "open" ? t("Open") : t("Closed")));
-const formattedBalance = computed(() =>
-  props.openingBalance !== undefined ? formatCurrency(props.openingBalance.toString()) : "",
-);
+const formattedBalance = computed(() => (props.openingBalance !== undefined ? formatCurrency(props.openingBalance.toString()) : ""));
 </script>
 
 <template>

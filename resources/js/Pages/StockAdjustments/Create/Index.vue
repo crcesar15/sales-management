@@ -1,17 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import {
-  Button,
-  Card,
-  Select,
-  InputNumber,
-  InputText,
-  Textarea,
-  AutoComplete,
-  DatePicker,
-  Tag,
-  useToast,
-} from "primevue";
+import { Button, Card, Select, InputNumber, InputText, Textarea, AutoComplete, DatePicker, Tag, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -54,10 +43,7 @@ const schema = toTypedSchema(
       }),
     expiry_date: string().nullable().optional(),
     batch_identifier: string().nullable().optional().max(255),
-    quantity_change: number()
-      .required()
-      .typeError(t("Quantity Change is required"))
-      .notOneOf([0], t("Quantity change cannot be zero")),
+    quantity_change: number().required().typeError(t("Quantity Change is required")).notOneOf([0], t("Quantity change cannot be zero")),
     reason: string().required(t("Reason is required")),
     notes: string().nullable().optional().max(1000),
   }),
@@ -98,9 +84,7 @@ const selectedBatchId = ref<number | null>(null);
 
 const isInitialStock = computed(() => values.reason === "initial_stock");
 const isNewBatch = computed(() => isInitialStock.value || selectedBatchId.value === NEW_BATCH_VALUE);
-const showBatchSelector = computed(
-  () => !isInitialStock.value && !!values.store_id && !!values.product_variant_id,
-);
+const showBatchSelector = computed(() => !isInitialStock.value && !!values.store_id && !!values.product_variant_id);
 const showNewBatchFields = computed(() => isNewBatch.value);
 const requiresExpiration = computed(() => selectedVariant.value?.has_expiration === true);
 
@@ -210,9 +194,7 @@ const batchSelectOptions = computed(() => {
   return options;
 });
 
-const selectedStoreName = computed(
-  () => props.stores.find((s) => s.id === values.store_id)?.name ?? null,
-);
+const selectedStoreName = computed(() => props.stores.find((s) => s.id === values.store_id)?.name ?? null);
 
 const selectedBatchLabel = computed(() => {
   if (isNewBatch.value) return t("New batch");
@@ -367,11 +349,9 @@ const submit = handleSubmit((formValues) => {
                           <div class="flex flex-col gap-0.5 min-w-0 flex-1">
                             <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
                             <span class="text-xs text-surface-500 truncate">
-                              <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} · </span>
-                              <span v-if="option.name">{{ option.name }} </span>
-                              <span v-if="option.product?.measurement_unit" class="ml-1">
-                                ({{ option.product.measurement_unit.name }})
-                              </span>
+                              <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} ·</span>
+                              <span v-if="option.name">{{ option.name }}</span>
+                              <span v-if="option.product?.measurement_unit" class="ml-1">({{ option.product.measurement_unit.name }})</span>
                             </span>
                           </div>
                           <Tag
@@ -454,7 +434,9 @@ const submit = handleSubmit((formValues) => {
                     show-icon
                     :placeholder="requiresExpiration ? t('Select expiry date') : t('Select expiry date (optional)')"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.expiry_date }"
-                    @update:model-value="setFieldValue('expiry_date', $event && $event instanceof Date ? $event.toISOString().split('T')[0] : null)"
+                    @update:model-value="
+                      setFieldValue('expiry_date', $event && $event instanceof Date ? $event.toISOString().split('T')[0] : null)
+                    "
                   />
                   <small v-if="submitCount > 0 && errors.expiry_date" class="text-red-400 dark:text-red-300">
                     {{ errors.expiry_date }}
@@ -512,7 +494,9 @@ const submit = handleSubmit((formValues) => {
                 <span v-if="selectedVariant" class="font-medium">
                   {{ selectedVariant.product?.name }}
                   <span class="text-surface-500 ml-1">{{ selectedVariant.name || selectedVariant.identifier }}</span>
-                  <span v-if="selectedVariant.product?.brand?.name" class="block text-sm text-surface-500">{{ selectedVariant.product.brand.name }}</span>
+                  <span v-if="selectedVariant.product?.brand?.name" class="block text-sm text-surface-500">
+                    {{ selectedVariant.product.brand.name }}
+                  </span>
                 </span>
                 <span v-else class="text-surface-400">---</span>
               </div>
@@ -528,7 +512,9 @@ const submit = handleSubmit((formValues) => {
                 <span class="text-sm text-surface-500 block">{{ t("Quantity Change") }}</span>
                 <span
                   v-if="formattedQuantity"
-                  :class="values.quantity_change != null && values.quantity_change < 0 ? 'text-red-500 font-bold' : 'text-green-600 font-bold'"
+                  :class="
+                    values.quantity_change != null && values.quantity_change < 0 ? 'text-red-500 font-bold' : 'text-green-600 font-bold'
+                  "
                 >
                   {{ formattedQuantity }}
                 </span>

@@ -166,7 +166,8 @@ function formatConversion(item: ReceptionLineItem): string {
             :class="{ 'p-invalid': data.has_expiration && !data.expiry_date }"
             class="w-full"
             @update:model-value="
-              (val: Date | Date[] | (Date | null)[] | null | undefined) => updateExpiryDate(index, Array.isArray(val) ? null : (val ?? null))
+              (val: Date | Date[] | (Date | null)[] | null | undefined) =>
+                updateExpiryDate(index, Array.isArray(val) ? null : (val ?? null))
             "
           />
           <small v-if="data.has_expiration && !data.expiry_date" class="text-red-400 dark:text-red-300">{{ t("Required") }}</small>
@@ -196,14 +197,7 @@ function formatConversion(item: ReceptionLineItem): string {
 
     <Column v-if="!disabled" style="min-width: 80px; width: 80px">
       <template #body="{ index }">
-        <Button
-          v-tooltip.top="t('Delete')"
-          icon="fa fa-trash-can"
-          text
-          rounded
-          severity="danger"
-          @click="confirmRemoveItem(index)"
-        />
+        <Button v-tooltip.top="t('Delete')" icon="fa fa-trash-can" text rounded severity="danger" @click="confirmRemoveItem(index)" />
       </template>
     </Column>
   </DataTable>

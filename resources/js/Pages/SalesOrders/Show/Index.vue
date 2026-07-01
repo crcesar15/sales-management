@@ -51,13 +51,7 @@ function shiftLabel(): string {
         <OrderStatusBadge :status="order.status" />
       </div>
       <div class="flex items-center gap-2">
-        <Button
-          v-if="canEdit"
-          v-can="'sales.manage'"
-          :label="t('Edit')"
-          icon="fa fa-pen"
-          @click="goToEdit"
-        />
+        <Button v-if="canEdit" v-can="'sales.manage'" :label="t('Edit')" icon="fa fa-pen" @click="goToEdit" />
       </div>
     </div>
 

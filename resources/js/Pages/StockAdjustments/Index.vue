@@ -1,26 +1,12 @@
 <script setup lang="ts">
-import {
-  DataTable,
-  Card,
-  Column,
-  Button,
-  Select,
-  DatePicker,
-  Badge,
-  Popover,
-  type DataTablePageEvent,
-} from "primevue";
+import { DataTable, Card, Column, Button, Select, DatePicker, Badge, Popover, type DataTablePageEvent } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import type {
-  StockAdjustmentListResponse,
-  StockAdjustmentFilters,
-  StockAdjustmentResponse,
-} from "@/Types/stock-adjustment-types";
+import type { StockAdjustmentListResponse, StockAdjustmentFilters, StockAdjustmentResponse } from "@/Types/stock-adjustment-types";
 import AdjustmentReasonTag from "./Show/Components/AdjustmentReasonTag.vue";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 
@@ -54,14 +40,9 @@ const reasonOptions = computed(() => [
   { label: t("Other"), value: "other" },
 ]);
 
-const storeOptions = computed(() => [
-  { label: t("All Stores"), value: ALL },
-  ...props.stores.map((s) => ({ label: s.name, value: s.id })),
-]);
+const storeOptions = computed(() => [{ label: t("All Stores"), value: ALL }, ...props.stores.map((s) => ({ label: s.name, value: s.id }))]);
 
-const hasActiveFilters = computed(
-  () => storeId.value !== ALL || reason.value !== ALL || dateFrom.value !== null || dateTo.value !== null,
-);
+const hasActiveFilters = computed(() => storeId.value !== ALL || reason.value !== ALL || dateFrom.value !== null || dateTo.value !== null);
 
 const activeFilterCount = computed(() => {
   let count = 0;

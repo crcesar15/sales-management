@@ -19,7 +19,7 @@ const emit = defineEmits<{
   (e: "movement-added"): void;
 }>();
 
-const {currencyCode} = useCurrencyFormatter();
+const { currencyCode } = useCurrencyFormatter();
 const toast = useToast();
 const { t } = useI18n();
 

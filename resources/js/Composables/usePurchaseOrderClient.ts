@@ -5,10 +5,7 @@ import type { AxiosResponse } from "axios";
 export function usePurchaseOrderClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchVendorCatalogApi = async (
-    vendorId: number,
-    query?: string,
-  ): Promise<AxiosResponse> => {
+  const fetchVendorCatalogApi = async (vendorId: number, query?: string): Promise<AxiosResponse> => {
     const params: Record<string, unknown> = {
       per_page: 50,
       status: "active",
@@ -16,18 +13,11 @@ export function usePurchaseOrderClient() {
     if (query) {
       params.filter = query;
     }
-    return await apiClient.get(
-      route("api.v1.vendors.variants", { vendor: vendorId }),
-      { params },
-    );
+    return await apiClient.get(route("api.v1.vendors.variants", { vendor: vendorId }), { params });
   };
 
-  const fetchVariantVendorsApi = async (
-    variantId: number,
-  ): Promise<AxiosResponse> => {
-    return await apiClient.get(
-      route("api.v1.variants.vendors", { variant: variantId }),
-    );
+  const fetchVariantVendorsApi = async (variantId: number): Promise<AxiosResponse> => {
+    return await apiClient.get(route("api.v1.variants.vendors", { variant: variantId }));
   };
 
   return {

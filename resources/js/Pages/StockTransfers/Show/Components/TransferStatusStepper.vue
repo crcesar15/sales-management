@@ -23,11 +23,7 @@ const currentIndex = computed(() => steps.findIndex((s) => s.key === props.curre
 
 <template>
   <div v-if="cancelled" class="flex items-center gap-2">
-    <div
-      v-for="(step, i) in steps"
-      :key="step.key"
-      class="flex items-center gap-2"
-    >
+    <div v-for="(step, i) in steps" :key="step.key" class="flex items-center gap-2">
       <div
         class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300"
       >
@@ -38,35 +34,21 @@ const currentIndex = computed(() => steps.findIndex((s) => s.key === props.curre
     </div>
   </div>
   <div v-else class="flex items-center gap-2">
-    <div
-      v-for="(step, i) in steps"
-      :key="step.key"
-      class="flex items-center gap-2"
-    >
+    <div v-for="(step, i) in steps" :key="step.key" class="flex items-center gap-2">
       <div
         :class="[
           'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
-          i <= currentIndex
-            ? 'bg-primary-500 text-white'
-            : 'bg-surface-200 text-surface-500 dark:bg-surface-700 dark:text-surface-400',
+          i <= currentIndex ? 'bg-primary-500 text-white' : 'bg-surface-200 text-surface-500 dark:bg-surface-700 dark:text-surface-400',
         ]"
       >
         {{ i + 1 }}
       </div>
-      <span
-        :class="[
-          'text-sm',
-          i <= currentIndex ? 'text-primary-600 font-medium' : 'text-surface-400',
-        ]"
-      >
+      <span :class="['text-sm', i <= currentIndex ? 'text-primary-600 font-medium' : 'text-surface-400']">
         {{ t(step.label) }}
       </span>
       <i
         v-if="i < steps.length - 1"
-        :class="[
-          'fa-solid fa-chevron-right text-xs',
-          i < currentIndex ? 'text-primary-400' : 'text-surface-300',
-        ]"
+        :class="['fa-solid fa-chevron-right text-xs', i < currentIndex ? 'text-primary-400' : 'text-surface-300']"
       />
     </div>
   </div>

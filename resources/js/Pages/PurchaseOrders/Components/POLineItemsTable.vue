@@ -295,7 +295,7 @@ watch(
                   {{ option.product_variant?.product?.name ?? option.product_variant?.name }}
                 </span>
                 <span class="text-xs text-surface-500 truncate">
-                  <span v-if="option.product_variant?.product?.brand?.name">{{ option.product_variant.product.brand.name }} · </span>
+                  <span v-if="option.product_variant?.product?.brand?.name">{{ option.product_variant.product.brand.name }} ·</span>
                   {{ option.product_variant?.name ?? option.product_variant?.identifier }}
                   <span v-if="option.purchase_unit?.name" class="ml-1">({{ option.purchase_unit.name }})</span>
                   <span v-else-if="option.product_variant?.product?.measurement_unit" class="ml-1">
@@ -415,13 +415,7 @@ watch(
       <Column style="min-width: 80px; width: 80px">
         <template #body="{ data, index }">
           <div class="flex gap-1">
-            <Button
-              v-tooltip.top="t('View Vendors')"
-              icon="fa fa-store"
-              text
-              rounded
-              @click="openVendorsDialog(data)"
-            />
+            <Button v-tooltip.top="t('View Vendors')" icon="fa fa-store" text rounded @click="openVendorsDialog(data)" />
             <Button v-tooltip.top="t('Delete')" icon="fa fa-trash-can" text rounded @click="confirmRemoveItem(index)" />
           </div>
         </template>

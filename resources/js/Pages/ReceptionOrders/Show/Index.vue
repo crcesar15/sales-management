@@ -212,7 +212,13 @@ function formatConversion(item: ReceptionOrderResponse["line_items"][number]): s
               <Column :header="t('Conversion')" style="min-width: 160px">
                 <template #body="{ data }">
                   <span v-if="formatConversion(data)" class="text-sm text-surface-500">{{ formatConversion(data) }}</span>
-                  <span v-else class="text-surface-500">{{ data.product_variant?.product?.measurement_unit?.abbreviation ?? data.product_variant?.product?.measurement_unit?.name ?? t("units") }}</span>
+                  <span v-else class="text-surface-500">
+                    {{
+                      data.product_variant?.product?.measurement_unit?.abbreviation ??
+                      data.product_variant?.product?.measurement_unit?.name ??
+                      t("units")
+                    }}
+                  </span>
                 </template>
               </Column>
               <Column :header="t('Expiry Date')" style="min-width: 120px">

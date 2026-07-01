@@ -46,4 +46,3 @@ export interface StockStoreBreakdown {
   store_code: string;
   quantity: number;
 }
-

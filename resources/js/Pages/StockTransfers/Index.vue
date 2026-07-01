@@ -1,25 +1,12 @@
 <script setup lang="ts">
-import {
-  DataTable,
-  Card,
-  Column,
-  Button,
-  Select,
-  Badge,
-  Popover,
-  type DataTablePageEvent,
-} from "primevue";
+import { DataTable, Card, Column, Button, Select, Badge, Popover, type DataTablePageEvent } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import type {
-  StockTransferListResponse,
-  StockTransferFilters,
-  StockTransferResponse,
-} from "@/Types/stock-transfer-types";
+import type { StockTransferListResponse, StockTransferFilters, StockTransferResponse } from "@/Types/stock-transfer-types";
 import TransferStatusTag from "./Show/Components/TransferStatusTag.vue";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import CancelTransferModal from "./Show/Components/CancelTransferModal.vue";
@@ -55,14 +42,9 @@ const statusOptions = computed(() => [
   { label: t("Cancelled"), value: "cancelled" },
 ]);
 
-const storeOptions = computed(() => [
-  { label: t("All Stores"), value: ALL },
-  ...props.stores.map((s) => ({ label: s.name, value: s.id })),
-]);
+const storeOptions = computed(() => [{ label: t("All Stores"), value: ALL }, ...props.stores.map((s) => ({ label: s.name, value: s.id }))]);
 
-const hasActiveFilters = computed(
-  () => status.value !== ALL || fromStoreId.value !== ALL || toStoreId.value !== ALL,
-);
+const hasActiveFilters = computed(() => status.value !== ALL || fromStoreId.value !== ALL || toStoreId.value !== ALL);
 
 const activeFilterCount = computed(() => {
   let count = 0;
@@ -247,10 +229,6 @@ function openCancelModal(transferId: number) {
       </template>
     </Card>
 
-    <CancelTransferModal
-      v-if="selectedTransferId"
-      v-model:visible="cancelModalVisible"
-      :transfer-id="selectedTransferId"
-    />
+    <CancelTransferModal v-if="selectedTransferId" v-model:visible="cancelModalVisible" :transfer-id="selectedTransferId" />
   </div>
 </template>

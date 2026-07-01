@@ -7,10 +7,7 @@ import type { ReceptionOrderStatus } from "@/Types/reception-order-types";
 const props = defineProps<{ status: ReceptionOrderStatus }>();
 const { t } = useI18n();
 
-const statusMap: Record<
-  string,
-  { label: string; severity: "success" | "info" | "warn" | "secondary" | "danger" }
-> = {
+const statusMap: Record<string, { label: string; severity: "success" | "info" | "warn" | "secondary" | "danger" }> = {
   pending: { label: "Pending", severity: "warn" },
   completed: { label: "Completed", severity: "success" },
   cancelled: { label: "Cancelled", severity: "danger" },

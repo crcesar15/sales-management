@@ -218,11 +218,17 @@ function goBack() {
                         <span class="text-surface-500">{{ selectedVendor.details }}</span>
                       </div>
                     </div>
-                    <div v-if="selectedVendor.additional_contacts?.length" class="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
+                    <div
+                      v-if="selectedVendor.additional_contacts?.length"
+                      class="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700"
+                    >
                       <p class="text-xs font-medium text-surface-500 uppercase mb-2">{{ t("Contacts") }}</p>
                       <div class="flex flex-col gap-2 text-sm">
                         <div v-for="contact in selectedVendor.additional_contacts" :key="contact.email" class="flex flex-col">
-                          <span class="font-medium">{{ contact.name }} <span class="text-surface-400 font-normal text-xs">{{ contact.role }}</span></span>
+                          <span class="font-medium">
+                            {{ contact.name }}
+                            <span class="text-surface-400 font-normal text-xs">{{ contact.role }}</span>
+                          </span>
                           <span class="text-surface-500 text-xs">{{ contact.email }}</span>
                         </div>
                       </div>

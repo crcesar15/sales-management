@@ -36,14 +36,7 @@ const schema = toTypedSchema(
   }),
 );
 
-const {
-  handleSubmit,
-  errors,
-  defineField,
-  isSubmitting,
-  setErrors,
-  submitCount,
-} = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount } = useForm({
   validationSchema: schema,
   validateOnMount: false,
   initialValues: {
@@ -108,13 +101,7 @@ const submit = handleSubmit((formValues) => {
   <div>
     <div class="flex flex-row justify-between mb-3">
       <div class="flex">
-        <Button
-          icon="fa fa-arrow-left"
-          text
-          severity="secondary"
-          class="hover:shadow-md mr-2"
-          @click="goBack"
-        />
+        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="goBack" />
         <h2 class="text-2xl font-bold flex items-center m-0">
           {{ t("Edit Customer") }}
         </h2>
@@ -207,7 +194,10 @@ const submit = handleSubmit((formValues) => {
           </template>
           <template #content>
             <div class="flex flex-col gap-1">
-              <label for="status">{{ t("Status") }} <span class="text-red-500">*</span></label>
+              <label for="status">
+                {{ t("Status") }}
+                <span class="text-red-500">*</span>
+              </label>
               <Select
                 id="status"
                 v-model="status"

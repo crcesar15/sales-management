@@ -6,7 +6,9 @@ import type { ActivityLog } from "@/Types/activity-log-types";
 export function useActivityLogClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchActivityLogsApi = async (queryParameters?: string): Promise<AxiosResponse<{ data: ActivityLog[] , meta: { total: number } }>> => {
+  const fetchActivityLogsApi = async (
+    queryParameters?: string,
+  ): Promise<AxiosResponse<{ data: ActivityLog[]; meta: { total: number } }>> => {
     let url: string = route("api.v1.activity-logs");
 
     if (queryParameters) {

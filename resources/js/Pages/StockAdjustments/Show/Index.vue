@@ -18,9 +18,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const { formatDatetime } = useDatetimeFormatter();
 
-const quantityClass = computed(() =>
-  props.adjustment.quantity_change < 0 ? "text-red-500 font-bold" : "text-green-600 font-bold",
-);
+const quantityClass = computed(() => (props.adjustment.quantity_change < 0 ? "text-red-500 font-bold" : "text-green-600 font-bold"));
 
 const formattedQuantity = computed(() => {
   const val = props.adjustment.quantity_change;

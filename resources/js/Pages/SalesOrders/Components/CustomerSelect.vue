@@ -172,10 +172,7 @@ function goToCustomerEdit() {
     </small>
 
     <!-- Inline create form -->
-    <div
-      v-if="showCreateForm"
-      class="border border-surface-200 dark:border-surface-700 rounded p-3 mt-1 bg-surface-50 dark:bg-surface-950"
-    >
+    <div v-if="showCreateForm" class="border border-surface-200 dark:border-surface-700 rounded p-3 mt-1 bg-surface-50 dark:bg-surface-950">
       <div class="flex flex-col gap-2">
         <div>
           <label for="customer-tax-id-name" class="text-sm font-medium">{{ t("Tax ID Name") }}</label>
@@ -200,13 +197,7 @@ function goToCustomerEdit() {
             class="uppercase"
             @click="createCustomer"
           />
-          <Button
-            :label="t('Cancel')"
-            severity="secondary"
-            size="small"
-            text
-            @click="cancelCreate"
-          />
+          <Button :label="t('Cancel')" severity="secondary" size="small" text @click="cancelCreate" />
         </div>
         <small class="text-surface-500 dark:text-surface-400 flex items-center gap-1">
           <i class="fa fa-circle-info" />

@@ -107,11 +107,7 @@ function confirm() {
 
     <template #footer>
       <Button :label="t('Cancel')" severity="secondary" outlined @click="close" />
-      <Button
-        :label="t(statusLabels[targetStatus] ?? 'Confirm')"
-        :loading="loading"
-        @click="confirm"
-      />
+      <Button :label="t(statusLabels[targetStatus] ?? 'Confirm')" :loading="loading" @click="confirm" />
     </template>
   </Dialog>
 </template>

@@ -148,7 +148,7 @@ const onDeleteVariant = (data: CreateVariant) => {
     message: t("This variant will be permanently deleted."),
     header: t("Delete Variant"),
     icon: "fa fa-triangle-exclamation",
-    rejectProps: { label: t("Cancel"), severity: "secondary"},
+    rejectProps: { label: t("Cancel"), severity: "secondary" },
     acceptProps: { label: t("Delete"), severity: "primary" },
     accept: () => {
       emit(

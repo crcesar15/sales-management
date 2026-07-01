@@ -34,9 +34,7 @@ const transitionMap: Record<SalesOrderStatus, { label: string; status: SalesOrde
     { label: t("Mark as Paid"), status: "paid", icon: "fa fa-check-circle", severity: "success" },
     { label: t("Cancel Order"), status: "cancelled", icon: "fa fa-ban", severity: "danger" },
   ],
-  paid: [
-    { label: t("Cancel Order"), status: "cancelled", icon: "fa fa-ban", severity: "danger" },
-  ],
+  paid: [{ label: t("Cancel Order"), status: "cancelled", icon: "fa fa-ban", severity: "danger" }],
   cancelled: [],
 };
 
@@ -151,7 +149,7 @@ function handleTransition(action: { label: string; status: SalesOrderStatus; sev
       :key="action.status"
       :icon="action.icon"
       :label="action.label"
-      :severity="(action.severity as any)"
+      :severity="action.severity as any"
       outlined
       class="w-full"
       @click="handleTransition(action)"

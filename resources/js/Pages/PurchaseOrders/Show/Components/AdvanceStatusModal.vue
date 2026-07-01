@@ -100,7 +100,11 @@ function confirmAction() {
         id="completion-notes"
         v-model="completionNotes"
         rows="3"
-        :placeholder="requiresCompletionNotes ? t('Reason for closing the purchase order before all items have been received') : t('Optional notes about completing this purchase order')"
+        :placeholder="
+          requiresCompletionNotes
+            ? t('Reason for closing the purchase order before all items have been received')
+            : t('Optional notes about completing this purchase order')
+        "
       />
       <small v-if="requiresCompletionNotes" class="text-surface-500">
         {{ t("Reason for closing the purchase order before all items have been received") }}

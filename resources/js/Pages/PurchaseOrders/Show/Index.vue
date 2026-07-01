@@ -86,7 +86,9 @@ const advancePermission = computed(() => {
 
 const canCancel = computed(() => ["draft", "awaiting_approval", "approved"].includes(props.purchaseOrder.status));
 
-const canMarkAsPaid = computed(() => !props.purchaseOrder.is_paid && ["approved", "sent", "partially_received", "received"].includes(props.purchaseOrder.status));
+const canMarkAsPaid = computed(
+  () => !props.purchaseOrder.is_paid && ["approved", "sent", "partially_received", "received"].includes(props.purchaseOrder.status),
+);
 
 const canEdit = computed(() => props.purchaseOrder.status === "draft");
 
@@ -316,7 +318,12 @@ function formatFileSize(bytes: number): string {
         <Card class="mb-4">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <DataTable v-model:expanded-rows="expandedRows" :value="purchaseOrder.line_items ?? []" data-key="id" class="mt-4 border-t-2 border-surface-200 dark:border-surface-700">
+            <DataTable
+              v-model:expanded-rows="expandedRows"
+              :value="purchaseOrder.line_items ?? []"
+              data-key="id"
+              class="mt-4 border-t-2 border-surface-200 dark:border-surface-700"
+            >
               <template #empty>
                 {{ t("No items") }}
               </template>
@@ -344,7 +351,15 @@ function formatFileSize(bytes: number): string {
               </Column>
               <Column :header="t('Received')" style="min-width: 120px">
                 <template #body="{ data }">
-                  <span :class="Number(data.received_quantity) >= Number(data.quantity) ? 'text-green-600' : Number(data.received_quantity) > 0 ? 'text-amber-600' : 'text-surface-500'">
+                  <span
+                    :class="
+                      Number(data.received_quantity) >= Number(data.quantity)
+                        ? 'text-green-600'
+                        : Number(data.received_quantity) > 0
+                          ? 'text-amber-600'
+                          : 'text-surface-500'
+                    "
+                  >
                     {{ formatQuantity(data.received_quantity) }} / {{ formatQuantity(data.quantity) }}
                   </span>
                 </template>
@@ -398,7 +413,8 @@ function formatFileSize(bytes: number): string {
                       <span class="text-surface-500 block mb-1">{{ t("Purchase Unit") }}</span>
                       <span class="font-medium">{{ data.catalog_entry.unit.name }}</span>
                       <span v-if="data.catalog_entry.unit.conversion_factor !== 1" class="text-surface-500 ml-1">
-                        (x{{ formatQuantity(data.catalog_entry.unit.conversion_factor) }} {{ data.product_variant?.product?.measurement_unit?.name }})
+                        (x{{ formatQuantity(data.catalog_entry.unit.conversion_factor) }}
+                        {{ data.product_variant?.product?.measurement_unit?.name }})
                       </span>
                     </div>
                   </div>
@@ -504,7 +520,12 @@ function formatFileSize(bytes: number): string {
       </div>
     </div>
 
-    <AdvanceStatusModal v-model:visible="advanceModalVisible" :purchase-order-id="purchaseOrder.id" :target-status="targetStatus" :is-fully-received="purchaseOrder.is_fully_received" />
+    <AdvanceStatusModal
+      v-model:visible="advanceModalVisible"
+      :purchase-order-id="purchaseOrder.id"
+      :target-status="targetStatus"
+      :is-fully-received="purchaseOrder.is_fully_received"
+    />
 
     <MarkAsPaidModal v-model:visible="markAsPaidModalVisible" :purchase-order-id="purchaseOrder.id" />
 

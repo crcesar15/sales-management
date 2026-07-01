@@ -51,10 +51,6 @@ const goBack = () => {
       <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" @click="formRef?.submit" />
     </div>
 
-    <CatalogEntryForm
-      ref="formRef"
-      :vendor="vendor"
-      @submit="handleSubmit"
-    />
+    <CatalogEntryForm ref="formRef" :vendor="vendor" @submit="handleSubmit" />
   </div>
 </template>

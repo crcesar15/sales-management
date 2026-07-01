@@ -27,9 +27,7 @@ const expiryDate = ref<Date | null>(props.expiryDate ? new Date(props.expiryDate
 
 const isDirty = computed(() => {
   const identifierChanged = (batchIdentifier.value || null) !== props.batchIdentifier;
-  const dateChanged = (expiryDate.value
-    ? expiryDate.value.toISOString().split("T")[0]
-    : null) !== (props.expiryDate ?? null);
+  const dateChanged = (expiryDate.value ? expiryDate.value.toISOString().split("T")[0] : null) !== (props.expiryDate ?? null);
   return identifierChanged || dateChanged;
 });
 
@@ -131,13 +129,7 @@ function submit() {
           {{ t("Expiry Date") }}
           <span v-if="hasExpiration" class="text-red-400">*</span>
         </label>
-        <DatePicker
-          id="expiry-date"
-          v-model="expiryDate"
-          show-icon
-          class="w-full"
-          :class="{ 'p-invalid': fieldErrors.expiry_date }"
-        />
+        <DatePicker id="expiry-date" v-model="expiryDate" show-icon class="w-full" :class="{ 'p-invalid': fieldErrors.expiry_date }" />
         <small v-if="fieldErrors.expiry_date" class="text-red-500">{{ fieldErrors.expiry_date }}</small>
         <small v-else class="text-surface-500">{{ t("Updating the expiry date will recalculate the expiry status") }}</small>
       </div>

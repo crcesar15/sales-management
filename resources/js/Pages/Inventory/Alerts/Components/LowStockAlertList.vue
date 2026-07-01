@@ -77,12 +77,7 @@ function deficitSeverity(item: LowStockAlertItem): "danger" | "warning" | "info"
 
     <Column :header="t('Stock Level')">
       <template #body="{ data }">
-        <ProgressBar
-          :value="deficitPercentage(data)"
-          :severity="deficitSeverity(data)"
-          :show-value="true"
-          :style="{ height: '12px' }"
-        />
+        <ProgressBar :value="deficitPercentage(data)" :severity="deficitSeverity(data)" :show-value="true" :style="{ height: '12px' }" />
       </template>
     </Column>
 

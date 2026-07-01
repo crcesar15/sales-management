@@ -43,20 +43,14 @@ const storeId = ref<string | number>(props.filters.store_id ?? ALL);
 const categoryId = ref<string | number>(props.filters.category_id ?? ALL);
 const brandId = ref<string | number>(props.filters.brand_id ?? ALL);
 
-const storeOptions = computed(() => [
-  { label: t("All Stores"), value: ALL },
-  ...props.stores.map((s) => ({ label: s.name, value: s.id })),
-]);
+const storeOptions = computed(() => [{ label: t("All Stores"), value: ALL }, ...props.stores.map((s) => ({ label: s.name, value: s.id }))]);
 
 const categoryOptions = computed(() => [
   { label: t("All Categories"), value: ALL },
   ...props.categories.map((c) => ({ label: c.name, value: c.id })),
 ]);
 
-const brandOptions = computed(() => [
-  { label: t("All Brands"), value: ALL },
-  ...props.brands.map((b) => ({ label: b.name, value: b.id })),
-]);
+const brandOptions = computed(() => [{ label: t("All Brands"), value: ALL }, ...props.brands.map((b) => ({ label: b.name, value: b.id }))]);
 const lowStock = ref(props.filters.low_stock ?? false);
 const sortField = ref(props.filters.order_by ?? "product_name");
 const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
@@ -80,7 +74,13 @@ const statusSeverity = (s: string): "success" | "warn" | "danger" | "info" => {
 };
 
 const hasActiveFilters = computed(
-  () => status.value !== "active" || storeId.value !== ALL || categoryId.value !== ALL || brandId.value !== ALL || lowStock.value || search.value !== "",
+  () =>
+    status.value !== "active" ||
+    storeId.value !== ALL ||
+    categoryId.value !== ALL ||
+    brandId.value !== ALL ||
+    lowStock.value ||
+    search.value !== "",
 );
 
 const activeFilterCount = computed(() => {
@@ -282,11 +282,7 @@ const onSort = (event: DataTableSortEvent) => {
           <Column field="total_stock" :header="t('Stock')" sortable>
             <template #body="{ data }">
               <span class="inline-flex items-center gap-1.5">
-                <i
-                  v-if="data.is_low_stock"
-                  v-tooltip.top="t('Low Stock')"
-                  class="fa-solid fa-triangle-exclamation text-red-500"
-                />
+                <i v-if="data.is_low_stock" v-tooltip.top="t('Low Stock')" class="fa-solid fa-triangle-exclamation text-red-500" />
                 <span>{{ data.total_stock }}</span>
               </span>
             </template>

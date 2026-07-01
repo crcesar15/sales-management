@@ -24,7 +24,7 @@ const emit = defineEmits<{
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
-const { formatCurrencySymbol,currencyCode } = useCurrencyFormatter();
+const { formatCurrencySymbol, currencyCode } = useCurrencyFormatter();
 
 const schema = toTypedSchema(
   object({

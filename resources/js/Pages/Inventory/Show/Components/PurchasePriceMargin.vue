@@ -37,18 +37,14 @@ const showHistory = ref(false);
 let isProgrammatic = false;
 
 const stats = computed(() => priceHistory.value?.stats ?? null);
-const hasStats = computed(
-  () => stats.value !== null && (stats.value.latest !== null || stats.value.average !== null),
-);
+const hasStats = computed(() => stats.value !== null && (stats.value.latest !== null || stats.value.average !== null));
 
 const marginTypeOptions = computed(() => [
   { label: "%", value: "percent" },
   { label: currency, value: "amount" },
 ]);
 
-const canCalculateMargin = computed(
-  () => localPurchasePrice.value !== null && localPurchasePrice.value > 0,
-);
+const canCalculateMargin = computed(() => localPurchasePrice.value !== null && localPurchasePrice.value > 0);
 
 // selling = purchase / (1 - margin/100)  [percent]
 // selling = purchase + margin            [amount]
@@ -78,37 +74,49 @@ const computeMarginFromPrice = (): number | null => {
 };
 
 // purchase price change → hold margin, recompute price
-watch(localPurchasePrice, () => {
-  if (isProgrammatic) return;
-  const newPrice = computePriceFromMargin();
-  if (newPrice !== null) {
-    isProgrammatic = true;
-    localPrice.value = newPrice;
-    isProgrammatic = false;
-  }
-}, { flush: "sync" });
+watch(
+  localPurchasePrice,
+  () => {
+    if (isProgrammatic) return;
+    const newPrice = computePriceFromMargin();
+    if (newPrice !== null) {
+      isProgrammatic = true;
+      localPrice.value = newPrice;
+      isProgrammatic = false;
+    }
+  },
+  { flush: "sync" },
+);
 
 // margin change → hold purchase, recompute price
-watch(localMarginValue, () => {
-  if (isProgrammatic) return;
-  const newPrice = computePriceFromMargin();
-  if (newPrice !== null) {
-    isProgrammatic = true;
-    localPrice.value = newPrice;
-    isProgrammatic = false;
-  }
-}, { flush: "sync" });
+watch(
+  localMarginValue,
+  () => {
+    if (isProgrammatic) return;
+    const newPrice = computePriceFromMargin();
+    if (newPrice !== null) {
+      isProgrammatic = true;
+      localPrice.value = newPrice;
+      isProgrammatic = false;
+    }
+  },
+  { flush: "sync" },
+);
 
 // selling price change → hold purchase, recompute margin
-watch(localPrice, () => {
-  if (isProgrammatic) return;
-  const newMargin = computeMarginFromPrice();
-  if (newMargin !== null) {
-    isProgrammatic = true;
-    localMarginValue.value = newMargin;
-    isProgrammatic = false;
-  }
-}, { flush: "sync" });
+watch(
+  localPrice,
+  () => {
+    if (isProgrammatic) return;
+    const newMargin = computeMarginFromPrice();
+    if (newMargin !== null) {
+      isProgrammatic = true;
+      localMarginValue.value = newMargin;
+      isProgrammatic = false;
+    }
+  },
+  { flush: "sync" },
+);
 
 const onPurchasePriceUpdate = (value: number | null) => {
   localPurchasePrice.value = value;
@@ -130,7 +138,7 @@ const onMarginTypeChange = () => {
     if (localMarginType.value === "amount") {
       const percent = localMarginValue.value;
       if (percent < 100) {
-        localMarginValue.value = Math.round((purchasePrice * percent) / (100 - percent) * 100) / 100;
+        localMarginValue.value = Math.round(((purchasePrice * percent) / (100 - percent)) * 100) / 100;
       }
     } else {
       const amount = localMarginValue.value;
@@ -221,9 +229,7 @@ const breakdownText = computed(() => {
   if (localPrice.value <= 0) {
     return t("Enter selling price or margin to calculate");
   }
-  const marginDisplay = localMarginType.value === "percent"
-    ? `${localMarginValue.value}%`
-    : formatCurrency(String(localMarginValue.value));
+  const marginDisplay = localMarginType.value === "percent" ? `${localMarginValue.value}%` : formatCurrency(String(localMarginValue.value));
   return `${formatCurrency(String(localPurchasePrice.value))} + ${marginDisplay} = ${formatCurrency(String(localPrice.value))}`;
 });
 

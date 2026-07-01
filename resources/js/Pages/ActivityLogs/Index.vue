@@ -3,7 +3,18 @@ import AppLayout from "@layouts/admin.vue";
 
 import { ref, watch, computed } from "vue";
 
-import { DataTable, Card, Column, InputText, IconField, InputIcon, Tag, Select, type DataTablePageEvent, type DataTableSortEvent } from "primevue";
+import {
+  DataTable,
+  Card,
+  Column,
+  InputText,
+  IconField,
+  InputIcon,
+  Tag,
+  Select,
+  type DataTablePageEvent,
+  type DataTableSortEvent,
+} from "primevue";
 
 import { useI18n } from "vue-i18n";
 import { useActivityLogClient } from "@composables/useActivityLogClient";

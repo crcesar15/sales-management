@@ -94,7 +94,13 @@ const submit = handleSubmit((values) => {
           {{ t("Name") }}
           <span class="text-red-500">*</span>
         </label>
-        <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.name }" />
+        <InputText
+          id="name"
+          v-model="name"
+          v-bind="nameAttrs"
+          autocomplete="off"
+          :class="{ 'p-invalid': submitCount > 0 && !!errors.name }"
+        />
         <small v-if="submitCount > 0 && errors.name" class="text-red-400 dark:text-red-300">
           {{ errors.name }}
         </small>

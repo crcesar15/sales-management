@@ -24,11 +24,7 @@ import RegisterEditor from "@pages/CashRegisters/List/RegisterEditor.vue";
 import { computed, ref, watch } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import type {
-  CashRegisterResponse,
-  CashRegisterListResponse,
-  CashRegisterFilters,
-} from "@/Types/cash-register-types";
+import type { CashRegisterResponse, CashRegisterListResponse, CashRegisterFilters } from "@/Types/cash-register-types";
 import { useI18n } from "vue-i18n";
 
 defineOptions({ layout: AppLayout });
@@ -59,14 +55,9 @@ const statusOptions = computed(() => [
   { label: t("Inactive"), value: "inactive" },
 ]);
 
-const storeOptions = computed(() => [
-  { label: t("All Stores"), value: ALL },
-  ...props.stores.map((s) => ({ label: s.name, value: s.id })),
-]);
+const storeOptions = computed(() => [{ label: t("All Stores"), value: ALL }, ...props.stores.map((s) => ({ label: s.name, value: s.id }))]);
 
-const hasActiveFilters = computed(
-  () => status.value !== ALL || filter.value !== "" || storeId.value !== ALL,
-);
+const hasActiveFilters = computed(() => status.value !== ALL || filter.value !== "" || storeId.value !== ALL);
 
 const activeFilterCount = computed(() => {
   let count = 0;
@@ -198,7 +189,14 @@ function shiftStatusLabel(shiftStatus: string | null | undefined) {
       <h2 class="text-2xl font-bold flex items-end m-0">
         {{ t("Cash Registers") }}
       </h2>
-      <Button v-can="'cash_register.create'" :label="t('Add Register')" icon="fa fa-add" raised class="ml-2 uppercase" @click="addRegister" />
+      <Button
+        v-can="'cash_register.create'"
+        :label="t('Add Register')"
+        icon="fa fa-add"
+        raised
+        class="ml-2 uppercase"
+        @click="addRegister"
+      />
     </div>
     <ConfirmDialog />
     <Toast />
@@ -245,11 +243,25 @@ function shiftStatusLabel(shiftStatus: string | null | undefined) {
               <div class="flex flex-col gap-4 p-4 min-w-72">
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
-                  <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" :empty-message="t('No available options')" class="w-full" />
+                  <Select
+                    v-model="status"
+                    :options="statusOptions"
+                    option-label="label"
+                    option-value="value"
+                    :empty-message="t('No available options')"
+                    class="w-full"
+                  />
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Store") }}</label>
-                  <Select v-model="storeId" :options="storeOptions" option-label="label" option-value="value" :empty-message="t('No available options')" class="w-full" />
+                  <Select
+                    v-model="storeId"
+                    :options="storeOptions"
+                    option-label="label"
+                    option-value="value"
+                    :empty-message="t('No available options')"
+                    class="w-full"
+                  />
                 </div>
                 <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
                   <Button

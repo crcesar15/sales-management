@@ -68,9 +68,7 @@ const statusOptions = computed(() => [
   { label: t("Archived"), value: "archived" },
 ]);
 
-const hasActiveFilters = computed(
-  () => status.value !== "all" || filter.value !== "",
-);
+const hasActiveFilters = computed(() => status.value !== "all" || filter.value !== "");
 
 const activeFilterCount = computed(() => {
   let count = 0;

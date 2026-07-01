@@ -62,13 +62,11 @@ const statusOptions = computed(() => [
   { label: t("Closed"), value: "closed" },
 ]);
 
-const storeOptions = computed(() => [
-  { label: t("All Stores"), value: ALL },
-  ...props.stores.map((s) => ({ label: s.name, value: s.id })),
-]);
+const storeOptions = computed(() => [{ label: t("All Stores"), value: ALL }, ...props.stores.map((s) => ({ label: s.name, value: s.id }))]);
 
 const hasActiveFilters = computed(
-  () => status.value !== ALL || storeId.value !== ALL || expiringSoon.value || expiryFrom.value || expiryTo.value || productName.value !== "",
+  () =>
+    status.value !== ALL || storeId.value !== ALL || expiringSoon.value || expiryFrom.value || expiryTo.value || productName.value !== "",
 );
 
 const activeFilterCount = computed(() => {
@@ -135,7 +133,6 @@ function openEditModal(batch: BatchResponse) {
   editExpiryDate.value = batch.expiry_date;
   editModalVisible.value = true;
 }
-
 </script>
 
 <template>
@@ -323,11 +320,7 @@ function openEditModal(batch: BatchResponse) {
       </template>
     </Card>
 
-    <CloseBatchModal
-      v-if="selectedBatchId"
-      v-model:visible="closeModalVisible"
-      :batch-id="selectedBatchId"
-    />
+    <CloseBatchModal v-if="selectedBatchId" v-model:visible="closeModalVisible" :batch-id="selectedBatchId" />
 
     <EditBatchModal
       v-if="editBatchId"

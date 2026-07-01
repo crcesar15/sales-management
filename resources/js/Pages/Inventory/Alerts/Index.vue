@@ -25,10 +25,7 @@ const ALL = "__all__";
 
 const storeId = ref<string | number>(props.filters.store_id ?? ALL);
 
-const storeOptions = computed(() => [
-  { label: t("All Stores"), value: ALL },
-  ...props.stores.map((s) => ({ label: s.name, value: s.id })),
-]);
+const storeOptions = computed(() => [{ label: t("All Stores"), value: ALL }, ...props.stores.map((s) => ({ label: s.name, value: s.id }))]);
 
 function applyFilters(overrides: Record<string, unknown> = {}) {
   router.visit(route("inventory.alerts"), {

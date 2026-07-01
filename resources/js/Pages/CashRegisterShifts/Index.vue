@@ -1,17 +1,5 @@
 <script setup lang="ts">
-import {
-  DataTable,
-  Card,
-  Column,
-  Toast,
-  Button,
-  Select,
-  DatePicker,
-  Popover,
-  Badge,
-  Tag,
-  type DataTablePageEvent,
-} from "primevue";
+import { DataTable, Card, Column, Toast, Button, Select, DatePicker, Popover, Badge, Tag, type DataTablePageEvent } from "primevue";
 
 import AppLayout from "@layouts/admin.vue";
 import OpenShiftDialog from "@pages/CashRegisterShifts/Components/OpenShiftDialog.vue";
@@ -20,11 +8,7 @@ import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import type {
-  CashRegisterShiftResponse,
-  ShiftListResponse,
-  ShiftFilters,
-} from "@/Types/cash-register-types";
+import type { CashRegisterShiftResponse, ShiftListResponse, ShiftFilters } from "@/Types/cash-register-types";
 import { useI18n } from "vue-i18n";
 
 defineOptions({ layout: AppLayout });
@@ -69,12 +53,7 @@ const cashierOptions = computed(() => [
 ]);
 
 const hasActiveFilters = computed(
-  () =>
-    status.value !== ALL ||
-    registerId.value !== ALL ||
-    cashierId.value !== ALL ||
-    dateFrom.value !== null ||
-    dateTo.value !== null,
+  () => status.value !== ALL || registerId.value !== ALL || cashierId.value !== ALL || dateFrom.value !== null || dateTo.value !== null,
 );
 
 const activeFilterCount = computed(() => {
@@ -174,7 +153,14 @@ const onShiftOpened = () => {
       <h2 class="text-2xl font-bold flex items-end m-0">
         {{ t("Shifts") }}
       </h2>
-      <Button v-can="'shift.open'" :label="t('Open Shift')" icon="fa fa-clock" raised class="ml-2 uppercase" @click="showOpenDialog = true" />
+      <Button
+        v-can="'shift.open'"
+        :label="t('Open Shift')"
+        icon="fa fa-clock"
+        raised
+        class="ml-2 uppercase"
+        @click="showOpenDialog = true"
+      />
     </div>
     <Toast />
     <Card>
@@ -214,15 +200,36 @@ const onShiftOpened = () => {
               <div class="flex flex-col gap-4 p-4 min-w-72">
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
-                  <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" :empty-message="t('No available options')" class="w-full" />
+                  <Select
+                    v-model="status"
+                    :options="statusOptions"
+                    option-label="label"
+                    option-value="value"
+                    :empty-message="t('No available options')"
+                    class="w-full"
+                  />
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Register") }}</label>
-                  <Select v-model="registerId" :options="registerOptions" option-label="label" option-value="value" :empty-message="t('No available options')" class="w-full" />
+                  <Select
+                    v-model="registerId"
+                    :options="registerOptions"
+                    option-label="label"
+                    option-value="value"
+                    :empty-message="t('No available options')"
+                    class="w-full"
+                  />
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Cashier") }}</label>
-                  <Select v-model="cashierId" :options="cashierOptions" option-label="label" option-value="value" :empty-message="t('No available options')" class="w-full" />
+                  <Select
+                    v-model="cashierId"
+                    :options="cashierOptions"
+                    option-label="label"
+                    option-value="value"
+                    :empty-message="t('No available options')"
+                    class="w-full"
+                  />
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date From") }}</label>
@@ -295,14 +302,7 @@ const onShiftOpened = () => {
           <Column :header="t('Actions')">
             <template #body="{ data }: { data: CashRegisterShiftResponse }">
               <div class="flex justify-start gap-2">
-                <Button
-                  v-tooltip.top="t('View')"
-                  icon="fa fa-eye"
-                  text
-                  size="large"
-                  rounded
-                  @click="viewShift(data.id)"
-                />
+                <Button v-tooltip.top="t('View')" icon="fa fa-eye" text size="large" rounded @click="viewShift(data.id)" />
               </div>
             </template>
           </Column>

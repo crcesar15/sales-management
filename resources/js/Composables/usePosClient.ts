@@ -89,9 +89,7 @@ function handleApiError(error: unknown): void {
     }
 
     if (status === 403) {
-      throw new PosPermissionError(
-        (error.response?.data as { message?: string })?.message || "You do not have permission for this action",
-      );
+      throw new PosPermissionError((error.response?.data as { message?: string })?.message || "You do not have permission for this action");
     }
 
     if (status === 422) {

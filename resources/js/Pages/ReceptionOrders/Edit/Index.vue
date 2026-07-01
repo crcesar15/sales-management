@@ -64,7 +64,7 @@ const lineItems = ref<ReceptionLineItem[]>(
     quantity: Number(item.quantity),
     max_quantity: poRemainingByItem.get(item.purchase_order_item_id) ?? undefined,
     expiry_date: item.expiry_date ? new Date(item.expiry_date) : null,
-    batch_identifier: item.batch_identifier ?? '',
+    batch_identifier: item.batch_identifier ?? "",
     purchase_unit: item.catalog_entry?.unit ?? null,
     base_unit: item.product_variant?.product?.measurement_unit
       ? {

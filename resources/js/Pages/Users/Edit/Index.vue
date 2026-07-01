@@ -163,7 +163,13 @@ const submit = handleSubmit((values) => {
             </div>
             <div class="flex flex-col gap-2 mb-3">
               <label for="email">{{ t("Email") }}</label>
-              <InputText id="email" v-model="email" v-bind="emailAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.email }" />
+              <InputText
+                id="email"
+                v-model="email"
+                v-bind="emailAttrs"
+                autocomplete="off"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.email }"
+              />
               <small v-if="submitCount > 0 && errors.email" class="text-red-400 dark:text-red-300">
                 {{ errors.email }}
               </small>

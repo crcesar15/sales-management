@@ -97,13 +97,12 @@ const selectedVariant = ref<VariantOption | null>(null);
 if (props.isEditing && props.initialValues?.product_variant_id) {
   const pv = props.initialValues.product_variant;
   if (pv) {
-    const variantLabel = pv.values?.length > 0
-      ? pv.values.map((v: { option_name: string; value: string }) => `${v.option_name}: ${v.value}`).join(", ")
-      : pv.identifier || pv.name;
+    const variantLabel =
+      pv.values?.length > 0
+        ? pv.values.map((v: { option_name: string; value: string }) => `${v.option_name}: ${v.value}`).join(", ")
+        : pv.identifier || pv.name;
     const brand = pv.product?.brand?.name;
-    const displayName = brand
-      ? `${pv.product.name} — ${brand} (${variantLabel})`
-      : `${pv.product.name} (${variantLabel})`;
+    const displayName = brand ? `${pv.product.name} — ${brand} (${variantLabel})` : `${pv.product.name} (${variantLabel})`;
     selectedVariant.value = {
       id: pv.id,
       name: displayName,
@@ -126,9 +125,10 @@ async function searchVariants(event: { query: string }) {
     });
     variantSearchResults.value = (response.data.data || []).map((v: Record<string, unknown>) => {
       const values = v.values as VariantOptionValue[];
-      const variantLabel = values?.length > 0
-        ? values.map((val: VariantOptionValue) => `${val.option_name}: ${val.value}`).join(", ")
-        : (v.identifier as string) || (v.name as string);
+      const variantLabel =
+        values?.length > 0
+          ? values.map((val: VariantOptionValue) => `${val.option_name}: ${val.value}`).join(", ")
+          : (v.identifier as string) || (v.name as string);
 
       let item = {
         id: v.id as number,
@@ -141,9 +141,7 @@ async function searchVariants(event: { query: string }) {
 
       if (item.product?.name) {
         const brand = item.product.brand?.name;
-        item.name = brand
-          ? `${item.product.name} — ${brand} (${variantLabel})`
-          : `${item.product.name} (${variantLabel})`;
+        item.name = brand ? `${item.product.name} — ${brand} (${variantLabel})` : `${item.product.name} (${variantLabel})`;
       } else {
         item.name = variantLabel;
       }
@@ -314,11 +312,9 @@ defineExpose({
                       <div class="flex flex-col gap-0.5 min-w-0 flex-1">
                         <span class="font-medium text-sm truncate">{{ option.product?.name ?? option.name }}</span>
                         <span class="text-xs text-surface-500 truncate">
-                          <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} · </span>
+                          <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} ·</span>
                           {{ option.variantLabel }}
-                          <span v-if="option.product?.measurement_unit" class="ml-1">
-                            ({{ option.product.measurement_unit.name }})
-                          </span>
+                          <span v-if="option.product?.measurement_unit" class="ml-1">({{ option.product.measurement_unit.name }})</span>
                         </span>
                       </div>
                     </div>
@@ -391,7 +387,13 @@ defineExpose({
             <!-- Details -->
             <div class="flex flex-col gap-1">
               <label for="details">{{ t("Details") }}</label>
-              <Textarea id="details" v-model="details" v-bind="detailsAttrs" rows="3" :class="{ 'p-invalid': submitCount > 0 && !!errors.details }" />
+              <Textarea
+                id="details"
+                v-model="details"
+                v-bind="detailsAttrs"
+                rows="3"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.details }"
+              />
               <small v-if="submitCount > 0 && errors.details" class="text-red-400 dark:text-red-300">{{ errors.details }}</small>
             </div>
           </template>

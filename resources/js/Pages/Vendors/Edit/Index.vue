@@ -148,7 +148,13 @@ const submit = handleSubmit((formValues) => {
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-1">
                   <label for="phone">{{ t("Phone") }}</label>
-                  <InputText id="phone" v-model="phone" v-bind="phoneAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.phone }" />
+                  <InputText
+                    id="phone"
+                    v-model="phone"
+                    v-bind="phoneAttrs"
+                    autocomplete="off"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.phone }"
+                  />
                   <small v-if="submitCount > 0 && errors.phone" class="text-red-400 dark:text-red-300">
                     {{ errors.phone }}
                   </small>
@@ -157,21 +163,39 @@ const submit = handleSubmit((formValues) => {
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label for="email">{{ t("Email") }}</label>
-              <InputText id="email" v-model="email" v-bind="emailAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.email }" />
+              <InputText
+                id="email"
+                v-model="email"
+                v-bind="emailAttrs"
+                autocomplete="off"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.email }"
+              />
               <small v-if="submitCount > 0 && errors.email" class="text-red-400 dark:text-red-300">
                 {{ errors.email }}
               </small>
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label for="address">{{ t("Address") }}</label>
-              <InputText id="address" v-model="address" v-bind="addressAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.address }" />
+              <InputText
+                id="address"
+                v-model="address"
+                v-bind="addressAttrs"
+                autocomplete="off"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.address }"
+              />
               <small v-if="submitCount > 0 && errors.address" class="text-red-400 dark:text-red-300">
                 {{ errors.address }}
               </small>
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label for="details">{{ t("Details") }}</label>
-              <Textarea id="details" v-model="details" v-bind="detailsAttrs" rows="3" :class="{ 'p-invalid': submitCount > 0 && !!errors.details }" />
+              <Textarea
+                id="details"
+                v-model="details"
+                v-bind="detailsAttrs"
+                rows="3"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.details }"
+              />
               <small v-if="submitCount > 0 && errors.details" class="text-red-400 dark:text-red-300">
                 {{ errors.details }}
               </small>

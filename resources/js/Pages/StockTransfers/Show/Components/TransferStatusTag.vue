@@ -7,10 +7,7 @@ import type { TransferStatus } from "@/Types/stock-transfer-types";
 const props = defineProps<{ status: TransferStatus }>();
 const { t } = useI18n();
 
-const statusMap: Record<
-  string,
-  { label: string; severity: "success" | "info" | "warn" | "secondary" | "danger" }
-> = {
+const statusMap: Record<string, { label: string; severity: "success" | "info" | "warn" | "secondary" | "danger" }> = {
   requested: { label: "Requested", severity: "info" },
   picked: { label: "Picked", severity: "info" },
   in_transit: { label: "In Transit", severity: "warn" },

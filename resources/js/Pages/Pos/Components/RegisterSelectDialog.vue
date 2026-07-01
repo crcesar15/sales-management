@@ -6,13 +6,7 @@ import { route } from "ziggy-js";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, number } from "yup";
-import {
-  Dialog,
-  Button,
-  RadioButton,
-  InputNumber,
-  ProgressSpinner,
-} from "primevue";
+import { Dialog, Button, RadioButton, InputNumber, ProgressSpinner } from "primevue";
 import { usePosStore } from "@/Composables/usePosStore";
 import { usePosClient } from "@/Composables/usePosClient";
 import type { CashRegister } from "@/Types/pos";
@@ -179,9 +173,7 @@ function cancel(): void {
 
     <!-- Register list -->
     <div v-else>
-      <p class="text-sm text-surface-500 dark:text-surface-400 mb-4">
-        {{ t("Store") }}: {{ storeName }}
-      </p>
+      <p class="text-sm text-surface-500 dark:text-surface-400 mb-4">{{ t("Store") }}: {{ storeName }}</p>
 
       <div class="flex flex-col gap-2 mb-4">
         <div
@@ -190,8 +182,7 @@ function cancel(): void {
           class="flex items-center justify-between p-3 border rounded-lg border-surface-200 dark:border-surface-700"
           :class="{
             'opacity-50 cursor-not-allowed': !getRegisterStatus(reg, posStore.userId ?? 0).selectable,
-            'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700':
-              selectedRegisterId === reg.id,
+            'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700': selectedRegisterId === reg.id,
           }"
           data-testid="register-item"
         >
@@ -211,8 +202,7 @@ function cancel(): void {
             class="text-sm"
             :class="{
               'text-surface-400': getRegisterStatus(reg, posStore.userId ?? 0).state === 'inactive',
-              'text-yellow-600 dark:text-yellow-400':
-                getRegisterStatus(reg, posStore.userId ?? 0).state === 'in-use',
+              'text-yellow-600 dark:text-yellow-400': getRegisterStatus(reg, posStore.userId ?? 0).state === 'in-use',
               'text-green-600 dark:text-green-400':
                 getRegisterStatus(reg, posStore.userId ?? 0).state === 'available' ||
                 getRegisterStatus(reg, posStore.userId ?? 0).state === 'own-shift',

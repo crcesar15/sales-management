@@ -63,9 +63,7 @@ const statusOptions = computed(() => [
   { label: t("Cancelled"), value: "cancelled" },
 ]);
 
-const hasActiveFilters = computed(
-  () => status.value !== "all" || dateFrom.value !== null || dateTo.value !== null || search.value !== "",
-);
+const hasActiveFilters = computed(() => status.value !== "all" || dateFrom.value !== null || dateTo.value !== null || search.value !== "");
 
 const activeFilterCount = computed(() => {
   let count = 0;
@@ -221,9 +219,7 @@ function customerName(order: SalesOrderResponse): string {
             </Popover>
           </template>
           <Column field="id" :header="t('Order #')" sortable style="min-width: 80px">
-            <template #body="{ data }">
-              #{{ data.id }}
-            </template>
+            <template #body="{ data }">#{{ data.id }}</template>
           </Column>
           <Column field="customer" :header="t('Customer')" sortable style="min-width: 180px">
             <template #body="{ data }">

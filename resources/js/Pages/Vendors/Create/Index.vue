@@ -1,14 +1,5 @@
 <script setup lang="ts">
-import {
-  Card,
-  InputText,
-  Textarea,
-  Select,
-  Button,
-  ToggleSwitch,
-  Toast,
-  useToast,
-} from "primevue";
+import { Card, InputText, Textarea, Select, Button, ToggleSwitch, Toast, useToast } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import AdditionalContactsEditor from "../Components/AdditionalContactsEditor.vue";
 import { useForm } from "vee-validate";
@@ -45,14 +36,7 @@ const schema = toTypedSchema(
   }),
 );
 
-const {
-  handleSubmit,
-  errors,
-  defineField,
-  isSubmitting,
-  setErrors,
-  submitCount,
-} = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount } = useForm({
   validationSchema: schema,
   validateOnMount: false,
   initialValues: {
@@ -113,13 +97,7 @@ const submit = handleSubmit((formValues) => {
   <div>
     <div class="flex flex-row justify-between mb-3">
       <div class="flex">
-        <Button
-          icon="fa fa-arrow-left"
-          text
-          severity="secondary"
-          class="hover:shadow-md mr-2"
-          @click="goBack"
-        />
+        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="goBack" />
         <h2 class="text-2xl font-bold flex items-center m-0">
           {{ t("Add Vendor") }}
         </h2>
@@ -137,7 +115,10 @@ const submit = handleSubmit((formValues) => {
             <div class="grid grid-cols-12 gap-4">
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-1">
-                  <label for="fullname">{{ t("Full Name") }} <span class="text-red-500">*</span></label>
+                  <label for="fullname">
+                    {{ t("Full Name") }}
+                    <span class="text-red-500">*</span>
+                  </label>
                   <InputText
                     id="fullname"
                     v-model="fullname"
@@ -236,7 +217,10 @@ const submit = handleSubmit((formValues) => {
           </template>
           <template #content>
             <div class="flex flex-col gap-1">
-              <label for="status">{{ t("Status") }} <span class="text-red-500">*</span></label>
+              <label for="status">
+                {{ t("Status") }}
+                <span class="text-red-500">*</span>
+              </label>
               <Select
                 id="status"
                 v-model="status"

@@ -74,7 +74,13 @@ const formatPaymentTerms = (terms: string | null): string => {
             <span :class="{ 'font-bold text-green-600 dark:text-green-400': data.price === props.lowestPrice }">
               {{ formatCurrency(String(data.price)) }}
             </span>
-            <Tag v-if="data.price === props.lowestPrice && props.entries.length > 1" value="Best" severity="success" rounded class="text-xs" />
+            <Tag
+              v-if="data.price === props.lowestPrice && props.entries.length > 1"
+              value="Best"
+              severity="success"
+              rounded
+              class="text-xs"
+            />
           </div>
         </template>
       </Column>
@@ -107,22 +113,18 @@ const formatPaymentTerms = (terms: string | null): string => {
 
       <Column field="status" :header="t('Status')">
         <template #body="{ data }">
-          <Tag :value="t(data.status === 'active' ? 'Active' : 'Inactive')" :severity="data.status === 'active' ? 'success' : 'warn'" rounded />
+          <Tag
+            :value="t(data.status === 'active' ? 'Active' : 'Inactive')"
+            :severity="data.status === 'active' ? 'success' : 'warn'"
+            rounded
+          />
         </template>
       </Column>
 
       <Column :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
         <template #body="{ data }">
           <div class="flex justify-center gap-2">
-            <Button
-              v-can="'catalog.edit'"
-              v-tooltip.top="t('Edit')"
-              icon="fa fa-edit"
-              text
-              rounded
-              size="large"
-              @click="editEntry(data)"
-            />
+            <Button v-can="'catalog.edit'" v-tooltip.top="t('Edit')" icon="fa fa-edit" text rounded size="large" @click="editEntry(data)" />
             <Button
               v-can="'catalog.delete'"
               v-tooltip.top="t('Delete')"

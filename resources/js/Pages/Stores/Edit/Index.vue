@@ -155,7 +155,13 @@ const submit = handleSubmit((values) => {
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
                   <label for="name">{{ t("Store Name") }}</label>
-                  <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.name }" />
+                  <InputText
+                    id="name"
+                    v-model="name"
+                    v-bind="nameAttrs"
+                    autocomplete="off"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.name }"
+                  />
                   <small v-if="submitCount > 0 && errors.name" class="text-red-400 dark:text-red-300">
                     {{ errors.name }}
                   </small>
@@ -164,7 +170,13 @@ const submit = handleSubmit((values) => {
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
                   <label for="code">{{ t("Code") }}</label>
-                  <InputText id="code" v-model="code" v-bind="codeAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.code }" />
+                  <InputText
+                    id="code"
+                    v-model="code"
+                    v-bind="codeAttrs"
+                    autocomplete="off"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.code }"
+                  />
                   <small class="text-gray-500">{{ t("Short identifier used in reports and receipts (e.g., HQ, BRANCH1)") }}</small>
                   <small v-if="submitCount > 0 && errors.code" class="text-red-400 dark:text-red-300">
                     {{ errors.code }}
@@ -213,7 +225,13 @@ const submit = handleSubmit((values) => {
               <div class="md:col-span-6 col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
                   <label for="email">{{ t("Email") }}</label>
-                  <InputText id="email" v-model="email" v-bind="emailAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.email }" />
+                  <InputText
+                    id="email"
+                    v-model="email"
+                    v-bind="emailAttrs"
+                    autocomplete="off"
+                    :class="{ 'p-invalid': submitCount > 0 && !!errors.email }"
+                  />
                   <small v-if="submitCount > 0 && errors.email" class="text-red-400 dark:text-red-300">
                     {{ errors.email }}
                   </small>

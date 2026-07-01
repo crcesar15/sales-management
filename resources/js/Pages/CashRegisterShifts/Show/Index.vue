@@ -134,7 +134,13 @@ const openCloseDialog = (force: boolean) => {
               </Column>
               <Column field="amount" :header="t('Amount')">
                 <template #body="{ data }: { data: CashRegisterMovementResponse }">
-                  <span :class="data.type === 'cash_in' ? 'text-green-600 dark:text-green-400 font-medium' : 'text-red-600 dark:text-red-400 font-medium'">
+                  <span
+                    :class="
+                      data.type === 'cash_in'
+                        ? 'text-green-600 dark:text-green-400 font-medium'
+                        : 'text-red-600 dark:text-red-400 font-medium'
+                    "
+                  >
                     {{ data.type === "cash_in" ? "+" : "-" }}{{ formatCurrencySymbol(String(data.amount)) }}
                   </span>
                 </template>
@@ -227,16 +233,7 @@ const openCloseDialog = (force: boolean) => {
     </div>
 
     <!-- Dialogs -->
-    <MovementForm
-      v-model:visible="showMovementDialog"
-      :shift-id="shift.id"
-      @movement-added="onMovementAdded"
-    />
-    <CloseShiftDialog
-      v-model:visible="showCloseDialog"
-      :shift="shift"
-      :force-close="isForceClose"
-      @shift-closed="onShiftClosed"
-    />
+    <MovementForm v-model:visible="showMovementDialog" :shift-id="shift.id" @movement-added="onMovementAdded" />
+    <CloseShiftDialog v-model:visible="showCloseDialog" :shift="shift" :force-close="isForceClose" @shift-closed="onShiftClosed" />
   </div>
 </template>

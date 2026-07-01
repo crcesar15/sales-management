@@ -197,7 +197,13 @@ const onSubmit = handleSubmit((values) => {
                 {{ t("Name") }}
                 <span class="text-red-400">*</span>
               </label>
-              <InputText id="name" v-model="name" v-bind="nameAttrs" autocomplete="off" :class="{ 'p-invalid': submitCount > 0 && !!errors.name }" />
+              <InputText
+                id="name"
+                v-model="name"
+                v-bind="nameAttrs"
+                autocomplete="off"
+                :class="{ 'p-invalid': submitCount > 0 && !!errors.name }"
+              />
               <small v-if="submitCount > 0 && errors.name" class="text-red-400 dark:text-red-300">
                 {{ errors.name }}
               </small>
@@ -246,21 +252,11 @@ const onSubmit = handleSubmit((values) => {
             <div class="grid grid-cols-12 gap-4">
               <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
                 <label for="identifier">{{ t("Identifier") }}</label>
-                <InputText
-                  id="identifier"
-                  v-model="identifier"
-                  v-bind="identifierAttrs"
-                  autocomplete="off"
-                />
+                <InputText id="identifier" v-model="identifier" v-bind="identifierAttrs" autocomplete="off" />
               </div>
               <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
                 <label for="barcode">{{ t("Barcode") }}</label>
-                <InputText
-                  id="barcode"
-                  v-model="barcode"
-                  v-bind="barcodeAttrs"
-                  autocomplete="off"
-                />
+                <InputText id="barcode" v-model="barcode" v-bind="barcodeAttrs" autocomplete="off" />
               </div>
             </div>
           </template>
