@@ -23,6 +23,11 @@ const props = defineProps<{
    * is stable as the user edits that line (only sibling lines move it).
    */
   getRemainingBaseExcludingLine?: (variantId: number, lineId: string) => number | null;
+  /**
+   * Store to scope product search and stock to. When null, the picker is
+   * disabled (no store chosen yet).
+   */
+  storeId?: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -143,7 +148,7 @@ function confirmRemoveItem(index: number) {
 
 <template>
   <div>
-    <SOProductPicker :added-keys="addedKeys" :get-remaining-base="getRemainingBase" @add="onPickerAdd" />
+    <SOProductPicker :added-keys="addedKeys" :get-remaining-base="getRemainingBase" :store-id="storeId" @add="onPickerAdd" />
 
     <DataTable
       :value="items"

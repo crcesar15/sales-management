@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, useToast, ConfirmDialog } from "primevue";
+import { Button, Card, Select, useToast, ConfirmDialog } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -45,6 +45,12 @@ const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, sub
 
 const [discountValue, discountValueAttrs] = defineField("discount_value");
 const [notes, notesAttrs] = defineField("notes");
+
+// Read-only store reference for this order. Stock on newly-added items is
+// scoped to this store via the picker; the store itself is immutable on edit.
+const orderStoreId = computed(() => props.order.store_id ?? null);
+const orderStoreName = computed(() => props.order.store?.name ?? null);
+const orderStoreOptions = computed(() => (orderStoreName.value !== null ? [{ name: orderStoreName.value, value: orderStoreId.value }] : []));
 
 const selectedCustomerId = ref<number | null>(props.order.customer_id);
 
@@ -173,6 +179,17 @@ function goBack() {
         <Card class="mb-4">
           <template #title>{{ t("Order Details") }}</template>
           <template #content>
+            <div class="flex flex-col gap-2 mb-3">
+              <label for="so-store">{{ t("Store") }}</label>
+              <Select
+                id="so-store"
+                :model-value="orderStoreId"
+                :options="orderStoreOptions"
+                option-label="name"
+                option-value="value"
+                disabled
+              />
+            </div>
             <CustomerSelect
               v-model="selectedCustomerId"
               :initial-customer="
@@ -199,6 +216,7 @@ function goBack() {
               v-model="lineItems"
               :get-remaining-base="getRemainingBase"
               :get-remaining-base-excluding-line="getRemainingBaseExcludingLine"
+              :store-id="orderStoreId"
             />
             <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
           </template>

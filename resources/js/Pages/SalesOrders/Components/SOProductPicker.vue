@@ -39,6 +39,11 @@ const props = defineProps<{
    * the variant is not in the order (use the static snapshot).
    */
   getRemainingBase?: (variantId: number) => number | null;
+  /**
+   * Store to scope stock to. When null, the picker is disabled (no store
+   * chosen yet) and searches are not fired.
+   */
+  storeId?: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -140,14 +145,14 @@ let currentRequestId = 0;
 
 async function performSearch() {
   const q = query.value.trim();
-  if (q.length < 2) {
+  if (q.length < 2 || props.storeId == null) {
     searchResults.value = [];
     return;
   }
   searchLoading.value = true;
   const reqId = ++currentRequestId;
   try {
-    const response = await searchVariantsApi(q);
+    const response = await searchVariantsApi(q, props.storeId);
     if (reqId !== currentRequestId) return;
     const data = response.data?.data ?? [];
     searchResults.value = Array.isArray(data) ? (data as VariantSearchResult[]) : [];
@@ -271,6 +276,9 @@ function addUnitRow(row: UnitRow) {
   nextTick(() => inputRef.value?.focus());
 }
 
+const inputDisabled = computed(() => props.storeId == null);
+const inputPlaceholder = computed(() => (props.storeId == null ? t("Select a store first") : t("Search product...")));
+
 const showEmpty = computed(
   () => isOpen.value && !searchLoading.value && query.value.trim().length >= 2 && searchResults.value.length === 0,
 );
@@ -289,7 +297,8 @@ const showEmpty = computed(
           type="text"
           autocomplete="off"
           role="combobox"
-          :placeholder="t('Search product...')"
+          :disabled="inputDisabled"
+          :placeholder="inputPlaceholder"
           :aria-expanded="isOpen"
           aria-autocomplete="list"
           :aria-activedescendant="activeIndex >= 0 ? `so-opt-${activeIndex}` : undefined"

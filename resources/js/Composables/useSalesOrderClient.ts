@@ -7,11 +7,16 @@ export function useSalesOrderClient() {
   /**
    * Search product variants by name/identifier.
    * Returns enriched data including stock, price, brand, and sale units for AutoComplete suggestions.
+   * When `storeId` is provided, stock is scoped to that store's active batches only.
    */
-  const searchVariantsApi = async (filter: string) => {
+  const searchVariantsApi = async (filter: string, storeId?: number | null) => {
     if (!filter || filter.length < 2) return { data: [] };
     return await apiClient.get(route("api.v1.variants.search"), {
-      params: { filter, includes: "saleUnits" },
+      params: {
+        filter,
+        includes: "saleUnits",
+        ...(storeId ? { store_id: storeId } : {}),
+      },
     });
   };
 

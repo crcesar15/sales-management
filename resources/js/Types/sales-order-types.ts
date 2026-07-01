@@ -197,3 +197,10 @@ export interface CustomerOption {
   tax_id: string;
   tax_id_name: string;
 }
+
+// Store option for the sales order store selector
+export interface StoreOption {
+  id: number;
+  name: string;
+  code: string | null;
+}

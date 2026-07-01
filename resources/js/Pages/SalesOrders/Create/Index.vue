@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, useToast, ConfirmDialog } from "primevue";
+import { Button, Card, Select, useToast, ConfirmDialog } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -15,9 +15,13 @@ import SOFinancialSummary from "../Components/SOFinancialSummary.vue";
 import SOPaymentsPanel from "../Components/SOPaymentsPanel.vue";
 import CustomerSelect from "../Components/CustomerSelect.vue";
 import type { LineItem } from "../Components/SOLineItemsTable.vue";
-import type { SalesOrderPaymentForm } from "@/Types/sales-order-types";
+import type { StoreOption, SalesOrderPaymentForm } from "@/Types/sales-order-types";
 
 defineOptions({ layout: AppLayout });
+
+const props = defineProps<{
+  stores: StoreOption[];
+}>();
 
 const toast = useToast();
 const { t } = useI18n();
@@ -42,11 +46,25 @@ const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, sub
 const [discountValue, discountValueAttrs] = defineField("discount_value");
 const [notes, notesAttrs] = defineField("notes");
 
+// Store selector — auto-select when the actor has exactly one store.
+const selectedStoreId = ref<number | null>(props.stores.length === 1 ? props.stores[0].id : null);
+const showStoreSelector = computed(() => props.stores.length > 1);
+const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
+const storeError = ref("");
+
 const selectedCustomerId = ref<number | null>(null);
 const lineItems = ref<LineItem[]>([]);
 const payments = ref<SalesOrderPaymentForm[]>([{ payment_method: "cash", amount: 0, reference: null }]);
 const itemsError = ref("");
 const paymentsError = ref("");
+
+// Clear line items if the store changes mid-order — stock snapshots are
+// store-scoped and would otherwise be stale.
+function onStoreChange(value: number | null) {
+  selectedStoreId.value = value;
+  lineItems.value = [];
+  itemsError.value = "";
+}
 
 // Live per-variant base-stock ledger: shared between picker and table so the
 // Available Tag reflects in-progress allocation, and oversell is caught pre-submit.
@@ -62,6 +80,12 @@ const totalAmount = computed(() => Math.round((subTotal.value - discountAmount.v
 const submit = handleSubmit((formValues) => {
   itemsError.value = "";
   paymentsError.value = "";
+  storeError.value = "";
+
+  if (selectedStoreId.value === null) {
+    storeError.value = t("Select a store first");
+    return;
+  }
 
   if (lineItems.value.length === 0) {
     itemsError.value = t("At least one item is required");
@@ -81,6 +105,7 @@ const submit = handleSubmit((formValues) => {
   }
 
   const payload = {
+    store_id: selectedStoreId.value,
     customer_id: selectedCustomerId.value,
     discount_type: "flat" as const,
     discount_value: formValues.discount_value ?? 0,
@@ -135,6 +160,20 @@ function goBack() {
         <Card class="mb-4">
           <template #title>{{ t("Order Details") }}</template>
           <template #content>
+            <div v-if="showStoreSelector" class="flex flex-col gap-2 mb-3">
+              <label for="so-store">{{ t("Store") }}</label>
+              <Select
+                id="so-store"
+                :model-value="selectedStoreId"
+                :options="storeOptions"
+                option-label="name"
+                option-value="value"
+                :placeholder="t('Select store')"
+                :class="{ 'p-invalid': !!storeError }"
+                @update:model-value="onStoreChange"
+              />
+              <small v-if="storeError" class="text-red-400 dark:text-red-300">{{ storeError }}</small>
+            </div>
             <CustomerSelect v-model="selectedCustomerId" />
           </template>
         </Card>
@@ -142,16 +181,24 @@ function goBack() {
         <Card class="mb-4">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <SOLineItemsTable
-              v-model="lineItems"
-              :get-remaining-base="getRemainingBase"
-              :get-remaining-base-excluding-line="getRemainingBaseExcludingLine"
-            />
-            <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
+            <div v-if="selectedStoreId === null" class="flex flex-col items-center justify-center py-10 text-surface-400">
+              <i class="fa fa-store text-4xl mb-3"></i>
+              <span class="font-medium text-lg mb-1">{{ t("Select a store to add products") }}</span>
+              <small>{{ t("Stock availability depends on the selected store") }}</small>
+            </div>
+            <template v-else>
+              <SOLineItemsTable
+                v-model="lineItems"
+                :get-remaining-base="getRemainingBase"
+                :get-remaining-base-excluding-line="getRemainingBaseExcludingLine"
+                :store-id="selectedStoreId"
+              />
+              <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
+            </template>
           </template>
         </Card>
 
-        <SOPaymentsPanel v-model="payments" :total-amount="totalAmount" :error="paymentsError" />
+        <SOPaymentsPanel v-if="selectedStoreId !== null" v-model="payments" :total-amount="totalAmount" :error="paymentsError" />
       </div>
 
       <div class="lg:col-span-4 col-span-12">
