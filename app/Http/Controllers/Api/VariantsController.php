@@ -102,11 +102,13 @@ final class VariantsController extends Controller
 
         $query = ProductVariant::query()
             ->with(['product.brand', 'activeSaleUnits', 'values.option', ...in_array('saleUnits', $includeList) ? ['activeSaleUnits'] : []])
-            ->whereHas('product', function ($q) use ($filter): void {
-                $q->where('name', 'like', "%{$filter}%");
-            })
-            ->orWhere('identifier', 'like', "%{$filter}%")
-            ->where('status', '!=', 'archived');
+            ->where('status', '!=', 'archived')
+            ->where(function ($q) use ($filter): void {
+                $q->whereHas('product', function ($sq) use ($filter): void {
+                    $sq->where('name', 'like', "%{$filter}%");
+                })
+                    ->orWhere('identifier', 'like', "%{$filter}%");
+            });
 
         $variants = $query->orderBy('identifier')
             ->limit(20)
