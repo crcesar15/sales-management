@@ -8,8 +8,37 @@ import type { SalesOrderLineItemForm, VariantSearchResult } from "@/Types/sales-
 
 type LineItem = SalesOrderLineItemForm;
 
-defineProps<{
+/**
+ * A single sellable unit row, flattened from a VariantSearchResult.
+ * One variant with N sale units becomes 1 + N rows (base unit always first).
+ */
+interface UnitRow {
+  /** Stable key: `${variantId}:${unitId ?? "base"}` — matches addedKeys */
+  key: string;
+  variantId: number;
+  /** Sale unit id, or null for the base measurement unit */
+  unitId: number | null;
+  unitName: string;
+  conversionFactor: number;
+  /** Unit-specific price */
+  price: number;
+  /** Base-stock snapshot from search time (before any in-order allocation) */
+  baseStock: number | null;
+  /** Per-variant minimum stock level, in BASE units */
+  minStockBase: number | null;
+  isBase: boolean;
+  /** Reference to the source variant for context columns (product, brand, badges) */
+  variant: VariantSearchResult;
+}
+
+const props = defineProps<{
   addedKeys: Set<string>;
+  /**
+   * Live remaining base stock for a variant, after subtracting base units
+   * already allocated across all line items in the order. Returns null when
+   * the variant is not in the order (use the static snapshot).
+   */
+  getRemainingBase?: (variantId: number) => number | null;
 }>();
 
 const emit = defineEmits<{
@@ -21,71 +50,79 @@ const { formatCurrency } = useCurrencyFormatter();
 const toast = useToast();
 const { searchVariantsApi } = useSalesOrderClient();
 
-interface SaleUnitPill {
-  key: string;
-  id: number | null;
-  name: string;
-  conversion_factor: number;
-  price: number;
-  available: number | null;
-  severity: "success" | "warn" | "danger";
-  isBase: boolean;
-}
-
-function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" {
-  if (stock === null || stock === undefined) return "success";
-  if (stock === 0) return "danger";
-  if (minStock && stock <= minStock) return "warn";
-  return "success";
-}
-
-function getStockLabel(stock: number | null | undefined): string {
-  if (stock === null || stock === undefined) return "—";
-  if (stock === 0) return t("Out of stock");
-  return `${t("In stock")}: ${String(stock)}`;
-}
-
-function buildPills(variant: VariantSearchResult): SaleUnitPill[] {
+function buildUnitRows(variant: VariantSearchResult): UnitRow[] {
   const baseStock = variant.stock ?? null;
   const minStock = variant.minimum_stock_level ?? null;
   const baseUnitName = variant.product?.measurement_unit?.name ?? t("Unit");
   const basePrice = variant.price ? parseFloat(String(variant.price)) : 0;
 
-  const pills: SaleUnitPill[] = [];
+  const rows: UnitRow[] = [];
 
-  pills.push({
+  rows.push({
     key: `${variant.id}:base`,
-    id: null,
-    name: baseUnitName,
-    conversion_factor: 1,
+    variantId: variant.id,
+    unitId: null,
+    unitName: baseUnitName,
+    conversionFactor: 1,
     price: basePrice,
-    available: baseStock,
-    severity: getStockSeverity(baseStock, minStock),
+    baseStock,
+    minStockBase: minStock,
     isBase: true,
+    variant,
   });
 
   const saleUnits = variant.sale_units ?? [];
   for (const unit of saleUnits) {
     const cf = unit.conversion_factor > 0 ? unit.conversion_factor : 1;
-    const avail = baseStock !== null ? Math.floor(baseStock / cf) : null;
-    pills.push({
+    rows.push({
       key: `${variant.id}:${unit.id}`,
-      id: unit.id,
-      name: unit.name,
-      conversion_factor: cf,
+      variantId: variant.id,
+      unitId: unit.id,
+      unitName: unit.name,
+      conversionFactor: cf,
       price: parseFloat(String(unit.price)),
-      available: avail,
-      severity: getStockSeverity(avail, null),
+      baseStock,
+      minStockBase: minStock,
       isBase: false,
+      variant,
     });
   }
 
-  return pills;
+  return rows;
 }
 
-function pillCaption(pill: SaleUnitPill): string {
-  if (pill.available === null) return "—";
-  return String(pill.available);
+/** Flatten all variants into one row per sellable unit, preserving search order. */
+const flatRows = computed<UnitRow[]>(() => searchResults.value.flatMap(buildUnitRows));
+
+/** Live available (in this row's unit) = floor(remainingBase / cf). Falls back to snapshot. */
+function availableInUnit(row: UnitRow): number | null {
+  const base = props.getRemainingBase?.(row.variantId) ?? row.baseStock;
+  if (base === null) return null;
+  const cf = row.conversionFactor > 0 ? row.conversionFactor : 1;
+  return Math.floor(base / cf);
+}
+
+/** One severity rule, applied identically here and in the table (unit-aware threshold). */
+function getStockSeverity(row: UnitRow): "success" | "warn" | "danger" {
+  const avail = availableInUnit(row);
+  if (avail === null) return "success";
+  if (avail <= 0) return "danger";
+  if (row.minStockBase !== null && row.minStockBase > 0) {
+    const minInUnit = Math.ceil(row.minStockBase / row.conversionFactor);
+    if (avail <= minInUnit) return "warn";
+  }
+  return "success";
+}
+
+function getStockLabel(row: UnitRow): string {
+  const avail = availableInUnit(row);
+  if (avail === null) return "—";
+  if (avail === 0) return t("Out of stock");
+  return `${t("Available")}: ${String(avail)}`;
+}
+
+function isRowDisabled(row: UnitRow): boolean {
+  return props.addedKeys.has(row.key) || getStockSeverity(row) === "danger";
 }
 
 const query = ref("");
@@ -147,18 +184,18 @@ function onInputFocus() {
 function onKeydown(event: KeyboardEvent) {
   if (event.key === "ArrowDown") {
     event.preventDefault();
-    if (!isOpen.value && searchResults.value.length > 0) {
+    if (!isOpen.value && flatRows.value.length > 0) {
       openPanel();
       return;
     }
-    if (searchResults.value.length > 0) {
-      activeIndex.value = (activeIndex.value + 1) % searchResults.value.length;
+    if (flatRows.value.length > 0) {
+      activeIndex.value = (activeIndex.value + 1) % flatRows.value.length;
       scrollActiveIntoView();
     }
   } else if (event.key === "ArrowUp") {
     event.preventDefault();
-    if (isOpen.value && searchResults.value.length > 0) {
-      activeIndex.value = activeIndex.value <= 0 ? searchResults.value.length - 1 : activeIndex.value - 1;
+    if (isOpen.value && flatRows.value.length > 0) {
+      activeIndex.value = activeIndex.value <= 0 ? flatRows.value.length - 1 : activeIndex.value - 1;
       scrollActiveIntoView();
     }
   } else if (event.key === "Escape") {
@@ -167,8 +204,12 @@ function onKeydown(event: KeyboardEvent) {
       closePanel();
     }
   } else if (event.key === "Enter") {
-    if (isOpen.value && activeIndex.value >= 0 && activeIndex.value < searchResults.value.length) {
+    if (isOpen.value && activeIndex.value >= 0 && activeIndex.value < flatRows.value.length) {
       event.preventDefault();
+      const row = flatRows.value[activeIndex.value];
+      if (row && !isRowDisabled(row)) {
+        addUnitRow(row);
+      }
     }
   }
 }
@@ -199,29 +240,28 @@ onBeforeUnmount(() => {
   if (debounceTimer) clearTimeout(debounceTimer);
 });
 
-function addFromPill(variant: VariantSearchResult, pill: SaleUnitPill) {
+function addUnitRow(row: UnitRow) {
+  const variant = row.variant;
   const productName = variant.product?.name ?? variant.name ?? "—";
-  const variantLabel = variant.variant_label ?? variant.identifier ?? productName;
-
-  const unitLabel = pill.name;
-  const displayLabel = `${variantLabel} (${unitLabel})`;
+  const variantLabel = variant.variant_label ?? variant.identifier ?? null;
+  // When the variant has no distinguishing label (default-only product),
+  // show just the unit name — the product name is already on line 1 of the row.
+  const displayLabel = variantLabel ? `${variantLabel} (${row.unitName})` : row.unitName;
 
   const newItem: LineItem = {
     id: crypto.randomUUID(),
     product_variant_id: variant.id,
     product_name: productName,
     variant_label: displayLabel,
-    sale_unit_id: pill.id,
+    sale_unit_id: row.unitId,
     quantity: 1,
-    unit_price: pill.price,
-    conversion_factor: pill.conversion_factor,
-    line_total: pill.price * 1,
-    stock: variant.stock ?? null,
-    minimum_stock_level: variant.minimum_stock_level ?? null,
+    unit_price: row.price,
+    conversion_factor: row.conversionFactor,
+    line_total: row.price * 1,
+    stock: row.baseStock,
+    minimum_stock_level: row.minStockBase,
     sale_units: variant.sale_units ?? [],
-    sale_unit: pill.isBase
-      ? null
-      : { id: pill.id as number, name: pill.name, conversion_factor: pill.conversion_factor },
+    sale_unit: row.isBase ? null : { id: row.unitId as number, name: row.unitName, conversion_factor: row.conversionFactor },
   };
 
   emit("add", newItem);
@@ -231,7 +271,9 @@ function addFromPill(variant: VariantSearchResult, pill: SaleUnitPill) {
   nextTick(() => inputRef.value?.focus());
 }
 
-const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.value.trim().length >= 2 && searchResults.value.length === 0);
+const showEmpty = computed(
+  () => isOpen.value && !searchLoading.value && query.value.trim().length >= 2 && searchResults.value.length === 0,
+);
 </script>
 
 <template>
@@ -260,89 +302,54 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
       </div>
 
       <Transition name="so-panel">
-        <div
-          v-if="isOpen && (searchResults.length > 0 || showEmpty)"
-          ref="listRef"
-          class="so-panel"
-          role="listbox"
-        >
-          <div
-            class="so-panel-header"
-          >
+        <div v-if="isOpen && (flatRows.length > 0 || showEmpty)" ref="listRef" class="so-panel" role="listbox">
+          <div class="so-panel-header">
             <span class="so-col so-col-product">{{ t("Product") }}</span>
             <span class="so-col so-col-brand">{{ t("Brand") }}</span>
+            <span class="so-col so-col-unit">{{ t("Sale Unit") }}</span>
             <span class="so-col so-col-price">{{ t("Price") }}</span>
-            <span class="so-col so-col-stock">{{ t("Stock") }}</span>
-            <span class="so-col so-col-units">{{ t("Sale Units") }}</span>
+            <span class="so-col so-col-stock">{{ t("Available") }}</span>
           </div>
 
           <div
-            v-for="(variant, vIndex) in searchResults"
-            :id="`so-opt-${vIndex}`"
-            :key="variant.id"
-            class="so-option"
+            v-for="(row, rIndex) in flatRows"
+            :id="`so-opt-${rIndex}`"
+            :key="row.key"
+            :class="[
+              'so-option',
+              isRowDisabled(row) ? 'so-option-disabled' : '',
+              getStockSeverity(row) === 'danger' ? 'so-option-danger' : '',
+              getStockSeverity(row) === 'warn' ? 'so-option-warn' : '',
+              addedKeys.has(row.key) ? 'so-option-added' : '',
+            ]"
             role="option"
-            :aria-selected="vIndex === activeIndex"
-            :data-active="vIndex === activeIndex"
-            @mouseenter="activeIndex = vIndex"
+            :aria-selected="rIndex === activeIndex"
+            :aria-disabled="isRowDisabled(row)"
+            :data-active="rIndex === activeIndex"
+            :tabindex="isRowDisabled(row) ? -1 : 0"
+            @mouseenter="activeIndex = rIndex"
+            @click="!isRowDisabled(row) && addUnitRow(row)"
           >
             <!-- Desktop: grid row -->
             <div class="so-row so-row-desktop">
               <div class="so-col so-col-product so-product-cell">
-                <span class="so-product-name">{{ variant.product?.name ?? variant.name }}</span>
-                <div v-if="variant.option_values || variant.identifier" class="flex flex-wrap gap-1">
-                  <Badge
-                    v-if="variant.option_values"
-                    :value="variant.option_values"
-                    severity="secondary"
-                  />
-                  <Badge
-                    v-else-if="variant.identifier"
-                    :value="variant.identifier"
-                    severity="secondary"
-                  />
+                <span class="so-product-name">{{ row.variant.product?.name ?? row.variant.name }}</span>
+                <div v-if="row.variant.option_values || row.variant.identifier" class="flex flex-wrap gap-1">
+                  <Badge v-if="row.variant.option_values" :value="row.variant.option_values" severity="secondary" />
+                  <Badge v-else-if="row.variant.identifier" :value="row.variant.identifier" severity="secondary" />
                 </div>
               </div>
-              <div class="so-col so-col-brand so-brand-cell">{{ variant.product?.brand?.name ?? "—" }}</div>
-              <div class="so-col so-col-price so-price-cell">{{ formatCurrency(String(variant.price)) }}</div>
-              <div class="so-col so-col-stock">
-                <Tag
-                  :value="getStockLabel(variant.stock)"
-                  :severity="getStockSeverity(variant.stock, variant.minimum_stock_level)"
-                  class="text-xs"
-                  rounded
-                />
+              <div class="so-col so-col-brand so-brand-cell">{{ row.variant.product?.brand?.name ?? "—" }}</div>
+              <div class="so-col so-col-unit so-unit-cell">
+                <span class="font-medium">{{ row.unitName }}</span>
+                <span v-if="row.conversionFactor !== 1" class="so-unit-factor">×{{ row.conversionFactor }}</span>
               </div>
-              <div class="so-col so-col-units so-pills-row">
-                <div class="so-pills">
-                  <button
-                    v-for="pill in buildPills(variant)"
-                    :key="pill.key"
-                    type="button"
-                    :disabled="addedKeys.has(pill.key)"
-                    :class="[
-                      'so-pill',
-                      pill.severity === 'danger' ? 'so-pill-danger' : '',
-                      pill.severity === 'warn' ? 'so-pill-warn' : '',
-                      addedKeys.has(pill.key) ? 'so-pill-added' : '',
-                    ]"
-                    @click.stop="addFromPill(variant, pill)"
-                  >
-                    <span class="so-pill-name">{{ pill.name }}</span>
-                    <span v-if="pill.conversion_factor !== 1" class="so-pill-factor">×{{ pill.conversion_factor }}</span>
-                    <span class="so-pill-price">{{ formatCurrency(String(pill.price)) }}</span>
-                    <span
-                      :class="['so-pill-stock', pill.severity === 'danger' ? 'so-pill-stock-danger' : '']"
-                      :title="t('Available stock')"
-                    >
-                      <i class="fa fa-boxes-stacked" aria-hidden="true" />
-                      {{ pillCaption(pill) }}
-                    </span>
-                    <span v-if="addedKeys.has(pill.key)" class="so-pill-check" aria-hidden="true">
-                      <i class="fa fa-check" />
-                    </span>
-                  </button>
-                </div>
+              <div class="so-col so-col-price so-price-cell">{{ formatCurrency(String(row.price)) }}</div>
+              <div class="so-col so-col-stock so-stock-cell">
+                <Tag :value="getStockLabel(row)" :severity="getStockSeverity(row)" class="text-xs" rounded />
+                <span v-if="addedKeys.has(row.key)" class="so-added-check" aria-hidden="true">
+                  <i class="fa fa-check" />
+                </span>
               </div>
             </div>
 
@@ -350,58 +357,26 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
             <div class="so-row so-row-mobile">
               <div class="so-mobile-top">
                 <div class="so-product-cell">
-                  <span class="so-product-name">{{ variant.product?.name ?? variant.name }}</span>
-                  <div v-if="variant.option_values || variant.identifier" class="flex flex-wrap gap-1">
-                    <span v-if="variant.product?.brand?.name" class="so-brand-inline">{{ variant.product.brand.name }}</span>
-                    <Badge
-                      v-if="variant.option_values"
-                      :value="variant.option_values"
-                      severity="secondary"
-                    />
-                    <Badge
-                      v-else-if="variant.identifier"
-                      :value="variant.identifier"
-                      severity="secondary"
-                    />
+                  <span class="so-product-name">{{ row.variant.product?.name ?? row.variant.name }}</span>
+                  <div class="flex flex-wrap gap-1">
+                    <span v-if="row.variant.product?.brand?.name" class="so-brand-inline">{{ row.variant.product.brand.name }}</span>
+                    <Badge v-if="row.variant.option_values" :value="row.variant.option_values" severity="secondary" />
+                    <Badge v-else-if="row.variant.identifier" :value="row.variant.identifier" severity="secondary" />
                   </div>
                 </div>
                 <div class="so-mobile-right">
-                  <span class="so-price-cell">{{ formatCurrency(String(variant.price)) }}</span>
-                  <Tag
-                    :value="getStockLabel(variant.stock)"
-                    :severity="getStockSeverity(variant.stock, variant.minimum_stock_level)"
-                    class="text-xs"
-                  />
+                  <span class="so-price-cell">{{ formatCurrency(String(row.price)) }}</span>
                 </div>
               </div>
-              <div class="so-pills">
-                <button
-                  v-for="pill in buildPills(variant)"
-                  :key="pill.key"
-                  type="button"
-                  :disabled="addedKeys.has(pill.key)"
-                  :class="[
-                    'so-pill',
-                    pill.severity === 'danger' ? 'so-pill-danger' : '',
-                    pill.severity === 'warn' ? 'so-pill-warn' : '',
-                    addedKeys.has(pill.key) ? 'so-pill-added' : '',
-                  ]"
-                  @click.stop="addFromPill(variant, pill)"
-                >
-                  <span class="so-pill-name">{{ pill.name }}</span>
-                  <span v-if="pill.conversion_factor !== 1" class="so-pill-factor">×{{ pill.conversion_factor }}</span>
-                  <span class="so-pill-price">{{ formatCurrency(String(pill.price)) }}</span>
-                  <span
-                    :class="['so-pill-stock', pill.severity === 'danger' ? 'so-pill-stock-danger' : '']"
-                    :title="t('Available stock')"
-                  >
-                    <i class="fa fa-boxes-stacked" aria-hidden="true" />
-                    {{ pillCaption(pill) }}
-                  </span>
-                  <span v-if="addedKeys.has(pill.key)" class="so-pill-check" aria-hidden="true">
-                    <i class="fa fa-check" />
-                  </span>
-                </button>
+              <div class="so-mobile-bottom">
+                <div class="so-unit-cell">
+                  <span class="font-medium">{{ row.unitName }}</span>
+                  <span v-if="row.conversionFactor !== 1" class="so-unit-factor">×{{ row.conversionFactor }}</span>
+                </div>
+                <Tag :value="getStockLabel(row)" :severity="getStockSeverity(row)" class="text-xs" rounded />
+                <span v-if="addedKeys.has(row.key)" class="so-added-check" aria-hidden="true">
+                  <i class="fa fa-check" />
+                </span>
               </div>
             </div>
           </div>
@@ -511,7 +486,7 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
 
 .so-option {
   border-bottom: 1px solid var(--p-surface-100, #f1f5f9);
-  cursor: default;
+  cursor: pointer;
   transition: background-color 0.12s ease;
 }
 
@@ -519,8 +494,27 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
   border-bottom: none;
 }
 
-.so-option[data-active="true"] {
+.so-option[data-active="true"]:not(.so-option-disabled) {
   background: var(--p-surface-100, #f1f5f9);
+}
+
+.so-option[data-active="true"].so-option-disabled {
+  background: var(--p-surface-50, #f8fafc);
+}
+
+.so-option:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--p-focus-ring-color, rgba(0, 83, 155, 0.25));
+}
+
+.so-option-disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.so-option-added {
+  cursor: default;
+  opacity: 0.7;
 }
 
 .so-row {
@@ -534,7 +528,7 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
 .so-row-mobile {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .so-col {
@@ -568,10 +562,29 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
   white-space: nowrap;
 }
 
+.so-unit-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.so-unit-factor {
+  color: var(--p-surface-500, #64748b);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
 .so-price-cell {
   font-weight: 600;
   font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
+}
+
+.so-stock-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 .so-mobile-top {
@@ -588,121 +601,21 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
 
 .so-mobile-right {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
   flex-shrink: 0;
 }
 
-.so-mobile-right .so-price-cell {
-  font-size: 0.875rem;
-}
-
-.so-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-}
-
-.so-pills-row {
+.so-mobile-bottom {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-/* Pills */
-.so-pill {
+.so-added-check {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.3125rem 0.5rem;
-  border: 1px solid var(--p-surface-300, #cbd5e1);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--p-text-color, #1e293b);
+  color: var(--p-surface-500, #64748b);
   font-size: 0.75rem;
-  line-height: 1.25;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-  user-select: none;
-  max-width: 100%;
-}
-
-.so-pill:hover:not(:disabled):not(.so-pill-added) {
-  background: var(--p-surface-100, #f1f5f9);
-  border-color: var(--p-primary-color, #00539b);
-  color: var(--p-primary-color, #00539b);
-}
-
-.so-pill:active:not(:disabled):not(.so-pill-added) {
-  background: var(--p-surface-200, #e2e8f0);
-}
-
-.so-pill:focus-visible {
-  outline: none;
-  border-color: var(--p-primary-color, #00539b);
-  box-shadow: 0 0 0 2px var(--p-focus-ring-color, rgba(0, 83, 155, 0.25));
-}
-
-.so-pill:disabled {
-  cursor: default;
-  opacity: 0.7;
-}
-
-.so-pill-added {
-  background: var(--p-surface-100, #f1f5f9);
-  border-color: var(--p-surface-300, #cbd5e1);
-  color: var(--p-surface-500, #64748b);
-  opacity: 0.75;
-}
-
-.so-pill-name {
-  font-weight: 600;
-}
-
-.so-pill-factor {
-  color: var(--p-surface-500, #64748b);
-  font-weight: 400;
-}
-
-.so-pill-price {
-  font-variant-numeric: tabular-nums;
-  color: var(--p-surface-700, #334155);
-}
-
-.so-pill-stock {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.1875rem;
-  color: var(--p-surface-500, #64748b);
-  font-weight: 400;
-}
-
-.so-pill-stock i {
-  font-size: 0.625rem;
-}
-
-.so-pill-stock-danger {
-  color: var(--p-red-500, #ef4444);
-  font-weight: 600;
-}
-
-.so-pill-danger:not(.so-pill-added) {
-  border-color: var(--p-red-300, #fca5a5);
-}
-
-.so-pill-warn:not(.so-pill-added) {
-  border-color: var(--p-amber-300, #fcd34d);
-}
-
-.so-pill-check {
-  display: inline-flex;
-  align-items: center;
-  color: var(--p-surface-500, #64748b);
-  font-size: 0.6875rem;
 }
 
 .so-empty {
@@ -743,7 +656,7 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
     display: grid;
     grid-template-columns: 4fr 2fr 2fr 2fr 2fr;
     gap: 0.5rem;
-    align-items: start;
+    align-items: center;
   }
 
   .so-row-mobile {
@@ -758,6 +671,10 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
     align-self: center;
   }
 
+  .so-col-unit {
+    align-self: center;
+  }
+
   .so-col-price {
     align-self: center;
   }
@@ -765,10 +682,15 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
   .so-col-stock {
     align-self: center;
   }
+}
 
-  .so-col-units {
-    align-self: center;
-  }
+/* Out-of-stock / low-stock border cues (full border, never side-stripe) */
+.so-option-danger:not(.so-option-added) {
+  border-bottom-color: var(--p-red-300, #fca5a5);
+}
+
+.so-option-warn:not(.so-option-added) {
+  border-bottom-color: var(--p-amber-300, #fcd34d);
 }
 
 /* Dark mode */
@@ -796,51 +718,33 @@ const showEmpty = computed(() => isOpen.value && !searchLoading.value && query.v
   border-color: var(--p-surface-800, #1e293b);
 }
 
-.app-dark .so-option[data-active="true"] {
+.app-dark .so-option[data-active="true"]:not(.so-option-disabled) {
   background: var(--p-surface-800, #1e293b);
 }
 
-.app-dark .so-pill {
-  border-color: var(--p-surface-700, #334155);
-  color: var(--p-text-color, #f8fafc);
+.app-dark .so-option[data-active="true"].so-option-disabled {
+  background: var(--p-surface-900, #1e293b);
 }
 
-.app-dark .so-pill:hover:not(:disabled):not(.so-pill-added) {
-  background: var(--p-surface-800, #1e293b);
-}
-
-.app-dark .so-pill:active:not(:disabled):not(.so-pill-added) {
-  background: var(--p-surface-700, #334155);
-}
-
-.app-dark .so-pill-added {
-  background: var(--p-surface-800, #1e293b);
-  border-color: var(--p-surface-700, #334155);
+.app-dark .so-unit-factor,
+.app-dark .so-brand-inline,
+.app-dark .so-brand-cell {
   color: var(--p-surface-400, #94a3b8);
 }
 
-.app-dark .so-pill-price {
-  color: var(--p-surface-300, #cbd5e1);
-}
-
-.app-dark .so-pill-stock {
+.app-dark .so-added-check {
   color: var(--p-surface-400, #94a3b8);
 }
 
-.app-dark .so-pill-stock-danger {
-  color: var(--p-red-400, #f87171);
+.app-dark .so-option-danger:not(.so-option-added) {
+  border-bottom-color: var(--p-red-700, #b91c1c);
 }
 
-.app-dark .so-pill-danger:not(.so-pill-added) {
-  border-color: var(--p-red-700, #b91c1c);
-}
-
-.app-dark .so-pill-warn:not(.so-pill-added) {
-  border-color: var(--p-amber-700, #b45309);
+.app-dark .so-option-warn:not(.so-option-added) {
+  border-bottom-color: var(--p-amber-700, #b45309);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .so-pill,
   .so-option,
   .so-input,
   .so-panel-enter-active,

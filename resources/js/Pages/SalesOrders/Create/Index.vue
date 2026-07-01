@@ -9,6 +9,7 @@ import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
 import { useAuth } from "@composables/useAuth";
+import { useStockLedger } from "@composables/useStockLedger";
 import SOLineItemsTable from "../Components/SOLineItemsTable.vue";
 import SOFinancialSummary from "../Components/SOFinancialSummary.vue";
 import SOPaymentsPanel from "../Components/SOPaymentsPanel.vue";
@@ -43,20 +44,20 @@ const [notes, notesAttrs] = defineField("notes");
 
 const selectedCustomerId = ref<number | null>(null);
 const lineItems = ref<LineItem[]>([]);
-const payments = ref<SalesOrderPaymentForm[]>([
-  { payment_method: "cash", amount: 0, reference: null },
-]);
+const payments = ref<SalesOrderPaymentForm[]>([{ payment_method: "cash", amount: 0, reference: null }]);
 const itemsError = ref("");
 const paymentsError = ref("");
+
+// Live per-variant base-stock ledger: shared between picker and table so the
+// Available Tag reflects in-progress allocation, and oversell is caught pre-submit.
+const { getRemainingBase, getRemainingBaseExcludingLine, hasOversell } = useStockLedger(lineItems);
 
 // Totals computation — must mirror SalesOrderService::calculateTotals()
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.line_total, 0));
 const discountAmount = computed(() => values.discount_value ?? 0);
 const taxRate = computed(() => Number(getSetting("sales", "tax_rate", "0") ?? 0) / 100);
 const taxAmount = computed(() => Math.round((subTotal.value - discountAmount.value) * taxRate.value * 100) / 100);
-const totalAmount = computed(
-  () => Math.round((subTotal.value - discountAmount.value + taxAmount.value) * 100) / 100,
-);
+const totalAmount = computed(() => Math.round((subTotal.value - discountAmount.value + taxAmount.value) * 100) / 100);
 
 const submit = handleSubmit((formValues) => {
   itemsError.value = "";
@@ -64,6 +65,11 @@ const submit = handleSubmit((formValues) => {
 
   if (lineItems.value.length === 0) {
     itemsError.value = t("At least one item is required");
+    return;
+  }
+
+  if (hasOversell.value) {
+    itemsError.value = t("One or more items exceeds available stock");
     return;
   }
 
@@ -136,16 +142,16 @@ function goBack() {
         <Card class="mb-4">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <SOLineItemsTable v-model="lineItems" />
+            <SOLineItemsTable
+              v-model="lineItems"
+              :get-remaining-base="getRemainingBase"
+              :get-remaining-base-excluding-line="getRemainingBaseExcludingLine"
+            />
             <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
           </template>
         </Card>
 
-        <SOPaymentsPanel
-          v-model="payments"
-          :total-amount="totalAmount"
-          :error="paymentsError"
-        />
+        <SOPaymentsPanel v-model="payments" :total-amount="totalAmount" :error="paymentsError" />
       </div>
 
       <div class="lg:col-span-4 col-span-12">

@@ -9,6 +9,7 @@ import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
 import { useAuth } from "@composables/useAuth";
+import { useStockLedger } from "@composables/useStockLedger";
 import SOLineItemsTable from "../Components/SOLineItemsTable.vue";
 import SOFinancialSummary from "../Components/SOFinancialSummary.vue";
 import SOPaymentsPanel from "../Components/SOPaymentsPanel.vue";
@@ -53,7 +54,11 @@ const lineItems = ref<LineItem[]>(
     id: crypto.randomUUID(),
     product_variant_id: item.product_variant_id,
     product_name: item.product_variant?.product?.name ?? "—",
-    variant_label: item.product_variant?.identifier ?? "—",
+    // For default-only variants (no identifier), show the sale unit name as
+    // the variant label instead of repeating the product name on line 2.
+    variant_label: item.product_variant?.identifier
+      ? item.product_variant.identifier
+      : item.sale_unit?.name ?? t("Unit"),
     sale_unit_id: item.sale_unit_id,
     quantity: item.quantity,
     unit_price: item.unit_price,
@@ -79,14 +84,18 @@ const payments = ref<SalesOrderPaymentForm[]>(
 const itemsError = ref("");
 const paymentsError = ref("");
 
+// Live per-variant base-stock ledger. On Edit, pre-populated items carry
+// stock=null (no fresh snapshot), so the ledger returns null for those
+// variants and the table falls back to a neutral "—" until the operator
+// re-searches and adds a fresh row (which carries the snapshot).
+const { getRemainingBase, getRemainingBaseExcludingLine, hasOversell } = useStockLedger(lineItems);
+
 // Totals computation — must mirror SalesOrderService::calculateTotals()
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.line_total, 0));
 const discountAmount = computed(() => values.discount_value ?? 0);
 const taxRate = computed(() => Number(getSetting("sales", "tax_rate", "0") ?? 0) / 100);
 const taxAmount = computed(() => Math.round((subTotal.value - discountAmount.value) * taxRate.value * 100) / 100);
-const totalAmount = computed(
-  () => Math.round((subTotal.value - discountAmount.value + taxAmount.value) * 100) / 100,
-);
+const totalAmount = computed(() => Math.round((subTotal.value - discountAmount.value + taxAmount.value) * 100) / 100);
 
 const submit = handleSubmit((formValues) => {
   itemsError.value = "";
@@ -94,6 +103,11 @@ const submit = handleSubmit((formValues) => {
 
   if (lineItems.value.length === 0) {
     itemsError.value = t("At least one item is required");
+    return;
+  }
+
+  if (hasOversell.value) {
+    itemsError.value = t("One or more items exceeds available stock");
     return;
   }
 
@@ -161,15 +175,19 @@ function goBack() {
           <template #content>
             <CustomerSelect
               v-model="selectedCustomerId"
-              :initial-customer="order.customer ? {
-                id: order.customer.id!,
-                first_name: order.customer.first_name ?? '',
-                last_name: order.customer.last_name ?? '',
-                email: order.customer.email,
-                phone: order.customer.phone,
-                tax_id: order.customer.tax_id ?? '',
-                tax_id_name: order.customer.tax_id_name ?? '',
-              } : null"
+              :initial-customer="
+                order.customer
+                  ? {
+                      id: order.customer.id!,
+                      first_name: order.customer.first_name ?? '',
+                      last_name: order.customer.last_name ?? '',
+                      email: order.customer.email,
+                      phone: order.customer.phone,
+                      tax_id: order.customer.tax_id ?? '',
+                      tax_id_name: order.customer.tax_id_name ?? '',
+                    }
+                  : null
+              "
             />
           </template>
         </Card>
@@ -177,16 +195,16 @@ function goBack() {
         <Card class="mb-4">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <SOLineItemsTable v-model="lineItems" />
+            <SOLineItemsTable
+              v-model="lineItems"
+              :get-remaining-base="getRemainingBase"
+              :get-remaining-base-excluding-line="getRemainingBaseExcludingLine"
+            />
             <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
           </template>
         </Card>
 
-        <SOPaymentsPanel
-          v-model="payments"
-          :total-amount="totalAmount"
-          :error="paymentsError"
-        />
+        <SOPaymentsPanel v-model="payments" :total-amount="totalAmount" :error="paymentsError" />
       </div>
 
       <div class="lg:col-span-4 col-span-12">
