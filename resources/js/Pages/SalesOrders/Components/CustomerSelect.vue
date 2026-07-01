@@ -22,6 +22,7 @@ const { loading, findByTaxIdApi, storeCustomerApi } = useCustomerClient();
 
 const taxIdInput = ref("");
 const selectedCustomer = ref<CustomerOption | null>(null);
+const walkInSelected = ref(false);
 const searchError = ref("");
 const showCreateForm = ref(false);
 const taxIdNameInput = ref("");
@@ -34,6 +35,10 @@ function buildLabel(c: CustomerOption): string {
 }
 
 const displayLabel = computed(() => (selectedCustomer.value ? buildLabel(selectedCustomer.value) : ""));
+// A chip renders for either a named customer OR an explicit walk-in choice —
+// one vocabulary for "customer chosen," so walk-in reads as a named state
+// rather than the absence of one.
+const showChip = computed(() => selectedCustomer.value !== null || walkInSelected.value);
 
 onMounted(() => {
   if (props.initialCustomer) {
@@ -49,6 +54,7 @@ async function searchCustomer() {
 
   searchError.value = "";
   showCreateForm.value = false;
+  walkInSelected.value = false;
 
   try {
     const response = await findByTaxIdApi<CustomerOption>(taxIdInput.value.trim());
@@ -117,12 +123,24 @@ function cancelCreate() {
   searchError.value = "";
 }
 
+function selectWalkIn() {
+  selectedCustomer.value = null;
+  taxIdInput.value = "";
+  taxIdNameInput.value = "";
+  searchError.value = "";
+  showCreateForm.value = false;
+  walkInSelected.value = true;
+  emit("update:modelValue", null);
+  emit("select", null);
+}
+
 function clearCustomer() {
   selectedCustomer.value = null;
   taxIdInput.value = "";
   taxIdNameInput.value = "";
   searchError.value = "";
   showCreateForm.value = false;
+  walkInSelected.value = false;
   emit("update:modelValue", null);
   emit("select", null);
 }
@@ -143,8 +161,8 @@ function goToCustomerEdit() {
   <div class="flex flex-col gap-1">
     <label for="customer-tax-id">{{ t("Customer") }}</label>
 
-    <!-- Search input + button (shown when no customer selected) -->
-    <div v-if="!selectedCustomer" class="flex gap-2">
+    <!-- Search input + walk-in choice (shown until a customer OR walk-in is chosen) -->
+    <div v-if="!showChip" class="flex gap-2">
       <div class="flex-1">
         <InputText
           id="customer-tax-id"
@@ -164,10 +182,17 @@ function goToCustomerEdit() {
         size="small"
         @click="searchCustomer"
       />
+      <Button
+        :label="t('Continue as Walk-in')"
+        severity="secondary"
+        size="small"
+        text
+        @click="selectWalkIn"
+      />
     </div>
 
     <!-- Error message -->
-    <small v-if="searchError" role="alert" class="text-red-400 dark:text-red-300">
+    <small v-if="searchError" role="alert" class="text-red-500 dark:text-red-400">
       {{ searchError }}
     </small>
 
@@ -206,36 +231,44 @@ function goToCustomerEdit() {
       </div>
     </div>
 
-    <!-- Selected customer chip -->
+    <!-- Selected customer OR walk-in chip — one vocabulary for "customer chosen" -->
     <div
-      v-if="selectedCustomer"
+      v-if="showChip"
       class="flex items-center gap-2 border border-surface-200 dark:border-surface-700 rounded px-3 py-2 bg-surface-50 dark:bg-surface-950"
     >
-      <i class="fa fa-user-check text-surface-400" />
-      <span class="font-medium flex-1">{{ displayLabel }}</span>
-      <Button
-        v-tooltip.top="t('Customer Information')"
-        icon="fa fa-eye"
-        text
-        size="small"
-        :aria-label="t('Customer Information')"
-        @click="toggleCustomerInfo"
+      <i
+        :class="selectedCustomer ? 'fa fa-user-check' : 'fa fa-person-walking'"
+        class="text-surface-500 dark:text-surface-400"
       />
+      <span class="font-medium flex-1">
+        <template v-if="selectedCustomer">{{ displayLabel }}</template>
+        <template v-else>{{ t("Walk-in") }}</template>
+      </span>
+      <template v-if="selectedCustomer">
+        <Button
+          v-tooltip.top="t('Customer Information')"
+          icon="fa fa-eye"
+          text
+          size="small"
+          :aria-label="t('Customer Information')"
+          @click="toggleCustomerInfo"
+        />
+        <Button
+          v-tooltip.top="t('Edit customer details')"
+          icon="fa fa-pen"
+          text
+          size="small"
+          :aria-label="t('Edit customer details')"
+          @click="goToCustomerEdit"
+        />
+      </template>
       <Button
-        v-tooltip.top="t('Edit customer details')"
-        icon="fa fa-pen"
-        text
-        size="small"
-        :aria-label="t('Edit customer details')"
-        @click="goToCustomerEdit"
-      />
-      <Button
-        v-tooltip.top="t('Remove customer')"
+        v-tooltip.top="selectedCustomer ? t('Remove customer') : t('Remove walk-in')"
         icon="fa fa-times"
         text
         size="small"
         severity="secondary"
-        :aria-label="t('Remove customer')"
+        :aria-label="selectedCustomer ? t('Remove customer') : t('Remove walk-in')"
         @click="clearCustomer"
       />
     </div>
@@ -246,32 +279,20 @@ function goToCustomerEdit() {
         <h4 class="text-lg font-semibold mb-3">{{ displayLabel }}</h4>
         <div class="flex flex-col gap-2 text-sm">
           <div v-if="selectedCustomer.email" class="flex items-center gap-2">
-            <i class="fa fa-envelope text-surface-400 w-4 text-center" />
+            <i class="fa fa-envelope text-surface-500 dark:text-surface-400 w-4 text-center" />
             <span>{{ selectedCustomer.email }}</span>
           </div>
           <div v-if="selectedCustomer.phone" class="flex items-center gap-2">
-            <i class="fa fa-phone text-surface-400 w-4 text-center" />
+            <i class="fa fa-phone text-surface-500 dark:text-surface-400 w-4 text-center" />
             <span>{{ selectedCustomer.phone }}</span>
           </div>
           <div class="flex items-center gap-2">
-            <i class="fa fa-id-card text-surface-400 w-4 text-center" />
+            <i class="fa fa-id-card text-surface-500 dark:text-surface-400 w-4 text-center" />
             <span>{{ selectedCustomer.tax_id }}</span>
           </div>
         </div>
       </div>
     </Popover>
 
-    <!-- Walk-in / no customer -->
-    <small v-if="!modelValue && !selectedCustomer" class="text-surface-400">{{ t("No customer (Walk-in)") }}</small>
-    <Button
-      v-if="modelValue"
-      type="button"
-      icon="fa fa-times"
-      :label="t('Walk-in')"
-      severity="secondary"
-      text
-      size="small"
-      @click="clearCustomer"
-    />
   </div>
 </template>

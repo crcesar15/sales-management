@@ -33,6 +33,16 @@ const payments = computed({
 const paymentsTotal = computed(() => payments.value.reduce((sum, p) => sum + p.amount, 0));
 const paymentsDifference = computed(() => Math.abs(paymentsTotal.value - props.totalAmount));
 
+// Direction-aware mismatch callout: positive shortfall = underpaid ("Short",
+// sale can't close balanced — warn); negative = overpaid ("Over", operator
+// owes change — not an error). Icon + label + amount = three carriers so
+// color is never the sole state indicator (DESIGN.md Status-Pairs Rule).
+const paymentsShortfall = computed(() => props.totalAmount - paymentsTotal.value);
+const isShortfall = computed(() => paymentsShortfall.value > 0);
+const mismatchLabel = computed(() => (isShortfall.value ? t("Short") : t("Over")));
+const mismatchAmount = computed(() => formatCurrency(String(Math.abs(paymentsShortfall.value))));
+const mismatchIcon = computed(() => (isShortfall.value ? "fa fa-circle-exclamation" : "fa fa-circle-check"));
+
 function updatePaymentMethod(index: number, method: string) {
   const updated = [...payments.value];
   updated[index] = { ...updated[index], payment_method: method as SalesOrderPaymentForm["payment_method"] };
@@ -121,11 +131,21 @@ function removePayment(index: number) {
           <span class="text-surface-500">{{ t("Payment Total") }}</span>
           <span class="font-medium">{{ formatCurrency(String(paymentsTotal)) }}</span>
         </div>
-        <div v-if="paymentsDifference > 0.01" class="flex justify-between text-amber-600">
-          <span>{{ t("Order Total") }}</span>
-          <span>{{ formatCurrency(String(totalAmount)) }}</span>
+        <div
+          v-if="paymentsDifference > 0.01"
+          role="alert"
+          class="flex items-center justify-between rounded p-2"
+          :class="isShortfall
+            ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'
+            : 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400'"
+        >
+          <span class="flex items-center gap-2 font-medium">
+            <i :class="mismatchIcon" class="text-base" />
+            {{ mismatchLabel }}
+          </span>
+          <span class="font-semibold tabular-nums">{{ mismatchAmount }}</span>
         </div>
-        <small v-if="error" class="text-red-400 dark:text-red-300">{{ error }}</small>
+        <small v-if="error" class="text-red-500 dark:text-red-400">{{ error }}</small>
       </div>
     </template>
   </Card>
