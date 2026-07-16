@@ -4,7 +4,9 @@
 enabled = true
 command = "php"
 args = ["artisan", "boost:mcp"]
-cwd = "."
+# Paths in project config resolve from this .codex directory. Laravel’s
+# artisan entry point lives at the repository root.
+cwd = ".."
 
 [agents.crud-generator]
 description = "Generate a complete CRUD stack following this repository's conventions."

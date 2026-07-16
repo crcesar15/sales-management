@@ -1,3 +1,3 @@
 name = "refactoring"
 description = "Align an existing module with the repository's conventions."
-developer_instructions = "Read and follow .claude/agents/refactoring.md. Inspect sibling modules before changing code and run the appropriate project validation after the refactor."
+developer_instructions = "Read AGENTS.md and the applicable .claude/rules/*.md before .claude/agents/refactoring.md; AGENTS.md and the rules take precedence over any stale examples in that workflow. Inspect sibling modules before changing code and run the appropriate project validation after the refactor."

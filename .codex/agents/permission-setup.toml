@@ -1,3 +1,3 @@
 name = "permission-setup"
 description = "Configure permissions, roles, and navigation for a module."
-developer_instructions = "Read and follow .claude/agents/permission-setup.md. Preserve the repository's PermissionsEnum and authorization conventions. Verify all affected PHP and frontend files."
+developer_instructions = "Read AGENTS.md and .claude/rules/authorization.md before .claude/agents/permission-setup.md; the repository guidance takes precedence over workflow examples. Preserve the repository's PermissionsEnum and authorization conventions. Verify all affected PHP and frontend files."
