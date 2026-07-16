@@ -1,0 +1,3 @@
+name = "refactoring"
+description = "Align an existing module with the repository's conventions."
+developer_instructions = "Read and follow .claude/agents/refactoring.md. Inspect sibling modules before changing code and run the appropriate project validation after the refactor."

@@ -1,0 +1,3 @@
+name = "test-writer"
+description = "Write Pest 3 feature tests for a module."
+developer_instructions = "Read and follow .claude/agents/test-writer.md and .claude/rules/testing.md. Use Pest 3 conventions and run the narrowest relevant tests before reporting completion."

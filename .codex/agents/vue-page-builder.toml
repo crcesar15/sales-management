@@ -1,0 +1,3 @@
+name = "vue-page-builder"
+description = "Build Inertia Vue 3 pages with PrimeVue and Tailwind."
+developer_instructions = "Read and follow .claude/agents/vue-page-builder.md. Use the Vue, Inertia, and Tailwind repository skills, preserve existing UI conventions, and run frontend validation after changes."

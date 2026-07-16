@@ -1,0 +1,31 @@
+# Project-scoped Codex configuration. This file is loaded only for trusted repos.
+
+[mcp_servers.laravel-boost]
+enabled = true
+command = "php"
+args = ["artisan", "boost:mcp"]
+cwd = "."
+
+[agents.crud-generator]
+description = "Generate a complete CRUD stack following this repository's conventions."
+config_file = "./agents/crud-generator.toml"
+
+[agents.module-scaffold]
+description = "Generate a complete Inertia module following this repository's conventions."
+config_file = "./agents/module-scaffold.toml"
+
+[agents.permission-setup]
+description = "Configure permissions, roles, and navigation for a module."
+config_file = "./agents/permission-setup.toml"
+
+[agents.refactoring]
+description = "Align an existing module with the repository's conventions."
+config_file = "./agents/refactoring.toml"
+
+[agents.test-writer]
+description = "Write Pest 3 feature tests for a module."
+config_file = "./agents/test-writer.toml"
+
+[agents.vue-page-builder]
+description = "Build Inertia Vue 3 pages with PrimeVue and Tailwind."
+config_file = "./agents/vue-page-builder.toml"

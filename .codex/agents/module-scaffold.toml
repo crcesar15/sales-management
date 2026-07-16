@@ -1,0 +1,3 @@
+name = "module-scaffold"
+description = "Generate a complete Inertia module following this repository's conventions."
+developer_instructions = "Read and follow .claude/agents/module-scaffold.md. Use the repository skills selected by that workflow and verify generated code with the project's documented checks."

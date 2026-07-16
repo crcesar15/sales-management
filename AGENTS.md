@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This is a sales management application. opencode loads this file automatically as project instructions. The full project guide lives in `CLAUDE.md` and the detailed rules live in `.claude/rules/` — both are also loaded via `opencode.json` `instructions`, so read them before making changes.
+This is a sales management application. Codex loads this file automatically as project instructions. The full project guide lives in `CLAUDE.md` and the detailed rules live in `.claude/rules/`; read them before making changes. The same files remain available for Claude Code and OpenCode.
 
 ## Stack
 
@@ -57,17 +57,21 @@ Every module follows the same full-stack pattern. When working on a feature, che
   - `testing.md` — Pest conventions, running tests, factory usage, known issues
   - `commands.md` — build, dev, lint, artisan, and database commands
 
-## Subagents
+## Skills and subagents
 
-Project-specific subagents are available via `@mention` (defined in `.opencode/agent/`):
+Codex discovers reusable project skills from `.agents/skills/`. The repository's Codex skill directory contains the shared frontend, Laravel, testing, dashboard, and design workflows. Claude-specific skills in `.claude/skills/` are bridged there when they are also needed by Codex.
 
-- `@crud-generator` — scaffold a full CRUD stack for a model
-- `@module-scaffold` — scaffold a complete Inertia module from scratch
-- `@permission-setup` — wire up permissions, roles, and menu for a module
-- `@refactoring` — align an existing module with project patterns
-- `@test-writer` — write Pest 3 feature tests for a module
-- `@vue-page-builder` — build Inertia Vue 3 pages with PrimeVue + Tailwind
+The project-specific subagent workflows are defined in `.claude/agents/` and are also registered as Codex custom agents under `.codex/agents/`. Use the matching Codex agent name when delegation is available:
+
+- `crud-generator` — scaffold a full CRUD stack for a model
+- `module-scaffold` — scaffold a complete Inertia module from scratch
+- `permission-setup` — wire up permissions, roles, and menu for a module
+- `refactoring` — align an existing module with project patterns
+- `test-writer` — write Pest 3 feature tests for a module
+- `vue-page-builder` — build Inertia Vue 3 pages with PrimeVue + Tailwind
+
+The original Claude `@mention` form remains documented in .claude/AGENTS.md for Claude Code users.
 
 ## MCP
 
-The `laravel-boost` MCP server (database schema, query, docs search, logs) is configured in `opencode.json` and runs via `php artisan boost:mcp`.
+The `laravel-boost` MCP server (database schema, query, docs search, logs) is configured for OpenCode in `opencode.json` and for Codex in `.codex/config.toml`; both run it via `php artisan boost:mcp`.

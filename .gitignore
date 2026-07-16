@@ -23,3 +23,13 @@ yarn-error.log
 /.agents
 /.windsurf
 docs/.obsidian/workspace.json
+
+# Codex bridges for Claude project skills
+!/.agents/
+/.agents/*
+!/.agents/skills/
+/.agents/skills/*
+!/.agents/skills/commit
+!/.agents/skills/medialibrary-development
+!/.agents/skills/playwright-cli
+!/.agents/skills/tailwindcss-development
