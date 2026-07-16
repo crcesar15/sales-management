@@ -335,7 +335,7 @@ const showEmpty = computed(
             :aria-selected="rIndex === activeIndex"
             :aria-disabled="isRowDisabled(row)"
             :data-active="rIndex === activeIndex"
-            :tabindex="isRowDisabled(row) ? -1 : 0"
+            :tabindex="rIndex === activeIndex && !isRowDisabled(row) ? 0 : -1"
             @mouseenter="activeIndex = rIndex"
             @click="!isRowDisabled(row) && addUnitRow(row)"
           >

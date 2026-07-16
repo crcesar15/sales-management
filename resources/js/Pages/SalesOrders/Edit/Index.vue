@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, Select, useToast, ConfirmDialog } from "primevue";
+import { Button, Card, Select, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -197,8 +197,6 @@ function goBack() {
       </div>
       <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="submitting" :disabled="submitting" @click="submit" />
     </div>
-
-    <ConfirmDialog />
 
     <div class="grid grid-cols-12 gap-4">
       <div class="lg:col-span-8 col-span-12">

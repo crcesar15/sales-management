@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DataTable, Column, Button, InputNumber, Tag, useConfirm } from "primevue";
+import { DataTable, Column, Button, InputNumber, Tag, useConfirm, ConfirmDialog } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { computed } from "vue";
@@ -148,12 +148,13 @@ function confirmRemoveItem(index: number) {
 
 <template>
   <div>
+    <ConfirmDialog />
     <SOProductPicker :added-keys="addedKeys" :get-remaining-base="getRemainingBase" :store-id="storeId" @add="onPickerAdd" />
 
     <DataTable
       :value="items"
       data-key="id"
-      class="mt-4 border-t-2 border-surface-200 dark:border-surface-700"
+      class="mt-4 border-t border-surface-200 dark:border-surface-700"
       striped-rows
       row-hover
       scrollable

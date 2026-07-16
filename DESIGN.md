@@ -24,6 +24,8 @@ colors:
   status-success: "#22c55e"
   status-warn: "#f59e0b"
   status-danger: "#ef4444"
+  status-warn-border-dark: "#b45309"
+  status-danger-border-dark: "#b91c1c"
   noir-ink: "#18181b"
   noir-paper: "#fafafa"
 typography:
@@ -140,6 +142,7 @@ The full ramp (50 → 950) is defined in `resources/js/app.ts` as the custom Aur
 ### Status (semantic, never the sole carrier of state)
 
 - **Success** (`#22c55e`), **Warn** (`#f59e0b`), **Danger** (`#ef4444`): PrimeVue severity colors. Always paired with a label or icon — color is confirmation, not the message.
+  - **Dark-mode border tonal extensions:** `#b45309` (amber-700) for warn borders and `#b91c1c` (red-700) for danger borders in `.app-dark`, one step darker on the same hue ramp to keep the border visible against `surface-800`. These are documented tonal extensions of `status-warn` / `status-danger`, not off-ramp colors.
 
 ### Login exception: Noir
 
