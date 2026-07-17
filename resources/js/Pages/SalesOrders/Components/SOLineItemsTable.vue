@@ -175,6 +175,12 @@ function confirmRemoveItem(index: number) {
         </template>
       </Column>
 
+      <Column :header="t('Brand')" style="min-width: 140px">
+        <template #body="{ data }">
+          <span class="text-surface-500 dark:text-surface-400">{{ data.brand_name ?? "—" }}</span>
+        </template>
+      </Column>
+
       <Column :header="t('Available')" style="min-width: 120px">
         <template #body="{ data }">
           <Tag :value="getStockLabel(data)" :severity="getStockSeverity(data)" class="text-xs" rounded />

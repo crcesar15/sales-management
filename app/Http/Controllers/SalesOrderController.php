@@ -95,7 +95,7 @@ final class SalesOrderController extends Controller
             'user',
             'store',
             'cashRegisterShift.register',
-            'items.productVariant.product',
+            'items.productVariant.product.brand',
             'items.saleUnit',
             'payments',
         ]);
@@ -117,7 +117,7 @@ final class SalesOrderController extends Controller
         $salesOrder->load([
             'customer',
             'store',
-            'items.productVariant.product',
+            'items.productVariant.product.brand',
             'items.saleUnit',
             'payments',
         ]);

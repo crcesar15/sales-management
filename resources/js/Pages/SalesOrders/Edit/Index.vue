@@ -61,6 +61,7 @@ const lineItems = ref<LineItem[]>(
     id: crypto.randomUUID(),
     product_variant_id: item.product_variant_id,
     product_name: item.product_variant?.product?.name ?? "—",
+    brand_name: item.product_variant?.product?.brand?.name ?? null,
     // For default-only variants (no identifier), show the sale unit name as
     // the variant label instead of repeating the product name on line 2.
     variant_label: item.product_variant?.identifier

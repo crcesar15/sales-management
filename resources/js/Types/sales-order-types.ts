@@ -22,6 +22,7 @@ export interface SalesOrderItem {
     product?: {
       id: number;
       name: string;
+      brand: { id: number; name: string } | null;
     };
   };
   sale_unit?: {
@@ -133,6 +134,7 @@ export interface SalesOrderLineItemForm {
   id: string;
   product_variant_id: number;
   product_name: string;
+  brand_name: string | null;
   variant_label: string;
   sale_unit_id: number | null;
   quantity: number;

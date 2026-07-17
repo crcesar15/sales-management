@@ -257,6 +257,7 @@ function addUnitRow(row: UnitRow) {
     id: crypto.randomUUID(),
     product_variant_id: variant.id,
     product_name: productName,
+    brand_name: variant.product?.brand?.name ?? null,
     variant_label: displayLabel,
     sale_unit_id: row.unitId,
     quantity: 1,

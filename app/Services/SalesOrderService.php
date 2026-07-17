@@ -41,7 +41,7 @@ final class SalesOrderService
                 'user',
                 'store',
                 'cashRegisterShift',
-                'items.productVariant.product',
+                'items.productVariant.product.brand',
                 'items.saleUnit',
                 'payments',
             ])
@@ -146,7 +146,7 @@ final class SalesOrderService
                 ->withProperties(['status' => $status])
                 ->log("Order {$order->id} created with status {$status}");
 
-            return $order->load(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant', 'items.saleUnit', 'payments']);
+            return $order->load(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']);
         });
     }
 
@@ -214,7 +214,7 @@ final class SalesOrderService
                 ->causedBy($actor)
                 ->log("Order {$order->id} updated");
 
-            return $order->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant', 'items.saleUnit', 'payments']) ?? $order;
+            return $order->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']) ?? $order;
         });
     }
 
@@ -237,7 +237,7 @@ final class SalesOrderService
                 ->withProperties(['from' => $currentStatus, 'to' => $newStatus])
                 ->log("Order {$order->id} status changed from {$currentStatus} to {$newStatus}");
 
-            return $order->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant', 'items.saleUnit', 'payments']) ?? $order;
+            return $order->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']) ?? $order;
         });
     }
 

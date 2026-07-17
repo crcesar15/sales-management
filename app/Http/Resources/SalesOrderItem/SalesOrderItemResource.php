@@ -27,6 +27,10 @@ final class SalesOrderItemResource extends JsonResource
                 'product' => $this->productVariant?->product ? [
                     'id' => $this->productVariant->product->id,
                     'name' => $this->productVariant->product->name,
+                    'brand' => $this->productVariant->product->brand ? [
+                        'id' => $this->productVariant->product->brand->id,
+                        'name' => $this->productVariant->product->brand->name,
+                    ] : null,
                 ] : null,
             ]),
             'sale_unit_id' => $this->sale_unit_id,
