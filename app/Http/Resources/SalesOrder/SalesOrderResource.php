@@ -32,6 +32,10 @@ final class SalesOrderResource extends JsonResource
             'discount' => (float) $this->discount,
             'tax_amount' => (float) $this->tax_amount,
             'total' => (float) $this->total,
+            'outstanding_balance' => $this->status->value === 'cancelled'
+                ? 0.0
+                : max(0, round((float) $this->total - (float) $this->payments()->sum('amount'), 2)),
+            'items_count' => $this->relationLoaded('items') ? $this->items->count() : $this->items()->count(),
             'token' => $this->token,
             'notes' => $this->notes,
             'validated_at' => $this->validated_at?->toISOString(),

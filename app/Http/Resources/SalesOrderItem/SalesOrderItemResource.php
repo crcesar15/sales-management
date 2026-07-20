@@ -45,6 +45,11 @@ final class SalesOrderItemResource extends JsonResource
             'stock_allocations' => $this->whenLoaded('stockAllocations', fn () => $this->stockAllocations->map(fn ($allocation): array => [
                 'batch_id' => $allocation->batch_id,
                 'quantity' => $allocation->quantity,
+                'batch' => $allocation->relationLoaded('batch') ? [
+                    'id' => $allocation->batch?->id,
+                    'identifier' => $allocation->batch?->batch_identifier,
+                    'expiry_date' => $allocation->batch?->expiry_date?->toDateString(),
+                ] : null,
             ])->values()),
         ];
     }

@@ -90,9 +90,13 @@ final class SalesOrderController extends Controller
             ->with('success', 'Sales order created successfully.');
     }
 
-    public function show(SalesOrder $salesOrder): InertiaResponse
+    public function show(SalesOrder $salesOrder): InertiaResponse|RedirectResponse
     {
         $this->authorize(PermissionsEnum::SALES_VIEW);
+
+        if (! in_array($salesOrder->status->value, ['completed', 'cancelled'], true)) {
+            return redirect()->route('sales-orders.edit', $salesOrder);
+        }
 
         $salesOrder->load([
             'customer',
@@ -101,6 +105,7 @@ final class SalesOrderController extends Controller
             'cashRegisterShift.register',
             'items.productVariant.product.brand',
             'items.saleUnit',
+            'items.stockAllocations.batch',
             'payments',
         ]);
 
@@ -113,16 +118,18 @@ final class SalesOrderController extends Controller
     {
         $this->authorize(PermissionsEnum::SALES_MANAGE);
 
-        if ($salesOrder->status->value !== 'draft') {
+        if (in_array($salesOrder->status->value, ['completed', 'cancelled'], true)) {
             return redirect()->route('sales-orders.show', $salesOrder->id)
-                ->with('error', 'Only draft orders can be edited.');
+                ->with('error', 'Completed and cancelled orders are read-only.');
         }
 
         $salesOrder->load([
             'customer',
+            'user',
             'store',
             'items.productVariant.product.brand',
             'items.saleUnit',
+            'items.stockAllocations.batch',
             'payments',
         ]);
 
@@ -143,7 +150,7 @@ final class SalesOrderController extends Controller
             return redirect()->back()->withErrors(['items' => $e->getMessage()]);
         }
 
-        return redirect()->route('sales-orders.show', $salesOrder->id)
+        return redirect()->route('sales-orders.edit', $salesOrder->id)
             ->with('success', 'Sales order updated successfully.');
     }
 
@@ -176,29 +183,29 @@ final class SalesOrderController extends Controller
             return redirect()->back()->withErrors(['validation' => $e->getMessage()]);
         }
 
-        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Sales order validated successfully.');
+        return redirect()->route('sales-orders.edit', $salesOrder)->with('success', 'Sales order validated successfully.');
     }
 
     public function fulfill(FulfillSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
     {
         try {
-            $this->salesOrderService->fulfill($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+            $order = $this->salesOrderService->fulfill($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['fulfillment' => $e->getMessage()]);
         }
 
-        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Sales order fulfilled successfully.');
+        return redirect()->route($order->status->value === 'completed' ? 'sales-orders.show' : 'sales-orders.edit', $order)->with('success', 'Sales order fulfilled successfully.');
     }
 
     public function pay(PaySalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
     {
         try {
-            $this->salesOrderService->pay($salesOrder, $request->validated('payments'), $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+            $order = $this->salesOrderService->pay($salesOrder, $request->validated('payments'), $request->user() ?? throw new RuntimeException('Unauthenticated.'));
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['payments' => $e->getMessage()]);
         }
 
-        return redirect()->route('sales-orders.show', $salesOrder)->with('success', 'Sales order paid successfully.');
+        return redirect()->route($order->status->value === 'completed' ? 'sales-orders.show' : 'sales-orders.edit', $order)->with('success', 'Sales order paid successfully.');
     }
 
     public function cancel(CancelSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
