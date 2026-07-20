@@ -36,7 +36,7 @@ final class HandleInertiaRequests extends Middleware
     /**
      * Defines the props that are shared by default.
      */
-    public function share(Request $request): array // @phpstan-ignore-line
+    public function share(Request $request): array
     {
         $shared = ['auth' => null];
 

@@ -15,7 +15,6 @@ import StyleClass from "primevue/styleclass";
 import PrimeVue from "primevue/config";
 import ToastService from "primevue/toastservice";
 import ConfirmationService from "primevue/confirmationservice";
-import { InertiaProgress } from "@inertiajs/progress";
 import { ZiggyVue } from "ziggy-js";
 import { definePreset } from "@primeuix/themes";
 import Aura from "@primeuix/themes/aura";
@@ -87,12 +86,13 @@ const i18n = createI18n({
 
 configureYupLocale(i18n.global.t);
 
-InertiaProgress.init();
-
 // pages
 const pages: Record<symbol, Promise<DefineComponent> | (() => Promise<DefineComponent>)> = import.meta.glob("./Pages/**/*.vue");
 
 createInertiaApp({
+  progress: {
+    color: "#00539b",
+  },
   resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, pages),
   setup({ el, App, props, plugin }) {
     createApp({ setup: () => () => h(App, props) })
