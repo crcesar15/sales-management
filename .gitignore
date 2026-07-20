@@ -23,6 +23,7 @@ yarn-error.log
 /.agents
 /.windsurf
 docs/.obsidian/workspace.json
+.playwright-cli
 
 # Codex bridges for Claude project skills
 !/.agents/
