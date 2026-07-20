@@ -56,6 +56,12 @@ final class CashRegisterShift extends Model
         return $this->hasMany(SalesOrder::class);
     }
 
+    /** @return HasMany<SalesOrderPayment, $this> */
+    public function salesOrderPayments(): HasMany
+    {
+        return $this->hasMany(SalesOrderPayment::class);
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Enums\DiscountType;
 use App\Enums\PermissionsEnum;
 use App\Models\Batch;
+use App\Models\CashRegister;
+use App\Models\CashRegisterShift;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\SalesOrder;
@@ -25,6 +27,10 @@ beforeEach(function () {
         PermissionsEnum::SALES_MANAGE->value,
         PermissionsEnum::SALES_VIEW->value,
     );
+    $this->shift = CashRegisterShift::factory()->create([
+        'cash_register_id' => CashRegister::factory()->create(['store_id' => $this->storeA])->id,
+        'user_id' => $this->actor->id,
+    ]);
 
     // A shared product variant with two batches: 5 units in storeA, 50 in storeB.
     // The variant's aggregate `stock` column is irrelevant to the store-scoped
@@ -138,7 +144,10 @@ it('deducts stock only from the selected store batches on a paid order', functio
             ],
         ],
     ], $this->actor);
-    $service->confirm($order, $this->actor);
+    $order->update(['cash_register_shift_id' => $this->shift->id]);
+    $service->validate($order, $this->actor);
+    $service->pay($order, [['payment_method' => 'transfer', 'amount' => 300, 'reference' => null]], $this->actor);
+    $service->fulfill($order, $this->actor);
 
     $storeABatch = Batch::where('product_variant_id', $this->variant->id)
         ->where('store_id', $this->storeA->id)

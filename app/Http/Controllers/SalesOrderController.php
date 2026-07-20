@@ -6,12 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Requests\SalesOrders\CancelSalesOrderRequest;
-use App\Http\Requests\SalesOrders\ConfirmSalesOrderRequest;
-use App\Http\Requests\SalesOrders\DeliverSalesOrderRequest;
+use App\Http\Requests\SalesOrders\FulfillSalesOrderRequest;
 use App\Http\Requests\SalesOrders\PaySalesOrderRequest;
 use App\Http\Requests\SalesOrders\StoreSalesOrderRequest;
 use App\Http\Requests\SalesOrders\UpdateSalesOrderCheckoutRequest;
 use App\Http\Requests\SalesOrders\UpdateSalesOrderRequest;
+use App\Http\Requests\SalesOrders\ValidateSalesOrderRequest;
 use App\Http\Resources\SalesOrder\SalesOrderCollection;
 use App\Http\Resources\SalesOrder\SalesOrderResource;
 use App\Models\SalesOrder;
@@ -168,26 +168,26 @@ final class SalesOrderController extends Controller
         return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Checkout details updated successfully.');
     }
 
-    public function confirm(ConfirmSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
+    public function validateOrder(ValidateSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
     {
         try {
-            $this->salesOrderService->confirm($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+            $this->salesOrderService->validate($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
         } catch (InvalidArgumentException $e) {
-            return redirect()->back()->withErrors(['confirmation' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['validation' => $e->getMessage()]);
         }
 
-        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Sales order confirmed successfully.');
+        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Sales order validated successfully.');
     }
 
-    public function deliver(DeliverSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
+    public function fulfill(FulfillSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
     {
         try {
-            $this->salesOrderService->deliver($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+            $this->salesOrderService->fulfill($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
         } catch (InvalidArgumentException $e) {
-            return redirect()->back()->withErrors(['delivery' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['fulfillment' => $e->getMessage()]);
         }
 
-        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Sales order delivered successfully.');
+        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Sales order fulfilled successfully.');
     }
 
     public function pay(PaySalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
@@ -204,7 +204,7 @@ final class SalesOrderController extends Controller
     public function cancel(CancelSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
     {
         try {
-            $this->salesOrderService->cancel($salesOrder, $request->string('reason')->toString() ?: null, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+            $this->salesOrderService->cancel($salesOrder, $request->string('reason')->toString(), $request->user() ?? throw new RuntimeException('Unauthenticated.'));
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['cancellation' => $e->getMessage()]);
         }

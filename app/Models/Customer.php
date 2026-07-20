@@ -35,6 +35,12 @@ final class Customer extends Model
         return $this->hasMany(SalesOrder::class);
     }
 
+    /** @return HasMany<CustomerReceivableEntry, $this> */
+    public function receivableEntries(): HasMany
+    {
+        return $this->hasMany(CustomerReceivableEntry::class);
+    }
+
     public function hasSalesOrders(): bool
     {
         return $this->salesOrders()->exists();

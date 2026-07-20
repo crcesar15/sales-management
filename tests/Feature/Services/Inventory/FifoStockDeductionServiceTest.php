@@ -54,7 +54,7 @@ it('closes an exhausted batch when a FIFO sale deduction drains it to zero', fun
     $order = SalesOrder::factory()->create([
         'user_id' => $user->id,
         'store_id' => $this->store->id,
-        'status' => SalesOrderStatus::CONFIRMED->value,
+        'status' => SalesOrderStatus::VALIDATED->value,
         'discount_type' => DiscountType::FLAT->value,
         'discount_value' => 0,
         'sub_total' => 600,
@@ -93,7 +93,7 @@ it('throws InvalidArgumentException on insufficient stock for a sale deduction',
     $order = SalesOrder::factory()->create([
         'user_id' => $user->id,
         'store_id' => $this->store->id,
-        'status' => SalesOrderStatus::CONFIRMED->value,
+        'status' => SalesOrderStatus::VALIDATED->value,
         'discount_type' => DiscountType::FLAT->value,
         'discount_value' => 0,
         'sub_total' => 1100,

@@ -213,10 +213,9 @@ final class CashRegisterShiftService
             ->where('type', CashMovementType::CASH_OUT->value)
             ->sum('amount');
 
-        $cashSales = (float) $shift->salesOrders()
-            ->join('sales_order_payments', 'sales_orders.id', '=', 'sales_order_payments.sales_order_id')
-            ->where('sales_order_payments.payment_method', PaymentMethod::CASH->value)
-            ->sum('sales_order_payments.amount');
+        $cashSales = (float) $shift->salesOrderPayments()
+            ->where('payment_method', PaymentMethod::CASH->value)
+            ->sum('amount');
 
         return round((float) $shift->opening_balance + $cashIn - $cashOut + $cashSales, 2);
     }

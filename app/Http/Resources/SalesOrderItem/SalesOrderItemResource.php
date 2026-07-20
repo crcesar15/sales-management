@@ -42,6 +42,10 @@ final class SalesOrderItemResource extends JsonResource
             'unit_price' => (float) $this->unit_price,
             'conversion_factor' => $this->conversion_factor,
             'line_total' => (float) $this->line_total,
+            'stock_allocations' => $this->whenLoaded('stockAllocations', fn () => $this->stockAllocations->map(fn ($allocation): array => [
+                'batch_id' => $allocation->batch_id,
+                'quantity' => $allocation->quantity,
+            ])->values()),
         ];
     }
 }

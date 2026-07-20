@@ -34,14 +34,17 @@ final class SalesOrderResource extends JsonResource
             'total' => (float) $this->total,
             'token' => $this->token,
             'notes' => $this->notes,
-            'confirmed_at' => $this->confirmed_at?->toISOString(),
-            'delivered_at' => $this->delivered_at?->toISOString(),
+            'validated_at' => $this->validated_at?->toISOString(),
+            'fulfilled_at' => $this->fulfilled_at?->toISOString(),
+            'completed_at' => $this->completed_at?->toISOString(),
             'paid_at' => $this->paid_at?->toISOString(),
             'cancelled_at' => $this->cancelled_at?->toISOString(),
+            'cancellation_reason' => $this->cancellation_reason,
             'customer_id' => $this->customer_id,
             'user_id' => $this->user_id,
             'store_id' => $this->store_id,
             'cash_register_shift_id' => $this->cash_register_shift_id,
+            'fulfilled_by' => $this->fulfilled_by,
             'customer' => $this->whenLoaded('customer', fn () => [
                 'id' => $this->customer?->id,
                 'display_name' => $this->customer ? trim($this->customer->first_name . ' ' . $this->customer->last_name) : null,
@@ -55,6 +58,7 @@ final class SalesOrderResource extends JsonResource
             'user' => $this->whenLoaded('user', fn () => (new UserResource($this->user))->resolve()),
             'store' => $this->whenLoaded('store', fn () => (new StoreResource($this->store))->resolve()),
             'cash_register_shift' => $this->whenLoaded('cashRegisterShift', fn () => (new CashRegisterShiftResource($this->cashRegisterShift))->resolve()),
+            'fulfiller' => $this->whenLoaded('fulfiller', fn () => (new UserResource($this->fulfiller))->resolve()),
             'items' => $this->relationLoaded('items')
                 ? SalesOrderItemResource::collection($this->items)->resolve()
                 : [],

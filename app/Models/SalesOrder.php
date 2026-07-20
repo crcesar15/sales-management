@@ -29,6 +29,7 @@ final class SalesOrder extends Model
         'user_id',
         'store_id',
         'cash_register_shift_id',
+        'fulfilled_by',
         'status',
         'payment_status',
         'discount_type',
@@ -39,10 +40,12 @@ final class SalesOrder extends Model
         'total',
         'token',
         'notes',
-        'confirmed_at',
-        'delivered_at',
+        'validated_at',
+        'fulfilled_at',
+        'completed_at',
         'paid_at',
         'cancelled_at',
+        'cancellation_reason',
     ];
 
     /** @return BelongsTo<Customer, $this> */
@@ -69,6 +72,12 @@ final class SalesOrder extends Model
         return $this->belongsTo(CashRegisterShift::class);
     }
 
+    /** @return BelongsTo<User, $this> */
+    public function fulfiller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'fulfilled_by');
+    }
+
     /** @return HasMany<SalesOrderItem, $this> */
     public function items(): HasMany
     {
@@ -79,6 +88,12 @@ final class SalesOrder extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(SalesOrderPayment::class);
+    }
+
+    /** @return HasMany<CustomerReceivableEntry, $this> */
+    public function receivableEntries(): HasMany
+    {
+        return $this->hasMany(CustomerReceivableEntry::class);
     }
 
     /** @param  Builder<self>  $query */
@@ -119,8 +134,9 @@ final class SalesOrder extends Model
             'total' => 'decimal:2',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',
-            'confirmed_at' => 'datetime',
-            'delivered_at' => 'datetime',
+            'validated_at' => 'datetime',
+            'fulfilled_at' => 'datetime',
+            'completed_at' => 'datetime',
             'paid_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];

@@ -87,38 +87,6 @@ final class FifoStockDeductionService
     }
 
     /**
-     * Restore the exact batches consumed when an unpaid confirmed order is cancelled.
-     * Must be called within an existing DB::transaction.
-     */
-    public function restoreForOrder(SalesOrder $order): void
-    {
-        $allocations = SalesOrderStockAllocation::query()
-            ->whereIn('sales_order_item_id', $order->items()->select('id'))
-            ->whereNull('restored_at')
-            ->with('salesOrderItem')
-            ->lockForUpdate()
-            ->get();
-
-        $affectedVariantIds = [];
-
-        foreach ($allocations as $allocation) {
-            $batch = Batch::query()->lockForUpdate()->findOrFail($allocation->batch_id);
-            $batch->increment('remaining_quantity', $allocation->quantity);
-            $batch->decrement('sold_quantity', $allocation->quantity);
-            $batch->update(['status' => 'active']);
-            $allocation->update(['restored_at' => now()]);
-            $variantId = $allocation->salesOrderItem?->product_variant_id;
-            if ($variantId !== null) {
-                $affectedVariantIds[$variantId] = true;
-            }
-        }
-
-        foreach (array_keys($affectedVariantIds) as $variantId) {
-            ProductVariant::findOrFail($variantId)->recalculateStock();
-        }
-    }
-
-    /**
      * Deduct stock for a transfer using FIFO.
      * Opens its own DB::transaction.
      *

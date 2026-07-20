@@ -30,6 +30,7 @@ final class SalesOrderFactory extends Factory
             'user_id' => User::factory(),
             'store_id' => Store::factory(),
             'cash_register_shift_id' => null,
+            'fulfilled_by' => null,
             'status' => SalesOrderStatus::DRAFT->value,
             'payment_status' => SalesOrderPaymentStatus::PENDING->value,
             'discount_type' => DiscountType::FLAT->value,
@@ -40,6 +41,12 @@ final class SalesOrderFactory extends Factory
             'total' => $subTotal,
             'token' => null,
             'notes' => null,
+            'validated_at' => null,
+            'fulfilled_at' => null,
+            'completed_at' => null,
+            'paid_at' => null,
+            'cancelled_at' => null,
+            'cancellation_reason' => null,
         ];
     }
 }
