@@ -2,8 +2,8 @@ import type { UserResponse } from "./user-types";
 import type { StoreResponse } from "./store-types";
 import type { PaymentMethod } from "./purchase-order-types";
 
-export type SalesOrderStatus = "draft" | "confirmed" | "delivered" | "cancelled";
-export type SalesOrderPaymentStatus = "pending" | "paid";
+export type SalesOrderStatus = "draft" | "validated" | "fulfilled" | "completed" | "cancelled";
+export type SalesOrderPaymentStatus = "pending" | "partially_paid" | "paid";
 export type DiscountType = "flat" | "percentage";
 
 export interface SalesOrderItem {
@@ -31,6 +31,17 @@ export interface SalesOrderItem {
     name: string;
     conversion_factor: number;
   } | null;
+  stock_allocations?: SalesOrderStockAllocation[];
+}
+
+export interface SalesOrderStockAllocation {
+  batch_id: number;
+  quantity: number;
+  batch?: {
+    id: number;
+    identifier: string;
+    expiry_date: string | null;
+  } | null;
 }
 
 export interface SalesOrderPayment {
@@ -55,14 +66,19 @@ export interface SalesOrder {
   discount: number;
   tax_amount: number;
   total: number;
+  outstanding_balance: number;
+  items_count: number;
   token: string | null;
   notes: string | null;
   created_at: string | null;
   updated_at: string | null;
-  confirmed_at: string | null;
-  delivered_at: string | null;
+  validated_at: string | null;
+  fulfilled_at: string | null;
+  completed_at: string | null;
   paid_at: string | null;
   cancelled_at: string | null;
+  cancellation_reason: string | null;
+  fulfilled_by: number | null;
   customer?: {
     id: number | null;
     display_name: string | null;
@@ -74,6 +90,7 @@ export interface SalesOrder {
     tax_id_name: string | null;
   } | null;
   user?: Pick<UserResponse, "id" | "full_name">;
+  fulfiller?: Pick<UserResponse, "id" | "full_name">;
   store?: Pick<StoreResponse, "id" | "name" | "code">;
   cash_register_shift?: {
     id: number;

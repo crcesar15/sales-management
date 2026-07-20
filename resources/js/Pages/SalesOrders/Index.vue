@@ -24,6 +24,7 @@ import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import type { SalesOrderResponse, SalesOrderFilters } from "@/Types/sales-order-types";
 import OrderStatusBadge from "./Components/OrderStatusBadge.vue";
+import PaymentStatusBadge from "./Components/PaymentStatusBadge.vue";
 import { useI18n } from "vue-i18n";
 
 defineOptions({ layout: AppLayout });
@@ -57,8 +58,9 @@ const filterPopover = ref();
 const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
   { label: t("Draft"), value: "draft" },
-  { label: t("Confirmed"), value: "confirmed" },
-  { label: t("Delivered"), value: "delivered" },
+    { label: t("Validated"), value: "validated" },
+    { label: t("Fulfilled"), value: "fulfilled" },
+    { label: t("Completed"), value: "completed" },
   { label: t("Cancelled"), value: "cancelled" },
 ]);
 
@@ -116,18 +118,6 @@ const onSort = (event: DataTableSortEvent) => {
   sortOrder.value = event.sortOrder ?? -1;
   applyFilters();
 };
-
-function viewOrder(order: SalesOrderResponse) {
-  router.visit(route("sales-orders.show", order.id));
-}
-
-function editOrder(order: SalesOrderResponse) {
-  router.visit(route("sales-orders.edit", order.id));
-}
-
-function checkoutOrder(order: SalesOrderResponse) {
-  router.visit(route("sales-orders.checkout", order.id));
-}
 
 function customerName(order: SalesOrderResponse): string {
   if (order.customer?.display_name) return order.customer.display_name;
@@ -229,9 +219,9 @@ function customerName(order: SalesOrderResponse): string {
               {{ customerName(data) }}
             </template>
           </Column>
-          <Column field="user" :header="t('Cashier')" sortable style="min-width: 150px">
+          <Column field="store" :header="t('Store')" sortable style="min-width: 150px">
             <template #body="{ data }">
-              {{ data.user?.full_name ?? "---" }}
+              {{ data.store?.name ?? "---" }}
             </template>
           </Column>
           <Column field="created_at" :header="t('Date')" sortable style="min-width: 140px">
@@ -244,36 +234,19 @@ function customerName(order: SalesOrderResponse): string {
               <OrderStatusBadge :status="data.status" />
             </template>
           </Column>
+          <Column field="payment_status" :header="t('Payment')" sortable style="width: 150px">
+            <template #body="{ data }">
+              <PaymentStatusBadge :status="data.payment_status" />
+            </template>
+          </Column>
+          <Column field="items_count" :header="t('Items')" sortable style="width: 100px">
+            <template #body="{ data }">
+              {{ data.items_count }}
+            </template>
+          </Column>
           <Column field="total" :header="t('Total')" sortable style="min-width: 120px">
             <template #body="{ data }">
               {{ formatCurrency(String(data.total ?? 0)) }}
-            </template>
-          </Column>
-          <Column :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-center' }">
-            <template #body="{ data }">
-              <div class="flex justify-center gap-2">
-                <Button v-tooltip.top="t('View')" icon="fa fa-eye" text size="large" rounded @click="viewOrder(data)" />
-                <Button
-                  v-if="data.status === 'draft'"
-                  v-can="'sales.manage'"
-                  v-tooltip.top="t('Edit')"
-                  icon="fa fa-edit"
-                  text
-                  size="large"
-                  rounded
-                  @click="editOrder(data)"
-                />
-                <Button
-                  v-if="data.status !== 'cancelled' && data.payment_status !== 'paid'"
-                  v-can="'sales.manage'"
-                  v-tooltip.top="t('Checkout')"
-                  icon="fa fa-cash-register"
-                  text
-                  size="large"
-                  rounded
-                  @click="checkoutOrder(data)"
-                />
-              </div>
             </template>
           </Column>
         </DataTable>

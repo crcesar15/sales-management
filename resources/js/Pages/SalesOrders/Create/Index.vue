@@ -11,6 +11,7 @@ import AppLayout from "@layouts/admin.vue";
 import { useStockLedger } from "@composables/useStockLedger";
 import SOLineItemsTable from "../Components/SOLineItemsTable.vue";
 import OrderTotalsCard from "../Components/OrderTotalsCard.vue";
+import SalesOrderStatusStepper from "../Components/SalesOrderStatusStepper.vue";
 import type { LineItem } from "../Components/SOLineItemsTable.vue";
 import type { StoreOption } from "@/Types/sales-order-types";
 
@@ -120,16 +121,17 @@ function goBack() {
 </script>
 
 <template>
-  <div>
+    <div>
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
         <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Create Sales Order") }}</h2>
       </div>
       <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="submitting" :disabled="submitting" @click="submit" />
-    </div>
+      </div>
+      <SalesOrderStatusStepper status="draft" />
 
-    <div class="grid grid-cols-12 gap-4">
+      <div class="grid grid-cols-12 gap-4">
       <div class="lg:col-span-8 col-span-12">
         <Card class="mb-4">
           <template #title>{{ t("Order Details") }}</template>
