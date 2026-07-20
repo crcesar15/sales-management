@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -43,6 +44,12 @@ final class SalesOrderItem extends Model
     public function saleUnit(): BelongsTo
     {
         return $this->belongsTo(ProductVariantUnit::class, 'sale_unit_id');
+    }
+
+    /** @return HasMany<SalesOrderStockAllocation, $this> */
+    public function stockAllocations(): HasMany
+    {
+        return $this->hasMany(SalesOrderStockAllocation::class);
     }
 
     public function getActivitylogOptions(): LogOptions

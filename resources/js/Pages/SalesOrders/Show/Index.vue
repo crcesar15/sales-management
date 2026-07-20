@@ -11,7 +11,6 @@ import OrderStatusBadge from "../Components/OrderStatusBadge.vue";
 import OrderItemsTable from "../Components/OrderItemsTable.vue";
 import OrderTotalsCard from "../Components/OrderTotalsCard.vue";
 import OrderPaymentsTable from "../Components/OrderPaymentsTable.vue";
-import StatusTransitionButtons from "../Components/StatusTransitionButtons.vue";
 
 defineOptions({ layout: AppLayout });
 
@@ -139,8 +138,8 @@ function shiftLabel(): string {
           :discount-value="order.discount_value"
         />
 
-        <div class="mt-4">
-          <StatusTransitionButtons :order="order" @transitioned="router.reload()" />
+        <div v-if="order.status !== 'cancelled' && order.payment_status !== 'paid'" class="mt-4">
+          <Button v-can="'sales.manage'" :label="t('Continue Checkout')" icon="fa fa-cash-register" class="w-full" @click="router.visit(route('sales-orders.checkout', order.id))" />
         </div>
       </div>
     </div>

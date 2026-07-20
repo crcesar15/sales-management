@@ -7,8 +7,7 @@ namespace App\Enums;
 enum SalesOrderStatus: string
 {
     case DRAFT = 'draft';
-    case SENT = 'sent';
-    case PAID = 'paid';
-    case HELD = 'held';
+    case CONFIRMED = 'confirmed';
+    case DELIVERED = 'delivered';
     case CANCELLED = 'cancelled';
 }

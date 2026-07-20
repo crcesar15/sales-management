@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\DiscountType;
+use App\Enums\SalesOrderPaymentStatus;
 use App\Enums\SalesOrderStatus;
 use Database\Factories\SalesOrderFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +30,7 @@ final class SalesOrder extends Model
         'store_id',
         'cash_register_shift_id',
         'status',
+        'payment_status',
         'discount_type',
         'discount_value',
         'sub_total',
@@ -37,6 +39,10 @@ final class SalesOrder extends Model
         'total',
         'token',
         'notes',
+        'confirmed_at',
+        'delivered_at',
+        'paid_at',
+        'cancelled_at',
     ];
 
     /** @return BelongsTo<Customer, $this> */
@@ -75,20 +81,6 @@ final class SalesOrder extends Model
         return $this->hasMany(SalesOrderPayment::class);
     }
 
-    // ─── Scopes ────────────────────────────────────────────────────────────────
-
-    /** @param  Builder<self>  $query */
-    public function scopeHeld(Builder $query): void
-    {
-        $query->where('status', SalesOrderStatus::HELD);
-    }
-
-    /** @param  Builder<self>  $query */
-    public function scopeNotHeld(Builder $query): void
-    {
-        $query->where('status', '!=', SalesOrderStatus::HELD->value);
-    }
-
     /** @param  Builder<self>  $query */
     public function scopeStatus(Builder $query, string $status): void
     {
@@ -118,6 +110,7 @@ final class SalesOrder extends Model
     {
         return [
             'status' => SalesOrderStatus::class,
+            'payment_status' => SalesOrderPaymentStatus::class,
             'discount_type' => DiscountType::class,
             'discount_value' => 'decimal:2',
             'sub_total' => 'decimal:2',
@@ -126,6 +119,10 @@ final class SalesOrder extends Model
             'total' => 'decimal:2',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',
+            'confirmed_at' => 'datetime',
+            'delivered_at' => 'datetime',
+            'paid_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 }

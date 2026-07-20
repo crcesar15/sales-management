@@ -9,9 +9,8 @@ const { t } = useI18n();
 
 const statusMap: Record<string, { label: string; severity: "secondary" | "info" | "success" | "warn" | "danger" }> = {
   draft: { label: "Draft", severity: "secondary" },
-  sent: { label: "Sent", severity: "info" },
-  paid: { label: "Paid", severity: "success" },
-  held: { label: "Held", severity: "warn" },
+  confirmed: { label: "Confirmed", severity: "info" },
+  delivered: { label: "Delivered", severity: "success" },
   cancelled: { label: "Cancelled", severity: "danger" },
 };
 

@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Batch;
 use App\Models\ProductVariant;
 use App\Models\SalesOrder;
+use App\Models\SalesOrderStockAllocation;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -25,7 +26,7 @@ final class FifoStockDeductionService
         foreach ($order->items as $item) {
             $baseQuantity = $item->quantity * $item->conversion_factor;
 
-            $batches = Batch::where('product_variant_id', $item->product_variant_id)
+            $batches = Batch::query()->where('product_variant_id', $item->product_variant_id)
                 ->where('store_id', $order->store_id)
                 ->where('status', 'active')
                 ->where('remaining_quantity', '>', 0)
@@ -55,6 +56,11 @@ final class FifoStockDeductionService
                 $deduct = min($remaining, (int) $batch->remaining_quantity);
                 $batch->decrement('remaining_quantity', $deduct);
                 $batch->increment('sold_quantity', $deduct);
+                SalesOrderStockAllocation::create([
+                    'sales_order_item_id' => $item->id,
+                    'batch_id' => $batch->id,
+                    'quantity' => $deduct,
+                ]);
                 $remaining -= $deduct;
 
                 $batch->refresh();
@@ -77,6 +83,38 @@ final class FifoStockDeductionService
             }
 
             $variant->recalculateStock();
+        }
+    }
+
+    /**
+     * Restore the exact batches consumed when an unpaid confirmed order is cancelled.
+     * Must be called within an existing DB::transaction.
+     */
+    public function restoreForOrder(SalesOrder $order): void
+    {
+        $allocations = SalesOrderStockAllocation::query()
+            ->whereIn('sales_order_item_id', $order->items()->select('id'))
+            ->whereNull('restored_at')
+            ->with('salesOrderItem')
+            ->lockForUpdate()
+            ->get();
+
+        $affectedVariantIds = [];
+
+        foreach ($allocations as $allocation) {
+            $batch = Batch::query()->lockForUpdate()->findOrFail($allocation->batch_id);
+            $batch->increment('remaining_quantity', $allocation->quantity);
+            $batch->decrement('sold_quantity', $allocation->quantity);
+            $batch->update(['status' => 'active']);
+            $allocation->update(['restored_at' => now()]);
+            $variantId = $allocation->salesOrderItem?->product_variant_id;
+            if ($variantId !== null) {
+                $affectedVariantIds[$variantId] = true;
+            }
+        }
+
+        foreach (array_keys($affectedVariantIds) as $variantId) {
+            ProductVariant::findOrFail($variantId)->recalculateStock();
         }
     }
 

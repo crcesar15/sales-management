@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\DiscountType;
+use App\Enums\SalesOrderPaymentStatus;
 use App\Enums\SalesOrderStatus;
 use App\Models\Customer;
 use App\Models\SalesOrder;
@@ -30,6 +31,7 @@ final class SalesOrderFactory extends Factory
             'store_id' => Store::factory(),
             'cash_register_shift_id' => null,
             'status' => SalesOrderStatus::DRAFT->value,
+            'payment_status' => SalesOrderPaymentStatus::PENDING->value,
             'discount_type' => DiscountType::FLAT->value,
             'discount_value' => 0,
             'sub_total' => $subTotal,

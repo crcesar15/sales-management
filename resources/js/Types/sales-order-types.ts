@@ -2,7 +2,8 @@ import type { UserResponse } from "./user-types";
 import type { StoreResponse } from "./store-types";
 import type { PaymentMethod } from "./purchase-order-types";
 
-export type SalesOrderStatus = "draft" | "sent" | "paid" | "held" | "cancelled";
+export type SalesOrderStatus = "draft" | "confirmed" | "delivered" | "cancelled";
+export type SalesOrderPaymentStatus = "pending" | "paid";
 export type DiscountType = "flat" | "percentage";
 
 export interface SalesOrderItem {
@@ -47,6 +48,7 @@ export interface SalesOrder {
   store_id: number;
   cash_register_shift_id: number | null;
   status: SalesOrderStatus;
+  payment_status: SalesOrderPaymentStatus;
   discount_type: DiscountType;
   discount_value: number;
   sub_total: number;
@@ -57,6 +59,10 @@ export interface SalesOrder {
   notes: string | null;
   created_at: string | null;
   updated_at: string | null;
+  confirmed_at: string | null;
+  delivered_at: string | null;
+  paid_at: string | null;
+  cancelled_at: string | null;
   customer?: {
     id: number | null;
     display_name: string | null;

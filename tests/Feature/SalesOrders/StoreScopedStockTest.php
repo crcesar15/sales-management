@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Enums\DiscountType;
 use App\Enums\PermissionsEnum;
-use App\Enums\SalesOrderStatus;
 use App\Models\Batch;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -124,12 +123,11 @@ it('deducts stock only from the selected store batches on a paid order', functio
     // a paid order — the path that triggers FIFO deduction.
     $service = app(SalesOrderService::class);
 
-    $service->create([
+    $order = $service->create([
         'store_id' => $this->storeA->id,
         'customer_id' => null,
         'discount_type' => DiscountType::FLAT->value,
         'discount_value' => 0,
-        'status' => SalesOrderStatus::PAID->value,
         'items' => [
             [
                 'product_variant_id' => $this->variant->id,
@@ -139,10 +137,8 @@ it('deducts stock only from the selected store batches on a paid order', functio
                 'conversion_factor' => 1,
             ],
         ],
-        'payments' => [
-            ['payment_method' => 'cash', 'amount' => 300, 'reference' => null],
-        ],
     ], $this->actor);
+    $service->confirm($order, $this->actor);
 
     $storeABatch = Batch::where('product_variant_id', $this->variant->id)
         ->where('store_id', $this->storeA->id)

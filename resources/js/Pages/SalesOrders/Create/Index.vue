@@ -4,19 +4,15 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
-import { object, number, string } from "yup";
+import { object } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
-import { useAuth } from "@composables/useAuth";
 import { useStockLedger } from "@composables/useStockLedger";
-import { usePaymentsTotals } from "@composables/usePaymentsTotals";
 import SOLineItemsTable from "../Components/SOLineItemsTable.vue";
-import SOFinancialSummary from "../Components/SOFinancialSummary.vue";
-import SOPaymentsPanel from "../Components/SOPaymentsPanel.vue";
-import CustomerSelect from "../Components/CustomerSelect.vue";
+import OrderTotalsCard from "../Components/OrderTotalsCard.vue";
 import type { LineItem } from "../Components/SOLineItemsTable.vue";
-import type { StoreOption, SalesOrderPaymentForm } from "@/Types/sales-order-types";
+import type { StoreOption } from "@/Types/sales-order-types";
 
 defineOptions({ layout: AppLayout });
 
@@ -26,38 +22,16 @@ const props = defineProps<{
 
 const toast = useToast();
 const { t } = useI18n();
-const { getSetting } = useAuth();
-
-const schema = toTypedSchema(
-  object({
-    discount_value: number().nullable().optional().min(0, t("Discount must be at least 0")),
-    notes: string().nullable().optional().max(1000, t("Notes must not exceed 1000 characters")),
-  }),
-);
-
-const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, submitCount } = useForm({
-  validationSchema: schema,
-  validateOnMount: false,
-  initialValues: {
-    discount_value: 0 as number | null,
-    notes: null as string | null,
-  },
-});
-
-const [discountValue, discountValueAttrs] = defineField("discount_value");
-const [notes, notesAttrs] = defineField("notes");
+const schema = toTypedSchema(object({}));
+const { handleSubmit, setErrors } = useForm({ validationSchema: schema });
 
 // Store selector — auto-select when the actor has exactly one store.
 const selectedStoreId = ref<number | null>(props.stores.length === 1 ? props.stores[0].id : null);
-const showStoreSelector = computed(() => props.stores.length > 1);
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
 const storeError = ref("");
 
-const selectedCustomerId = ref<number | null>(null);
 const lineItems = ref<LineItem[]>([]);
-const payments = ref<SalesOrderPaymentForm[]>([{ payment_method: "cash", amount: 0, reference: null }]);
 const itemsError = ref("");
-const paymentsError = ref("");
 const submitting = ref(false);
 
 // Surface a client-side validation failure with the same feedback layer as
@@ -85,20 +59,11 @@ function onStoreChange(value: number | null) {
 // Available Tag reflects in-progress allocation, and oversell is caught pre-submit.
 const { getRemainingBase, getRemainingBaseExcludingLine, hasOversell } = useStockLedger(lineItems);
 
-// Totals computation — must mirror SalesOrderService::calculateTotals()
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.line_total, 0));
-const discountAmount = computed(() => values.discount_value ?? 0);
-const taxRate = computed(() => Number(getSetting("sales", "tax_rate", "0") ?? 0) / 100);
-const taxAmount = computed(() => Math.round((subTotal.value - discountAmount.value) * taxRate.value * 100) / 100);
-const totalAmount = computed(() => Math.round((subTotal.value - discountAmount.value + taxAmount.value) * 100) / 100);
+const totalAmount = subTotal;
 
-// Single-sourced payment totals — shared with SOPaymentsPanel so the submit
-// guard and the live mismatch callout cannot drift apart.
-const { isBalanced: paymentsAreBalanced } = usePaymentsTotals(payments, totalAmount);
-
-const submit = handleSubmit((formValues) => {
+const submit = handleSubmit(() => {
   itemsError.value = "";
-  paymentsError.value = "";
   storeError.value = "";
 
   if (selectedStoreId.value === null) {
@@ -122,30 +87,13 @@ const submit = handleSubmit((formValues) => {
     return;
   }
 
-  if (!paymentsAreBalanced.value) {
-    failValidation(() => {
-      paymentsError.value = t("Payments must equal order total");
-    }, "Payments must equal order total");
-    return;
-  }
-
   const payload = {
     store_id: selectedStoreId.value,
-    customer_id: selectedCustomerId.value,
-    discount_type: "flat" as const,
-    discount_value: formValues.discount_value ?? 0,
-    notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
       product_variant_id: item.product_variant_id,
       sale_unit_id: item.sale_unit_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
-      conversion_factor: item.conversion_factor,
-    })),
-    payments: payments.value.map((p) => ({
-      payment_method: p.payment_method,
-      amount: p.amount,
-      reference: p.reference || null,
     })),
   };
 
@@ -186,7 +134,7 @@ function goBack() {
         <Card class="mb-4">
           <template #title>{{ t("Order Details") }}</template>
           <template #content>
-            <div v-if="showStoreSelector" class="flex flex-col gap-2 mb-3">
+            <div class="flex flex-col gap-2 mb-3">
               <label for="so-store">{{ t("Store") }}</label>
               <Select
                 id="so-store"
@@ -196,11 +144,14 @@ function goBack() {
                 option-value="value"
                 :placeholder="t('Select store')"
                 :class="{ 'p-invalid': !!storeError }"
+                :disabled="stores.length === 1"
                 @update:model-value="onStoreChange"
               />
               <small v-if="storeError" class="text-red-500 dark:text-red-400">{{ storeError }}</small>
+              <small v-else-if="stores.length === 0" class="text-surface-500 dark:text-surface-400">
+                {{ t("No active stores are assigned to your account") }}
+              </small>
             </div>
-            <CustomerSelect v-model="selectedCustomerId" />
           </template>
         </Card>
 
@@ -224,23 +175,14 @@ function goBack() {
           </template>
         </Card>
 
-        <SOPaymentsPanel v-if="selectedStoreId !== null" v-model="payments" :total-amount="totalAmount" :error="paymentsError" />
       </div>
 
       <div class="lg:col-span-4 col-span-12">
-        <SOFinancialSummary
+        <OrderTotalsCard
           :sub-total="subTotal"
           :total="totalAmount"
-          :discount-value="discountValue"
-          :discount-attrs="discountValueAttrs"
-          :max-discount="subTotal"
-          :tax-amount="taxAmount"
-          :notes="notes"
-          :notes-attrs="notesAttrs"
-          :submit-count="submitCount"
-          :errors="errors"
-          @update:discount-value="setFieldValue('discount_value', $event)"
-          @update:notes="setFieldValue('notes', $event)"
+          :discount="0"
+          :tax-amount="0"
         />
       </div>
     </div>

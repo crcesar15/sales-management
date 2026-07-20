@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\DiscountType;
+use App\Enums\SalesOrderPaymentStatus;
 use App\Enums\SalesOrderStatus;
+use App\Models\ProductVariantUnit;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\SalesOrderPayment;
@@ -17,14 +19,6 @@ use InvalidArgumentException;
 
 final class SalesOrderService
 {
-    private const TRANSITION_MAP = [
-        'draft' => ['sent', 'paid', 'held', 'cancelled'],
-        'held' => ['draft', 'cancelled'],
-        'sent' => ['paid', 'cancelled'],
-        'paid' => ['cancelled'],
-        'cancelled' => [],
-    ];
-
     public function __construct(
         private readonly FifoStockDeductionService $fifoStockDeductionService,
     ) {}
@@ -88,21 +82,19 @@ final class SalesOrderService
     {
         return DB::transaction(function () use ($data, $actor): SalesOrder {
             $items = $data['items'] ?? [];
-            $payments = $data['payments'] ?? [];
             $discountType = $data['discount_type'] ?? DiscountType::FLAT->value;
             $discountValue = (float) ($data['discount_value'] ?? 0);
             $taxRate = (float) Setting::get('tax_rate', 0);
 
             $totals = $this->calculateTotals($items, $discountType, $discountValue, $taxRate);
 
-            $status = $data['status'] ?? SalesOrderStatus::DRAFT->value;
-
             $order = SalesOrder::create([
                 'customer_id' => $data['customer_id'] ?? null,
                 'user_id' => $actor->id,
                 'store_id' => $data['store_id'],
                 'cash_register_shift_id' => $data['cash_register_shift_id'] ?? null,
-                'status' => $status,
+                'status' => SalesOrderStatus::DRAFT,
+                'payment_status' => SalesOrderPaymentStatus::PENDING,
                 'discount_type' => $discountType,
                 'discount_value' => $discountValue,
                 'sub_total' => $totals['sub_total'],
@@ -113,7 +105,7 @@ final class SalesOrderService
             ]);
 
             foreach ($items as $item) {
-                $conversionFactor = (int) ($item['conversion_factor'] ?? 1);
+                $conversionFactor = $this->conversionFactorFor($item);
                 $lineTotal = (float) $item['unit_price'] * (int) $item['quantity'];
 
                 SalesOrderItem::create([
@@ -127,24 +119,11 @@ final class SalesOrderService
                 ]);
             }
 
-            foreach ($payments as $payment) {
-                SalesOrderPayment::create([
-                    'sales_order_id' => $order->id,
-                    'payment_method' => $payment['payment_method'],
-                    'amount' => $payment['amount'],
-                    'reference' => $payment['reference'] ?? null,
-                ]);
-            }
-
-            if ($status === SalesOrderStatus::PAID->value) {
-                $this->fifoStockDeductionService->deductForOrder($order->load('items'));
-            }
-
             activity('sales_order')
                 ->performedOn($order)
                 ->causedBy($actor)
-                ->withProperties(['status' => $status])
-                ->log("Order {$order->id} created with status {$status}");
+                ->withProperties(['status' => SalesOrderStatus::DRAFT->value])
+                ->log("Order {$order->id} created as draft");
 
             return $order->load(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']);
         });
@@ -163,7 +142,6 @@ final class SalesOrderService
 
         return DB::transaction(function () use ($order, $data, $actor): SalesOrder {
             $items = $data['items'] ?? [];
-            $payments = $data['payments'] ?? [];
             $discountType = $data['discount_type'] ?? $order->discount_type->value;
             $discountValue = (float) ($data['discount_value'] ?? $order->discount_value);
             $taxRate = (float) Setting::get('tax_rate', 0);
@@ -184,7 +162,7 @@ final class SalesOrderService
             // Replace items
             $order->items()->delete();
             foreach ($items as $item) {
-                $conversionFactor = (int) ($item['conversion_factor'] ?? 1);
+                $conversionFactor = $this->conversionFactorFor($item);
                 $lineTotal = (float) $item['unit_price'] * (int) $item['quantity'];
 
                 SalesOrderItem::create([
@@ -198,17 +176,6 @@ final class SalesOrderService
                 ]);
             }
 
-            // Replace payments
-            $order->payments()->delete();
-            foreach ($payments as $payment) {
-                SalesOrderPayment::create([
-                    'sales_order_id' => $order->id,
-                    'payment_method' => $payment['payment_method'],
-                    'amount' => $payment['amount'],
-                    'reference' => $payment['reference'] ?? null,
-                ]);
-            }
-
             activity('sales_order')
                 ->performedOn($order)
                 ->causedBy($actor)
@@ -218,46 +185,121 @@ final class SalesOrderService
         });
     }
 
-    public function transitionStatus(SalesOrder $order, string $newStatus, User $actor): SalesOrder
+    /** @param array<string, mixed> $data */
+    public function updateCheckout(SalesOrder $order, array $data, User $actor): SalesOrder
     {
-        $currentStatus = $order->status->value;
+        if ($order->status !== SalesOrderStatus::DRAFT) {
+            throw new InvalidArgumentException('Only draft orders can be updated.');
+        }
 
-        $this->validateTransition($currentStatus, $newStatus);
+        return DB::transaction(function () use ($order, $data, $actor): SalesOrder {
+            $totals = $this->calculateTotals(
+                $order->items->map(fn (SalesOrderItem $item): array => [
+                    'quantity' => $item->quantity,
+                    'unit_price' => (float) $item->unit_price,
+                ])->all(),
+                $data['discount_type'],
+                (float) $data['discount_value'],
+                (float) Setting::get('tax_rate', 0),
+            );
 
-        return DB::transaction(function () use ($order, $newStatus, $actor, $currentStatus): SalesOrder {
-            if ($newStatus === SalesOrderStatus::PAID->value) {
-                $this->fifoStockDeductionService->deductForOrder($order->load('items'));
-            }
-
-            $order->update(['status' => $newStatus]);
+            $order->update([
+                'customer_id' => $data['customer_id'] ?? null,
+                'discount_type' => $data['discount_type'],
+                'discount_value' => $data['discount_value'],
+                'sub_total' => $totals['sub_total'],
+                'discount' => $totals['discount'],
+                'tax_amount' => $totals['tax_amount'],
+                'total' => $totals['total'],
+                'notes' => $data['notes'] ?? null,
+            ]);
 
             activity('sales_order')
                 ->performedOn($order)
                 ->causedBy($actor)
-                ->withProperties(['from' => $currentStatus, 'to' => $newStatus])
-                ->log("Order {$order->id} status changed from {$currentStatus} to {$newStatus}");
+                ->log("Order {$order->id} checkout details updated");
 
             return $order->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']) ?? $order;
         });
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function holdOrder(array $data, User $actor): SalesOrder
+    public function confirm(SalesOrder $order, User $actor): SalesOrder
     {
-        $data['status'] = SalesOrderStatus::HELD->value;
+        if ($order->status !== SalesOrderStatus::DRAFT) {
+            throw new InvalidArgumentException('Only draft orders can be confirmed.');
+        }
 
-        return $this->create($data, $actor);
+        return DB::transaction(function () use ($order, $actor): SalesOrder {
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            $lockedOrder->load('items');
+            $this->fifoStockDeductionService->deductForOrder($lockedOrder);
+            $lockedOrder->update(['status' => SalesOrderStatus::CONFIRMED, 'confirmed_at' => now()]);
+            activity('sales_order')->performedOn($lockedOrder)->causedBy($actor)->log("Order {$lockedOrder->id} confirmed");
+
+            return $lockedOrder->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']) ?? $lockedOrder;
+        });
     }
 
-    public function resumeOrder(SalesOrder $order, User $actor): SalesOrder
+    public function deliver(SalesOrder $order, User $actor): SalesOrder
     {
-        return $this->transitionStatus($order, SalesOrderStatus::DRAFT->value, $actor);
+        if ($order->status !== SalesOrderStatus::CONFIRMED) {
+            throw new InvalidArgumentException('Only confirmed orders can be delivered.');
+        }
+
+        return DB::transaction(function () use ($order, $actor): SalesOrder {
+            $order->update(['status' => SalesOrderStatus::DELIVERED, 'delivered_at' => now()]);
+            activity('sales_order')->performedOn($order)->causedBy($actor)->log("Order {$order->id} delivered");
+
+            return $order->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']) ?? $order;
+        });
+    }
+
+    /** @param array<int, array{payment_method: string, amount: float, reference?: string|null}> $payments */
+    public function pay(SalesOrder $order, array $payments, User $actor): SalesOrder
+    {
+        if (! in_array($order->status, [SalesOrderStatus::CONFIRMED, SalesOrderStatus::DELIVERED], true)) {
+            throw new InvalidArgumentException('Only confirmed or delivered orders can be paid.');
+        }
+        if ($order->payment_status !== SalesOrderPaymentStatus::PENDING) {
+            throw new InvalidArgumentException('Order has already been paid.');
+        }
+
+        return DB::transaction(function () use ($order, $payments, $actor): SalesOrder {
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($lockedOrder->payment_status !== SalesOrderPaymentStatus::PENDING) {
+                throw new InvalidArgumentException('Order has already been paid.');
+            }
+
+            $remaining = (float) $lockedOrder->total;
+            foreach ($payments as $payment) {
+                $amount = (float) $payment['amount'];
+                if ($payment['payment_method'] !== 'cash' && $amount > $remaining + 0.01) {
+                    throw new InvalidArgumentException('Non-cash payments cannot exceed the remaining balance.');
+                }
+                $appliedAmount = min($amount, $remaining);
+                if ($appliedAmount > 0) {
+                    SalesOrderPayment::create([
+                        'sales_order_id' => $lockedOrder->id,
+                        'payment_method' => $payment['payment_method'],
+                        'amount' => $appliedAmount,
+                        'reference' => $payment['reference'] ?? null,
+                    ]);
+                    $remaining = round($remaining - $appliedAmount, 2);
+                }
+            }
+            if ($remaining > 0.01) {
+                throw new InvalidArgumentException('Payments must cover the order total.');
+            }
+
+            $lockedOrder->update(['payment_status' => SalesOrderPaymentStatus::PAID, 'paid_at' => now()]);
+            activity('sales_order')->performedOn($lockedOrder)->causedBy($actor)->log("Order {$lockedOrder->id} paid");
+
+            return $lockedOrder->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']) ?? $lockedOrder;
+        });
     }
 
     /**
-     * @param  array<int, array{product_variant_id: int, quantity: int, unit_price: float, conversion_factor?: int}>  $items
+     * @param  array<int, array{quantity: int, unit_price: float}>  $items
      * @return array{sub_total: float, discount: float, tax_amount: float, total: float}
      */
     public function calculateTotals(array $items, string $discountType, float $discountValue, float $taxRate): array
@@ -287,31 +329,46 @@ final class SalesOrderService
 
     public function cancel(SalesOrder $order, ?string $reason, User $actor): void
     {
-        if ($order->status === SalesOrderStatus::CANCELLED) {
-            throw new InvalidArgumentException('Order is already cancelled.');
-        }
-
-        $this->validateTransition($order->status->value, SalesOrderStatus::CANCELLED->value);
-
         DB::transaction(function () use ($order, $reason, $actor): void {
-            $previousStatus = $order->status->value;
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($lockedOrder->status === SalesOrderStatus::CANCELLED) {
+                throw new InvalidArgumentException('Order is already cancelled.');
+            }
+            if ($lockedOrder->payment_status === SalesOrderPaymentStatus::PAID) {
+                throw new InvalidArgumentException('Paid orders require a refund before cancellation.');
+            }
 
-            $order->update(['status' => SalesOrderStatus::CANCELLED->value]);
+            $previousStatus = $lockedOrder->status->value;
+            if (in_array($lockedOrder->status, [SalesOrderStatus::CONFIRMED, SalesOrderStatus::DELIVERED], true)) {
+                $lockedOrder->load('items');
+                $this->fifoStockDeductionService->restoreForOrder($lockedOrder);
+            }
+            $lockedOrder->update(['status' => SalesOrderStatus::CANCELLED, 'cancelled_at' => now()]);
 
             activity('sales_order')
-                ->performedOn($order)
+                ->performedOn($lockedOrder)
                 ->causedBy($actor)
                 ->withProperties(['from' => $previousStatus, 'to' => 'cancelled', 'reason' => $reason])
-                ->log('Order ' . $order->id . ' cancelled' . ($reason ? ": {$reason}" : ''));
+                ->log('Order ' . $lockedOrder->id . ' cancelled' . ($reason ? ": {$reason}" : ''));
         });
     }
 
-    private function validateTransition(string $from, string $to): void
+    /** @param array<string, mixed> $item */
+    private function conversionFactorFor(array $item): int
     {
-        $allowed = self::TRANSITION_MAP[$from] ?? [];
-
-        if (! in_array($to, $allowed, true)) {
-            throw new InvalidArgumentException("Cannot transition order from {$from} to {$to}.");
+        if (($item['sale_unit_id'] ?? null) === null) {
+            return 1;
         }
+
+        $saleUnit = ProductVariantUnit::query()
+            ->whereKey($item['sale_unit_id'])
+            ->where('product_variant_id', $item['product_variant_id'])
+            ->first();
+
+        if ($saleUnit === null) {
+            throw new InvalidArgumentException('The selected sale unit does not belong to the product variant.');
+        }
+
+        return $saleUnit->conversion_factor;
     }
 }

@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
+use App\Http\Requests\SalesOrders\CancelSalesOrderRequest;
+use App\Http\Requests\SalesOrders\ConfirmSalesOrderRequest;
+use App\Http\Requests\SalesOrders\DeliverSalesOrderRequest;
+use App\Http\Requests\SalesOrders\PaySalesOrderRequest;
 use App\Http\Requests\SalesOrders\StoreSalesOrderRequest;
-use App\Http\Requests\SalesOrders\TransitionStatusRequest;
+use App\Http\Requests\SalesOrders\UpdateSalesOrderCheckoutRequest;
 use App\Http\Requests\SalesOrders\UpdateSalesOrderRequest;
 use App\Http\Resources\SalesOrder\SalesOrderCollection;
 use App\Http\Resources\SalesOrder\SalesOrderResource;
@@ -82,7 +86,7 @@ final class SalesOrderController extends Controller
             return redirect()->back()->withErrors(['items' => $e->getMessage()]);
         }
 
-        return redirect()->route('sales-orders.show', $order->id)
+        return redirect()->route('sales-orders.checkout', $order->id)
             ->with('success', 'Sales order created successfully.');
     }
 
@@ -143,18 +147,68 @@ final class SalesOrderController extends Controller
             ->with('success', 'Sales order updated successfully.');
     }
 
-    public function transitionStatus(TransitionStatusRequest $request, SalesOrder $salesOrder): RedirectResponse
+    public function checkout(SalesOrder $salesOrder): InertiaResponse
+    {
+        $this->authorize(PermissionsEnum::SALES_MANAGE);
+        $salesOrder->load(['customer', 'user', 'store', 'cashRegisterShift.register', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']);
+
+        return Inertia::render('SalesOrders/Checkout/Index', [
+            'order' => (new SalesOrderResource($salesOrder))->resolve(),
+        ]);
+    }
+
+    public function updateCheckout(UpdateSalesOrderCheckoutRequest $request, SalesOrder $salesOrder): RedirectResponse
     {
         try {
-            $this->salesOrderService->transitionStatus(
-                $salesOrder,
-                (string) $request->input('status'),
-                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
-            );
+            $this->salesOrderService->updateCheckout($salesOrder, $request->validated(), $request->user() ?? throw new RuntimeException('Unauthenticated.'));
         } catch (InvalidArgumentException $e) {
-            return redirect()->back()->withErrors(['status' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['checkout' => $e->getMessage()]);
         }
 
-        return redirect()->back()->with('success', 'Order status updated successfully.');
+        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Checkout details updated successfully.');
+    }
+
+    public function confirm(ConfirmSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
+    {
+        try {
+            $this->salesOrderService->confirm($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['confirmation' => $e->getMessage()]);
+        }
+
+        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Sales order confirmed successfully.');
+    }
+
+    public function deliver(DeliverSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
+    {
+        try {
+            $this->salesOrderService->deliver($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['delivery' => $e->getMessage()]);
+        }
+
+        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Sales order delivered successfully.');
+    }
+
+    public function pay(PaySalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
+    {
+        try {
+            $this->salesOrderService->pay($salesOrder, $request->validated('payments'), $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['payments' => $e->getMessage()]);
+        }
+
+        return redirect()->route('sales-orders.show', $salesOrder)->with('success', 'Sales order paid successfully.');
+    }
+
+    public function cancel(CancelSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
+    {
+        try {
+            $this->salesOrderService->cancel($salesOrder, $request->string('reason')->toString() ?: null, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['cancellation' => $e->getMessage()]);
+        }
+
+        return redirect()->route('sales-orders.show', $salesOrder)->with('success', 'Sales order cancelled successfully.');
     }
 }

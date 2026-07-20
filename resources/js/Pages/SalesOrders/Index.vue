@@ -57,9 +57,8 @@ const filterPopover = ref();
 const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
   { label: t("Draft"), value: "draft" },
-  { label: t("Sent"), value: "sent" },
-  { label: t("Paid"), value: "paid" },
-  { label: t("Held"), value: "held" },
+  { label: t("Confirmed"), value: "confirmed" },
+  { label: t("Delivered"), value: "delivered" },
   { label: t("Cancelled"), value: "cancelled" },
 ]);
 
@@ -124,6 +123,10 @@ function viewOrder(order: SalesOrderResponse) {
 
 function editOrder(order: SalesOrderResponse) {
   router.visit(route("sales-orders.edit", order.id));
+}
+
+function checkoutOrder(order: SalesOrderResponse) {
+  router.visit(route("sales-orders.checkout", order.id));
 }
 
 function customerName(order: SalesOrderResponse): string {
@@ -259,6 +262,16 @@ function customerName(order: SalesOrderResponse): string {
                   size="large"
                   rounded
                   @click="editOrder(data)"
+                />
+                <Button
+                  v-if="data.status !== 'cancelled' && data.payment_status !== 'paid'"
+                  v-can="'sales.manage'"
+                  v-tooltip.top="t('Checkout')"
+                  icon="fa fa-cash-register"
+                  text
+                  size="large"
+                  rounded
+                  @click="checkoutOrder(data)"
                 />
               </div>
             </template>

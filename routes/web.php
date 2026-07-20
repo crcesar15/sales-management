@@ -277,10 +277,15 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/sales-orders', [SalesOrderController::class, 'index'])->name('sales-orders');
     Route::get('/sales-orders/create', [SalesOrderController::class, 'create'])->name('sales-orders.create');
     Route::post('/sales-orders', [SalesOrderController::class, 'store'])->name('sales-orders.store');
+    Route::get('/sales-orders/{salesOrder}/checkout', [SalesOrderController::class, 'checkout'])->name('sales-orders.checkout');
+    Route::put('/sales-orders/{salesOrder}/checkout', [SalesOrderController::class, 'updateCheckout'])->name('sales-orders.checkout.update');
+    Route::patch('/sales-orders/{salesOrder}/confirm', [SalesOrderController::class, 'confirm'])->name('sales-orders.confirm');
+    Route::patch('/sales-orders/{salesOrder}/deliver', [SalesOrderController::class, 'deliver'])->name('sales-orders.deliver');
+    Route::post('/sales-orders/{salesOrder}/pay', [SalesOrderController::class, 'pay'])->name('sales-orders.pay');
+    Route::patch('/sales-orders/{salesOrder}/cancel', [SalesOrderController::class, 'cancel'])->name('sales-orders.cancel');
     Route::get('/sales-orders/{salesOrder}', [SalesOrderController::class, 'show'])->name('sales-orders.show');
     Route::get('/sales-orders/{salesOrder}/edit', [SalesOrderController::class, 'edit'])->name('sales-orders.edit');
     Route::put('/sales-orders/{salesOrder}', [SalesOrderController::class, 'update'])->name('sales-orders.update');
-    Route::patch('/sales-orders/{salesOrder}/status', [SalesOrderController::class, 'transitionStatus'])->name('sales-orders.status');
 
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('settings');

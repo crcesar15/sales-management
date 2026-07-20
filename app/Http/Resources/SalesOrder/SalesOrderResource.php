@@ -25,6 +25,7 @@ final class SalesOrderResource extends JsonResource
         return [
             'id' => $this->id,
             'status' => $this->status->value,
+            'payment_status' => $this->payment_status->value,
             'discount_type' => $this->discount_type->value,
             'discount_value' => (float) $this->discount_value,
             'sub_total' => (float) $this->sub_total,
@@ -33,6 +34,10 @@ final class SalesOrderResource extends JsonResource
             'total' => (float) $this->total,
             'token' => $this->token,
             'notes' => $this->notes,
+            'confirmed_at' => $this->confirmed_at?->toISOString(),
+            'delivered_at' => $this->delivered_at?->toISOString(),
+            'paid_at' => $this->paid_at?->toISOString(),
+            'cancelled_at' => $this->cancelled_at?->toISOString(),
             'customer_id' => $this->customer_id,
             'user_id' => $this->user_id,
             'store_id' => $this->store_id,
