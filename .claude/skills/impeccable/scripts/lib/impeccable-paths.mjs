@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { resolveProjectRoot } from '../context.mjs';
+export { IMPECCABLE_COMMAND_PREFIX } from './provider.mjs';
 
 export const IMPECCABLE_DIR = '.impeccable';
 export const LIVE_DIR = 'live';
@@ -101,6 +102,20 @@ export function removeLiveServerInfo(cwd = process.cwd(), options = {}) {
   for (const filePath of [getLiveServerPath(cwd, options), getLegacyLiveServerPath(cwd, options)]) {
     try { fs.unlinkSync(filePath); } catch {}
   }
+}
+
+/**
+ * Session IDs become path segments (journals, snapshots, accept receipts,
+ * preview manifests, generated component dirs). They arrive from CLI `--id`
+ * arguments and HTTP payloads, so anything containing a separator or `..` must
+ * be rejected before it reaches path.join, which would happily escape
+ * `.impeccable/live/`. Real IDs are 8 hex chars; the tests use short slugs.
+ */
+export function safeSessionId(id) {
+  if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) {
+    throw new Error('invalid session id: ' + id);
+  }
+  return id;
 }
 
 export function getLiveSessionsDir(cwd = process.cwd(), options = {}) {
