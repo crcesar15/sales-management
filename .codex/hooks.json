@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "root=\"$(git rev-parse --show-toplevel)\"; script=\"$root/.agents/skills/impeccable/scripts/hook.mjs\"; [ -f \"$script\" ] || script=\"$root/.claude/skills/impeccable/scripts/hook.mjs\"; node \"$script\"",
+            "command": "node \".agents/skills/impeccable/scripts/hook.mjs\"",
             "timeout": 5,
             "statusMessage": "Checking UI changes"
           }
