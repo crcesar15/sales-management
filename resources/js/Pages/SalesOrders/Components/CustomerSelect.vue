@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Button, InputText, Popover, useToast } from "primevue";
+import { Button, Dialog, InputText, Message, Popover, useToast } from "primevue";
 import { useI18n } from "vue-i18n";
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 import { route } from "ziggy-js";
 import { useCustomerClient } from "@composables/useCustomerClient";
 import type { CustomerOption } from "@/Types/sales-order-types";
@@ -24,9 +24,10 @@ const taxIdInput = ref("");
 const selectedCustomer = ref<CustomerOption | null>(null);
 const walkInSelected = ref(false);
 const searchError = ref("");
-const showCreateForm = ref(false);
+const customerCreateVisible = ref(false);
 const taxIdNameInput = ref("");
 const creating = ref(false);
+const taxIdInputRef = ref<HTMLInputElement | null>(null);
 const taxIdNameInputRef = ref<HTMLInputElement | null>(null);
 const customerInfoPopover = ref();
 
@@ -35,10 +36,6 @@ function buildLabel(c: CustomerOption): string {
 }
 
 const displayLabel = computed(() => (selectedCustomer.value ? buildLabel(selectedCustomer.value) : ""));
-// A chip renders for either a named customer OR an explicit walk-in choice —
-// one vocabulary for "customer chosen," so walk-in reads as a named state
-// rather than the absence of one.
-const showChip = computed(() => selectedCustomer.value !== null || walkInSelected.value);
 
 onMounted(() => {
   if (props.initialCustomer) {
@@ -53,7 +50,6 @@ async function searchCustomer() {
   }
 
   searchError.value = "";
-  showCreateForm.value = false;
   walkInSelected.value = false;
 
   try {
@@ -66,8 +62,9 @@ async function searchCustomer() {
     const status = (err as { response?: { status?: number } })?.response?.status;
 
     if (status === 404) {
-      searchError.value = t("No customer found with that tax ID.");
-      showCreateForm.value = true;
+      searchError.value = t("No customer found for this Tax ID. Create one to assign it to this order.");
+      taxIdNameInput.value = "";
+      customerCreateVisible.value = true;
       nextTick(() => taxIdNameInputRef.value?.focus());
     } else {
       toast.add({
@@ -97,13 +94,13 @@ async function createCustomer() {
     selectedCustomer.value = response.data;
     emit("update:modelValue", response.data.id);
     emit("select", response.data);
-    showCreateForm.value = false;
     searchError.value = "";
+    customerCreateVisible.value = false;
 
     toast.add({
       severity: "success",
       summary: t("Success"),
-      detail: t("Customer created successfully."),
+      detail: t("Customer created and assigned to this order."),
       life: 3000,
     });
   } catch {
@@ -119,16 +116,22 @@ async function createCustomer() {
 }
 
 function cancelCreate() {
-  showCreateForm.value = false;
-  searchError.value = "";
+  customerCreateVisible.value = false;
 }
+
+watch(customerCreateVisible, (visible) => {
+  if (visible) return;
+
+  searchError.value = "";
+  taxIdNameInput.value = "";
+  nextTick(() => taxIdInputRef.value?.focus());
+});
 
 function selectWalkIn() {
   selectedCustomer.value = null;
   taxIdInput.value = "";
   taxIdNameInput.value = "";
   searchError.value = "";
-  showCreateForm.value = false;
   walkInSelected.value = true;
   emit("update:modelValue", null);
   emit("select", null);
@@ -139,7 +142,6 @@ function clearCustomer() {
   taxIdInput.value = "";
   taxIdNameInput.value = "";
   searchError.value = "";
-  showCreateForm.value = false;
   walkInSelected.value = false;
   emit("update:modelValue", null);
   emit("select", null);
@@ -158,91 +160,18 @@ function goToCustomerEdit() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
-    <label for="customer-tax-id">{{ t("Customer") }}</label>
+  <div class="flex flex-col gap-2">
+    <label for="customer-tax-id">{{ t("Customer Tax ID") }}</label>
 
-    <!-- Search input + walk-in choice (shown until a customer OR walk-in is chosen) -->
-    <div v-if="!showChip" class="flex gap-2">
-      <div class="flex-1">
-        <InputText
-          id="customer-tax-id"
-          v-model="taxIdInput"
-          :placeholder="t('Enter tax ID')"
-          :disabled="loading"
-          autocomplete="off"
-          class="w-full"
-          @keydown.enter.prevent="searchCustomer"
-        />
-      </div>
-      <Button
-        icon="fa fa-search"
-        :loading="loading"
-        :disabled="loading || !taxIdInput.trim()"
-        :aria-label="t('Search')"
-        size="small"
-        @click="searchCustomer"
-      />
-      <Button
-        :label="t('Continue as Walk-in')"
-        severity="secondary"
-        size="small"
-        text
-        @click="selectWalkIn"
-      />
-    </div>
-
-    <!-- Error message -->
-    <small v-if="searchError" role="alert" class="text-red-500 dark:text-red-400">
-      {{ searchError }}
-    </small>
-
-    <!-- Inline create form -->
-    <div v-if="showCreateForm" class="border border-surface-200 dark:border-surface-700 rounded p-3 mt-1 bg-surface-50 dark:bg-surface-950">
-      <div class="flex flex-col gap-2">
-        <div>
-          <label for="customer-tax-id-name" class="text-sm font-medium">{{ t("Tax ID Name") }}</label>
-          <InputText
-            id="customer-tax-id-name"
-            ref="taxIdNameInputRef"
-            v-model="taxIdNameInput"
-            :placeholder="t('Enter tax ID name')"
-            :disabled="creating"
-            class="w-full mt-1"
-            @keydown.enter.prevent="createCustomer"
-          />
-        </div>
-        <div class="flex gap-2">
-          <Button
-            icon="fa fa-check"
-            :label="t('Create & Select')"
-            :loading="creating"
-            :disabled="creating || !taxIdNameInput.trim()"
-            size="small"
-            raised
-            class="uppercase"
-            @click="createCustomer"
-          />
-          <Button :label="t('Cancel')" severity="secondary" size="small" text @click="cancelCreate" />
-        </div>
-        <small class="text-surface-500 dark:text-surface-400 flex items-center gap-1">
-          <i class="fa fa-circle-info" />
-          {{ t("You can complete the customer's details later from the Customers page.") }}
-        </small>
-      </div>
-    </div>
-
-    <!-- Selected customer OR walk-in chip — one vocabulary for "customer chosen" -->
     <div
-      v-if="showChip"
-      class="flex items-center gap-2 border border-surface-200 dark:border-surface-700 rounded px-3 py-2 bg-surface-50 dark:bg-surface-950"
+      v-if="selectedCustomer || walkInSelected"
+      class="flex min-w-0 items-center gap-2 rounded border border-surface-200 bg-surface-50 px-3 dark:border-surface-700 dark:bg-surface-950"
     >
-      <i
-        :class="selectedCustomer ? 'fa fa-user-check' : 'fa fa-person-walking'"
-        class="text-surface-500 dark:text-surface-400"
-      />
-      <span class="font-medium flex-1">
+      <i :class="selectedCustomer ? 'fa fa-user-check' : 'fa fa-person-walking'" class="text-surface-500 dark:text-surface-400" />
+      <span class="min-w-0 flex-1 truncate font-medium">
         <template v-if="selectedCustomer">{{ displayLabel }}</template>
-        <template v-else>{{ t("Walk-in") }}</template>
+        <template v-else-if="walkInSelected">{{ t("Walk-in") }}</template>
+        <template v-else>{{ t("No customer selected") }}</template>
       </span>
       <template v-if="selectedCustomer">
         <Button
@@ -263,15 +192,84 @@ function goToCustomerEdit() {
         />
       </template>
       <Button
-        v-tooltip.top="selectedCustomer ? t('Remove customer') : t('Remove walk-in')"
-        icon="fa fa-times"
+        icon="fa fa-delete-left"
+        v-tooltip.top="t('Clear customer')"
         text
         size="small"
-        severity="secondary"
-        :aria-label="selectedCustomer ? t('Remove customer') : t('Remove walk-in')"
+        :aria-label="t('Clear customer')"
         @click="clearCustomer"
       />
     </div>
+
+    <div v-else class="flex gap-2">
+      <InputText
+        id="customer-tax-id"
+        ref="taxIdInputRef"
+        v-model="taxIdInput"
+        :placeholder="t('Enter tax ID')"
+        :disabled="loading"
+        autocomplete="off"
+        class="min-w-0 flex-1"
+        @keydown.enter.prevent="searchCustomer"
+      />
+      <Button
+        icon="fa fa-search"
+        :loading="loading"
+        :disabled="loading || !taxIdInput.trim()"
+        :aria-label="t('Search')"
+        @click="searchCustomer"
+      />
+      <Button
+        v-tooltip.top="t('Sell to a walk-in customer')"
+        icon="fa fa-person-walking"
+        severity="secondary"
+        text
+        :aria-label="t('Sell to a walk-in customer')"
+        @click="selectWalkIn"
+      />
+    </div>
+
+    <Dialog v-model:visible="customerCreateVisible" modal :header="t('Create and assign customer')" class="w-full max-w-xl">
+      <div class="flex flex-col gap-4">
+        <Message v-if="searchError" severity="warn" icon="fa fa-triangle-exclamation" :closable="false">
+          {{ searchError }}
+        </Message>
+
+        <div class="flex flex-col gap-1">
+          <label for="customer-tax-id-inherited" class="text-sm font-medium">{{ t("Customer Tax ID") }}</label>
+          <InputText id="customer-tax-id-inherited" :model-value="taxIdInput" disabled class="w-full" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="customer-tax-id-name" class="text-sm font-medium">{{ t("Tax ID Name") }}</label>
+          <InputText
+            id="customer-tax-id-name"
+            ref="taxIdNameInputRef"
+            v-model="taxIdNameInput"
+            :placeholder="t('Enter tax ID name')"
+            :disabled="creating"
+            class="w-full"
+            @keydown.enter.prevent="createCustomer"
+          />
+        </div>
+        <small class="flex items-center gap-1 text-surface-500 dark:text-surface-400">
+          <i class="fa fa-circle-info" />
+          {{ t("The new customer will be assigned to this order. You can complete their details later from the Customers page.") }}
+        </small>
+      </div>
+      <template #footer>
+        <Button :label="t('Cancel')" severity="secondary" text @click="cancelCreate" />
+        <Button
+          icon="fa fa-check"
+          :label="t('Create and assign')"
+          :loading="creating"
+          :disabled="creating || !taxIdNameInput.trim()"
+          raised
+          class="uppercase"
+          @click="createCustomer"
+        />
+      </template>
+    </Dialog>
 
     <!-- Customer info popover -->
     <Popover ref="customerInfoPopover">
@@ -293,6 +291,5 @@ function goToCustomerEdit() {
         </div>
       </div>
     </Popover>
-
   </div>
 </template>

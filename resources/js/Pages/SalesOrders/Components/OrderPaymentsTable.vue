@@ -44,7 +44,7 @@ function paymentMethodLabel(method: PaymentMethod): string {
         {{ data.reference ?? "---" }}
       </template>
     </Column>
-    <Column :header="t('Total')" style="min-width: 120px" footer-style="font-weight: bold">
+    <Column :header="t('Payments received')" style="min-width: 160px" footer-style="font-weight: bold">
       <template #footer>
         {{ formatCurrency(String(total)) }}
       </template>

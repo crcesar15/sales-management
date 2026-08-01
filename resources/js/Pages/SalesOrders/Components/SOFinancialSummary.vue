@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { Card, InputNumber, Textarea, SelectButton, Divider } from "primevue";
+import { InputNumber, Textarea, SelectButton, Divider } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { ref, computed } from "vue";
 
 const props = defineProps<{
   subTotal: number;
-  total: number;
   discountValue: number | null | undefined;
   discountAttrs: Record<string, unknown>;
   maxDiscount: number;
-  taxAmount: number;
   notes: string | null | undefined;
   notesAttrs: Record<string, unknown>;
   submitCount: number;
@@ -88,67 +86,47 @@ function updateNotes(val: string | null) {
 </script>
 
 <template>
-  <Card>
-    <template #title>{{ t("Summary") }}</template>
-    <template #content>
-      <div class="flex flex-col gap-3">
-        <div class="flex justify-between">
-          <span class="text-surface-500">{{ t("Sub Total") }}</span>
-          <span class="font-medium">{{ formatCurrency(String(subTotal ?? 0)) }}</span>
-        </div>
-
-        <div class="flex justify-between items-center gap-2">
-          <span class="text-surface-500">{{ t("Discount") }}</span>
-          <div class="flex items-center gap-2">
-            <SelectButton
-              :model-value="discountMode"
-              :options="modeOptions"
-              option-label="label"
-              option-value="value"
-              @update:model-value="onModeChange"
-            />
-            <InputNumber
-              :model-value="discountDisplayValue"
-              :mode="discountMode === 'percentage' ? 'decimal' : 'currency'"
-              :currency="discountMode === 'amount' ? currencyCode : undefined"
-              :suffix="discountMode === 'percentage' ? '%' : undefined"
-              :min="0"
-              :max="discountMax"
-              :min-fraction-digits="2"
-              input-class="w-28 text-right"
-              @update:model-value="discountDisplayValue = $event"
-            />
-            <span v-if="discountHint" class="text-surface-500 dark:text-surface-400 text-sm whitespace-nowrap">
-              {{ discountHint }}
-            </span>
-          </div>
-        </div>
-
-        <div class="flex justify-between">
-          <span class="text-surface-500">{{ t("Tax Amount") }}</span>
-          <span class="font-medium">{{ formatCurrency(String(taxAmount ?? 0)) }}</span>
-        </div>
-
-        <Divider class="!my-1" />
-
-        <div class="flex justify-between">
-          <span class="font-bold">{{ t("Total") }}</span>
-          <span class="font-bold text-lg">{{ formatCurrency(String(total ?? 0)) }}</span>
-        </div>
-
-        <div class="flex flex-col gap-1 mt-2">
-          <label for="so-notes">{{ t("Notes") }}</label>
-          <Textarea
-            id="so-notes"
-            :model-value="notes"
-            v-bind="notesAttrs"
-            rows="4"
-            :class="{ 'p-invalid': submitCount > 0 && !!errors.notes }"
-            @update:model-value="updateNotes($event)"
-          />
-          <small v-if="submitCount > 0 && errors.notes" class="text-red-500 dark:text-red-400">{{ errors.notes }}</small>
-        </div>
+  <div class="flex flex-col gap-3">
+    <div class="flex justify-between items-center gap-2">
+      <span class="text-surface-500">{{ t("Discount") }}</span>
+      <div class="flex items-center gap-2">
+        <SelectButton
+          :model-value="discountMode"
+          :options="modeOptions"
+          option-label="label"
+          option-value="value"
+          @update:model-value="onModeChange"
+        />
+        <InputNumber
+          :model-value="discountDisplayValue"
+          :mode="discountMode === 'percentage' ? 'decimal' : 'currency'"
+          :currency="discountMode === 'amount' ? currencyCode : undefined"
+          :suffix="discountMode === 'percentage' ? '%' : undefined"
+          :min="0"
+          :max="discountMax"
+          :min-fraction-digits="2"
+          input-class="w-28 text-right"
+          @update:model-value="discountDisplayValue = $event"
+        />
+        <span v-if="discountHint" class="text-surface-500 dark:text-surface-400 text-sm whitespace-nowrap">
+          {{ discountHint }}
+        </span>
       </div>
-    </template>
-  </Card>
+    </div>
+
+    <Divider class="!my-1" />
+
+    <div class="flex flex-col gap-1">
+      <label for="so-notes">{{ t("Notes") }}</label>
+      <Textarea
+        id="so-notes"
+        :model-value="notes"
+        v-bind="notesAttrs"
+        rows="4"
+        :class="{ 'p-invalid': submitCount > 0 && !!errors.notes }"
+        @update:model-value="updateNotes($event)"
+      />
+      <small v-if="submitCount > 0 && errors.notes" class="text-red-500 dark:text-red-400">{{ errors.notes }}</small>
+    </div>
+  </div>
 </template>

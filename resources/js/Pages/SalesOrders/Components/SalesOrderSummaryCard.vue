@@ -19,7 +19,7 @@ function customerName(): string {
 
 <template>
   <Card>
-    <template #title>{{ t("Summary") }}</template>
+    <template #title>{{ t("Order Details") }}</template>
     <template #content>
       <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div><dt class="text-sm text-surface-500">{{ t("Order #") }}</dt><dd class="font-medium">#{{ order.id }}</dd></div>

@@ -121,46 +121,44 @@ function goBack() {
 </script>
 
 <template>
-    <div>
-    <div class="flex justify-between mb-3">
+  <div>
+    <div class="mb-6 flex items-center justify-between gap-4">
       <div class="flex items-center gap-3">
-        <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
+        <Button :aria-label="t('Back')" icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Create Sales Order") }}</h2>
       </div>
       <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="submitting" :disabled="submitting" @click="submit" />
-      </div>
-      <SalesOrderStatusStepper status="draft" />
+    </div>
+    <SalesOrderStatusStepper status="draft" />
 
-      <div class="grid grid-cols-12 gap-4">
-      <div class="lg:col-span-8 col-span-12">
-        <Card class="mb-4">
-          <template #title>{{ t("Order Details") }}</template>
-          <template #content>
-            <div class="flex flex-col gap-2 mb-3">
-              <label for="so-store">{{ t("Store") }}</label>
-              <Select
-                id="so-store"
-                :model-value="selectedStoreId"
-                :options="storeOptions"
-                option-label="name"
-                option-value="value"
-                :placeholder="t('Select store')"
-                :class="{ 'p-invalid': !!storeError }"
-                :disabled="stores.length === 1"
-                @update:model-value="onStoreChange"
-              />
-              <small v-if="storeError" class="text-red-500 dark:text-red-400">{{ storeError }}</small>
-              <small v-else-if="stores.length === 0" class="text-surface-500 dark:text-surface-400">
-                {{ t("No active stores are assigned to your account") }}
-              </small>
-            </div>
-          </template>
-        </Card>
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 flex flex-col gap-4 lg:col-span-8">
+        <section class="flex flex-col gap-2">
+          <label for="so-store" class="font-medium">{{ t("Store") }}</label>
+          <Select
+            id="so-store"
+            :model-value="selectedStoreId"
+            :options="storeOptions"
+            option-label="name"
+            option-value="value"
+            :placeholder="t('Select store')"
+            :class="{ 'p-invalid': !!storeError }"
+            :disabled="stores.length === 1"
+            @update:model-value="onStoreChange"
+          />
+          <small v-if="storeError" class="text-red-500 dark:text-red-400">{{ storeError }}</small>
+          <small v-else-if="stores.length === 0" class="text-surface-500 dark:text-surface-400">
+            {{ t("No active stores are assigned to your account") }}
+          </small>
+        </section>
 
-        <Card class="mb-4">
+        <Card>
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <div v-if="selectedStoreId === null" class="flex flex-col items-center justify-center py-10 text-surface-500 dark:text-surface-400">
+            <div
+              v-if="selectedStoreId === null"
+              class="flex flex-col items-center justify-center py-10 text-surface-500 dark:text-surface-400"
+            >
               <i class="fa fa-store text-4xl mb-3"></i>
               <span class="font-medium text-lg mb-1">{{ t("Select a store to add products") }}</span>
               <small>{{ t("Stock availability depends on the selected store") }}</small>
@@ -176,17 +174,13 @@ function goBack() {
             </template>
           </template>
         </Card>
-
       </div>
 
-      <div class="lg:col-span-4 col-span-12">
-        <OrderTotalsCard
-          :sub-total="subTotal"
-          :total="totalAmount"
-          :discount="0"
-          :tax-amount="0"
-        />
-      </div>
+      <aside class="col-span-12 lg:col-span-4">
+        <div class="lg:sticky lg:top-4">
+          <OrderTotalsCard :sub-total="subTotal" :total="totalAmount" :discount="0" :tax-amount="0" />
+        </div>
+      </aside>
     </div>
   </div>
 </template>

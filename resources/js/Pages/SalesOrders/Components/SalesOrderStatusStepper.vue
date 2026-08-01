@@ -3,6 +3,7 @@ import { Step, StepList, Stepper } from "primevue";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import type { SalesOrderStatus } from "@/Types/sales-order-types";
+import OrderStatusBadge from "./OrderStatusBadge.vue";
 
 const props = defineProps<{ status?: SalesOrderStatus }>();
 const { t } = useI18n();
@@ -19,11 +20,17 @@ const stepperPt = { root: { class: "pointer-events-none" }, step: { class: "poin
 </script>
 
 <template>
-  <Stepper v-if="status !== 'cancelled'" :value="activeStep" :pt="stepperPt" class="mb-4 hidden xl:block">
-    <StepList>
-      <Step v-for="(step, index) in steps" :key="step.status" :value="String(index + 1)">
-        {{ t(step.label) }}
-      </Step>
-    </StepList>
-  </Stepper>
+  <div v-if="status" class="mb-6">
+    <div class="flex items-center gap-2 xl:hidden">
+      <span class="text-sm text-surface-500 dark:text-surface-400">{{ t("Status") }}</span>
+      <OrderStatusBadge :status="status" />
+    </div>
+    <Stepper v-if="status !== 'cancelled'" :value="activeStep" :pt="stepperPt" class="hidden xl:block">
+      <StepList>
+        <Step v-for="(step, index) in steps" :key="step.status" :value="String(index + 1)">
+          {{ t(step.label) }}
+        </Step>
+      </StepList>
+    </Stepper>
+  </div>
 </template>
