@@ -24,6 +24,7 @@ yarn-error.log
 /.windsurf
 docs/.obsidian/workspace.json
 .playwright-cli
+/.impeccable
 
 # Codex bridges for Claude project skills
 !/.agents/
