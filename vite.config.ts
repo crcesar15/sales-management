@@ -5,6 +5,12 @@ import path from "path";
 import tailwindcss from "tailwindcss";
 
 export default defineConfig({
+  server: {
+      host: '0.0.0.0', // Allows connections from any IP
+      hmr: {
+          host: '192.168.31.95' // Points hot-reloading to your exact IP
+      }
+  },
   css: {
     preprocessorOptions: {
       scss: {
