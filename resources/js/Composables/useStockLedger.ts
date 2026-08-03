@@ -10,9 +10,9 @@ type LineItem = SalesOrderLineItemForm;
  * subtracting the base units already allocated across ALL line items
  * (Σ quantity × conversion_factor) from the variant's static stock snapshot.
  *
- * Used by SOProductPicker (so the Available Tag in search results reflects
- * what's already in the order) and SOLineItemsTable (so each line's Available
- * and quantity max reflect sibling lines consuming the same base stock).
+ * Used by SOProductPicker (so its stock breakdown reflects draft allocation)
+ * and SOLineItemsTable (so stock facts and quantity limits reflect sibling
+ * lines consuming the same base stock).
  *
  * Oversell is prevented before submit: when remainingBase < 0 for any variant,
  * hasOversell is true and the orchestrator blocks submit with an inline error.
@@ -61,9 +61,9 @@ export function useStockLedger(lineItems: Ref<LineItem[]>) {
 
   /**
    * Remaining base stock for a variant, EXCLUDING the allocation of one line.
-   * Used by a line's own Available Tag and quantity max so the number reflects
-   * the ceiling for THAT line (what other lines have consumed), not a
-   * self-referential recoil as the user edits the line's own quantity.
+   * Used by a line's quantity max so the number reflects the ceiling for THAT
+   * line (what other lines have consumed), not a self-referential recoil as the
+   * user edits the line's own quantity.
    */
   function getRemainingBaseExcludingLine(variantId: number, lineId: string): number | null {
     const snapshot = baseStockByVariant.value.get(variantId) ?? null;

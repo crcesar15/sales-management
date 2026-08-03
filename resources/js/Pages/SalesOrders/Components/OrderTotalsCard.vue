@@ -35,24 +35,24 @@ const discountPercentage = computed(() => {
     <template #content>
       <div class="flex flex-col gap-3">
         <div class="flex justify-between">
-          <span class="text-surface-500">{{ t("Sub Total") }}</span>
-          <span class="font-medium">{{ formatCurrency(String(subTotal)) }}</span>
+          <span class="text-lg lg:text-base">{{ t("Sub Total") }}</span>
+          <span class="text-lg lg:text-base">{{ formatCurrency(String(subTotal)) }}</span>
         </div>
         <div v-if="discount > 0" class="flex justify-between items-center">
-          <span class="text-surface-500">{{ t("Discount") }}</span>
+          <span class="text-lg lg:text-base">{{ t("Discount") }}</span>
           <div class="text-right">
             <span class="text-red-500 dark:text-red-400 font-medium">-{{ formatCurrency(String(discount)) }}</span>
             <span v-if="discountPercentage" class="text-surface-400 text-sm ml-1">({{ discountPercentage }}%)</span>
           </div>
         </div>
         <div class="flex justify-between">
-          <span class="text-surface-500">{{ t("Tax Amount") }}</span>
-          <span class="font-medium">{{ formatCurrency(String(taxAmount)) }}</span>
+          <span class="text-lg lg:text-base">{{ t("Tax Amount") }}</span>
+          <span class="text-lg lg:text-base">{{ formatCurrency(String(taxAmount)) }}</span>
         </div>
         <Divider class="!my-1" />
         <div class="flex justify-between">
-          <span class="font-bold">{{ t("Total") }}</span>
-          <span class="font-bold text-lg">{{ formatCurrency(String(total)) }}</span>
+          <span class="text-2xl font-bold lg:text-base">{{ t("Total") }}</span>
+          <span class="text-2xl font-bold lg:text-base">{{ formatCurrency(String(total)) }}</span>
         </div>
       </div>
     </template>

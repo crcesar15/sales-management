@@ -71,12 +71,12 @@ const lineItems = ref<LineItem[]>(
     product_variant_id: item.product_variant_id,
     product_name: item.product_variant?.product?.name ?? "—",
     brand_name: item.product_variant?.product?.brand?.name ?? null,
-    // For default-only variants (no identifier), show the sale unit name as
-    // the variant label instead of repeating the product name on line 2.
-    variant_label: item.product_variant?.identifier ? item.product_variant.identifier : (item.sale_unit?.name ?? t("Unit")),
+    variant_identity: item.product_variant?.identifier ?? item.product_variant?.sku ?? null,
+    variant_label: item.product_variant?.identifier ?? item.product_variant?.sku ?? item.sale_unit?.name ?? t("Unit"),
     sale_unit_id: item.sale_unit_id,
     quantity: item.quantity,
     unit_price: item.unit_price,
+    original_unit_price: item.unit_price,
     conversion_factor: item.conversion_factor,
     line_total: item.line_total,
     stock: null,
@@ -253,6 +253,7 @@ function cancelOrder(reason: string): void {
                 <label for="so-store">{{ t("Store") }}</label>
                 <Select
                   id="so-store"
+                  size="large"
                   :model-value="orderStoreId"
                   :options="orderStoreOptions"
                   option-label="name"

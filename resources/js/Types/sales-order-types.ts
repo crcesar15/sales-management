@@ -158,10 +158,13 @@ export interface SalesOrderLineItemForm {
   product_variant_id: number;
   product_name: string;
   brand_name: string | null;
-  variant_label: string;
+  base_unit_name?: string | null;
+  variant_identity?: string | null;
+  variant_label: string | null;
   sale_unit_id: number | null;
   quantity: number;
   unit_price: number;
+  original_unit_price: number;
   conversion_factor: number;
   line_total: number;
   stock?: number | null;
@@ -190,11 +193,8 @@ export interface SalesOrderPaymentForm {
 // Variant search result from the enriched search API
 export interface VariantSearchResult {
   id: number;
-  name: string;
   identifier: string | null;
-  variant_label: string | null;
   option_values: string | null;
-  label: string;
   price: number;
   stock: number | null;
   minimum_stock_level: number | null;

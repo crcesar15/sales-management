@@ -205,6 +205,7 @@ function goToCustomerEdit() {
       <InputText
         id="customer-tax-id"
         ref="taxIdInputRef"
+        size="large"
         v-model="taxIdInput"
         :placeholder="t('Enter tax ID')"
         :disabled="loading"

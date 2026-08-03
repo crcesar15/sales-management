@@ -134,7 +134,7 @@ function goBack() {
     <div class="grid grid-cols-12 gap-4">
       <div class="col-span-12 flex flex-col gap-4 lg:col-span-8">
         <section class="flex flex-col gap-2">
-          <label for="so-store" class="font-medium">{{ t("Store") }}</label>
+          <label for="so-store" class="font-medium text-xl">{{ t("Store") }}</label>
           <Select
             id="so-store"
             :model-value="selectedStoreId"
@@ -142,7 +142,8 @@ function goBack() {
             option-label="name"
             option-value="value"
             :placeholder="t('Select store')"
-            :class="{ 'p-invalid': !!storeError }"
+            :class="{ 'p-invalid': !!storeError}"
+            size="large"
             :disabled="stores.length === 1"
             @update:model-value="onStoreChange"
           />
@@ -152,7 +153,7 @@ function goBack() {
           </small>
         </section>
 
-        <Card>
+        <Card class="!border !border-surface-200 !shadow-none dark:!border-surface-700">
           <template #title>{{ t("Products") }}</template>
           <template #content>
             <div

@@ -8,7 +8,7 @@ const props = defineProps<{ status: SalesOrderStatus }>();
 const { t } = useI18n();
 
 const statusMap: Record<string, { label: string; severity: "secondary" | "info" | "success" | "warn" | "danger" }> = {
-  draft: { label: "Draft", severity: "secondary" },
+  draft: { label: "Draft", severity: "info" },
   validated: { label: "Validated", severity: "info" },
   fulfilled: { label: "Fulfilled", severity: "warn" },
   completed: { label: "Completed", severity: "success" },
@@ -19,5 +19,5 @@ const config = computed(() => statusMap[props.status] ?? { label: props.status, 
 </script>
 
 <template>
-  <Tag :value="t(config.label)" :severity="config.severity" />
+  <Tag :value="t(config.label)" :severity="config.severity" class="text-lg" />
 </template>

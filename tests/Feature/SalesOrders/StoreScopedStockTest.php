@@ -97,6 +97,28 @@ it('returns aggregate stock when store_id is omitted (backward compat)', functio
         ->and((int) $data[0]['stock'])->toBe(55);
 });
 
+it('returns canonical variant fields without derived display aliases', function () {
+    $this->variant->update(['identifier' => 'TEST-IDENTIFIER']);
+
+    $response = actingAs($this->actor, 'sanctum')
+        ->getJson(route('api.v1.variants.search', [
+            'filter' => $this->variant->product->name,
+        ]));
+
+    $response->assertSuccessful();
+    $variant = $response->json('data.0');
+
+    expect($variant)
+        ->toHaveKey('id')
+        ->toHaveKey('identifier', 'TEST-IDENTIFIER')
+        ->toHaveKey('option_values')
+        ->toHaveKey('product')
+        ->not->toHaveKey('name')
+        ->not->toHaveKey('variant_label')
+        ->not->toHaveKey('label')
+        ->not->toHaveKey('sale_units');
+});
+
 it('rejects creating a sales order without a store_id', function () {
     $payload = payloadFor(storeId: null);
 

@@ -101,9 +101,14 @@ final class VariantsController extends Controller
         $includes = $request->string('includes', '')->value();
         $includeList = array_filter(explode(',', $includes));
         $storeId = $request->integer('store_id', 0);
+        $relations = ['product.brand', 'values.option'];
+
+        if (in_array('saleUnits', $includeList, true)) {
+            $relations[] = 'activeSaleUnits';
+        }
 
         $query = ProductVariant::query()
-            ->with(['product.brand', 'activeSaleUnits', 'values.option', ...in_array('saleUnits', $includeList) ? ['activeSaleUnits'] : []])
+            ->with($relations)
             ->where('status', '!=', 'archived')
             ->where(function ($q) use ($filter): void {
                 $q->whereHas('product', function ($sq) use ($filter): void {
@@ -116,14 +121,11 @@ final class VariantsController extends Controller
             ->limit(20)
             ->get()
             ->map(function ($variant) use ($storeId) {
-                $productName = $variant->product !== null ? $variant->product->name : '';
                 $brandName = $variant->product?->brand?->name;
 
                 $optionValues = $variant->values->isNotEmpty()
                     ? $variant->values->map(fn ($v) => $v->value)->implode(' / ')
                     : null;
-
-                $variantLabel = $variant->identifier ?: $optionValues;
 
                 // When a store is specified, compute stock from that store's
                 // active batches only — the variant's aggregate `stock` column
@@ -138,11 +140,8 @@ final class VariantsController extends Controller
 
                 $data = [
                     'id' => $variant->id,
-                    'name' => $productName,
                     'identifier' => $variant->identifier,
-                    'variant_label' => $variantLabel,
                     'option_values' => $optionValues,
-                    'label' => $productName . ' - ' . $variantLabel,
                     'price' => (float) $variant->price,
                     'stock' => $stock,
                     'minimum_stock_level' => $variant->minimum_stock_level,
