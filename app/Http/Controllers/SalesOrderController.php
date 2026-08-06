@@ -17,6 +17,7 @@ use App\Http\Resources\SalesOrder\SalesOrderResource;
 use App\Models\SalesOrder;
 use App\Models\Store;
 use App\Services\SalesOrderService;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -128,6 +129,11 @@ final class SalesOrderController extends Controller
             'user',
             'store',
             'items.productVariant.product.brand',
+            'items.productVariant.product.measurementUnit',
+            'items.productVariant.values',
+            'items.productVariant.batches' => fn (HasMany $query): HasMany => $query
+                ->where('status', 'active')
+                ->where('store_id', $salesOrder->store_id),
             'items.saleUnit',
             'items.stockAllocations.batch',
             'payments',

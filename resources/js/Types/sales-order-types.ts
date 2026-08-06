@@ -20,10 +20,13 @@ export interface SalesOrderItem {
     name: string;
     identifier: string;
     sku?: string;
+    option_values?: string | null;
+    minimum_stock_level?: number | null;
     product?: {
       id: number;
       name: string;
       brand: { id: number; name: string } | null;
+      measurement_unit?: { id: number; name: string } | null;
     };
   };
   sale_unit?: {
@@ -31,6 +34,7 @@ export interface SalesOrderItem {
     name: string;
     conversion_factor: number;
   } | null;
+  stock?: number;
   stock_allocations?: SalesOrderStockAllocation[];
 }
 
