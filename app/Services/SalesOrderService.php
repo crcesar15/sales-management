@@ -17,6 +17,7 @@ use App\Models\ProductVariantUnit;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\SalesOrderPayment;
+use App\Models\SalesOrderStockAllocation;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -141,37 +142,38 @@ final class SalesOrderService
      */
     public function update(SalesOrder $order, array $data, User $actor): SalesOrder
     {
-        if ($order->status !== SalesOrderStatus::DRAFT) {
-            throw new InvalidArgumentException('Only draft orders can be updated.');
-        }
-
         return DB::transaction(function () use ($order, $data, $actor): SalesOrder {
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($lockedOrder->status !== SalesOrderStatus::DRAFT) {
+                throw new InvalidArgumentException('Only draft orders can be updated.');
+            }
+
             $items = $data['items'] ?? [];
-            $discountType = $data['discount_type'] ?? $order->discount_type->value;
-            $discountValue = (float) ($data['discount_value'] ?? $order->discount_value);
+            $discountType = $data['discount_type'] ?? $lockedOrder->discount_type->value;
+            $discountValue = (float) ($data['discount_value'] ?? $lockedOrder->discount_value);
             $taxRate = (float) Setting::get('tax_rate', 0);
 
             $totals = $this->calculateTotals($items, $discountType, $discountValue, $taxRate);
 
-            $order->update([
-                'customer_id' => $data['customer_id'] ?? $order->customer_id,
+            $lockedOrder->update([
+                'customer_id' => $data['customer_id'] ?? $lockedOrder->customer_id,
                 'discount_type' => $discountType,
                 'discount_value' => $discountValue,
                 'sub_total' => $totals['sub_total'],
                 'discount' => $totals['discount'],
                 'tax_amount' => $totals['tax_amount'],
                 'total' => $totals['total'],
-                'notes' => $data['notes'] ?? $order->notes,
+                'notes' => $data['notes'] ?? $lockedOrder->notes,
             ]);
 
             // Replace items
-            $order->items()->delete();
+            $lockedOrder->items()->delete();
             foreach ($items as $item) {
                 $conversionFactor = $this->conversionFactorFor($item);
                 $lineTotal = (float) $item['unit_price'] * (int) $item['quantity'];
 
                 SalesOrderItem::create([
-                    'sales_order_id' => $order->id,
+                    'sales_order_id' => $lockedOrder->id,
                     'product_variant_id' => $item['product_variant_id'],
                     'sale_unit_id' => $item['sale_unit_id'] ?? null,
                     'quantity' => $item['quantity'],
@@ -182,24 +184,26 @@ final class SalesOrderService
             }
 
             activity('sales_order')
-                ->performedOn($order)
+                ->performedOn($lockedOrder)
                 ->causedBy($actor)
-                ->log("Order {$order->id} updated");
+                ->log("Order {$lockedOrder->id} updated");
 
-            return $order->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']) ?? $order;
+            return $this->loadOrder($lockedOrder);
         });
     }
 
     /** @param array<string, mixed> $data */
     public function updateCheckout(SalesOrder $order, array $data, User $actor): SalesOrder
     {
-        if ($order->status !== SalesOrderStatus::DRAFT) {
-            throw new InvalidArgumentException('Only draft orders can be updated.');
-        }
-
         return DB::transaction(function () use ($order, $data, $actor): SalesOrder {
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($lockedOrder->status !== SalesOrderStatus::DRAFT) {
+                throw new InvalidArgumentException('Only draft orders can be updated.');
+            }
+
+            $lockedOrder->load('items');
             $totals = $this->calculateTotals(
-                $order->items->map(fn (SalesOrderItem $item): array => [
+                $lockedOrder->items->map(fn (SalesOrderItem $item): array => [
                     'quantity' => $item->quantity,
                     'unit_price' => (float) $item->unit_price,
                 ])->all(),
@@ -208,7 +212,7 @@ final class SalesOrderService
                 (float) Setting::get('tax_rate', 0),
             );
 
-            $order->update([
+            $lockedOrder->update([
                 'customer_id' => $data['customer_id'] ?? null,
                 'discount_type' => $data['discount_type'],
                 'discount_value' => $data['discount_value'],
@@ -220,11 +224,42 @@ final class SalesOrderService
             ]);
 
             activity('sales_order')
-                ->performedOn($order)
+                ->performedOn($lockedOrder)
                 ->causedBy($actor)
-                ->log("Order {$order->id} checkout details updated");
+                ->log("Order {$lockedOrder->id} checkout details updated");
 
-            return $order->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']) ?? $order;
+            return $this->loadOrder($lockedOrder);
+        });
+    }
+
+    public function reopen(SalesOrder $order, User $actor): SalesOrder
+    {
+        return DB::transaction(function () use ($order, $actor): SalesOrder {
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($lockedOrder->status !== SalesOrderStatus::VALIDATED) {
+                throw new InvalidArgumentException('Only validated orders can be reopened for editing.');
+            }
+
+            if ($lockedOrder->payment_status !== SalesOrderPaymentStatus::PENDING || $lockedOrder->payments()->exists()) {
+                throw new InvalidArgumentException('Orders with payments cannot be reopened for editing. Create a new sales order for additional products.');
+            }
+
+            $releasedAllocations = SalesOrderStockAllocation::query()
+                ->whereIn('sales_order_item_id', $lockedOrder->items()->select('id'))
+                ->delete();
+
+            $lockedOrder->update([
+                'status' => SalesOrderStatus::DRAFT,
+                'validated_at' => null,
+            ]);
+
+            activity('sales_order')
+                ->performedOn($lockedOrder)
+                ->causedBy($actor)
+                ->withProperties(['from' => SalesOrderStatus::VALIDATED->value, 'to' => SalesOrderStatus::DRAFT->value, 'released_allocations' => $releasedAllocations])
+                ->log("Order {$lockedOrder->id} reopened for editing");
+
+            return $this->loadOrder($lockedOrder);
         });
     }
 

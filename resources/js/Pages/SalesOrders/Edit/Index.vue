@@ -128,12 +128,19 @@ const canFulfill = computed(() => props.order.status === "validated");
 const canCancel = computed(
   () => props.order.status === "draft" || (props.order.status === "validated" && props.order.payment_status === "pending"),
 );
+const canReopen = computed(
+  () => props.order.status === "validated" && props.order.payment_status === "pending" && (props.order.payments?.length ?? 0) === 0,
+);
 const paymentsVisible = ref(false);
 const fulfillmentVisible = ref(false);
 const cancellationVisible = ref(false);
+const reopenVisible = ref(false);
 const actionProcessing = ref(false);
 
-const submit = handleSubmit((formValues) => {
+function saveDraft(
+  formValues: { discount_value?: number | null; notes?: string | null },
+  afterSave?: () => void,
+): boolean {
   itemsError.value = "";
   paymentsError.value = "";
 
@@ -141,14 +148,14 @@ const submit = handleSubmit((formValues) => {
     failValidation(() => {
       itemsError.value = t("At least one item is required");
     }, "At least one item is required");
-    return;
+    return false;
   }
 
   if (hasOversell.value) {
     failValidation(() => {
       itemsError.value = t("One or more items exceeds available stock");
     }, "One or more items exceeds available stock");
-    return;
+    return false;
   }
 
   const payload = {
@@ -169,10 +176,16 @@ const submit = handleSubmit((formValues) => {
   router.put(route("sales-orders.update", props.order.id), payload, {
     onSuccess: () => {
       submitting.value = false;
+      if (afterSave) {
+        afterSave();
+        return;
+      }
+
       toast.add({ severity: "success", summary: t("Success"), detail: t("Sales order updated successfully"), life: 3000 });
     },
     onError: (errs: Record<string, string>) => {
       submitting.value = false;
+      actionProcessing.value = false;
       setErrors(errs);
       toast.add({ severity: "error", summary: t("Error"), detail: t("Please review the errors in the form"), life: 3000 });
       nextTick(() => {
@@ -180,6 +193,12 @@ const submit = handleSubmit((formValues) => {
       });
     },
   });
+
+  return true;
+}
+
+const submit = handleSubmit((formValues) => {
+  saveDraft(formValues);
 });
 
 function goBack() {
@@ -201,8 +220,16 @@ function runAction(method: "patch" | "post", routeName: string, data: Record<str
   });
 }
 
-function validateOrder(): void {
-  runAction("patch", "sales-orders.validate", {}, "Sales order validated successfully");
+const validateOrder = handleSubmit((formValues) => {
+  actionProcessing.value = true;
+
+  if (!saveDraft(formValues, () => runAction("patch", "sales-orders.validate", {}, "Sales order validated successfully"))) {
+    actionProcessing.value = false;
+  }
+});
+function reopenOrder(): void {
+  reopenVisible.value = false;
+  runAction("patch", "sales-orders.reopen", {}, "Sales order reopened for editing");
 }
 function fulfillOrder(): void {
   fulfillmentVisible.value = false;
@@ -325,9 +352,9 @@ function cancelOrder(reason: string): void {
           <div class="mt-4 flex flex-col gap-3 border-t border-surface-200 pt-4 dark:border-surface-700">
             <div>
               <span class="font-medium">{{ t("Validate") }}</span>
-              <p class="m-0 text-sm text-surface-500 dark:text-surface-400">{{ t("Save changes before validation") }}</p>
+                <p class="m-0 text-sm text-surface-500 dark:text-surface-400">{{ t("Changes are saved before validation") }}</p>
             </div>
-            <Button v-can="'sales.manage'" :label="t('Validate')" icon="fa fa-check" :loading="actionProcessing" @click="validateOrder" />
+            <Button v-can="'sales.manage'" :label="t('Validate')" icon="fa fa-check" :loading="actionProcessing" :disabled="submitting" @click="validateOrder" />
             <Button
               v-can="'sales.manage'"
               :label="t('Cancel')"
@@ -400,6 +427,16 @@ function cancelOrder(reason: string): void {
               @click="paymentsVisible = true"
             />
             <Button
+              v-if="canReopen"
+              v-can="'sales.manage'"
+              :label="t('Reopen for editing')"
+              icon="fa fa-pen-to-square"
+              severity="secondary"
+              outlined
+              :loading="actionProcessing"
+              @click="reopenVisible = true"
+            />
+            <Button
               v-if="canCancel"
               v-can="'sales.manage'"
               :label="t('Cancel')"
@@ -423,5 +460,14 @@ function cancelOrder(reason: string): void {
     </Dialog>
     <FulfillmentDialog v-model:visible="fulfillmentVisible" :order="order" :processing="actionProcessing" @confirm="fulfillOrder" />
     <CancellationDialog v-model:visible="cancellationVisible" :processing="actionProcessing" @confirm="cancelOrder" />
+    <Dialog v-model:visible="reopenVisible" modal :header="t('Reopen sales order')" class="w-full max-w-md">
+      <p class="m-0 text-surface-600 dark:text-surface-300">
+        {{ t('Reopening releases the allocated stock. You must validate the order again before handing over products.') }}
+      </p>
+      <template #footer>
+        <Button :label="t('Cancel')" severity="secondary" text @click="reopenVisible = false" />
+        <Button :label="t('Reopen for editing')" icon="fa fa-pen-to-square" :loading="actionProcessing" @click="reopenOrder" />
+      </template>
+    </Dialog>
   </div>
 </template>

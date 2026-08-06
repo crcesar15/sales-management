@@ -8,6 +8,7 @@ use App\Enums\PermissionsEnum;
 use App\Http\Requests\SalesOrders\CancelSalesOrderRequest;
 use App\Http\Requests\SalesOrders\FulfillSalesOrderRequest;
 use App\Http\Requests\SalesOrders\PaySalesOrderRequest;
+use App\Http\Requests\SalesOrders\ReopenSalesOrderRequest;
 use App\Http\Requests\SalesOrders\StoreSalesOrderRequest;
 use App\Http\Requests\SalesOrders\UpdateSalesOrderCheckoutRequest;
 use App\Http\Requests\SalesOrders\UpdateSalesOrderRequest;
@@ -190,6 +191,17 @@ final class SalesOrderController extends Controller
         }
 
         return redirect()->route('sales-orders.edit', $salesOrder)->with('success', 'Sales order validated successfully.');
+    }
+
+    public function reopen(ReopenSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
+    {
+        try {
+            $this->salesOrderService->reopen($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['reopen' => $e->getMessage()]);
+        }
+
+        return redirect()->route('sales-orders.edit', $salesOrder)->with('success', 'Sales order reopened for editing.');
     }
 
     public function fulfill(FulfillSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse

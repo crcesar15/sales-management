@@ -67,6 +67,64 @@ it('provisionally allocates FEFO stock during validation without deducting it', 
         ->and($laterBatch->refresh()->remaining_quantity)->toBe(10);
 });
 
+it('allocates the saved item quantity when a draft is updated before validation', function (): void {
+    $order = ($this->createDraft)();
+
+    $updatedOrder = $this->service->update($order, [
+        'customer_id' => null,
+        'discount_type' => 'flat',
+        'discount_value' => 0,
+        'notes' => null,
+        'items' => [[
+            'product_variant_id' => $this->variant->id,
+            'sale_unit_id' => null,
+            'quantity' => 3,
+            'unit_price' => 100,
+        ]],
+    ], $this->actor);
+
+    $validatedOrder = $this->service->validate($updatedOrder, $this->actor);
+
+    expect($validatedOrder->items->firstOrFail()->quantity)->toBe(3)
+        ->and($validatedOrder->items->firstOrFail()->stockAllocations->sum('quantity'))->toBe(3)
+        ->and($this->batch->refresh()->remaining_quantity)->toBe(10);
+});
+
+it('reopens an unpaid validated order and releases its provisional allocations', function (): void {
+    $order = ($this->createDraft)();
+    $this->service->validate($order, $this->actor);
+
+    $reopenedOrder = $this->service->reopen($order, $this->actor);
+
+    expect($reopenedOrder->status)->toBe(SalesOrderStatus::DRAFT)
+        ->and($reopenedOrder->validated_at)->toBeNull()
+        ->and($reopenedOrder->items)->toHaveCount(1)
+        ->and($reopenedOrder->items->firstOrFail()->stockAllocations)->toBeEmpty()
+        ->and($this->batch->refresh()->remaining_quantity)->toBe(10)
+        ->and($this->batch->sold_quantity)->toBe(0);
+
+    $revalidatedOrder = $this->service->validate($reopenedOrder, $this->actor);
+
+    expect($revalidatedOrder->status)->toBe(SalesOrderStatus::VALIDATED)
+        ->and($revalidatedOrder->items->firstOrFail()->stockAllocations)->toHaveCount(1);
+});
+
+it('does not reopen validated orders with payments', function (): void {
+    $order = ($this->createDraft)();
+    $this->service->validate($order, $this->actor);
+    $this->service->pay($order, [['payment_method' => 'cash', 'amount' => 50, 'reference' => null]], $this->actor);
+
+    expect(fn (): SalesOrder => $this->service->reopen($order, $this->actor))
+        ->toThrow(InvalidArgumentException::class, 'Orders with payments cannot be reopened for editing. Create a new sales order for additional products.');
+});
+
+it('only reopens validated orders', function (): void {
+    $order = ($this->createDraft)();
+
+    expect(fn (): SalesOrder => $this->service->reopen($order, $this->actor))
+        ->toThrow(InvalidArgumentException::class, 'Only validated orders can be reopened for editing.');
+});
+
 it('fulfills exact validated allocations and completes a previously paid order', function (): void {
     $order = ($this->createDraft)();
     $this->service->validate($order, $this->actor);

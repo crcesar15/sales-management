@@ -23,6 +23,10 @@ final class UpdateSalesOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
+            'discount_type' => ['required', 'string', 'in:flat,percentage'],
+            'discount_value' => ['required', 'numeric', 'min:0'],
+            'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'items.*.sale_unit_id' => ['nullable', 'integer', 'exists:product_variant_units,id'],
@@ -50,8 +54,6 @@ final class UpdateSalesOrderRequest extends FormRequest
                     'Only draft orders can be updated.'
                 );
             }
-
-            $items = $this->array('items');
         });
     }
 }
