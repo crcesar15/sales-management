@@ -123,6 +123,7 @@ function customerName(order: SalesOrderResponse): string {
   if (order.customer?.display_name) return order.customer.display_name;
   return t("Walk-in");
 }
+
 </script>
 
 <template>
@@ -247,6 +248,20 @@ function customerName(order: SalesOrderResponse): string {
           <Column field="total" :header="t('Total')" sortable style="min-width: 120px">
             <template #body="{ data }">
               {{ formatCurrency(String(data.total ?? 0)) }}
+            </template>
+          </Column>
+          <Column :header="t('Actions')" :pt="{ columnHeaderContent: 'justify-start' }">
+            <template #body="{ data }">
+              <div class="flex justify-start gap-2">
+                <Button
+                  v-tooltip.top="t('Open')"
+                  icon="fa fa-arrow-up-right-from-square"
+                  text
+                  size="large"
+                  rounded
+                  @click="router.visit(route('sales-orders.show', data.id))"
+                />
+              </div>
             </template>
           </Column>
         </DataTable>

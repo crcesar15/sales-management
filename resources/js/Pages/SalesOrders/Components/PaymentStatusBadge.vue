@@ -9,8 +9,8 @@ const { t } = useI18n();
 
 const config = computed(() => {
   const statuses: Record<SalesOrderPaymentStatus, { label: string; severity: "secondary" | "warn" | "success" }> = {
-    pending: { label: "Pending", severity: "secondary" },
-    partially_paid: { label: "Partially Paid", severity: "warn" },
+    pending: { label: "Pending", severity: "warn" },
+    partially_paid: { label: "Partially Paid", severity: "secondary" },
     paid: { label: "Paid", severity: "success" },
   };
 
