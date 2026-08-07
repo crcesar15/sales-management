@@ -24,9 +24,14 @@ const { formatCurrency } = useCurrencyFormatter();
         <div class="text-sm text-surface-500">{{ data.product_variant?.name ?? data.product_variant?.identifier ?? "---" }}</div>
       </template>
     </Column>
-    <Column :header="t('Sale Units')" style="min-width: 120px">
+    <Column :header="t('Unit')" style="min-width: 120px">
       <template #body="{ data }">
-        {{ data.sale_unit?.name ?? "---" }}
+        <div>
+          <div>{{ data.sale_unit?.name ?? data.product_variant?.product?.measurement_unit?.name ?? "---" }}</div>
+          <small v-if="data.sale_unit && data.product_variant?.product?.measurement_unit" class="text-surface-500 dark:text-surface-400">
+            1 {{ data.sale_unit.name }} = {{ data.sale_unit.conversion_factor }} {{ data.product_variant.product.measurement_unit.name }}
+          </small>
+        </div>
       </template>
     </Column>
     <Column :header="t('Quantity')" style="min-width: 80px">

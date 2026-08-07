@@ -2,13 +2,16 @@
 import { DataTable, Column } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
+import { computed } from "vue";
 import type { PaymentMethod } from "@/Types/purchase-order-types";
 import type { SalesOrderPayment } from "@/Types/sales-order-types";
 
-defineProps<{ payments: SalesOrderPayment[]; total: number }>();
+const props = defineProps<{ payments: SalesOrderPayment[]; outstandingBalance: number }>();
 
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
+
+const paymentsTotal = computed(() => props.payments.reduce((total, payment) => total + payment.amount, 0));
 
 function paymentMethodLabel(method: PaymentMethod): string {
   const labels: Record<string, string> = {
@@ -44,10 +47,15 @@ function paymentMethodLabel(method: PaymentMethod): string {
         {{ data.reference ?? "---" }}
       </template>
     </Column>
-    <Column :header="t('Payments received')" style="min-width: 160px" footer-style="font-weight: bold">
-      <template #footer>
-        {{ formatCurrency(String(total)) }}
-      </template>
-    </Column>
   </DataTable>
+  <div class="mt-3 flex flex-col items-end gap-1 text-sm">
+    <div class="flex w-full max-w-xs justify-between gap-4">
+      <span class="text-surface-500 dark:text-surface-400">{{ t("Payments received") }}</span>
+      <span class="font-medium">{{ formatCurrency(String(paymentsTotal)) }}</span>
+    </div>
+    <div class="flex w-full max-w-xs justify-between gap-4">
+      <span class="text-surface-500 dark:text-surface-400">{{ t("Outstanding Balance") }}</span>
+      <span class="font-semibold">{{ formatCurrency(String(outstandingBalance)) }}</span>
+    </div>
+  </div>
 </template>

@@ -17,8 +17,8 @@ function confirm(): void {
   <Dialog :visible="visible" modal :header="t('Cancel Sales Order')" class="w-full max-w-lg" @update:visible="emit('update:visible', $event)">
     <div class="flex flex-col gap-2"><label for="cancellation-reason">{{ t("Cancellation Reason") }}</label><Textarea id="cancellation-reason" v-model="reason" rows="4" :placeholder="t('Provide a reason')" /></div>
     <template #footer>
-      <Button :label="t('Close')" severity="secondary" text @click="emit('update:visible', false)" />
-      <Button :label="t('Cancel Order')" severity="danger" :disabled="!reason.trim()" :loading="processing" @click="confirm" />
+      <Button :label="t('Close')" severity="secondary" @click="emit('update:visible', false)" />
+      <Button :label="t('Cancel Order')" :disabled="!reason.trim()" :loading="processing" @click="confirm" />
     </template>
   </Dialog>
 </template>

@@ -165,10 +165,10 @@ function goToCustomerEdit() {
 
     <div
       v-if="selectedCustomer || walkInSelected"
-      class="flex min-w-0 items-center gap-2 rounded border border-surface-200 bg-surface-50 px-3 dark:border-surface-700 dark:bg-surface-950"
+      class="flex min-w-0 items-center gap-2 rounded border border-surface-200 bg-surface-50 px-3 py-1 dark:border-surface-700 dark:bg-surface-950"
     >
       <i :class="selectedCustomer ? 'fa fa-user-check' : 'fa fa-person-walking'" class="text-surface-500 dark:text-surface-400" />
-      <span class="min-w-0 flex-1 truncate font-medium">
+      <span class="min-w-0 flex-1 truncate font-bold">
         <template v-if="selectedCustomer">{{ displayLabel }}</template>
         <template v-else-if="walkInSelected">{{ t("Walk-in") }}</template>
         <template v-else>{{ t("No customer selected") }}</template>
@@ -218,13 +218,15 @@ function goToCustomerEdit() {
         :loading="loading"
         :disabled="loading || !taxIdInput.trim()"
         :aria-label="t('Search')"
+        raised
         @click="searchCustomer"
       />
       <Button
         v-tooltip.top="t('Sell to a walk-in customer')"
         icon="fa fa-person-walking"
         severity="secondary"
-        text
+        outlined
+        raised
         :aria-label="t('Sell to a walk-in customer')"
         @click="selectWalkIn"
       />

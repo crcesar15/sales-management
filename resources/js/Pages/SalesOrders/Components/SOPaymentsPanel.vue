@@ -17,7 +17,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const { formatCurrency } = useCurrencyFormatter();
+const { formatCurrency, currencyCode } = useCurrencyFormatter();
 
 const paymentMethodOptions = computed(() => [
   { name: t("Cash"), value: "cash" },
@@ -117,6 +117,8 @@ function showApplyRemaining(index: number): boolean {
         <InputNumber
           :id="`payment-amount-${index}`"
           :model-value="payment.amount"
+          mode="currency"
+          :currency="currencyCode"
           :min="0"
           :max="maximumPaymentAmount(index)"
           :min-fraction-digits="2"

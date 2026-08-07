@@ -981,7 +981,7 @@
   "Record a payment to update the outstanding balance": "Record a payment to update the outstanding balance",
   "Save your changes, then validate this order to continue": "Save your changes, then validate this order to continue",
   "Save changes before validation": "Save changes before validation",
-  "Changes are saved before validation": "Changes are saved before validation",
+  "Validating saves your changes first.": "Validating saves your changes first.",
   "Select Customer": "Select Customer",
   "Sell to a walk-in customer": "Sell to a walk-in customer",
   "Create and assign customer": "Create and assign customer",

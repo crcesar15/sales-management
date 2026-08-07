@@ -17,6 +17,11 @@ const props = withDefaults(
   { discountType: "flat", discountValue: 0 },
 );
 
+defineSlots<{
+  discount?: () => unknown;
+  notes?: () => unknown;
+}>();
+
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
 
@@ -38,7 +43,8 @@ const discountPercentage = computed(() => {
           <span class="text-lg lg:text-base">{{ t("Sub Total") }}</span>
           <span class="text-lg lg:text-base">{{ formatCurrency(String(subTotal)) }}</span>
         </div>
-        <div v-if="discount > 0" class="flex justify-between items-center">
+        <slot v-if="$slots.discount" name="discount" />
+        <div v-else-if="discount > 0" class="flex justify-between items-center">
           <span class="text-lg lg:text-base">{{ t("Discount") }}</span>
           <div class="text-right">
             <span class="text-red-500 dark:text-red-400 font-medium">-{{ formatCurrency(String(discount)) }}</span>
@@ -54,6 +60,10 @@ const discountPercentage = computed(() => {
           <span class="text-2xl font-bold lg:text-base">{{ t("Total") }}</span>
           <span class="text-2xl font-bold lg:text-base">{{ formatCurrency(String(total)) }}</span>
         </div>
+        <template v-if="$slots.notes">
+          <Divider class="!my-1" />
+          <slot name="notes" />
+        </template>
       </div>
     </template>
   </Card>

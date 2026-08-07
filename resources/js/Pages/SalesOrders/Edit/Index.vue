@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, Dialog, Select, useToast } from "primevue";
+import { Button, Card, Dialog, Select, Textarea, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import type { FormDataConvertible } from "@inertiajs/core";
 import { useI18n } from "vue-i18n";
@@ -12,7 +12,7 @@ import AppLayout from "@layouts/admin.vue";
 import { useAuth } from "@composables/useAuth";
 import { useStockLedger } from "@composables/useStockLedger";
 import SOLineItemsTable from "../Components/SOLineItemsTable.vue";
-import SOFinancialSummary from "../Components/SOFinancialSummary.vue";
+import SODiscountField from "../Components/SODiscountField.vue";
 import SOPaymentsPanel from "../Components/SOPaymentsPanel.vue";
 import CustomerSelect from "../Components/CustomerSelect.vue";
 import CancellationDialog from "../Components/CancellationDialog.vue";
@@ -137,10 +137,7 @@ const cancellationVisible = ref(false);
 const reopenVisible = ref(false);
 const actionProcessing = ref(false);
 
-function saveDraft(
-  formValues: { discount_value?: number | null; notes?: string | null },
-  afterSave?: () => void,
-): boolean {
+function saveDraft(formValues: { discount_value?: number | null; notes?: string | null }, afterSave?: () => void): boolean {
   itemsError.value = "";
   paymentsError.value = "";
 
@@ -321,23 +318,6 @@ function cancelOrder(reason: string): void {
             <small v-if="itemsError" class="text-red-500 dark:text-red-400 mt-2 block">{{ itemsError }}</small>
           </template>
         </Card>
-        <Card>
-          <template #title>{{ t("Adjustments") }}</template>
-          <template #content>
-            <SOFinancialSummary
-              :sub-total="subTotal"
-              :discount-value="discountValue"
-              :discount-attrs="discountValueAttrs"
-              :max-discount="subTotal"
-              :notes="notes"
-              :notes-attrs="notesAttrs"
-              :submit-count="submitCount"
-              :errors="errors"
-              @update:discount-value="setFieldValue('discount_value', $event)"
-              @update:notes="setFieldValue('notes', $event)"
-            />
-          </template>
-        </Card>
       </div>
 
       <aside class="col-span-12 lg:col-span-4">
@@ -348,23 +328,59 @@ function cancelOrder(reason: string): void {
             :tax-amount="taxAmount"
             :total="totalAmount"
             :discount-value="discountValue ?? 0"
-          />
-          <div class="mt-4 flex flex-col gap-3 border-t border-surface-200 pt-4 dark:border-surface-700">
-            <div>
-              <span class="font-medium">{{ t("Validate") }}</span>
-                <p class="m-0 text-sm text-surface-500 dark:text-surface-400">{{ t("Changes are saved before validation") }}</p>
-            </div>
-            <Button v-can="'sales.manage'" :label="t('Validate')" icon="fa fa-check" :loading="actionProcessing" :disabled="submitting" @click="validateOrder" />
-            <Button
-              v-can="'sales.manage'"
-              :label="t('Cancel')"
-              icon="fa fa-ban"
-              severity="danger"
-              outlined
-              :loading="actionProcessing"
-              @click="cancellationVisible = true"
-            />
-          </div>
+          >
+            <template #discount>
+              <SODiscountField
+                :sub-total="subTotal"
+                :discount-value="discountValue"
+                :discount-attrs="discountValueAttrs"
+                :max-discount="subTotal"
+                @update:discount-value="setFieldValue('discount_value', $event)"
+              />
+            </template>
+            <template #notes>
+              <div class="flex flex-col gap-1">
+                <label for="so-notes">{{ t("Notes") }}</label>
+                <Textarea
+                  id="so-notes"
+                  :model-value="notes"
+                  v-bind="notesAttrs"
+                  rows="2"
+                  :class="{ 'p-invalid': submitCount > 0 && !!errors.notes }"
+                  @update:model-value="setFieldValue('notes', $event)"
+                />
+                <small v-if="submitCount > 0 && errors.notes" class="text-red-500 dark:text-red-400">{{ errors.notes }}</small>
+              </div>
+            </template>
+          </OrderTotalsCard>
+          <Card class="mt-4">
+            <template #title>{{ t("Next step") }}</template>
+            <template #content>
+              <div class="flex flex-col gap-3">
+                <p class="m-0 text-sm text-surface-500 dark:text-surface-400">{{ t("Validating saves your changes first.") }}</p>
+                <Button
+                  v-can="'sales.manage'"
+                  :label="t('Validate')"
+                  icon="fa fa-check"
+                  outlined
+                  raised
+                  :loading="actionProcessing"
+                  :disabled="submitting"
+                  @click="validateOrder"
+                />
+                <Button
+                  v-can="'sales.manage'"
+                  :label="t('Cancel')"
+                  icon="fa fa-ban"
+                  severity="danger"
+                  outlined
+                  raised
+                  :loading="actionProcessing"
+                  @click="cancellationVisible = true"
+                />
+              </div>
+            </template>
+          </Card>
         </div>
       </aside>
     </div>
@@ -378,7 +394,9 @@ function cancelOrder(reason: string): void {
         </Card>
         <Card>
           <template #title>{{ t("Payments") }}</template>
-          <template #content><OrderPaymentsTable :payments="order.payments ?? []" :total="order.total" /></template>
+          <template #content>
+            <OrderPaymentsTable :payments="order.payments ?? []" :outstanding-balance="order.outstanding_balance" />
+          </template>
         </Card>
       </div>
       <aside class="col-span-12 lg:col-span-4">
@@ -391,62 +409,71 @@ function cancelOrder(reason: string): void {
             :discount-type="order.discount_type"
             :discount-value="order.discount_value"
           />
-          <div class="mt-4 flex flex-col gap-3 border-t border-surface-200 pt-4 dark:border-surface-700">
-            <div>
-              <span class="font-medium">{{ t("Next step") }}</span>
-              <p class="m-0 text-sm text-surface-500 dark:text-surface-400">
-                {{
-                  canFulfill ? t("Hand over the products when the order is ready") : t("Record a payment to update the outstanding balance")
-                }}
-              </p>
-            </div>
-            <Button
-              v-if="order.status === 'draft'"
-              v-can="'sales.manage'"
-              :label="t('Validate')"
-              icon="fa fa-check"
-              :loading="actionProcessing"
-              @click="validateOrder"
-            />
-            <Button
-              v-if="canFulfill"
-              v-can="'sales.manage'"
-              :label="t('Product Handover')"
-              icon="fa fa-box"
-              :loading="actionProcessing"
-              @click="fulfillmentVisible = true"
-            />
-            <Button
-              v-if="canPay"
-              v-can="'sales.manage'"
-              :label="t('Payments')"
-              icon="fa fa-credit-card"
-              severity="secondary"
-              outlined
-              :loading="actionProcessing"
-              @click="paymentsVisible = true"
-            />
-            <Button
-              v-if="canReopen"
-              v-can="'sales.manage'"
-              :label="t('Reopen for editing')"
-              icon="fa fa-pen-to-square"
-              severity="secondary"
-              outlined
-              :loading="actionProcessing"
-              @click="reopenVisible = true"
-            />
-            <Button
-              v-if="canCancel"
-              v-can="'sales.manage'"
-              :label="t('Cancel')"
-              icon="fa fa-ban"
-              severity="danger"
-              outlined
-              :loading="actionProcessing"
-              @click="cancellationVisible = true"
-            />
-          </div>
+          <Card class="mt-4">
+            <template #title>{{ t("Next step") }}</template>
+            <template #content>
+              <div class="flex flex-col gap-3">
+                <p class="m-0 text-sm text-surface-500 dark:text-surface-400">
+                  {{
+                    canFulfill
+                      ? t("Hand over the products when the order is ready")
+                      : t("Record a payment to update the outstanding balance")
+                  }}
+                </p>
+                <Button
+                  v-if="order.status === 'draft'"
+                  v-can="'sales.manage'"
+                  :label="t('Validate')"
+                  icon="fa fa-check"
+                  :loading="actionProcessing"
+                  @click="validateOrder"
+                />
+                <Button
+                  v-if="canFulfill"
+                  v-can="'sales.manage'"
+                  :label="t('Product Handover')"
+                  icon="fa fa-box"
+                  outlined
+                  raised
+                  :loading="actionProcessing"
+                  @click="fulfillmentVisible = true"
+                />
+                <Button
+                  v-if="canPay"
+                  v-can="'sales.manage'"
+                  :label="t('Payments')"
+                  icon="fa fa-credit-card"
+                  severity="success"
+                  outlined
+                  raised
+                  :loading="actionProcessing"
+                  @click="paymentsVisible = true"
+                />
+                <Button
+                  v-if="canReopen"
+                  v-can="'sales.manage'"
+                  :label="t('Reopen for editing')"
+                  icon="fa fa-pen-to-square"
+                  severity="secondary"
+                  outlined
+                  raised
+                  :loading="actionProcessing"
+                  @click="reopenVisible = true"
+                />
+                <Button
+                  v-if="canCancel"
+                  v-can="'sales.manage'"
+                  :label="t('Cancel')"
+                  icon="fa fa-ban"
+                  severity="danger"
+                  outlined
+                  raised
+                  :loading="actionProcessing"
+                  @click="cancellationVisible = true"
+                />
+              </div>
+            </template>
+          </Card>
         </div>
       </aside>
     </div>
@@ -454,15 +481,15 @@ function cancelOrder(reason: string): void {
     <Dialog v-model:visible="paymentsVisible" modal :header="t('Payments')" class="w-full max-w-3xl">
       <SOPaymentsPanel v-model="payments" :total-amount="order.outstanding_balance" :error="paymentsError" />
       <template #footer>
-        <Button :label="t('Close')" severity="secondary" text @click="paymentsVisible = false" />
-        <Button :label="t('Record Payment')" icon="fa fa-credit-card" :loading="actionProcessing" @click="payOrder" />
+        <Button :label="t('Close')" severity="secondary" @click="paymentsVisible = false" />
+        <Button :label="t('Record Payment')" :loading="actionProcessing" @click="payOrder" />
       </template>
     </Dialog>
     <FulfillmentDialog v-model:visible="fulfillmentVisible" :order="order" :processing="actionProcessing" @confirm="fulfillOrder" />
     <CancellationDialog v-model:visible="cancellationVisible" :processing="actionProcessing" @confirm="cancelOrder" />
     <Dialog v-model:visible="reopenVisible" modal :header="t('Reopen sales order')" class="w-full max-w-md">
       <p class="m-0 text-surface-600 dark:text-surface-300">
-        {{ t('Reopening releases the allocated stock. You must validate the order again before handing over products.') }}
+        {{ t("Reopening releases the allocated stock. You must validate the order again before handing over products.") }}
       </p>
       <template #footer>
         <Button :label="t('Cancel')" severity="secondary" text @click="reopenVisible = false" />

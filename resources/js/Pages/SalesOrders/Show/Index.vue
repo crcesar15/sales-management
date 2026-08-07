@@ -42,7 +42,9 @@ const { t } = useI18n();
         </Card>
         <Card>
           <template #title>{{ t("Payments") }}</template>
-          <template #content><OrderPaymentsTable :payments="order.payments ?? []" :total="order.total" /></template>
+          <template #content>
+            <OrderPaymentsTable :payments="order.payments ?? []" :outstanding-balance="order.outstanding_balance" />
+          </template>
         </Card>
         <Card v-if="order.cancellation_reason || order.notes">
           <template #title>{{ order.cancellation_reason ? t("Cancellation Reason") : t("Notes") }}</template>
