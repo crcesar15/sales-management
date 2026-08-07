@@ -1,5 +1,6 @@
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
+import type { SalesOrderHandoverPreview } from "@/Types/sales-order-types";
 
 export function useSalesOrderClient() {
   const { apiClient, loading } = useApi();
@@ -35,9 +36,14 @@ export function useSalesOrderClient() {
     });
   };
 
+  const generateHandoverPreviewApi = async (salesOrderId: number) => {
+    return await apiClient.get<{ data: SalesOrderHandoverPreview }>(route("api.v1.sales-orders.handover-preview", salesOrderId));
+  };
+
   return {
     loading,
     searchVariantsApi,
     fetchVariantDetailsApi,
+    generateHandoverPreviewApi,
   };
 }

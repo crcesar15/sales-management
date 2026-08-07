@@ -1,27 +1,13 @@
 <script setup lang="ts">
 import { Button, Column, DataTable, Dialog } from "primevue";
-import { computed } from "vue";
-import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { useI18n } from "vue-i18n";
-import type { SalesOrderResponse } from "@/Types/sales-order-types";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
+import type { SalesOrderHandoverPreview } from "@/Types/sales-order-types";
 
-const props = defineProps<{ visible: boolean; order: SalesOrderResponse; processing?: boolean }>();
-const emit = defineEmits<{ "update:visible": [visible: boolean]; confirm: [] }>();
+defineProps<{ visible: boolean; preview: SalesOrderHandoverPreview | null; processing?: boolean }>();
+const emit = defineEmits<{ "update:visible": [visible: boolean]; confirm: []; regenerate: [] }>();
 const { t } = useI18n();
 const { formatDate } = useDatetimeFormatter();
-
-const allocations = computed(() =>
-  (props.order.items ?? []).flatMap((item) =>
-    (item.stock_allocations ?? []).map((allocation) => ({
-      id: `${item.id}-${allocation.batch_id}`,
-      product: item.product_variant?.product?.name ?? item.product_variant?.name ?? "---",
-      quantity: allocation.quantity,
-      baseUnit: item.product_variant?.product?.measurement_unit?.name ?? t("Unit"),
-      batch: allocation.batch?.identifier ?? `#${allocation.batch_id}`,
-      expiry: allocation.batch?.expiry_date ?? null,
-    })),
-  ),
-);
 </script>
 
 <template>
@@ -32,23 +18,32 @@ const allocations = computed(() =>
     class="w-full max-w-4xl"
     @update:visible="emit('update:visible', $event)"
   >
-    <p class="mb-4 text-surface-500 dark:text-surface-400">{{ t("Review the allocated stock before confirming handover.") }}</p>
-    <DataTable :value="allocations" data-key="id" striped-rows>
-      <Column field="product" :header="t('Product')" />
-      <Column :header="t('Quantity')">
-        <template #body="{ data }">
-          {{ data.quantity }}
-          <span class="text-surface-400 dark:text-surface-500 font-medium text-sm">({{ data.baseUnit }})</span>
-        </template>
-      </Column>
-      <Column field="batch" :header="t('Batch Identifier')" />
-      <Column :header="t('Expiry')">
-        <template #body="{ data }">{{ data.expiry ? formatDate(data.expiry) : "---" }}</template>
-      </Column>
-    </DataTable>
+    <template v-if="preview">
+      <p class="mb-4 text-surface-500 dark:text-surface-400">{{ t("Review the allocated stock before confirming handover.") }}</p>
+      <DataTable :value="preview.allocations" striped-rows>
+        <Column field="product" :header="t('Product')" />
+        <Column :header="t('Quantity')">
+          <template #body="{ data }">
+            {{ data.quantity }}
+            <span class="text-sm font-medium text-surface-400 dark:text-surface-500">({{ data.base_unit }})</span>
+          </template>
+        </Column>
+        <Column field="batch_identifier" :header="t('Batch Identifier')" />
+        <Column :header="t('Expiry')">
+          <template #body="{ data }">{{ data.expiry_date ? formatDate(data.expiry_date) : "---" }}</template>
+        </Column>
+      </DataTable>
+    </template>
+    <p v-else class="m-0 text-surface-500 dark:text-surface-400">
+      {{ t("The handover list is no longer available. Generate a new list.") }}
+    </p>
     <template #footer>
       <Button :label="t('Cancel')" severity="secondary" @click="emit('update:visible', false)" />
-      <Button :label="t('Confirm Handover')" :loading="processing" @click="emit('confirm')" />
+      <Button
+        :label="preview ? t('Confirm Handover') : t('Regenerate Handover List')"
+        :loading="processing"
+        @click="preview ? emit('confirm') : emit('regenerate')"
+      />
     </template>
   </Dialog>
 </template>

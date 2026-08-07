@@ -998,7 +998,10 @@
   "Record Payment": "Record Payment",
   "Reopen for editing": "Reopen for editing",
   "Reopen sales order": "Reopen sales order",
-  "Reopening releases the allocated stock. You must validate the order again before handing over products.": "Reopening releases the allocated stock. You must validate the order again before handing over products.",
+  "Regenerate Handover List": "Regenerate Handover List",
+  "The handover list is no longer available. Generate a new list.": "The handover list is no longer available. Generate a new list.",
+  "Unable to generate the handover list. Please try again.": "Unable to generate the handover list. Please try again.",
+  "Reopening allows the order to be edited. You must validate it again before generating a handover list.": "Reopening allows the order to be edited. You must validate it again before generating a handover list.",
   "Sales order cancelled successfully": "Sales order cancelled successfully",
   "Sales order fulfilled successfully": "Sales order fulfilled successfully",
   "Sales order reopened for editing": "Sales order reopened for editing",
@@ -1020,5 +1023,7 @@
     "username": "This field must only contain letters, numbers, dashes and underscores"
   },
   "variant stock": "{stock} in stock",
-  "variants stock": "{stock} in stock for {counter} variants"
+  "variants stock": "{stock} in stock for {counter} variants",
+  "Confirm Handover": "Confirm Handover",
+  "Review the allocated stock before confirming handover.": "Review the allocated stock before confirming handover."
 }

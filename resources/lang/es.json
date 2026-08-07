@@ -1000,7 +1000,10 @@
   "Record Payment": "Registrar pago",
   "Reopen for editing": "Reabrir para editar",
   "Reopen sales order": "Reabrir orden de venta",
-  "Reopening releases the allocated stock. You must validate the order again before handing over products.": "Al reabrir se libera el stock asignado. Debe validar el pedido nuevamente antes de entregar los productos.",
+  "Regenerate Handover List": "Regenerar lista de entrega",
+  "The handover list is no longer available. Generate a new list.": "La lista de entrega ya no está disponible. Genere una nueva lista.",
+  "Unable to generate the handover list. Please try again.": "No se pudo generar la lista de entrega. Inténtelo nuevamente.",
+  "Reopening allows the order to be edited. You must validate it again before generating a handover list.": "Al reabrir puede editar el pedido. Debe validarlo nuevamente antes de generar una lista de entrega.",
   "Sales order cancelled successfully": "Orden de venta cancelada exitosamente",
   "Sales order fulfilled successfully": "Orden de venta entregada exitosamente",
   "Sales order reopened for editing": "Orden de venta reabierta para edición",
@@ -1022,5 +1025,7 @@
     "username": "Este campo debe contener solo letras, números, guiones y guiones bajos"
   },
   "variant stock": "{stock} en stock",
-  "variants stock": "{stock} en stock de {counter} variantes"
+  "variants stock": "{stock} en stock de {counter} variantes",
+  "Confirm Handover": "Confirmar entrega",
+  "Review the allocated stock before confirming handover.": "Revise el inventario asignado antes de confirmar la entrega."
 }

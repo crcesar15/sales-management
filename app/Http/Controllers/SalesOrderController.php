@@ -207,7 +207,11 @@ final class SalesOrderController extends Controller
     public function fulfill(FulfillSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse
     {
         try {
-            $order = $this->salesOrderService->fulfill($salesOrder, $request->user() ?? throw new RuntimeException('Unauthenticated.'));
+            $order = $this->salesOrderService->fulfill(
+                $salesOrder,
+                $request->string('handover_token')->toString(),
+                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+            );
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['fulfillment' => $e->getMessage()]);
         }

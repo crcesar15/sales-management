@@ -49,7 +49,7 @@ beforeEach(function (): void {
     ], $this->actor);
 });
 
-it('provisionally allocates FEFO stock during validation without deducting it', function (): void {
+it('checks stock during validation without allocating or deducting it', function (): void {
     $laterBatch = Batch::factory()->create([
         'product_variant_id' => $this->variant,
         'store_id' => $this->store,
@@ -60,14 +60,16 @@ it('provisionally allocates FEFO stock during validation without deducting it', 
     $order = ($this->createDraft)();
 
     $this->service->validate($order, $this->actor);
+    $preview = $this->service->previewFulfillment($order, $this->actor);
 
     expect($order->refresh()->status)->toBe(SalesOrderStatus::VALIDATED)
         ->and($this->batch->refresh()->remaining_quantity)->toBe(10)
-        ->and($order->items()->firstOrFail()->stockAllocations()->firstOrFail()->batch_id)->toBe($this->batch->id)
-        ->and($laterBatch->refresh()->remaining_quantity)->toBe(10);
+        ->and($order->items()->firstOrFail()->stockAllocations)->toBeEmpty()
+        ->and($laterBatch->refresh()->remaining_quantity)->toBe(10)
+        ->and($preview['allocations'][0]['batch_id'])->toBe($this->batch->id);
 });
 
-it('allocates the saved item quantity when a draft is updated before validation', function (): void {
+it('checks the saved item quantity when a draft is updated before validation', function (): void {
     $order = ($this->createDraft)();
 
     $updatedOrder = $this->service->update($order, [
@@ -86,11 +88,11 @@ it('allocates the saved item quantity when a draft is updated before validation'
     $validatedOrder = $this->service->validate($updatedOrder, $this->actor);
 
     expect($validatedOrder->items->firstOrFail()->quantity)->toBe(3)
-        ->and($validatedOrder->items->firstOrFail()->stockAllocations->sum('quantity'))->toBe(3)
+        ->and($validatedOrder->items->firstOrFail()->stockAllocations)->toBeEmpty()
         ->and($this->batch->refresh()->remaining_quantity)->toBe(10);
 });
 
-it('reopens an unpaid validated order and releases its provisional allocations', function (): void {
+it('reopens an unpaid validated order without affecting stock', function (): void {
     $order = ($this->createDraft)();
     $this->service->validate($order, $this->actor);
 
@@ -106,7 +108,7 @@ it('reopens an unpaid validated order and releases its provisional allocations',
     $revalidatedOrder = $this->service->validate($reopenedOrder, $this->actor);
 
     expect($revalidatedOrder->status)->toBe(SalesOrderStatus::VALIDATED)
-        ->and($revalidatedOrder->items->firstOrFail()->stockAllocations)->toHaveCount(1);
+        ->and($revalidatedOrder->items->firstOrFail()->stockAllocations)->toBeEmpty();
 });
 
 it('does not reopen validated orders with payments', function (): void {
@@ -125,23 +127,109 @@ it('only reopens validated orders', function (): void {
         ->toThrow(InvalidArgumentException::class, 'Only validated orders can be reopened for editing.');
 });
 
-it('fulfills exact validated allocations and completes a previously paid order', function (): void {
+it('creates FEFO allocations during fulfillment and completes a previously paid order', function (): void {
     $order = ($this->createDraft)();
     $this->service->validate($order, $this->actor);
     $this->service->pay($order, [['payment_method' => 'cash', 'amount' => 200, 'reference' => null]], $this->actor);
-    $this->service->fulfill($order, $this->actor);
+    $preview = $this->service->previewFulfillment($order, $this->actor);
+    $this->service->fulfill($order, $preview['token'], $this->actor);
 
     expect($order->refresh()->status)->toBe(SalesOrderStatus::COMPLETED)
         ->and($order->payment_status)->toBe(SalesOrderPaymentStatus::PAID)
         ->and($order->fulfilled_by)->toBe($this->actor->id)
         ->and($this->batch->refresh()->remaining_quantity)->toBe(8)
-        ->and($this->batch->sold_quantity)->toBe(2);
+        ->and($this->batch->sold_quantity)->toBe(2)
+        ->and($order->items()->firstOrFail()->stockAllocations()->firstOrFail()->batch_id)->toBe($this->batch->id)
+        ->and($order->items()->firstOrFail()->stockAllocations()->sum('quantity'))->toBe(2);
+});
+
+it('uses the earliest-expiring available batch when fulfilling', function (): void {
+    $laterBatch = Batch::factory()->create([
+        'product_variant_id' => $this->variant,
+        'store_id' => $this->store,
+        'expiry_date' => now()->addMonths(2)->toDateString(),
+        'remaining_quantity' => 10,
+        'status' => 'active',
+    ]);
+    $order = ($this->createDraft)(Customer::factory()->create());
+    $this->service->validate($order, $this->actor);
+    $preview = $this->service->previewFulfillment($order, $this->actor);
+
+    $this->service->fulfill($order, $preview['token'], $this->actor);
+
+    expect($order->items()->firstOrFail()->stockAllocations()->firstOrFail()->batch_id)->toBe($this->batch->id)
+        ->and($laterBatch->refresh()->remaining_quantity)->toBe(10);
+});
+
+it('does not fulfill with a handover list whose stock changed after preview', function (): void {
+    $laterBatch = Batch::factory()->create([
+        'product_variant_id' => $this->variant,
+        'store_id' => $this->store,
+        'expiry_date' => now()->addMonths(2)->toDateString(),
+        'remaining_quantity' => 10,
+        'status' => 'active',
+    ]);
+    $order = ($this->createDraft)(Customer::factory()->create());
+    $this->service->validate($order, $this->actor);
+    $preview = $this->service->previewFulfillment($order, $this->actor);
+    $this->batch->update(['remaining_quantity' => 0, 'sold_quantity' => 10, 'status' => 'closed']);
+
+    expect(fn (): SalesOrder => $this->service->fulfill($order, $preview['token'], $this->actor))
+        ->toThrow(InvalidArgumentException::class, 'The handover list is no longer available. Generate a new list.');
+
+    expect($order->refresh()->status)->toBe(SalesOrderStatus::VALIDATED)
+        ->and($order->items()->firstOrFail()->stockAllocations)->toBeEmpty()
+        ->and($laterBatch->refresh()->remaining_quantity)->toBe(10);
+});
+
+it('does not partially fulfill when current stock is insufficient', function (): void {
+    $order = ($this->createDraft)(Customer::factory()->create());
+    $this->service->validate($order, $this->actor);
+    $preview = $this->service->previewFulfillment($order, $this->actor);
+    $this->batch->update(['remaining_quantity' => 1]);
+
+    expect(fn (): SalesOrder => $this->service->fulfill($order, $preview['token'], $this->actor))
+        ->toThrow(InvalidArgumentException::class, 'The handover list is no longer available. Generate a new list.');
+
+    expect($order->refresh()->status)->toBe(SalesOrderStatus::VALIDATED)
+        ->and($order->items()->firstOrFail()->stockAllocations)->toBeEmpty()
+        ->and($this->batch->refresh()->remaining_quantity)->toBe(1)
+        ->and($this->batch->sold_quantity)->toBe(0);
+});
+
+it('rejects handover lists after five minutes', function (): void {
+    $order = ($this->createDraft)(Customer::factory()->create());
+    $this->service->validate($order, $this->actor);
+    $preview = $this->service->previewFulfillment($order, $this->actor);
+
+    $this->travel(6)->minutes();
+
+    try {
+        expect(fn (): SalesOrder => $this->service->fulfill($order, $preview['token'], $this->actor))
+            ->toThrow(InvalidArgumentException::class, 'The handover list is no longer available. Generate a new list.');
+    } finally {
+        $this->travelBack();
+    }
+});
+
+it('replaces legacy provisional allocations with actual fulfillment allocations', function (): void {
+    $order = ($this->createDraft)(Customer::factory()->create());
+    $this->service->validate($order, $this->actor);
+    $item = $order->items()->firstOrFail();
+    $item->stockAllocations()->create(['batch_id' => $this->batch->id, 'quantity' => 1]);
+    $preview = $this->service->previewFulfillment($order, $this->actor);
+
+    $this->service->fulfill($order, $preview['token'], $this->actor);
+
+    expect($item->stockAllocations()->count())->toBe(1)
+        ->and($item->stockAllocations()->firstOrFail()->quantity)->toBe(2);
 });
 
 it('records receivable charge and subsequent payment entries for an unpaid fulfilled order', function (): void {
     $order = ($this->createDraft)(Customer::factory()->create());
     $this->service->validate($order, $this->actor);
-    $this->service->fulfill($order, $this->actor);
+    $preview = $this->service->previewFulfillment($order, $this->actor);
+    $this->service->fulfill($order, $preview['token'], $this->actor);
 
     expect($order->refresh()->status)->toBe(SalesOrderStatus::FULFILLED)
         ->and((float) $order->receivableEntries()->where('type', 'charge')->sum('amount'))->toBe(200.0);

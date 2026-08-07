@@ -10,6 +10,7 @@ import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
 import { useAuth } from "@composables/useAuth";
+import { useSalesOrderClient } from "@composables/useSalesOrderClient";
 import { useStockLedger } from "@composables/useStockLedger";
 import SOLineItemsTable from "../Components/SOLineItemsTable.vue";
 import SODiscountField from "../Components/SODiscountField.vue";
@@ -23,7 +24,7 @@ import OrderTotalsCard from "../Components/OrderTotalsCard.vue";
 import SalesOrderStatusStepper from "../Components/SalesOrderStatusStepper.vue";
 import SalesOrderSummaryCard from "../Components/SalesOrderSummaryCard.vue";
 import type { LineItem } from "../Components/SOLineItemsTable.vue";
-import type { SalesOrderResponse, SalesOrderPaymentForm } from "@/Types/sales-order-types";
+import type { SalesOrderHandoverPreview, SalesOrderResponse, SalesOrderPaymentForm } from "@/Types/sales-order-types";
 
 defineOptions({ layout: AppLayout });
 
@@ -34,6 +35,7 @@ const props = defineProps<{
 const toast = useToast();
 const { t } = useI18n();
 const { getSetting } = useAuth();
+const { loading: handoverPreviewLoading, generateHandoverPreviewApi } = useSalesOrderClient();
 
 const schema = toTypedSchema(
   object({
@@ -133,6 +135,7 @@ const canReopen = computed(
 );
 const paymentsVisible = ref(false);
 const fulfillmentVisible = ref(false);
+const handoverPreview = ref<SalesOrderHandoverPreview | null>(null);
 const cancellationVisible = ref(false);
 const reopenVisible = ref(false);
 const actionProcessing = ref(false);
@@ -228,9 +231,33 @@ function reopenOrder(): void {
   reopenVisible.value = false;
   runAction("patch", "sales-orders.reopen", {}, "Sales order reopened for editing");
 }
+async function openFulfillment(): Promise<void> {
+  try {
+    handoverPreview.value = (await generateHandoverPreviewApi(props.order.id)).data.data;
+    fulfillmentVisible.value = true;
+  } catch {
+    toast.add({ severity: "error", summary: t("Error"), detail: t("Unable to generate the handover list. Please try again."), life: 3000 });
+  }
+}
 function fulfillOrder(): void {
-  fulfillmentVisible.value = false;
-  runAction("patch", "sales-orders.fulfill", {}, "Sales order fulfilled successfully");
+  if (handoverPreview.value === null) {
+    return;
+  }
+
+  actionProcessing.value = true;
+  router.patch(route("sales-orders.fulfill", props.order.id), { handover_token: handoverPreview.value.token }, {
+    onSuccess: () => toast.add({ severity: "success", summary: t("Success"), detail: t("Sales order fulfilled successfully"), life: 3000 }),
+    onError: (serverErrors: Record<string, string>) => {
+      handoverPreview.value = null;
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: Object.values(serverErrors)[0] ?? t("The handover list is no longer available. Generate a new list."),
+        life: 3000,
+      });
+    },
+    onFinish: () => (actionProcessing.value = false),
+  });
 }
 function payOrder(): void {
   paymentsError.value = "";
@@ -435,8 +462,8 @@ function cancelOrder(reason: string): void {
                   icon="fa fa-box"
                   outlined
                   raised
-                  :loading="actionProcessing"
-                  @click="fulfillmentVisible = true"
+                  :loading="actionProcessing || handoverPreviewLoading"
+                  @click="openFulfillment"
                 />
                 <Button
                   v-if="canPay"
@@ -485,11 +512,17 @@ function cancelOrder(reason: string): void {
         <Button :label="t('Record Payment')" :loading="actionProcessing" @click="payOrder" />
       </template>
     </Dialog>
-    <FulfillmentDialog v-model:visible="fulfillmentVisible" :order="order" :processing="actionProcessing" @confirm="fulfillOrder" />
+    <FulfillmentDialog
+      v-model:visible="fulfillmentVisible"
+      :preview="handoverPreview"
+      :processing="actionProcessing || handoverPreviewLoading"
+      @confirm="fulfillOrder"
+      @regenerate="openFulfillment"
+    />
     <CancellationDialog v-model:visible="cancellationVisible" :processing="actionProcessing" @confirm="cancelOrder" />
     <Dialog v-model:visible="reopenVisible" modal :header="t('Reopen sales order')" class="w-full max-w-md">
       <p class="m-0 text-surface-600 dark:text-surface-300">
-        {{ t("Reopening releases the allocated stock. You must validate the order again before handing over products.") }}
+        {{ t("Reopening allows the order to be edited. You must validate it again before generating a handover list.") }}
       </p>
       <template #footer>
         <Button :label="t('Cancel')" severity="secondary" text @click="reopenVisible = false" />

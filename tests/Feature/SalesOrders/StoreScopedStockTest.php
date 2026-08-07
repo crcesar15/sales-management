@@ -169,7 +169,8 @@ it('deducts stock only from the selected store batches on a paid order', functio
     $order->update(['cash_register_shift_id' => $this->shift->id]);
     $service->validate($order, $this->actor);
     $service->pay($order, [['payment_method' => 'transfer', 'amount' => 300, 'reference' => null]], $this->actor);
-    $service->fulfill($order, $this->actor);
+    $preview = $service->previewFulfillment($order, $this->actor);
+    $service->fulfill($order, $preview['token'], $this->actor);
 
     $storeABatch = Batch::where('product_variant_id', $this->variant->id)
         ->where('store_id', $this->storeA->id)

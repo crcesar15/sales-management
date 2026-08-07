@@ -48,6 +48,21 @@ export interface SalesOrderStockAllocation {
   } | null;
 }
 
+export interface SalesOrderHandoverAllocation {
+  sales_order_item_id: number;
+  batch_id: number;
+  quantity: number;
+  product: string;
+  base_unit: string;
+  batch_identifier: string;
+  expiry_date: string | null;
+}
+
+export interface SalesOrderHandoverPreview {
+  token: string;
+  allocations: SalesOrderHandoverAllocation[];
+}
+
 export interface SalesOrderPayment {
   id: number;
   sales_order_id: number;

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\MeasurementUnitController;
 use App\Http\Controllers\Api\PermissionsController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SalesOrderHandoverController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VariantsController;
@@ -24,6 +25,10 @@ Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $reques
 Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.'], function (): void {
     // Routes for Batches
     Route::get('batches/available', [BatchesController::class, 'available'])->name('batches.available');
+
+    // Routes for Sales Orders
+    Route::get('sales-orders/{salesOrder}/handover-preview', [SalesOrderHandoverController::class, 'preview'])
+        ->name('sales-orders.handover-preview');
 
     // Routes for Categories
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');

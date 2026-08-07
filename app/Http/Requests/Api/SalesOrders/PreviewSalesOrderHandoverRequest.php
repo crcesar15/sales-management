@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests\SalesOrders;
+namespace App\Http\Requests\Api\SalesOrders;
 
 use App\Enums\PermissionsEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
-final class FulfillSalesOrderRequest extends FormRequest
+final class PreviewSalesOrderHandoverRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,8 +17,6 @@ final class FulfillSalesOrderRequest extends FormRequest
     /** @return array<string, array<int, string>> */
     public function rules(): array
     {
-        return [
-            'handover_token' => ['required', 'uuid'],
-        ];
+        return [];
     }
 }
