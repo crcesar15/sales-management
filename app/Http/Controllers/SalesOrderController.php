@@ -10,7 +10,6 @@ use App\Http\Requests\SalesOrders\FulfillSalesOrderRequest;
 use App\Http\Requests\SalesOrders\PaySalesOrderRequest;
 use App\Http\Requests\SalesOrders\ReopenSalesOrderRequest;
 use App\Http\Requests\SalesOrders\StoreSalesOrderRequest;
-use App\Http\Requests\SalesOrders\UpdateSalesOrderCheckoutRequest;
 use App\Http\Requests\SalesOrders\UpdateSalesOrderRequest;
 use App\Http\Requests\SalesOrders\ValidateSalesOrderRequest;
 use App\Http\Resources\SalesOrder\SalesOrderCollection;
@@ -88,7 +87,7 @@ final class SalesOrderController extends Controller
             return redirect()->back()->withErrors(['items' => $e->getMessage()]);
         }
 
-        return redirect()->route('sales-orders.checkout', $order->id)
+        return redirect()->route('sales-orders.edit', $order->id)
             ->with('success', 'Sales order created successfully.');
     }
 
@@ -159,27 +158,6 @@ final class SalesOrderController extends Controller
 
         return redirect()->route('sales-orders.edit', $salesOrder->id)
             ->with('success', 'Sales order updated successfully.');
-    }
-
-    public function checkout(SalesOrder $salesOrder): InertiaResponse
-    {
-        $this->authorize(PermissionsEnum::SALES_MANAGE);
-        $salesOrder->load(['customer', 'user', 'store', 'cashRegisterShift.register', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']);
-
-        return Inertia::render('SalesOrders/Checkout/Index', [
-            'order' => (new SalesOrderResource($salesOrder))->resolve(),
-        ]);
-    }
-
-    public function updateCheckout(UpdateSalesOrderCheckoutRequest $request, SalesOrder $salesOrder): RedirectResponse
-    {
-        try {
-            $this->salesOrderService->updateCheckout($salesOrder, $request->validated(), $request->user() ?? throw new RuntimeException('Unauthenticated.'));
-        } catch (InvalidArgumentException $e) {
-            return redirect()->back()->withErrors(['checkout' => $e->getMessage()]);
-        }
-
-        return redirect()->route('sales-orders.checkout', $salesOrder)->with('success', 'Checkout details updated successfully.');
     }
 
     public function validateOrder(ValidateSalesOrderRequest $request, SalesOrder $salesOrder): RedirectResponse

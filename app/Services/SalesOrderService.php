@@ -195,46 +195,6 @@ final class SalesOrderService
         });
     }
 
-    /** @param array<string, mixed> $data */
-    public function updateCheckout(SalesOrder $order, array $data, User $actor): SalesOrder
-    {
-        return DB::transaction(function () use ($order, $data, $actor): SalesOrder {
-            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
-            if ($lockedOrder->status !== SalesOrderStatus::DRAFT) {
-                throw new InvalidArgumentException('Only draft orders can be updated.');
-            }
-
-            $lockedOrder->load('items');
-            $totals = $this->calculateTotals(
-                $lockedOrder->items->map(fn (SalesOrderItem $item): array => [
-                    'quantity' => $item->quantity,
-                    'unit_price' => (float) $item->unit_price,
-                ])->all(),
-                $data['discount_type'],
-                (float) $data['discount_value'],
-                (float) Setting::get('tax_rate', 0),
-            );
-
-            $lockedOrder->update([
-                'customer_id' => $data['customer_id'] ?? null,
-                'discount_type' => $data['discount_type'],
-                'discount_value' => $data['discount_value'],
-                'sub_total' => $totals['sub_total'],
-                'discount' => $totals['discount'],
-                'tax_amount' => $totals['tax_amount'],
-                'total' => $totals['total'],
-                'notes' => $data['notes'] ?? null,
-            ]);
-
-            activity('sales_order')
-                ->performedOn($lockedOrder)
-                ->causedBy($actor)
-                ->log("Order {$lockedOrder->id} checkout details updated");
-
-            return $this->loadOrder($lockedOrder);
-        });
-    }
-
     public function reopen(SalesOrder $order, User $actor): SalesOrder
     {
         return DB::transaction(function () use ($order, $actor): SalesOrder {
@@ -296,6 +256,8 @@ final class SalesOrderService
      *         batch_id: int,
      *         quantity: int,
      *         product: string,
+     *         variant: string,
+     *         brand: string|null,
      *         base_unit: string,
      *         batch_identifier: string,
      *         expiry_date: string|null
@@ -305,7 +267,7 @@ final class SalesOrderService
     public function previewFulfillment(SalesOrder $order, User $actor): array
     {
         $order = SalesOrder::query()
-            ->with(['items.productVariant.product.measurementUnit'])
+            ->with(['items.productVariant.product.brand', 'items.productVariant.product.measurementUnit'])
             ->findOrFail($order->id);
 
         if ($order->status !== SalesOrderStatus::VALIDATED) {
@@ -341,6 +303,8 @@ final class SalesOrderService
                     'batch_id' => $batch->id,
                     'quantity' => $quantity,
                     'product' => $product->name,
+                    'variant' => $productVariant->name ?? $productVariant->identifier ?? '---',
+                    'brand' => $product->brand?->name,
                     'base_unit' => $measurementUnit instanceof MeasurementUnit ? $measurementUnit->name : 'Unit',
                     'batch_identifier' => $batch->batch_identifier ?? "#{$batch->id}",
                     'expiry_date' => $batch->expiry_date?->toDateString(),

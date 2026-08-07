@@ -53,6 +53,8 @@ export interface SalesOrderHandoverAllocation {
   batch_id: number;
   quantity: number;
   product: string;
+  variant: string;
+  brand: string | null;
   base_unit: string;
   batch_identifier: string;
   expiry_date: string | null;

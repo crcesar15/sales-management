@@ -54,7 +54,7 @@ it('returns a temporary FEFO handover list without persisting allocations', func
     $response->assertOk()
         ->assertJsonPath('data.allocations.0.batch_id', $this->batch->id)
         ->assertJsonPath('data.allocations.0.quantity', 2)
-        ->assertJsonStructure(['data' => ['token', 'allocations']]);
+        ->assertJsonStructure(['data' => ['token', 'allocations' => [['variant', 'brand']]]]);
 
     expect($this->order->items()->firstOrFail()->stockAllocations)->toBeEmpty()
         ->and($this->batch->refresh()->remaining_quantity)->toBe(5);

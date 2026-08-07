@@ -277,8 +277,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/sales-orders', [SalesOrderController::class, 'index'])->name('sales-orders');
     Route::get('/sales-orders/create', [SalesOrderController::class, 'create'])->name('sales-orders.create');
     Route::post('/sales-orders', [SalesOrderController::class, 'store'])->name('sales-orders.store');
-    Route::get('/sales-orders/{salesOrder}/checkout', [SalesOrderController::class, 'checkout'])->name('sales-orders.checkout');
-    Route::put('/sales-orders/{salesOrder}/checkout', [SalesOrderController::class, 'updateCheckout'])->name('sales-orders.checkout.update');
     Route::patch('/sales-orders/{salesOrder}/validate', [SalesOrderController::class, 'validateOrder'])->name('sales-orders.validate');
     Route::patch('/sales-orders/{salesOrder}/reopen', [SalesOrderController::class, 'reopen'])->name('sales-orders.reopen');
     Route::patch('/sales-orders/{salesOrder}/fulfill', [SalesOrderController::class, 'fulfill'])->name('sales-orders.fulfill');
