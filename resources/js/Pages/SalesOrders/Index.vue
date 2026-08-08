@@ -163,24 +163,21 @@ function customerName(order: SalesOrderResponse): string {
             </div>
           </template>
           <template #header>
-            <div class="grid grid-cols-12 gap-2">
-              <div class="lg:col-span-4 col-span-12 flex gap-2 items-center">
-                <IconField class="w-full">
-                  <InputIcon class="fa fa-search" />
-                  <InputText v-model="search" :placeholder="t('Search') + '...'" class="w-full" />
-                </IconField>
-              </div>
-              <div class="lg:col-span-8 col-span-12 flex justify-end gap-2 items-center">
-                <Button
-                  type="button"
-                  icon="fa fa-filter"
-                  :label="t('Filters')"
-                  :severity="hasActiveFilters ? 'primary' : 'secondary'"
-                  outlined
-                  @click="filterPopover.toggle($event)"
-                />
-                <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
-              </div>
+            <div class="flex items-center gap-2">
+              <Button
+                type="button"
+                icon="fa fa-filter"
+                :label="t('Filters')"
+                :severity="hasActiveFilters ? 'primary' : 'secondary'"
+                outlined
+                :pt="{label: {class: 'hidden sm:inline'}}"
+                @click="filterPopover.toggle($event)"
+              />
+              <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
+              <IconField icon-position="left" class="flex-1 sm:flex-none sm:w-80 sm:ml-auto">
+                <InputIcon class="fa fa-search" />
+                <InputText v-model="search" :placeholder="t('Search') + '...'" class="w-full" />
+              </IconField>
             </div>
 
             <Popover ref="filterPopover">
