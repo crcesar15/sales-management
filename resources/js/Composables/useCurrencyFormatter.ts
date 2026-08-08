@@ -3,7 +3,8 @@ import { useAuth } from "@/Composables/useAuth";
 export function useCurrencyFormatter() {
   const { getSetting } = useAuth();
 
-  const currencyCode = getSetting("finance", "currency") || "BOB";
+  const currencyCode = getSetting("finance", "currency") || "USD";
+  const currencySymbol = getSetting("finance", "currency_symbol") || "$";
 
   const formatCurrency = (value: string) => {
     const currency = getSetting("finance", "currency");
@@ -23,5 +24,6 @@ export function useCurrencyFormatter() {
     formatCurrency,
     formatCurrencySymbol,
     currencyCode,
+    currencySymbol
   };
 }

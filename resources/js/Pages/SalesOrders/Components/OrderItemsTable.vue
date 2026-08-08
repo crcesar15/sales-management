@@ -72,40 +72,40 @@ const { formatCurrency } = useCurrencyFormatter();
   </div>
 
   <div class="hidden xl:block">
-    <DataTable :value="items" data-key="id" striped-rows row-hover>
+    <DataTable :value="items" data-key="id" row-hover>
       <template #empty>
         <div class="flex flex-col items-center py-6 text-surface-400">
           <i class="fa fa-box-open mb-2 text-3xl" aria-hidden="true"></i>
           <span>{{ t("No items") }}</span>
         </div>
       </template>
-      <Column :header="t('Product')" style="min-width: 200px">
+      <Column :header="t('Product')" style="min-width: 200px" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
         <template #body="{ data }">
           <span class="font-medium">{{ data.product_variant?.product?.name ?? "---" }}</span>
-          <div class="text-sm text-surface-500">{{ data.product_variant?.name ?? data.product_variant?.identifier ?? "---" }}</div>
+          <div class="text-surface-500">{{ data.product_variant?.name ?? data.product_variant?.identifier ?? "---" }}</div>
         </template>
       </Column>
-      <Column :header="t('Unit')" style="min-width: 120px">
+      <Column :header="t('Unit')" style="min-width: 120px" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
         <template #body="{ data }">
           <div>
             <div>{{ data.sale_unit?.name ?? data.product_variant?.product?.measurement_unit?.name ?? "---" }}</div>
-            <small v-if="data.sale_unit && data.product_variant?.product?.measurement_unit" class="text-surface-500 dark:text-surface-400">
+            <span v-if="data.sale_unit && data.product_variant?.product?.measurement_unit" class="text-surface-500 dark:text-surface-400">
               1 {{ data.sale_unit.name }} = {{ data.sale_unit.conversion_factor }} {{ data.product_variant.product.measurement_unit.name }}
-            </small>
+            </span>
           </div>
         </template>
       </Column>
-      <Column :header="t('Quantity')" style="min-width: 80px">
+      <Column :header="t('Quantity')" style="min-width: 80px" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
         <template #body="{ data }">
           {{ data.quantity }}
         </template>
       </Column>
-      <Column :header="t('Unit Price')" style="min-width: 120px">
+      <Column :header="t('Unit Price')" style="min-width: 120px" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
         <template #body="{ data }">
           {{ formatCurrency(String(data.unit_price)) }}
         </template>
       </Column>
-      <Column :header="t('Line Total')" style="min-width: 120px">
+      <Column :header="t('Line Total')" style="min-width: 120px" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
         <template #body="{ data }">
           <span class="font-medium">{{ formatCurrency(String(data.line_total)) }}</span>
         </template>

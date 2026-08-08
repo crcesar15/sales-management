@@ -181,7 +181,7 @@ function hasPriceOverride(item: LineItem): boolean {
     <div v-else class="mt-4 border-y lg:border-x border-x-0  border-surface-200 dark:border-surface-700">
       <div
         aria-hidden="true"
-        class="hidden grid-cols-[minmax(6rem,1.2fr)_minmax(5rem,0.75fr)_minmax(6rem,0.85fr)_minmax(6.5rem,0.8fr)_minmax(8.25rem,1fr)_minmax(5.25rem,0.6fr)_5.75rem] gap-3 border-b border-surface-200 bg-surface-50 px-3 py-2 font-medium text-surface-600 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300 xl:grid"
+        class="hidden grid-cols-[minmax(6rem,1.2fr)_minmax(5rem,0.75fr)_minmax(6rem,0.85fr)_minmax(6.5rem,0.8fr)_minmax(8.25rem,1fr)_minmax(5.25rem,0.6fr)_5.75rem] font-bold gap-3 border-b border-surface-200 bg-surface-200 px-3 py-2 dark:border-surface-700 dark:bg-surface-800 xl:grid"
       >
         <span>{{ t("Product") }}</span>
         <span>{{ t("Brand") }}</span>
@@ -229,7 +229,7 @@ function hasPriceOverride(item: LineItem): boolean {
             <div class="hidden min-w-0 xl:block pt-3">
               <span class="block truncate font-medium text-surface-800 dark:text-surface-100">{{ saleUnitName(item) }}</span>
               <span v-if="item.sale_unit && item.base_unit_name" class="block truncate text-surface-600 dark:text-surface-300">
-                {{ t("Base units") }}: {{ item.base_unit_name }}
+                1 {{ saleUnitName(item) }} = {{ item.sale_unit.conversion_factor }} {{ item.base_unit_name }}
               </span>
             </div>
 
@@ -250,8 +250,8 @@ function hasPriceOverride(item: LineItem): boolean {
                 input-class="min-h-[44px] w-full !text-[16px] tabular-nums xl:!text-sm"
                 @update:model-value="(val: number) => updatePrice(index, val)"
               />
-              <small v-if="hasPriceOverride(item)" class="mt-1 block text-[16px] text-surface-600 dark:text-surface-300">
-                {{ t("Original price") }}: {{ formatCurrency(String(item.original_unit_price)) }}
+              <small v-if="hasPriceOverride(item)" class="mt-1 block text-[14px] text-surface-600 dark:text-surface-300">
+                {{ t("Base") }}: {{ formatCurrency(String(item.original_unit_price)) }}
               </small>
             </div>
 
@@ -275,14 +275,14 @@ function hasPriceOverride(item: LineItem): boolean {
                 input-class="min-h-[44px] min-w-0 w-full !text-[16px] tabular-nums xl:!text-sm"
                 @update:model-value="(val: number) => updateQuantity(index, val)"
               />
-              <div class="mt-1 flex flex-wrap items-center gap-2 text-[16px] text-surface-600 dark:text-surface-300">
+              <div class="mt-1 flex flex-wrap items-center gap-2 text-[14px] text-surface-600 dark:text-surface-300">
                 <span>{{ t("Remaining") }}: {{ remainingInSaleUnit(item) ?? "—" }}</span>
               </div>
             </div>
 
             <div class="min-w-0 pt-3">
-              <span class="block text-[16px] font-medium xl:sr-only">{{ t("Line Total") }}</span>
-              <span class="flex items-center text-[16px] tabular-nums xl:min-h-0 xl:text-sm">
+              <span class="block !text-[16px] font-medium xl:sr-only">{{ t("Line Total") }}</span>
+              <span class="flex items-center text-[16px] tabular-nums xl:min-h-0">
                 {{ formatCurrency(String(item.line_total)) }}
               </span>
             </div>

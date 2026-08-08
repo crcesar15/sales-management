@@ -46,12 +46,6 @@ const { t } = useI18n();
             <OrderPaymentsTable :payments="order.payments ?? []" :outstanding-balance="order.outstanding_balance" />
           </template>
         </Card>
-        <Card v-if="order.cancellation_reason || order.notes">
-          <template #title>{{ order.cancellation_reason ? t("Cancellation Reason") : t("Notes") }}</template>
-          <template #content>
-            <p class="m-0 whitespace-pre-wrap text-surface-700 dark:text-surface-200">{{ order.cancellation_reason ?? order.notes }}</p>
-          </template>
-        </Card>
       </div>
       <aside class="col-span-12 lg:col-span-4">
         <div class="lg:sticky lg:top-4">
@@ -63,6 +57,12 @@ const { t } = useI18n();
             :discount-type="order.discount_type"
             :discount-value="order.discount_value"
           />
+          <Card v-if="order.cancellation_reason || order.notes" class="mt-4">
+            <template #title>{{ order.cancellation_reason ? t("Cancellation Reason") : t("Notes") }}</template>
+            <template #content>
+              <p class="m-0 whitespace-pre-wrap text-surface-700 dark:text-surface-200">{{ order.cancellation_reason ?? order.notes }}</p>
+            </template>
+          </Card>
         </div>
       </aside>
     </div>

@@ -21,10 +21,6 @@ const stepperPt = { root: { class: "pointer-events-none" }, step: { class: "poin
 
 <template>
   <div v-if="status" class="mb-0">
-    <div class="flex items-center gap-2 xl:hidden justify-end">
-      <span class="text-lg text-surface-500 dark:text-surface-400">{{ t("Status") }}</span>
-      <OrderStatusBadge :status="status" />
-    </div>
     <Stepper v-if="status !== 'cancelled'" :value="activeStep" :pt="stepperPt" class="hidden xl:block">
       <StepList>
         <Step v-for="(step, index) in steps" :key="step.status" :value="String(index + 1)">

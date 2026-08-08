@@ -27,7 +27,7 @@ const { formatDate } = useDatetimeFormatter();
               <div class="min-w-0">
                 <div class="flex min-w-0 items-center gap-2">
                   <span class="truncate !text-[16px] font-bold text-surface-900 dark:text-surface-50">{{ allocation.product }}</span>
-                  <Badge :value="allocation.variant" severity="primary" class="!text-[14px] !font-semibold" />
+                  <Badge v-if="allocation.variant" :value="allocation.variant" severity="primary" class="!text-[14px] !font-semibold" />
                 </div>
               </div>
               <span v-if="allocation.brand" class="shrink-0 text-right text-[14px] font-semibold">
@@ -55,15 +55,23 @@ const { formatDate } = useDatetimeFormatter();
 
       <div class="hidden xl:block">
         <DataTable :value="preview.allocations" striped-rows>
-          <Column field="product" :header="t('Product')" />
-          <Column :header="t('Quantity')">
+          <Column field="product" :header="t('Product')" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
+            <template #body="{ data }">
+              <div class="flex flex-col min-w-0 items-start gap-2">
+                  <span class="truncate !text-[16px] font-bold text-surface-900 dark:text-surface-50">{{ data.product }}</span>
+                  <Badge v-if="data.variant" :value="data.variant" severity="primary" class="!text-[14px] !font-semibold" />
+                </div>
+            </template>
+          </Column>
+          <Column field="brand" :header="t('Brand')" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}" />
+          <Column :header="t('Quantity')" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
             <template #body="{ data }">
               {{ data.quantity }}
               <span class="text-sm font-medium text-surface-400 dark:text-surface-500">({{ data.base_unit }})</span>
             </template>
           </Column>
-          <Column field="batch_identifier" :header="t('Batch Identifier')" />
-          <Column :header="t('Expiry')">
+          <Column field="batch_identifier" :header="t('Batch Identifier')" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}"/>
+          <Column :header="t('Expiry')" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
             <template #body="{ data }">{{ data.expiry_date ? formatDate(data.expiry_date) : "---" }}</template>
           </Column>
         </DataTable>

@@ -27,28 +27,28 @@ function paymentMethodLabel(method: PaymentMethod): string {
 <template>
   <DataTable :value="payments" data-key="id" striped-rows row-hover>
     <template #empty>
-      <div class="flex flex-col items-center py-6 text-surface-400">
-        <i class="fa fa-credit-card text-3xl mb-2"></i>
+      <div class="flex flex-row gap-2 justify-center items-center py-1 text-surface-400">
+        <i class="fa fa-credit-card text-3xl"></i>
         <span>{{ t("No payments") }}</span>
       </div>
     </template>
-    <Column :header="t('Payment Method')" style="min-width: 150px">
+    <Column :header="t('Payment Method')" style="min-width: 150px" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
       <template #body="{ data }">
         {{ paymentMethodLabel(data.payment_method) }}
       </template>
     </Column>
-    <Column :header="t('Amount')" style="min-width: 120px">
+    <Column :header="t('Amount')" style="min-width: 120px" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
       <template #body="{ data }">
         {{ formatCurrency(String(data.amount)) }}
       </template>
     </Column>
-    <Column :header="t('Reference')" style="min-width: 150px">
+    <Column :header="t('Reference')" style="min-width: 150px" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
       <template #body="{ data }">
         {{ data.reference ?? "---" }}
       </template>
     </Column>
   </DataTable>
-  <div class="mt-3 flex flex-col items-end gap-1 text-sm">
+  <div class="mt-3 flex flex-col items-end gap-1">
     <div class="flex w-full max-w-xs justify-between gap-4">
       <span class="text-surface-500 dark:text-surface-400">{{ t("Payments received") }}</span>
       <span class="font-medium">{{ formatCurrency(String(paymentsTotal)) }}</span>
