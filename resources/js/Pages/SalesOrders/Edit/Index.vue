@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, Dialog, Select, Textarea, useToast } from "primevue";
+import { Button, Card, Dialog, Message, Select, Textarea, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import type { FormDataConvertible } from "@inertiajs/core";
 import { useI18n } from "vue-i18n";
@@ -65,6 +65,27 @@ const orderStoreOptions = computed(() =>
 );
 
 const selectedCustomerId = ref<number | null>(props.order.customer_id);
+const customerChoiceMade = ref(props.order.customer_id !== null);
+const isWalkIn = ref(false);
+const customerError = ref("");
+
+function selectCustomer(): void {
+  customerChoiceMade.value = true;
+  isWalkIn.value = false;
+  customerError.value = "";
+}
+
+function selectWalkInCustomer(): void {
+  customerChoiceMade.value = true;
+  isWalkIn.value = true;
+  customerError.value = "";
+}
+
+function clearCustomer(): void {
+  customerChoiceMade.value = false;
+  isWalkIn.value = false;
+  customerError.value = "";
+}
 
 // Pre-populate line items from order
 const lineItems = ref<LineItem[]>(
@@ -126,7 +147,9 @@ const totalAmount = computed(() => Math.round((subTotal.value - discountAmount.v
 
 const isDraft = computed(() => props.order.status === "draft");
 const canPay = computed(() => ["validated", "fulfilled"].includes(props.order.status) && props.order.payment_status !== "paid");
-const canFulfill = computed(() => props.order.status === "validated");
+const canFulfill = computed(
+  () => props.order.status === "validated" && (props.order.customer_id !== null || props.order.payment_status === "paid"),
+);
 const canCancel = computed(
   () => props.order.status === "draft" || (props.order.status === "validated" && props.order.payment_status === "pending"),
 );
@@ -143,6 +166,14 @@ const actionProcessing = ref(false);
 function saveDraft(formValues: { discount_value?: number | null; notes?: string | null }, afterSave?: () => void): boolean {
   itemsError.value = "";
   paymentsError.value = "";
+  customerError.value = "";
+
+  if (!customerChoiceMade.value) {
+    failValidation(() => {
+      customerError.value = t("Select a customer or mark the sale as walk-in");
+    }, "Select a customer or mark the sale as walk-in");
+    return false;
+  }
 
   if (lineItems.value.length === 0) {
     failValidation(() => {
@@ -160,6 +191,7 @@ function saveDraft(formValues: { discount_value?: number | null; notes?: string 
 
   const payload = {
     customer_id: selectedCustomerId.value,
+    is_walk_in: isWalkIn.value,
     discount_type: "flat" as const,
     discount_value: formValues.discount_value ?? 0,
     notes: formValues.notes || null,
@@ -313,22 +345,28 @@ function cancelOrder(reason: string): void {
                   disabled
                 />
               </div>
-              <CustomerSelect
-                v-model="selectedCustomerId"
-                :initial-customer="
-                  order.customer
-                    ? {
-                        id: order.customer.id!,
-                        first_name: order.customer.first_name ?? '',
-                        last_name: order.customer.last_name ?? '',
-                        email: order.customer.email,
-                        phone: order.customer.phone,
-                        tax_id: order.customer.tax_id ?? '',
-                        tax_id_name: order.customer.tax_id_name ?? '',
-                      }
-                    : null
-                "
-              />
+              <div>
+                <CustomerSelect
+                  v-model="selectedCustomerId"
+                  :initial-customer="
+                    order.customer
+                      ? {
+                          id: order.customer.id!,
+                          first_name: order.customer.first_name ?? '',
+                          last_name: order.customer.last_name ?? '',
+                          email: order.customer.email,
+                          phone: order.customer.phone,
+                          tax_id: order.customer.tax_id ?? '',
+                          tax_id_name: order.customer.tax_id_name ?? '',
+                        }
+                      : null
+                  "
+                  @select="selectCustomer"
+                  @walk-in="selectWalkInCustomer"
+                  @clear="clearCustomer"
+                />
+                <small v-if="customerError" class="text-red-500 dark:text-red-400 mt-2 block">{{ customerError }}</small>
+              </div>
             </div>
           </template>
         </Card>
@@ -447,6 +485,10 @@ function cancelOrder(reason: string): void {
                       : t("Record a payment to update the outstanding balance")
                   }}
                 </p>
+                <Message v-if="order.status === 'validated' && !canFulfill" severity="warn" :closable="false">
+                  <template #icon><i class="fa fa-triangle-exclamation" /></template>
+                  {{ t("Payment is required for walk-in customers") }}
+                </Message>
                 <Button
                   v-if="order.status === 'draft'"
                   v-can="'sales.manage'"
@@ -456,13 +498,14 @@ function cancelOrder(reason: string): void {
                   @click="validateOrder"
                 />
                 <Button
-                  v-if="canFulfill"
+                  v-if="order.status === 'validated'"
                   v-can="'sales.manage'"
                   :label="t('Product Handover')"
                   icon="fa fa-box"
                   outlined
                   raised
                   :loading="actionProcessing || handoverPreviewLoading"
+                  :disabled="!canFulfill"
                   @click="openFulfillment"
                 />
                 <Button

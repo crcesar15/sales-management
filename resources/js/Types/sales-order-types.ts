@@ -166,6 +166,7 @@ export interface SalesOrderPaymentPayload {
 
 export interface SalesOrderPayload {
   customer_id?: number | null;
+  is_walk_in?: boolean;
   discount_type: DiscountType;
   discount_value: number;
   notes?: string | null;

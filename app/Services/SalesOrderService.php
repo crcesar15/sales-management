@@ -159,7 +159,7 @@ final class SalesOrderService
             $totals = $this->calculateTotals($items, $discountType, $discountValue, $taxRate);
 
             $lockedOrder->update([
-                'customer_id' => $data['customer_id'] ?? $lockedOrder->customer_id,
+                'customer_id' => array_key_exists('customer_id', $data) ? $data['customer_id'] : $lockedOrder->customer_id,
                 'discount_type' => $discountType,
                 'discount_value' => $discountValue,
                 'sub_total' => $totals['sub_total'],
@@ -273,6 +273,7 @@ final class SalesOrderService
         if ($order->status !== SalesOrderStatus::VALIDATED) {
             throw new InvalidArgumentException('Only validated orders can generate a handover list.');
         }
+        $this->requirePaidOrNamedCustomer($order);
         $this->requireAssignedCashier($order, $actor);
 
         $allocations = [];
@@ -346,6 +347,7 @@ final class SalesOrderService
             if ($lockedOrder->status !== SalesOrderStatus::VALIDATED) {
                 throw new InvalidArgumentException('Only validated orders can be fulfilled.');
             }
+            $this->requirePaidOrNamedCustomer($lockedOrder);
             $this->requireAssignedCashier($lockedOrder, $actor);
             $lockedOrder->load('items');
 
@@ -436,10 +438,6 @@ final class SalesOrderService
             if ($lockedOrder->payment_status === SalesOrderPaymentStatus::PAID) {
                 $updates += ['status' => SalesOrderStatus::COMPLETED, 'completed_at' => now()];
             } else {
-                if ($lockedOrder->customer_id === null) {
-                    throw new InvalidArgumentException('A named customer is required to fulfill an unpaid order.');
-                }
-
                 $updates['status'] = SalesOrderStatus::FULFILLED;
                 CustomerReceivableEntry::create([
                     'customer_id' => $lockedOrder->customer_id,
@@ -589,6 +587,13 @@ final class SalesOrderService
     {
         if ($order->user_id !== $actor->id) {
             throw new InvalidArgumentException('Only the assigned cashier can perform this action.');
+        }
+    }
+
+    private function requirePaidOrNamedCustomer(SalesOrder $order): void
+    {
+        if ($order->customer_id === null && $order->payment_status !== SalesOrderPaymentStatus::PAID) {
+            throw new InvalidArgumentException('Walk-in orders must be paid before handover.');
         }
     }
 

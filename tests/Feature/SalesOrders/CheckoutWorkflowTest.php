@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\CashRegisterShiftStatus;
+use App\Enums\PermissionsEnum;
 use App\Enums\SalesOrderPaymentStatus;
 use App\Enums\SalesOrderStatus;
 use App\Models\Batch;
@@ -20,6 +21,7 @@ beforeEach(function (): void {
     $this->store = Store::factory()->create();
     $this->actor = User::factory()->create();
     $this->actor->stores()->attach($this->store);
+    $this->actor->givePermissionTo(PermissionsEnum::SALES_MANAGE->value);
     $this->shift = CashRegisterShift::factory()->create([
         'cash_register_id' => CashRegister::factory()->create(['store_id' => $this->store])->id,
         'user_id' => $this->actor->id,
@@ -57,7 +59,7 @@ it('checks stock during validation without allocating or deducting it', function
         'remaining_quantity' => 10,
         'status' => 'active',
     ]);
-    $order = ($this->createDraft)();
+    $order = ($this->createDraft)(Customer::factory()->create());
 
     $this->service->validate($order, $this->actor);
     $preview = $this->service->previewFulfillment($order, $this->actor);
@@ -90,6 +92,47 @@ it('checks the saved item quantity when a draft is updated before validation', f
     expect($validatedOrder->items->firstOrFail()->quantity)->toBe(3)
         ->and($validatedOrder->items->firstOrFail()->stockAllocations)->toBeEmpty()
         ->and($this->batch->refresh()->remaining_quantity)->toBe(10);
+});
+
+it('requires selecting a customer or marking the sale as walk-in when updating a draft', function (): void {
+    $order = ($this->createDraft)();
+
+    $this->actingAs($this->actor)
+        ->putJson(route('sales-orders.update', $order), [
+            'customer_id' => null,
+            'is_walk_in' => false,
+            'discount_type' => 'flat',
+            'discount_value' => 0,
+            'notes' => null,
+            'items' => [[
+                'product_variant_id' => $this->variant->id,
+                'sale_unit_id' => null,
+                'quantity' => 2,
+                'unit_price' => 100,
+            ]],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['customer_id']);
+});
+
+it('persists an explicit walk-in customer selection when updating a draft', function (): void {
+    $order = ($this->createDraft)(Customer::factory()->create());
+
+    $updatedOrder = $this->service->update($order, [
+        'customer_id' => null,
+        'discount_type' => 'flat',
+        'discount_value' => 0,
+        'notes' => null,
+        'items' => [[
+            'product_variant_id' => $this->variant->id,
+            'sale_unit_id' => null,
+            'quantity' => 2,
+            'unit_price' => 100,
+        ]],
+    ], $this->actor);
+
+    expect($updatedOrder->customer_id)->toBeNull()
+        ->and($order->refresh()->customer_id)->toBeNull();
 });
 
 it('reopens an unpaid validated order without affecting stock', function (): void {
@@ -159,6 +202,41 @@ it('uses the earliest-expiring available batch when fulfilling', function (): vo
 
     expect($order->items()->firstOrFail()->stockAllocations()->firstOrFail()->batch_id)->toBe($this->batch->id)
         ->and($laterBatch->refresh()->remaining_quantity)->toBe(10);
+});
+
+it('does not generate a handover list for an unpaid walk-in order', function (): void {
+    $order = ($this->createDraft)();
+    $this->service->validate($order, $this->actor);
+
+    expect(fn (): array => $this->service->previewFulfillment($order, $this->actor))
+        ->toThrow(InvalidArgumentException::class, 'Walk-in orders must be paid before handover.');
+});
+
+it('does not fulfill an unpaid walk-in order with a handover list generated before it was made walk-in', function (): void {
+    $order = ($this->createDraft)(Customer::factory()->create());
+    $this->service->validate($order, $this->actor);
+    $preview = $this->service->previewFulfillment($order, $this->actor);
+    $this->service->reopen($order, $this->actor);
+
+    $updatedOrder = $this->service->update($order, [
+        'customer_id' => null,
+        'discount_type' => 'flat',
+        'discount_value' => 0,
+        'notes' => null,
+        'items' => [[
+            'product_variant_id' => $this->variant->id,
+            'sale_unit_id' => null,
+            'quantity' => 2,
+            'unit_price' => 100,
+        ]],
+    ], $this->actor);
+    $this->service->validate($updatedOrder, $this->actor);
+
+    expect(fn (): SalesOrder => $this->service->fulfill($updatedOrder, $preview['token'], $this->actor))
+        ->toThrow(InvalidArgumentException::class, 'Walk-in orders must be paid before handover.');
+
+    expect($this->batch->refresh()->remaining_quantity)->toBe(10)
+        ->and($updatedOrder->refresh()->status)->toBe(SalesOrderStatus::VALIDATED);
 });
 
 it('does not fulfill with a handover list whose stock changed after preview', function (): void {

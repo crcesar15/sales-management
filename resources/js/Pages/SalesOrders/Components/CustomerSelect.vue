@@ -13,7 +13,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: number | null): void;
-  (e: "select", customer: CustomerOption | null): void;
+  (e: "select", customer: CustomerOption): void;
+  (e: "walkIn"): void;
+  (e: "clear"): void;
 }>();
 
 const { t } = useI18n();
@@ -134,7 +136,7 @@ function selectWalkIn() {
   searchError.value = "";
   walkInSelected.value = true;
   emit("update:modelValue", null);
-  emit("select", null);
+  emit("walkIn");
 }
 
 function clearCustomer() {
@@ -144,7 +146,7 @@ function clearCustomer() {
   searchError.value = "";
   walkInSelected.value = false;
   emit("update:modelValue", null);
-  emit("select", null);
+  emit("clear");
 }
 
 function toggleCustomerInfo(event: Event) {

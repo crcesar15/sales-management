@@ -24,6 +24,7 @@ final class UpdateSalesOrderRequest extends FormRequest
     {
         return [
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
+            'is_walk_in' => ['required', 'boolean'],
             'discount_type' => ['required', 'string', 'in:flat,percentage'],
             'discount_value' => ['required', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -46,6 +47,13 @@ final class UpdateSalesOrderRequest extends FormRequest
 
             if ($salesOrder === null) {
                 return;
+            }
+
+            if ($this->input('customer_id') === null && ! $this->boolean('is_walk_in')) {
+                $validator->errors()->add(
+                    'customer_id',
+                    __('Select a customer or mark the sale as walk-in')
+                );
             }
 
             if ($salesOrder->status !== SalesOrderStatus::DRAFT) {
