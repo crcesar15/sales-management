@@ -3,7 +3,6 @@ import {
   DataTable,
   Card,
   Column,
-  Toast,
   Button,
   InputText,
   IconField,
@@ -194,7 +193,6 @@ const restoreBrand = (id: number) => {
       <Button v-can="'brand.create'" :label="t('Add Brand')" icon="fa fa-add" raised class="ml-2 uppercase" @click="addBrand" />
     </div>
     <ConfirmDialog />
-    <Toast />
     <Card>
       <template #content>
         <DataTable

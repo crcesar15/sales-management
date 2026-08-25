@@ -3,7 +3,6 @@ import {
   DataTable,
   Card,
   Column,
-  Toast,
   Button,
   InputText,
   IconField,
@@ -200,7 +199,6 @@ const restoreMeasurementUnit = (id: number) => {
       />
     </div>
     <ConfirmDialog />
-    <Toast />
     <Card>
       <template #content>
         <DataTable

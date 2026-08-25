@@ -3,7 +3,6 @@ import {
   DataTable,
   Card,
   Column,
-  Toast,
   Button,
   InputText,
   IconField,
@@ -194,7 +193,6 @@ const restoreCategory = (id: number) => {
       <Button v-can="'category.create'" :label="t('Add Category')" icon="fa fa-add" raised class="ml-2 uppercase" @click="addCategory" />
     </div>
     <ConfirmDialog />
-    <Toast />
     <Card>
       <template #content>
         <DataTable
