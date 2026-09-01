@@ -51,9 +51,6 @@ const [status, statusAttrs] = defineField("status");
 // Submit
 const submit = handleSubmit((values) => {
   router.post(route("stores.store"), values, {
-    onSuccess: () => {
-      router.visit(route("stores"));
-    },
     onError: (errs) => {
       setErrors(errs);
       toast.add({

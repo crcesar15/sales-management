@@ -139,9 +139,13 @@ it('creates a store with valid data', function () {
         'email' => 'store@acme.com',
     ];
 
-    actingAs($admin)
+    $response = actingAs($admin)
         ->post(route('stores.store'), $storeData)
-        ->assertRedirect(route('stores'));
+        ->assertRedirect();
+
+    $store = Store::query()->where('code', 'ACM01')->firstOrFail();
+
+    $response->assertRedirect(route('stores.edit', $store));
 
     assertDatabaseHas('stores', [
         'name' => 'Acme Store',
@@ -154,13 +158,17 @@ it('uppercases store code on creation', function () {
     $admin = User::factory()->create();
     $admin->assignRole(RolesEnum::ADMIN);
 
-    actingAs($admin)
+    $response = actingAs($admin)
         ->post(route('stores.store'), [
             'name' => 'Lowercase Code',
             'code' => 'low01',
             'status' => 'active',
         ])
-        ->assertRedirect(route('stores'));
+        ->assertRedirect();
+
+    $store = Store::query()->where('code', 'LOW01')->firstOrFail();
+
+    $response->assertRedirect(route('stores.edit', $store));
 
     assertDatabaseHas('stores', ['code' => 'LOW01']);
 });

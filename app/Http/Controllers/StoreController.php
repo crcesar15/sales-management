@@ -59,9 +59,9 @@ final class StoreController extends Controller
 
     public function store(CreateStoreRequest $request): RedirectResponse
     {
-        $this->storeService->create($request->validated());
+        $store = $this->storeService->create($request->validated());
 
-        return redirect()->route('stores');
+        return redirect()->route('stores.edit', $store);
     }
 
     public function edit(Store $store): InertiaResponse
