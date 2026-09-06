@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, onUnmounted } from "vue";
 import { Toast, ConfirmDialog } from "primevue";
 import PosShiftBar from "@layouts/Components/PosShiftBar.vue";
+import PosSidebar from "@layouts/Components/PosSidebar.vue";
 import { useLayout } from "@layouts/Components/Composables/useLayout";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
@@ -34,7 +35,7 @@ const containerClass = computed(() => [
 
 <template>
   <!-- Skip link for keyboard users -->
-  <a href="#pos-main" class="skip-link sr-only focus:not-sr-only">
+  <a v-if="!isViewportUnsupported" href="#pos-main" class="skip-link sr-only focus:not-sr-only">
     {{ t("Skip to main content") }}
   </a>
 
@@ -54,9 +55,12 @@ const containerClass = computed(() => [
     <!-- Main POS interface -->
     <template v-else>
       <PosShiftBar />
-      <main id="pos-main" class="pt-14 h-screen overflow-y-auto" role="main">
-        <slot />
-      </main>
+      <div class="flex h-screen overflow-hidden pt-14">
+        <PosSidebar />
+        <main id="pos-main" class="min-w-0 flex-1 overflow-y-auto" role="main">
+          <slot />
+        </main>
+      </div>
     </template>
 
     <Toast position="top-center" group="pos" :pt="{ root: { class: 'pos-toast-offset' } }" />

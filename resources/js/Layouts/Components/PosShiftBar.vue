@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { router } from "@inertiajs/vue3";
-import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
 import { useConfirm } from "primevue/useconfirm";
 import { Button, Badge } from "primevue";
 import { usePosStore } from "@/Composables/usePosStore";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
+import { usePosLayout } from "@composables/usePosLayout";
 
 const { t } = useI18n();
 const confirm = useConfirm();
 const posStore = usePosStore();
 const { formatCurrency } = useCurrencyFormatter();
+const { isSidebarCollapsed, toggleSidebar } = usePosLayout();
 
 const storeName = computed(() => posStore.store?.name ?? t("Store"));
 const registerName = computed(() => posStore.register?.name ?? t("Cash Register"));
@@ -23,11 +23,6 @@ const formattedOpeningBalance = computed(() => {
   if (!shiftStatus.value) return formatCurrency("0");
   return formatCurrency(shiftStatus.value.opening_balance.toString());
 });
-
-function exitPos(): void {
-  // Cart check will be added in Task 02 (POS Interface)
-  router.visit(route("home"));
-}
 
 function closeShift(): void {
   confirm.require({
@@ -52,15 +47,17 @@ function closeShift(): void {
     <h1 class="sr-only">{{ t("Point of Sale") }}</h1>
 
     <div class="flex items-center gap-4">
-      <!-- Exit button -->
+      <!-- Sidebar toggle -->
       <Button
-        v-tooltip.right="t('Exit POS')"
+        v-tooltip.right="isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
         icon="fa fa-bars"
-        :aria-label="t('Exit POS')"
+        :aria-label="isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
+        :aria-expanded="!isSidebarCollapsed"
+        aria-controls="pos-sidebar"
         severity="secondary"
         text
         size="small"
-        @click="exitPos"
+        @click="toggleSidebar"
       />
 
       <!-- Store name -->
