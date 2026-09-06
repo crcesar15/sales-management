@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
 use App\Http\Controllers\Api\MeasurementUnitController;
 use App\Http\Controllers\Api\PermissionsController;
+use App\Http\Controllers\Api\Pos\PosSessionController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SalesOrderHandoverController;
@@ -23,6 +24,11 @@ Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $reques
 
 // API v1 Routes
 Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.'], function (): void {
+    // POS session routes
+    Route::get('pos/session', [PosSessionController::class, 'session'])->name('pos.session');
+    Route::get('pos/registers', [PosSessionController::class, 'registers'])->name('pos.registers');
+    Route::post('pos/session/shift/open', [PosSessionController::class, 'openShift'])->name('pos.session.shift.open');
+
     // Routes for Batches
     Route::get('batches/available', [BatchesController::class, 'available'])->name('batches.available');
 

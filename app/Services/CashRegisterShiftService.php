@@ -70,17 +70,31 @@ final class CashRegisterShiftService
         float $openingBalance,
         ?string $notes = null,
     ): CashRegisterShift {
-        if ($register->status !== CashRegisterStatus::ACTIVE) {
-            throw new InvalidArgumentException('Cannot open a shift on an inactive register.');
-        }
-
-        if (CashRegisterShift::where('cash_register_id', $register->id)->where('status', CashRegisterShiftStatus::OPEN)->exists()) {
-            throw new InvalidArgumentException('A shift is already open on this register.');
-        }
-
         return DB::transaction(function () use ($register, $cashier, $openingBalance, $notes): CashRegisterShift {
+            $lockedRegister = CashRegister::query()
+                ->lockForUpdate()
+                ->findOrFail($register->id);
+
+            if ($lockedRegister->status !== CashRegisterStatus::ACTIVE) {
+                throw new InvalidArgumentException('Cannot open a shift on an inactive register.');
+            }
+
+            if (CashRegisterShift::query()
+                ->where('cash_register_id', $lockedRegister->id)
+                ->where('status', CashRegisterShiftStatus::OPEN)
+                ->exists()) {
+                throw new InvalidArgumentException('A shift is already open on this register.');
+            }
+
+            if (CashRegisterShift::query()
+                ->where('user_id', $cashier->id)
+                ->where('status', CashRegisterShiftStatus::OPEN)
+                ->exists()) {
+                throw new InvalidArgumentException('This cashier already has an open shift.');
+            }
+
             $shift = CashRegisterShift::create([
-                'cash_register_id' => $register->id,
+                'cash_register_id' => $lockedRegister->id,
                 'user_id' => $cashier->id,
                 'status' => CashRegisterShiftStatus::OPEN,
                 'opening_balance' => $openingBalance,
@@ -91,8 +105,8 @@ final class CashRegisterShiftService
             activity('cash_register_shift')
                 ->performedOn($shift)
                 ->causedBy(auth()->user())
-                ->withProperties(['register' => $register->name])
-                ->log("Shift opened on register {$register->name}");
+                ->withProperties(['register' => $lockedRegister->name])
+                ->log("Shift opened on register {$lockedRegister->name}");
 
             return $shift->load(['register', 'cashier']);
         });
