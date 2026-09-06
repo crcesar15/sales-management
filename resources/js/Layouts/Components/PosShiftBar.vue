@@ -17,7 +17,7 @@ const storeName = computed(() => posStore.store?.name ?? t("Store"));
 const registerName = computed(() => posStore.register?.name ?? t("Cash Register"));
 const shiftStatus = computed(() => posStore.shift);
 const isShiftOpen = computed(() => posStore.shift?.status === "open");
-const isCashier = computed(() => posStore.shift?.cashier_id === posStore.userId);
+const isCashier = computed(() => posStore.shift?.user_id === posStore.userId);
 
 const formattedOpeningBalance = computed(() => {
   if (!shiftStatus.value) return formatCurrency("0");
@@ -83,7 +83,7 @@ function closeShift(): void {
       <div v-if="shiftStatus" class="flex items-center gap-2" aria-live="polite">
         <Badge :value="isShiftOpen ? t('Open') : t('Closed')" :severity="isShiftOpen ? 'success' : 'secondary'" />
         <span class="text-sm text-surface-500 dark:text-surface-400">
-          {{ t("Shift") }} #{{ shiftStatus.shift_number }}
+          {{ t("Shift") }} #{{ shiftStatus.id }}
           <span class="mx-1 text-surface-300 dark:text-surface-600" aria-hidden="true">&bull;</span>
           {{ t("Opened") }}: {{ formattedOpeningBalance }}
         </span>

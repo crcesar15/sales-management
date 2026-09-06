@@ -20,22 +20,10 @@ export function usePosClient() {
 
   async function getRegisters(storeId?: number): Promise<CashRegister[]> {
     try {
-      const { data } = await apiClient.get<CashRegister[]>(route("api.v1.pos.registers"), {
+      const { data } = await apiClient.get<{ data: CashRegister[] }>(route("api.v1.pos.registers"), {
         params: { store_id: storeId },
       });
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  }
-
-  async function selectRegister(registerId: number): Promise<PosSession> {
-    try {
-      const { data } = await apiClient.post<PosSession>(route("api.v1.pos.session.register"), {
-        register_id: registerId,
-      });
-      return data;
+      return data.data;
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -55,26 +43,11 @@ export function usePosClient() {
     }
   }
 
-  async function closeShift(shiftId: number, closingBalance?: number): Promise<PosSession> {
-    try {
-      const { data } = await apiClient.post<PosSession>(route("api.v1.pos.session.shift.close"), {
-        shift_id: shiftId,
-        closing_balance: closingBalance,
-      });
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  }
-
   return {
     loading,
     getSession,
     getRegisters,
-    selectRegister,
     openShift,
-    closeShift,
   };
 }
 

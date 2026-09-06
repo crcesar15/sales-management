@@ -1,27 +1,22 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
-import type { CashRegister, CashRegisterShift } from "@/Types/pos";
-
-interface StoreInfo {
-  id: number;
-  name: string;
-}
+import type { CashRegister, CashRegisterShift, PosStore } from "@/Types/pos";
 
 export const usePosStore = defineStore("pos", () => {
   // ========== State ==========
-  const store = ref<StoreInfo | null>(null);
+  const store = ref<PosStore | null>(null);
   const register = ref<CashRegister | null>(null);
   const shift = ref<CashRegisterShift | null>(null);
   const userId = ref<number | null>(null);
 
   // ========== Getters ==========
   const isShiftOpen = computed(() => shift.value?.status === "open");
-  const isCashier = computed(() => shift.value?.cashier_id === userId.value);
+  const isCashier = computed(() => shift.value?.user_id === userId.value);
   const hasRegister = computed(() => register.value !== null);
   const hasShift = computed(() => shift.value !== null);
 
   // ========== Actions ==========
-  function setStore(data: StoreInfo): void {
+  function setStore(data: PosStore): void {
     store.value = data;
   }
 

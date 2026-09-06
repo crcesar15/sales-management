@@ -32,41 +32,39 @@ export interface CashRegister {
   is_default: boolean;
   status: "active" | "inactive";
   current_shift?: CashRegisterShift | null;
+  store?: PosStore | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface CashRegisterShift {
   id: number;
-  shift_number: string;
-  register_id: number;
-  cashier_id: number;
+  cash_register_id: number;
+  user_id: number | null;
   opening_balance: number;
   closing_balance: number | null;
-  expected_closing_balance: number | null;
-  status: "open" | "closed";
-  opened_at: string;
+  expected_closing: number | null;
+  difference: number | null;
+  status: "open" | "closed" | "forced_close";
+  opened_at: string | null;
   closed_at: string | null;
-  register?: CashRegister;
-  cashier?: {
+  cash_register?: CashRegister;
+  user?: {
     id: number;
-    name: string;
-    email: string;
+    full_name: string;
   };
 }
 
+export interface PosStore {
+  id: number;
+  name: string;
+  code: string;
+}
+
 export interface PosSession {
-  store: {
-    id: number;
-    name: string;
-  };
+  store: PosStore | null;
   register: CashRegister | null;
   shift: CashRegisterShift | null;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-  };
 }
 
 export interface PosFilters {
