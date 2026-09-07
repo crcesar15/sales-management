@@ -21,7 +21,9 @@ return new class extends Migration
             $table->decimal('difference', 12, 2)->nullable();
             $table->timestamp('opened_at')->nullable();
             $table->timestamp('closed_at')->nullable();
-            $table->text('notes')->nullable();
+            $table->text('opening_notes')->nullable();
+            $table->text('closing_notes')->nullable();
+            $table->text('discrepancy_reason')->nullable();
             $table->timestamps();
 
             $table->index(['cash_register_id', 'status']);

@@ -30,7 +30,9 @@ final class CashRegisterShiftFactory extends Factory
             'difference' => null,
             'opened_at' => now(),
             'closed_at' => null,
-            'notes' => null,
+            'opening_notes' => null,
+            'closing_notes' => null,
+            'discrepancy_reason' => null,
         ];
     }
 }

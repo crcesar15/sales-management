@@ -48,11 +48,45 @@ export interface CashRegisterShift {
   status: "open" | "closed" | "forced_close";
   opened_at: string | null;
   closed_at: string | null;
+  opening_notes: string | null;
+  closing_notes: string | null;
+  discrepancy_reason: string | null;
   cash_register?: CashRegister;
   user?: {
     id: number;
     full_name: string;
   };
+}
+
+export interface ShiftReconciliation {
+  opening_balance: number;
+  cash_sales: number;
+  cash_sales_count: number;
+  cash_in: number;
+  cash_out: number;
+  expected_closing: number;
+}
+
+export interface ClosedShiftReconciliation extends ShiftReconciliation {
+  counted_cash: number;
+  difference: number;
+}
+
+export interface PosCloseShiftPayload {
+  closing_balance: number;
+  closing_notes?: string | null;
+  discrepancy_reason?: string | null;
+}
+
+export interface PosMovementPayload {
+  type: "cash_in" | "cash_out";
+  amount: number;
+  reason: string;
+}
+
+export interface PosCloseShiftResponse {
+  shift: CashRegisterShift;
+  summary: ClosedShiftReconciliation;
 }
 
 export interface PosStore {

@@ -23,7 +23,7 @@ final class OpenShiftRequest extends FormRequest
         return [
             'cash_register_id' => ['required', 'exists:cash_registers,id'],
             'opening_balance' => ['required', 'numeric', 'min:0'],
-            'notes' => ['nullable', 'string'],
+            'opening_notes' => ['nullable', 'string'],
         ];
     }
 }

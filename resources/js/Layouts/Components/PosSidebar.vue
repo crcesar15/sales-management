@@ -7,6 +7,8 @@ import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
 import { usePosLayout } from "@composables/usePosLayout";
 import { useLayout } from "@layouts/Components/Composables/useLayout";
+import { usePosStore } from "@/Composables/usePosStore";
+import { useAuth } from "@/Composables/useAuth";
 
 interface PosNavigationItem {
   key: string;
@@ -17,8 +19,10 @@ interface PosNavigationItem {
 
 const { t } = useI18n();
 const page = usePage();
-const { isSidebarCollapsed } = usePosLayout();
+const { isSidebarCollapsed, openCashMovementDialog } = usePosLayout();
 const { isDarkMode, toggleDarkMode } = useLayout();
+const posStore = usePosStore();
+const { can } = useAuth();
 const userMenu = ref();
 
 const itemClass =
@@ -29,7 +33,12 @@ const navigationItems = computed<PosNavigationItem[]>(() => [
   { key: "sales", label: t("Sales"), icon: "fa fa-receipt", enabled: false },
   { key: "customers", label: t("Customers"), icon: "fa fa-users", enabled: false },
   { key: "product-gallery", label: t("Product Gallery"), icon: "fa fa-images", enabled: false },
-  { key: "cash-movements", label: t("Cash movements"), icon: "fa fa-money-bill-transfer", enabled: false },
+  {
+    key: "cash-movements",
+    label: t("Cash movements"),
+    icon: "fa fa-money-bill-transfer",
+    enabled: posStore.isShiftOpen && can("cash_movement.create"),
+  },
 ]);
 
 const userName = computed(() => {
@@ -67,7 +76,7 @@ function toggleUserMenu(event: Event): void {
     <nav class="flex flex-1 flex-col gap-1 p-2" :aria-label="t('POS navigation')">
       <template v-for="item in navigationItems" :key="item.key">
         <Link
-          v-if="item.enabled"
+          v-if="item.key === 'pos'"
           :href="route('pos')"
           :class="[
             itemClass,
@@ -81,6 +90,23 @@ function toggleUserMenu(event: Event): void {
           <i :class="item.icon" class="w-5 shrink-0 text-center" aria-hidden="true" />
           <span v-if="!isSidebarCollapsed" class="truncate">{{ item.label }}</span>
         </Link>
+
+        <button
+          v-else-if="item.enabled"
+          v-ripple
+          type="button"
+          :class="[
+            itemClass,
+            isSidebarCollapsed ? 'justify-center px-2' : '',
+            'text-surface-700 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800',
+          ]"
+          :aria-label="item.label"
+          :title="isSidebarCollapsed ? item.label : undefined"
+          @click="openCashMovementDialog"
+        >
+          <i :class="item.icon" class="w-5 shrink-0 text-center" aria-hidden="true" />
+          <span v-if="!isSidebarCollapsed" class="truncate">{{ item.label }}</span>
+        </button>
 
         <button
           v-else

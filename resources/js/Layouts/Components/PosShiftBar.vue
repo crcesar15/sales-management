@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useConfirm } from "primevue/useconfirm";
 import { Button, Badge } from "primevue";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 import { usePosStore } from "@/Composables/usePosStore";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { usePosLayout } from "@composables/usePosLayout";
+import CloseShiftDialog from "@pages/Pos/Components/CloseShiftDialog.vue";
 
 const { t } = useI18n();
-const confirm = useConfirm();
 const posStore = usePosStore();
 const { formatCurrency } = useCurrencyFormatter();
 const { isSidebarCollapsed, toggleSidebar } = usePosLayout();
@@ -18,6 +19,7 @@ const registerName = computed(() => posStore.register?.name ?? t("Cash Register"
 const shiftStatus = computed(() => posStore.shift);
 const isShiftOpen = computed(() => posStore.shift?.status === "open");
 const isCashier = computed(() => posStore.shift?.user_id === posStore.userId);
+const showCloseDialog = ref(false);
 
 const formattedOpeningBalance = computed(() => {
   if (!shiftStatus.value) return formatCurrency("0");
@@ -25,16 +27,12 @@ const formattedOpeningBalance = computed(() => {
 });
 
 function closeShift(): void {
-  confirm.require({
-    message: t("Are you sure you want to close this shift?"),
-    header: t("Close Shift"),
-    icon: "fa fa-exclamation-triangle",
-    acceptLabel: t("Yes, close shift"),
-    rejectLabel: t("Cancel"),
-    accept: () => {
-      posStore.setShift(null);
-    },
-  });
+  showCloseDialog.value = true;
+}
+
+function completeClose(): void {
+  posStore.clearSession();
+  router.visit(route("home"));
 }
 </script>
 
@@ -104,6 +102,7 @@ function closeShift(): void {
       />
     </div>
   </header>
+  <CloseShiftDialog v-model:visible="showCloseDialog" @completed="completeClose" />
 </template>
 
 <style scoped>

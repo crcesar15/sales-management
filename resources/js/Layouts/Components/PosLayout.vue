@@ -3,12 +3,15 @@ import { computed, ref, onMounted, onUnmounted } from "vue";
 import { Toast, ConfirmDialog } from "primevue";
 import PosShiftBar from "@layouts/Components/PosShiftBar.vue";
 import PosSidebar from "@layouts/Components/PosSidebar.vue";
+import CashMovementDialog from "@pages/Pos/Components/CashMovementDialog.vue";
 import { useLayout } from "@layouts/Components/Composables/useLayout";
+import { usePosLayout } from "@composables/usePosLayout";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
 
 const { isDarkMode } = useLayout();
 const { t } = useI18n();
+const { isCashMovementDialogVisible } = usePosLayout();
 
 // Reactive viewport check (updates on resize)
 const windowWidth = ref(window.innerWidth);
@@ -65,6 +68,7 @@ const containerClass = computed(() => [
 
     <Toast position="top-center" group="pos" :pt="{ root: { class: 'pos-toast-offset' } }" />
     <ConfirmDialog />
+    <CashMovementDialog v-model:visible="isCashMovementDialogVisible" />
   </div>
 </template>
 

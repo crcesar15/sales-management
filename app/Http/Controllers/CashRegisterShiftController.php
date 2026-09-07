@@ -66,7 +66,7 @@ final class CashRegisterShiftController extends Controller
                 register: $register,
                 cashier: $request->user() ?? abort(401),
                 openingBalance: (float) $validated['opening_balance'],
-                notes: $validated['notes'] ?? null,
+                openingNotes: $validated['opening_notes'] ?? null,
             );
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['shift' => $e->getMessage()]);
@@ -90,7 +90,8 @@ final class CashRegisterShiftController extends Controller
             $this->shiftService->closeShift(
                 shift: $shift,
                 closingBalance: (float) $validated['closing_balance'],
-                notes: $validated['notes'] ?? null,
+                closingNotes: $validated['closing_notes'] ?? null,
+                discrepancyReason: $validated['discrepancy_reason'] ?? null,
             );
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['shift' => $e->getMessage()]);
@@ -108,7 +109,8 @@ final class CashRegisterShiftController extends Controller
                 shift: $shift,
                 manager: $request->user() ?? abort(401),
                 closingBalance: (float) $validated['closing_balance'],
-                notes: $validated['notes'] ?? null,
+                closingNotes: $validated['closing_notes'] ?? null,
+                discrepancyReason: $validated['discrepancy_reason'] ?? null,
             );
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['shift' => $e->getMessage()]);
@@ -125,6 +127,7 @@ final class CashRegisterShiftController extends Controller
 
         return Inertia::render('CashRegisterShifts/Show/Index', [
             'shift' => (new CashRegisterShiftResource($shift))->resolve(),
+            'reconciliation' => $this->shiftService->reconciliation($shift),
         ]);
     }
 

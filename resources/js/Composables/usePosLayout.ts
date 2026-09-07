@@ -4,6 +4,7 @@ import { readonly, shallowRef, watch } from "vue";
 const POS_SIDEBAR_KEY = "pos-sidebar-collapsed";
 const isShiftBarVisible = shallowRef(true);
 const isSidebarCollapsed = shallowRef(localStorage.getItem(POS_SIDEBAR_KEY) === "true");
+const isCashMovementDialogVisible = shallowRef(false);
 
 watch(isSidebarCollapsed, (collapsed) => {
   localStorage.setItem(POS_SIDEBAR_KEY, String(collapsed));
@@ -24,12 +25,23 @@ export function usePosLayout() {
     isSidebarCollapsed.value = !isSidebarCollapsed.value;
   }
 
+  function openCashMovementDialog(): void {
+    isCashMovementDialogVisible.value = true;
+  }
+
+  function closeCashMovementDialog(): void {
+    isCashMovementDialogVisible.value = false;
+  }
+
   return {
     isShiftBarVisible: readonly(isShiftBarVisible),
     isSidebarCollapsed: readonly(isSidebarCollapsed),
+    isCashMovementDialogVisible,
     shiftBarHeight,
     hideShiftBar,
     showShiftBar,
     toggleSidebar,
+    openCashMovementDialog,
+    closeCashMovementDialog,
   };
 }

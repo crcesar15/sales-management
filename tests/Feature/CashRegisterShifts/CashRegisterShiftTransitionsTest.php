@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Enums\CashRegisterStatus;
 use App\Enums\CashRegisterShiftStatus;
+use App\Enums\CashRegisterStatus;
 use App\Models\CashRegister;
 use App\Models\CashRegisterShift;
 use App\Models\Store;
@@ -99,7 +99,20 @@ it('rejects adding a movement to a closed shift (closed -> open)', function () {
     ]);
 
     $this->service->addMovement($shift, 'cash_in', 50, 'should fail', $this->cashier);
-})->throws(InvalidArgumentException::class, 'Cannot transition shift from closed to open');
+})->throws(InvalidArgumentException::class, 'Cannot add a movement to a closed shift.');
+
+it('allows adding a movement to an open shift', function () {
+    $shift = CashRegisterShift::factory()->create([
+        'cash_register_id' => $this->register->id,
+        'user_id' => $this->cashier->id,
+        'status' => CashRegisterShiftStatus::OPEN->value,
+    ]);
+
+    $movement = $this->service->addMovement($shift, 'cash_in', 50, 'Change float top-up.', $this->cashier);
+
+    expect($movement->cash_register_shift_id)->toBe($shift->id)
+        ->and($movement->amount)->toBe('50.00');
+});
 
 it('rejects any transition from a forced-closed shift', function () {
     $shift = CashRegisterShift::factory()->create([

@@ -1,129 +1,112 @@
 <script setup lang="ts">
-import { Dialog, InputNumber, InputText, Button, Tag, useConfirm, ConfirmDialog, useToast } from "primevue";
+import { Button, ConfirmDialog, Dialog, InputNumber, Tag, Textarea, useConfirm, useToast } from "primevue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
-import { object, number, string } from "yup";
+import { number, object, string } from "yup";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { watch, nextTick, computed } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
-import type { CashRegisterShiftResponse } from "@/Types/cash-register-types";
+import type { CashRegisterShiftResponse, ShiftReconciliation } from "@/Types/cash-register-types";
 
 const props = defineProps<{
   visible: boolean;
   shift: CashRegisterShiftResponse;
+  reconciliation: ShiftReconciliation;
   forceClose?: boolean;
 }>();
-
-const emit = defineEmits<{
-  (e: "update:visible", value: boolean): void;
-  (e: "shift-closed"): void;
-}>();
-
+const emit = defineEmits<{ (e: "update:visible", value: boolean): void; (e: "shift-closed"): void }>();
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
-const { formatCurrencySymbol, currencyCode } = useCurrencyFormatter();
-
+const { currencyCode, formatCurrencySymbol } = useCurrencyFormatter();
+const step = ref<"count" | "review">("count");
 const schema = toTypedSchema(
   object({
     closing_balance: number().required(t("Closing balance is required")).min(0, t("Closing balance must be at least 0")),
-    notes: string().nullable().optional(),
+    closing_notes: string().nullable().optional(),
+    discrepancy_reason: string().nullable().optional(),
   }),
 );
-
-const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm, submitCount, values } = useForm({
+const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm, values } = useForm({
   validationSchema: schema,
-  validateOnMount: false,
-  initialValues: {
-    closing_balance: 0,
-    notes: null as string | null,
-  },
+  initialValues: { closing_balance: undefined as number | undefined, closing_notes: null, discrepancy_reason: null },
 });
-
 const [closingBalance, closingBalanceAttrs] = defineField("closing_balance");
-const [notes, notesAttrs] = defineField("notes");
-
-const expectedClosing = computed(() => {
-  if (props.shift.expected_closing !== null) {
-    return Number(props.shift.expected_closing);
-  }
-  // Mirror backend: opening_balance + cash_in - cash_out
-  // Use Number() because Laravel decimal:2 cast serializes values as strings
-  const movements = props.shift.movements ?? [];
-  const cashIn = movements.filter((m) => m.type === "cash_in").reduce((sum, m) => sum + Number(m.amount), 0);
-  const cashOut = movements.filter((m) => m.type === "cash_out").reduce((sum, m) => sum + Number(m.amount), 0);
-  return Math.round((Number(props.shift.opening_balance) + cashIn - cashOut) * 100) / 100;
-});
-
-const difference = computed(() => {
-  const actual = Number(values.closing_balance) || 0;
-  return Math.round((actual - expectedClosing.value) * 100) / 100;
-});
-
-const differenceSeverity = computed(() => {
-  const diff = difference.value;
-  if (diff === 0) return "success";
-  return diff > 0 ? "warn" : "danger";
-});
-
-const differenceLabel = computed(() => {
-  const diff = difference.value;
-  return (diff >= 0 ? "+" : "") + formatCurrencySymbol(String(diff));
-});
+const [closingNotes, closingNotesAttrs] = defineField("closing_notes");
+const [discrepancyReason, discrepancyReasonAttrs] = defineField("discrepancy_reason");
+const difference = computed(() =>
+  values.closing_balance === undefined
+    ? null
+    : Math.round((Number(values.closing_balance) - Number(props.reconciliation.expected_closing)) * 100) / 100,
+);
+const hasDiscrepancy = computed(() => difference.value !== null && difference.value !== 0);
+const discrepancyLabel = computed(() => (difference.value !== null && difference.value > 0 ? t("Overage") : t("Shortage")));
+const differenceSeverity = computed(() =>
+  difference.value === 0 ? "success" : difference.value && difference.value > 0 ? "warn" : "danger",
+);
 
 watch(
   () => props.visible,
-  async (val) => {
-    if (val) {
-      resetForm({ values: { closing_balance: 0, notes: null } });
-    }
+  (visible) => {
+    if (!visible) return;
+    step.value = "count";
+    resetForm({ values: { closing_balance: undefined, closing_notes: null, discrepancy_reason: null } });
   },
 );
 
-const submit = handleSubmit((formValues) => {
+const review = handleSubmit(() => {
+  step.value = "review";
+});
+
+function submit(): void {
+  if (hasDiscrepancy.value && !values.discrepancy_reason?.trim()) {
+    setErrors({ discrepancy_reason: t("A discrepancy reason is required") });
+    return;
+  }
+
   if (props.forceClose) {
     confirm.require({
       message: t("Are you sure you want to force close this shift?"),
       header: t("Confirm"),
-      icon: "fas fa-exclamation-triangle",
+      icon: "fa fa-exclamation-triangle",
       rejectLabel: t("Cancel"),
-      acceptLabel: t("Yes, close shift"),
-      rejectClass: "p-button-secondary",
-      accept: () => {
-        doClose(formValues);
-      },
+      rejectClass: "p-button-text",
+      acceptLabel: t("Confirm Close"),
+      acceptClass: "p-button-danger",
+      accept: doClose,
     });
-  } else {
-    doClose(formValues);
+    return;
   }
-});
 
-function doClose(formValues: Record<string, unknown>) {
+  doClose();
+}
+
+function doClose(): void {
   const routeName = props.forceClose ? "shifts.force-close" : "shifts.close";
-
-  const onSuccess = () => {
-    emit("update:visible", false);
-    toast.add({
-      severity: "success",
-      summary: t("Success"),
-      detail: props.forceClose ? t("Shift force closed successfully") : t("Shift closed successfully"),
-      life: 3000,
-    });
-    emit("shift-closed");
-  };
-
-  const onError = (errs: Record<string, string>) => {
-    setErrors(errs);
-    nextTick(() => {
-      const el = document.querySelector<HTMLInputElement>(".p-invalid");
-      el?.focus();
-    });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  router.patch(route(routeName, props.shift.id), formValues as any, { onSuccess, onError });
+  router.patch(route(routeName, props.shift.id), values, {
+    onSuccess: () => {
+      emit("update:visible", false);
+      toast.add({
+        severity: "success",
+        summary: t("Success"),
+        detail: props.forceClose ? t("Shift force closed successfully") : t("Shift closed successfully"),
+        life: 3000,
+      });
+      emit("shift-closed");
+    },
+    onError: (serverErrors) => {
+      setErrors(serverErrors);
+      toast.add({
+        severity: "error",
+        summary: t("Error"),
+        detail: serverErrors.shift ?? t("Unable to close shift"),
+        life: 3000,
+      });
+      nextTick(() => document.querySelector<HTMLInputElement>(".p-invalid")?.focus());
+    },
+  });
 }
 </script>
 
@@ -134,52 +117,79 @@ function doClose(formValues: Record<string, unknown>) {
       :visible="visible"
       :header="forceClose ? t('Force Close Shift') : t('Close Shift')"
       modal
-      :closable="true"
-      :breakpoints="{ '1100px': '50vw', '750px': '75vw', '500px': '90vw' }"
-      :style="{ width: '40vw' }"
+      :style="{ width: '560px' }"
+      :breakpoints="{ '768px': '95vw' }"
       @update:visible="emit('update:visible', $event)"
-      @keydown.ctrl.enter="submit"
     >
-      <div class="flex flex-col gap-4">
-        <!-- Expected vs Actual display -->
-        <div class="grid grid-cols-2 gap-4 p-4 bg-surface-50 dark:bg-surface-800 rounded-lg">
-          <div>
-            <span class="text-sm text-surface-500 block">{{ t("Expected Closing") }}</span>
-            <span class="text-lg font-bold">{{ formatCurrencySymbol(String(expectedClosing)) }}</span>
-          </div>
-          <div>
-            <span class="text-sm text-surface-500 block">{{ t("Actual") }}</span>
-            <InputNumber
-              v-model="closingBalance"
-              v-bind="closingBalanceAttrs"
-              mode="currency"
-              :currency="currencyCode"
-              :min-fraction-digits="2"
-              :max-fraction-digits="2"
-              :class="{ 'p-invalid': submitCount > 0 && !!errors.closing_balance }"
-            />
-            <small v-if="submitCount > 0 && errors.closing_balance" class="text-red-400 dark:text-red-300 block">
-              {{ errors.closing_balance }}
-            </small>
-          </div>
-          <div v-if="closingBalance !== null && closingBalance !== undefined" class="col-span-2 flex items-center gap-2">
-            <span class="text-sm text-surface-500">{{ t("Difference") }}:</span>
-            <Tag :severity="differenceSeverity" :value="differenceLabel" />
-          </div>
-        </div>
-
+      <div v-if="step === 'count'" class="flex flex-col gap-4">
+        <p class="m-0 text-surface-600 dark:text-surface-300">
+          {{ t("Count the cash in the register before reviewing the expected total.") }}
+        </p>
         <div class="flex flex-col gap-2">
-          <label for="close_notes">{{ t("Notes") }} ({{ t("Optional") }})</label>
-          <InputText id="close_notes" v-model="notes" v-bind="notesAttrs" autocomplete="off" />
+          <label for="closing_balance">{{ t("Counted Cash") }}</label>
+          <InputNumber
+            id="closing_balance"
+            v-model="closingBalance"
+            v-bind="closingBalanceAttrs"
+            mode="currency"
+            :currency="currencyCode"
+            :min="0"
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
+            :class="{ 'p-invalid': !!errors.closing_balance }"
+          />
+          <small v-if="errors.closing_balance" class="text-red-400 dark:text-red-300">{{ errors.closing_balance }}</small>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="closing_notes">{{ t("Closing Notes") }} ({{ t("Optional") }})</label>
+          <Textarea id="closing_notes" v-model="closingNotes" v-bind="closingNotesAttrs" rows="3" />
+        </div>
+      </div>
+      <div v-else class="flex flex-col gap-4">
+        <div class="grid grid-cols-2 gap-x-6 gap-y-3 border-y border-surface-200 py-4 dark:border-surface-700">
+          <span class="text-surface-500">{{ t("Opening Balance") }}</span>
+          <strong>{{ formatCurrencySymbol(String(reconciliation.opening_balance)) }}</strong>
+          <span class="text-surface-500">{{ t("Cash Sales") }} ({{ reconciliation.cash_sales_count }})</span>
+          <strong>{{ formatCurrencySymbol(String(reconciliation.cash_sales)) }}</strong>
+          <span class="text-surface-500">{{ t("Cash In") }}</span>
+          <strong>{{ formatCurrencySymbol(String(reconciliation.cash_in)) }}</strong>
+          <span class="text-surface-500">{{ t("Cash Out") }}</span>
+          <strong>-{{ formatCurrencySymbol(String(reconciliation.cash_out)) }}</strong>
+          <span class="border-t border-surface-200 pt-3 font-medium dark:border-surface-700">{{ t("Expected Closing") }}</span>
+          <strong class="border-t border-surface-200 pt-3 dark:border-surface-700">
+            {{ formatCurrencySymbol(String(reconciliation.expected_closing)) }}
+          </strong>
+          <span class="font-medium">{{ t("Counted Cash") }}</span>
+          <strong>{{ formatCurrencySymbol(String(closingBalance)) }}</strong>
+        </div>
+        <div class="flex items-center justify-between rounded-md bg-surface-100 p-4 dark:bg-surface-800">
+          <span class="font-medium">{{ t("Difference") }}</span>
+          <Tag :severity="differenceSeverity" :value="`${discrepancyLabel}: ${formatCurrencySymbol(String(Math.abs(difference ?? 0)))}`" />
+        </div>
+        <div v-if="hasDiscrepancy" class="flex flex-col gap-2">
+          <label for="discrepancy_reason">
+            {{ t("Discrepancy Reason") }}
+            <span class="text-red-500">*</span>
+          </label>
+          <Textarea
+            id="discrepancy_reason"
+            v-model="discrepancyReason"
+            v-bind="discrepancyReasonAttrs"
+            rows="3"
+            :class="{ 'p-invalid': !!errors.discrepancy_reason }"
+          />
+          <small v-if="errors.discrepancy_reason" class="text-red-400 dark:text-red-300">{{ errors.discrepancy_reason }}</small>
         </div>
       </div>
       <template #footer>
-        <Button severity="secondary" :label="t('Cancel')" :disabled="isSubmitting" @click="emit('update:visible', false)" />
+        <Button v-if="step === 'count'" severity="secondary" :label="t('Cancel')" @click="emit('update:visible', false)" />
+        <Button v-if="step === 'count'" :label="t('Review Closing')" :loading="isSubmitting" @click="review" />
+        <Button v-if="step === 'review'" severity="secondary" :label="t('Back')" @click="step = 'count'" />
         <Button
+          v-if="step === 'review'"
           :severity="forceClose ? 'danger' : 'primary'"
-          :label="forceClose ? t('Force Close Shift') : t('Close Shift')"
+          :label="t('Confirm Close')"
           :loading="isSubmitting"
-          :icon="forceClose ? 'fa fa-exclamation-triangle' : 'fa fa-lock'"
           @click="submit"
         />
       </template>

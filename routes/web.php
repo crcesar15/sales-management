@@ -17,7 +17,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\OptionValueController;
-use App\Http\Controllers\Pos\PosController;
+use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductMediaController;
 use App\Http\Controllers\ProductOptionController;

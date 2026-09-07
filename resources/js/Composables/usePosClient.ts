@@ -1,6 +1,13 @@
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
-import type { PosSession, CashRegister } from "@/Types/pos";
+import type {
+  CashRegister,
+  PosCloseShiftPayload,
+  PosCloseShiftResponse,
+  PosMovementPayload,
+  PosSession,
+  ShiftReconciliation,
+} from "@/Types/pos";
 import { PosError, PosPermissionError, PosNetworkError } from "@/Types/pos";
 import { router } from "@inertiajs/vue3";
 import axios from "axios";
@@ -30,12 +37,43 @@ export function usePosClient() {
     }
   }
 
-  async function openShift(registerId: number, openingBalance: number): Promise<PosSession> {
+  async function openShift(registerId: number, openingBalance: number, openingNotes?: string | null): Promise<PosSession> {
     try {
       const { data } = await apiClient.post<PosSession>(route("api.v1.pos.session.shift.open"), {
         register_id: registerId,
         opening_balance: openingBalance,
+        opening_notes: openingNotes,
       });
+      return data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  }
+
+  async function getClosingSummary(): Promise<ShiftReconciliation> {
+    try {
+      const { data } = await apiClient.get<{ data: ShiftReconciliation }>(route("api.v1.pos.session.shift.closing-summary"));
+      return data.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  }
+
+  async function closeShift(payload: PosCloseShiftPayload): Promise<PosCloseShiftResponse> {
+    try {
+      const { data } = await apiClient.patch<PosCloseShiftResponse>(route("api.v1.pos.session.shift.close"), payload);
+      return data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  }
+
+  async function addMovement(payload: PosMovementPayload): Promise<PosSession> {
+    try {
+      const { data } = await apiClient.post<PosSession>(route("api.v1.pos.session.shift.movements.store"), payload);
       return data;
     } catch (error) {
       handleApiError(error);
@@ -48,6 +86,9 @@ export function usePosClient() {
     getSession,
     getRegisters,
     openShift,
+    getClosingSummary,
+    closeShift,
+    addMovement,
   };
 }
 

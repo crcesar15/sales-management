@@ -68,9 +68,9 @@ final class CashRegisterShiftService
         CashRegister $register,
         User $cashier,
         float $openingBalance,
-        ?string $notes = null,
+        ?string $openingNotes = null,
     ): CashRegisterShift {
-        return DB::transaction(function () use ($register, $cashier, $openingBalance, $notes): CashRegisterShift {
+        return DB::transaction(function () use ($register, $cashier, $openingBalance, $openingNotes): CashRegisterShift {
             $lockedRegister = CashRegister::query()
                 ->lockForUpdate()
                 ->findOrFail($register->id);
@@ -99,7 +99,7 @@ final class CashRegisterShiftService
                 'status' => CashRegisterShiftStatus::OPEN,
                 'opening_balance' => $openingBalance,
                 'opened_at' => now(),
-                'notes' => $notes,
+                'opening_notes' => $openingNotes,
             ]);
 
             activity('cash_register_shift')
@@ -117,30 +117,36 @@ final class CashRegisterShiftService
      *
      * @throws InvalidArgumentException if shift is not open
      */
-    public function closeShift(CashRegisterShift $shift, float $closingBalance, ?string $notes = null): CashRegisterShift
-    {
-        $this->validateTransition($shift->status->value, CashRegisterShiftStatus::CLOSED->value);
+    public function closeShift(
+        CashRegisterShift $shift,
+        float $closingBalance,
+        ?string $closingNotes = null,
+        ?string $discrepancyReason = null,
+    ): CashRegisterShift {
+        return DB::transaction(function () use ($shift, $closingBalance, $closingNotes, $discrepancyReason): CashRegisterShift {
+            $lockedShift = CashRegisterShift::query()->lockForUpdate()->findOrFail($shift->id);
+            $this->validateTransition($lockedShift->status->value, CashRegisterShiftStatus::CLOSED->value);
+            $reconciliation = $this->reconciliation($lockedShift);
+            $difference = round($closingBalance - $reconciliation['expected_closing'], 2);
+            $this->validateDiscrepancyReason($difference, $discrepancyReason);
 
-        return DB::transaction(function () use ($shift, $closingBalance, $notes): CashRegisterShift {
-            $expectedClosing = $this->calculateExpectedClosing($shift);
-            $difference = round($closingBalance - $expectedClosing, 2);
-
-            $shift->update([
+            $lockedShift->update([
                 'status' => CashRegisterShiftStatus::CLOSED,
                 'closing_balance' => $closingBalance,
-                'expected_closing' => $expectedClosing,
+                'expected_closing' => $reconciliation['expected_closing'],
                 'difference' => $difference,
                 'closed_at' => now(),
-                'notes' => $notes ?? $shift->notes,
+                'closing_notes' => $closingNotes,
+                'discrepancy_reason' => $discrepancyReason,
             ]);
 
             activity('cash_register_shift')
-                ->performedOn($shift)
+                ->performedOn($lockedShift)
                 ->causedBy(auth()->user())
                 ->withProperties(['difference' => $difference])
                 ->log("Shift closed. Difference: {$difference}");
 
-            return $shift->load(['register', 'cashier', 'movements']);
+            return $lockedShift->load(['register', 'cashier', 'movements']);
         });
     }
 
@@ -149,30 +155,37 @@ final class CashRegisterShiftService
      *
      * @throws InvalidArgumentException if shift is not open
      */
-    public function forceCloseShift(CashRegisterShift $shift, User $manager, float $closingBalance, ?string $notes = null): CashRegisterShift
-    {
-        $this->validateTransition($shift->status->value, CashRegisterShiftStatus::FORCED_CLOSE->value);
+    public function forceCloseShift(
+        CashRegisterShift $shift,
+        User $manager,
+        float $closingBalance,
+        ?string $closingNotes = null,
+        ?string $discrepancyReason = null,
+    ): CashRegisterShift {
+        return DB::transaction(function () use ($shift, $manager, $closingBalance, $closingNotes, $discrepancyReason): CashRegisterShift {
+            $lockedShift = CashRegisterShift::query()->lockForUpdate()->findOrFail($shift->id);
+            $this->validateTransition($lockedShift->status->value, CashRegisterShiftStatus::FORCED_CLOSE->value);
+            $reconciliation = $this->reconciliation($lockedShift);
+            $difference = round($closingBalance - $reconciliation['expected_closing'], 2);
+            $this->validateDiscrepancyReason($difference, $discrepancyReason);
 
-        return DB::transaction(function () use ($shift, $manager, $closingBalance, $notes): CashRegisterShift {
-            $expectedClosing = $this->calculateExpectedClosing($shift);
-            $difference = round($closingBalance - $expectedClosing, 2);
-
-            $shift->update([
+            $lockedShift->update([
                 'status' => CashRegisterShiftStatus::FORCED_CLOSE,
                 'closing_balance' => $closingBalance,
-                'expected_closing' => $expectedClosing,
+                'expected_closing' => $reconciliation['expected_closing'],
                 'difference' => $difference,
                 'closed_at' => now(),
-                'notes' => $notes ?? $shift->notes,
+                'closing_notes' => $closingNotes,
+                'discrepancy_reason' => $discrepancyReason,
             ]);
 
             activity('cash_register_shift')
-                ->performedOn($shift)
+                ->performedOn($lockedShift)
                 ->causedBy(auth()->user())
                 ->withProperties(['manager' => $manager->full_name, 'difference' => $difference])
                 ->log("Shift force-closed by {$manager->full_name}");
 
-            return $shift->load(['register', 'cashier', 'movements']);
+            return $lockedShift->load(['register', 'cashier', 'movements']);
         });
     }
 
@@ -183,11 +196,15 @@ final class CashRegisterShiftService
      */
     public function addMovement(CashRegisterShift $shift, string $type, float $amount, string $reason, User $user): CashRegisterMovement
     {
-        $this->validateTransition($shift->status->value, CashRegisterShiftStatus::OPEN->value);
-
         return DB::transaction(function () use ($shift, $type, $amount, $reason, $user): CashRegisterMovement {
+            $lockedShift = CashRegisterShift::query()->lockForUpdate()->findOrFail($shift->id);
+
+            if ($lockedShift->status !== CashRegisterShiftStatus::OPEN) {
+                throw new InvalidArgumentException("Cannot add a movement to a {$lockedShift->status->value} shift.");
+            }
+
             $movement = CashRegisterMovement::create([
-                'cash_register_shift_id' => $shift->id,
+                'cash_register_shift_id' => $lockedShift->id,
                 'user_id' => $user->id,
                 'type' => $type,
                 'amount' => $amount,
@@ -197,11 +214,39 @@ final class CashRegisterShiftService
             activity('cash_register_movement')
                 ->performedOn($movement)
                 ->causedBy(auth()->user())
-                ->withProperties(['type' => $type, 'amount' => $amount, 'shift_id' => $shift->id])
-                ->log("Movement ({$type}) of {$amount} added to shift {$shift->id}");
+                ->withProperties(['type' => $type, 'amount' => $amount, 'shift_id' => $lockedShift->id])
+                ->log("Movement ({$type}) of {$amount} added to shift {$lockedShift->id}");
 
             return $movement->load('user');
         });
+    }
+
+    /**
+     * @return array{opening_balance: float, cash_sales: float, cash_sales_count: int, cash_in: float, cash_out: float, expected_closing: float}
+     */
+    public function reconciliation(CashRegisterShift $shift): array
+    {
+        $cashIn = (float) $shift->movements()
+            ->where('type', CashMovementType::CASH_IN->value)
+            ->sum('amount');
+
+        $cashOut = (float) $shift->movements()
+            ->where('type', CashMovementType::CASH_OUT->value)
+            ->sum('amount');
+
+        $cashSalesQuery = $shift->salesOrderPayments()
+            ->where('payment_method', PaymentMethod::CASH->value);
+        $cashSales = (float) $cashSalesQuery->sum('amount');
+        $openingBalance = (float) $shift->opening_balance;
+
+        return [
+            'opening_balance' => $openingBalance,
+            'cash_sales' => $cashSales,
+            'cash_sales_count' => $cashSalesQuery->count(),
+            'cash_in' => $cashIn,
+            'cash_out' => $cashOut,
+            'expected_closing' => round($openingBalance + $cashIn - $cashOut + $cashSales, 2),
+        ];
     }
 
     private function validateTransition(string $from, string $to): void
@@ -213,24 +258,10 @@ final class CashRegisterShiftService
         }
     }
 
-    /**
-     * Calculate the expected closing balance for a shift.
-     * opening_balance + cash_in movements - cash_out movements + cash sales.
-     */
-    private function calculateExpectedClosing(CashRegisterShift $shift): float
+    private function validateDiscrepancyReason(float $difference, ?string $discrepancyReason): void
     {
-        $cashIn = (float) $shift->movements()
-            ->where('type', CashMovementType::CASH_IN->value)
-            ->sum('amount');
-
-        $cashOut = (float) $shift->movements()
-            ->where('type', CashMovementType::CASH_OUT->value)
-            ->sum('amount');
-
-        $cashSales = (float) $shift->salesOrderPayments()
-            ->where('payment_method', PaymentMethod::CASH->value)
-            ->sum('amount');
-
-        return round((float) $shift->opening_balance + $cashIn - $cashOut + $cashSales, 2);
+        if ($difference !== 0.0 && blank($discrepancyReason)) {
+            throw new InvalidArgumentException('A discrepancy reason is required when the counted cash does not match the expected closing.');
+        }
     }
 }

@@ -22,7 +22,8 @@ final class ForceCloseShiftRequest extends FormRequest
     {
         return [
             'closing_balance' => ['required', 'numeric', 'min:0'],
-            'notes' => ['nullable', 'string'],
+            'closing_notes' => ['nullable', 'string'],
+            'discrepancy_reason' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

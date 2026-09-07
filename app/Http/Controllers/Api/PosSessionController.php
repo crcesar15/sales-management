@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Api\Pos;
+namespace App\Http\Controllers\Api;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Pos\ClosePosShiftRequest;
 use App\Http\Requests\Api\Pos\ListPosRegistersRequest;
 use App\Http\Requests\Api\Pos\OpenPosShiftRequest;
+use App\Http\Requests\Api\Pos\StorePosMovementRequest;
 use App\Http\Resources\CashRegister\CashRegisterResource;
 use App\Http\Resources\CashRegisterShift\CashRegisterShiftResource;
 use App\Http\Resources\Store\StoreResource;
@@ -53,6 +55,70 @@ final class PosSessionController extends Controller
                 $user,
                 $validated['register_id'],
                 (float) $validated['opening_balance'],
+                $validated['opening_notes'] ?? null,
+            );
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json($this->sessionPayload($shift), 201);
+    }
+
+    public function closingSummary(Request $request): JsonResponse
+    {
+        $this->authorize(PermissionsEnum::POS_ACCESS->value, $request->user());
+
+        /** @var User $user */
+        $user = $request->user();
+
+        try {
+            return response()->json(['data' => $this->posSessionService->closingSummary($user)]);
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function closeShift(ClosePosShiftRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $validated = $request->validated();
+
+        try {
+            $shift = $this->posSessionService->closeShift(
+                $user,
+                (float) $validated['closing_balance'],
+                $validated['closing_notes'] ?? null,
+                $validated['discrepancy_reason'] ?? null,
+            );
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        $summary = $this->posSessionService->reconciliation($shift);
+
+        return response()->json([
+            'shift' => (new CashRegisterShiftResource($shift))->resolve(),
+            'summary' => [
+                ...$summary,
+                'counted_cash' => (float) $shift->closing_balance,
+                'difference' => (float) $shift->difference,
+            ],
+        ]);
+    }
+
+    public function addMovement(StorePosMovementRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $validated = $request->validated();
+
+        try {
+            $shift = $this->posSessionService->addMovement(
+                $user,
+                $validated['type'],
+                (float) $validated['amount'],
+                $validated['reason'],
             );
         } catch (InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 422);

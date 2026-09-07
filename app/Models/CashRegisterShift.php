@@ -29,7 +29,9 @@ final class CashRegisterShift extends Model
         'difference',
         'opened_at',
         'closed_at',
-        'notes',
+        'opening_notes',
+        'closing_notes',
+        'discrepancy_reason',
     ];
 
     /** @return BelongsTo<CashRegister, $this> */

@@ -5,10 +5,11 @@ import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
-import { object, number } from "yup";
-import { Dialog, Button, RadioButton, InputNumber, ProgressSpinner } from "primevue";
+import { object, number, string } from "yup";
+import { Dialog, Button, RadioButton, InputNumber, ProgressSpinner, Textarea } from "primevue";
 import { usePosStore } from "@/Composables/usePosStore";
 import { usePosClient } from "@/Composables/usePosClient";
+import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import type { CashRegister } from "@/Types/pos";
 
 defineEmits<{
@@ -20,6 +21,7 @@ const visible = defineModel<boolean>("visible", { default: false });
 const { t } = useI18n();
 const posStore = usePosStore();
 const posClient = usePosClient();
+const { currencyCode } = useCurrencyFormatter();
 
 const registers = ref<CashRegister[]>([]);
 const loading = ref(false);
@@ -32,15 +34,17 @@ const selectedRegister = computed(() => registers.value.find((register) => regis
 const schema = toTypedSchema(
   object({
     opening_balance: number().required().min(0).default(0),
+    opening_notes: string().nullable().optional(),
   }),
 );
 
 const { handleSubmit, errors, defineField } = useForm({
   validationSchema: schema,
-  initialValues: { opening_balance: 0 },
+  initialValues: { opening_balance: 0, opening_notes: null },
 });
 
 const [openingBalance, openingBalanceAttrs] = defineField("opening_balance");
+const [openingNotes, openingNotesAttrs] = defineField("opening_notes");
 
 async function loadRegisters(): Promise<void> {
   loading.value = true;
@@ -48,6 +52,7 @@ async function loadRegisters(): Promise<void> {
   try {
     const storeId = posStore.store?.id;
     registers.value = await posClient.getRegisters(storeId);
+    selectedRegisterId.value = registers.value.find((register) => register.is_default)?.id ?? null;
   } catch (err) {
     error.value = err instanceof Error ? t(err.message) : t("Failed to load registers");
   } finally {
@@ -66,7 +71,7 @@ const onSelectAndContinue = handleSubmit(async (values) => {
   if (!selectedRegisterId.value) return;
 
   try {
-    const session = await posClient.openShift(selectedRegisterId.value, values.opening_balance);
+    const session = await posClient.openShift(selectedRegisterId.value, values.opening_balance, values.opening_notes);
     if (session.store) posStore.setStore(session.store);
     if (session.register) posStore.setRegister(session.register);
     if (session.shift) posStore.setShift(session.shift);
@@ -115,8 +120,8 @@ function cancel(): void {
     </div>
 
     <!-- Register list -->
-      <div v-else>
-        <div class="flex flex-col gap-2 mb-4">
+    <div v-else>
+      <div class="flex flex-col gap-2 mb-4">
         <div
           v-for="reg in registers"
           :key="reg.id"
@@ -127,11 +132,7 @@ function cancel(): void {
           data-testid="register-item"
         >
           <div class="flex items-center gap-3">
-            <RadioButton
-              v-model="selectedRegisterId"
-              :value="reg.id"
-              :data-testid="`register-radio-${reg.id}`"
-            />
+            <RadioButton v-model="selectedRegisterId" :value="reg.id" :data-testid="`register-radio-${reg.id}`" />
             <div>
               <span class="font-medium">{{ reg.name }}</span>
               <span class="text-sm text-surface-500 dark:text-surface-400 ml-2">({{ reg.code }})</span>
@@ -151,7 +152,7 @@ function cancel(): void {
           v-model="openingBalance"
           v-bind="openingBalanceAttrs"
           mode="currency"
-          currency="BOB"
+          :currency="currencyCode"
           :min="0"
           :min-fraction-digits="2"
           :max-fraction-digits="2"
@@ -161,6 +162,11 @@ function cancel(): void {
           data-testid="opening-balance-input"
         />
         <small v-if="errors.opening_balance" class="p-error">{{ errors.opening_balance }}</small>
+      </div>
+
+      <div v-if="selectedRegister" class="flex flex-col gap-2">
+        <label for="opening-notes" class="text-sm font-medium">{{ t("Optional notes") }}</label>
+        <Textarea id="opening-notes" v-model="openingNotes" v-bind="openingNotesAttrs" rows="3" class="w-full" />
       </div>
     </div>
 

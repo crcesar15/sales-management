@@ -8,21 +8,21 @@ use App\Enums\PermissionsEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-final class OpenPosShiftRequest extends FormRequest
+final class StorePosMovementRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return ($this->user()?->can(PermissionsEnum::POS_ACCESS->value) ?? false)
-            && $this->user()->can(PermissionsEnum::SHIFTS_OPEN->value);
+            && $this->user()->can(PermissionsEnum::CASH_MOVEMENTS_CREATE->value);
     }
 
     /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
         return [
-            'register_id' => ['required', 'integer', 'exists:cash_registers,id'],
-            'opening_balance' => ['required', 'numeric', 'min:0'],
-            'opening_notes' => ['nullable', 'string'],
+            'type' => ['required', 'string', 'in:cash_in,cash_out'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'reason' => ['required', 'string', 'max:255'],
         ];
     }
 }

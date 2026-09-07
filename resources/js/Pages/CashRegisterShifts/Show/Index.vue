@@ -8,13 +8,14 @@ import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { computed, ref } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import type { CashRegisterShiftResponse, CashRegisterMovementResponse } from "@/Types/cash-register-types";
+import type { CashRegisterShiftResponse, CashRegisterMovementResponse, ShiftReconciliation } from "@/Types/cash-register-types";
 import { useI18n } from "vue-i18n";
 
 defineOptions({ layout: AppLayout });
 
 const props = defineProps<{
   shift: CashRegisterShiftResponse;
+  reconciliation: ShiftReconciliation;
 }>();
 
 const { t } = useI18n();
@@ -187,9 +188,17 @@ const openCloseDialog = (force: boolean) => {
                 <span class="text-sm text-surface-500 block">{{ t("Closing Time") }}</span>
                 <span class="font-medium">{{ formatDatetime(shift.closed_at) }}</span>
               </div>
-              <div v-if="shift.notes">
-                <span class="text-sm text-surface-500 block">{{ t("Notes") }}</span>
-                <span class="font-medium">{{ shift.notes }}</span>
+              <div v-if="shift.opening_notes">
+                <span class="text-sm text-surface-500 block">{{ t("Opening Notes") }}</span>
+                <span class="font-medium">{{ shift.opening_notes }}</span>
+              </div>
+              <div v-if="shift.closing_notes">
+                <span class="text-sm text-surface-500 block">{{ t("Closing Notes") }}</span>
+                <span class="font-medium">{{ shift.closing_notes }}</span>
+              </div>
+              <div v-if="shift.discrepancy_reason">
+                <span class="text-sm text-surface-500 block">{{ t("Discrepancy Reason") }}</span>
+                <span class="font-medium">{{ shift.discrepancy_reason }}</span>
               </div>
             </div>
           </template>
@@ -202,6 +211,18 @@ const openCloseDialog = (force: boolean) => {
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Opening Balance") }}</span>
                 <span class="font-bold">{{ formatCurrencySymbol(String(shift.opening_balance)) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-surface-500">{{ t("Cash Sales") }}</span>
+                <span class="font-bold">{{ formatCurrencySymbol(String(reconciliation.cash_sales)) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-surface-500">{{ t("Cash In") }}</span>
+                <span class="font-bold">{{ formatCurrencySymbol(String(reconciliation.cash_in)) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-surface-500">{{ t("Cash Out") }}</span>
+                <span class="font-bold">-{{ formatCurrencySymbol(String(reconciliation.cash_out)) }}</span>
               </div>
               <div v-if="shift.closing_balance !== null" class="flex justify-between">
                 <span class="text-surface-500">{{ t("Closing Balance") }}</span>
@@ -234,6 +255,12 @@ const openCloseDialog = (force: boolean) => {
 
     <!-- Dialogs -->
     <MovementForm v-model:visible="showMovementDialog" :shift-id="shift.id" @movement-added="onMovementAdded" />
-    <CloseShiftDialog v-model:visible="showCloseDialog" :shift="shift" :force-close="isForceClose" @shift-closed="onShiftClosed" />
+    <CloseShiftDialog
+      v-model:visible="showCloseDialog"
+      :shift="shift"
+      :reconciliation="reconciliation"
+      :force-close="isForceClose"
+      @shift-closed="onShiftClosed"
+    />
   </div>
 </template>

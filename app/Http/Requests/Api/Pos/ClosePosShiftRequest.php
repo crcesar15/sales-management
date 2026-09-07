@@ -2,25 +2,21 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests\CashRegisterShifts;
+namespace App\Http\Requests\Api\Pos;
 
+use App\Enums\PermissionsEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-final class CloseShiftRequest extends FormRequest
+final class ClosePosShiftRequest extends FormRequest
 {
-    /**
-     * Authorization is handled in the controller based on shift ownership.
-     * If the user is not the shift opener, they need shift.manage permission.
-     */
     public function authorize(): bool
     {
-        return true;
+        return ($this->user()?->can(PermissionsEnum::POS_ACCESS->value) ?? false)
+            && $this->user()->can(PermissionsEnum::SHIFTS_CLOSE->value);
     }
 
-    /**
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+    /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
         return [

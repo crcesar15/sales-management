@@ -54,7 +54,9 @@ interface CashRegisterShift {
   difference: number | null;
   opened_at: string | null;
   closed_at: string | null;
-  notes: string | null;
+  opening_notes: string | null;
+  closing_notes: string | null;
+  discrepancy_reason: string | null;
 }
 
 interface CashRegisterShiftResponse extends CashRegisterShift {
@@ -108,12 +110,22 @@ interface CashRegisterMovementResponse extends CashRegisterMovement {
 interface OpenShiftPayload {
   cash_register_id: number;
   opening_balance: number;
-  notes?: string | null;
+  opening_notes?: string | null;
 }
 
 interface CloseShiftPayload {
   closing_balance: number;
-  notes?: string | null;
+  closing_notes?: string | null;
+  discrepancy_reason?: string | null;
+}
+
+interface ShiftReconciliation {
+  opening_balance: number;
+  cash_sales: number;
+  cash_sales_count: number;
+  cash_in: number;
+  cash_out: number;
+  expected_closing: number;
 }
 
 interface MovementPayload {
@@ -136,4 +148,5 @@ export {
   type OpenShiftPayload,
   type CloseShiftPayload,
   type MovementPayload,
+  type ShiftReconciliation,
 };

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Dialog, Select, InputNumber, InputText, Button, useToast } from "primevue";
+import { Dialog, Select, InputNumber, Textarea, Button, useToast } from "primevue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, number, string } from "yup";
@@ -29,7 +29,7 @@ const schema = toTypedSchema(
   object({
     cash_register_id: number().required(t("Register is required")),
     opening_balance: number().required(t("Opening balance is required")).min(0, t("Opening balance must be at least 0")),
-    notes: string().nullable().optional(),
+    opening_notes: string().nullable().optional(),
   }),
 );
 
@@ -39,19 +39,19 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm, s
   initialValues: {
     cash_register_id: undefined as number | undefined,
     opening_balance: 0,
-    notes: null as string | null,
+    opening_notes: null as string | null,
   },
 });
 
 const [cashRegisterId, cashRegisterIdAttrs] = defineField("cash_register_id");
 const [openingBalance, openingBalanceAttrs] = defineField("opening_balance");
-const [notes, notesAttrs] = defineField("notes");
+const [openingNotes, openingNotesAttrs] = defineField("opening_notes");
 
 watch(
   () => props.visible,
   async (val) => {
     if (val) {
-      resetForm({ values: { cash_register_id: undefined, opening_balance: 0, notes: null } });
+      resetForm({ values: { cash_register_id: undefined, opening_balance: 0, opening_notes: null } });
       await nextTick();
       document.getElementById("cash_register_id")?.focus();
     }
@@ -131,8 +131,8 @@ const submit = handleSubmit((values) => {
       </div>
 
       <div class="flex flex-col gap-2">
-        <label for="notes">{{ t("Notes") }} ({{ t("Optional") }})</label>
-        <InputText id="notes" v-model="notes" v-bind="notesAttrs" autocomplete="off" />
+        <label for="opening_notes">{{ t("Optional notes") }}</label>
+        <Textarea id="opening_notes" v-model="openingNotes" v-bind="openingNotesAttrs" rows="3" />
       </div>
     </div>
     <template #footer>
