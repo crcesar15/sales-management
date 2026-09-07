@@ -120,6 +120,23 @@ function toggleUserMenu(event: Event): void {
           <span v-if="!isSidebarCollapsed" class="truncate">{{ item.label }}</span>
         </button>
       </template>
+
+      <div class="mt-auto border-t border-surface-200 pt-2 dark:border-surface-700">
+        <Link
+          v-ripple
+          :href="route('home')"
+          :class="[
+            itemClass,
+            isSidebarCollapsed ? 'justify-center px-2' : '',
+            'text-surface-600 hover:bg-surface-100 hover:text-surface-900 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-0',
+          ]"
+          :aria-label="t('Return to Dashboard')"
+          :title="isSidebarCollapsed ? t('Return to Dashboard') : undefined"
+        >
+          <i class="fa fa-arrow-left w-5 shrink-0 text-center" aria-hidden="true" />
+          <span v-if="!isSidebarCollapsed" class="truncate">{{ t("Dashboard") }}</span>
+        </Link>
+      </div>
     </nav>
 
     <div class="border-t border-surface-200 p-2 dark:border-surface-700">

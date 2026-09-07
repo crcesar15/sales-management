@@ -10,7 +10,7 @@ interface ShiftStatusBadgeProps {
   /** Show additional details */
   showDetails?: boolean;
   /** Shift number */
-  shiftNumber?: string;
+  shiftNumber?: string | number;
   /** Opening balance */
   openingBalance?: number;
 }
