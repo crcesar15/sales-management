@@ -105,3 +105,10 @@ export interface PosFilters {
   store_id?: number;
   register_id?: number;
 }
+
+export type PosCartItem = SalesOrderLineItemForm;
+
+export type PosCustomer = CustomerOption;
+
+export type PosDiscountType = "amount" | "percentage";
+import type { CustomerOption, SalesOrderLineItemForm } from "@/Types/sales-order-types";

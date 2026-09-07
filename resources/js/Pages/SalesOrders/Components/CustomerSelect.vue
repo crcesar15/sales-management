@@ -9,6 +9,7 @@ import type { CustomerOption } from "@/Types/sales-order-types";
 const props = defineProps<{
   modelValue: number | null;
   initialCustomer?: CustomerOption | null;
+  toastGroup?: string;
 }>();
 
 const emit = defineEmits<{
@@ -74,6 +75,7 @@ async function searchCustomer() {
         summary: t("Error"),
         detail: t("An error occurred while searching for the customer."),
         life: 3000,
+        group: props.toastGroup,
       });
     }
   }
@@ -104,6 +106,7 @@ async function createCustomer() {
       summary: t("Success"),
       detail: t("Customer created and assigned to this order."),
       life: 3000,
+      group: props.toastGroup,
     });
   } catch {
     toast.add({
@@ -111,6 +114,7 @@ async function createCustomer() {
       summary: t("Error"),
       detail: t("Could not create the customer."),
       life: 3000,
+      group: props.toastGroup,
     });
   } finally {
     creating.value = false;
