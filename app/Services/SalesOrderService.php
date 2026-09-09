@@ -22,6 +22,7 @@ use App\Models\SalesOrderStockAllocation;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -135,6 +136,118 @@ final class SalesOrderService
                 ->log("Order {$order->id} created as draft");
 
             return $order->load(['customer', 'user', 'store', 'cashRegisterShift', 'items.productVariant.product.brand', 'items.saleUnit', 'payments']);
+        });
+    }
+
+    /** @param array<string, mixed> $data */
+    public function createPosDraft(array $data, User $actor): SalesOrder
+    {
+        return DB::transaction(function () use ($data, $actor): SalesOrder {
+            $shift = $this->requiredPosShift($actor, true);
+            $existingOrder = SalesOrder::query()
+                ->where('user_id', $actor->id)
+                ->where('cash_register_shift_id', $shift->id)
+                ->where('status', SalesOrderStatus::DRAFT)
+                ->where('payment_status', SalesOrderPaymentStatus::PENDING)
+                ->lockForUpdate()
+                ->latest()
+                ->first();
+            if ($existingOrder !== null) {
+                $order = $this->update($existingOrder, $this->preparePosDraftData($data, $shift), $actor);
+
+                return $this->loadPosOrder($order);
+            }
+
+            $order = $this->create($this->preparePosDraftData($data, $shift), $actor);
+
+            return $this->loadPosOrder($order);
+        });
+    }
+
+    /** @param array<string, mixed> $data */
+    public function updatePosDraft(SalesOrder $order, array $data, User $actor): SalesOrder
+    {
+        return DB::transaction(function () use ($order, $data, $actor): SalesOrder {
+            $shift = $this->requiredPosShift($actor, true);
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            $this->assertPosDraft($lockedOrder, $actor, $shift);
+
+            $updatedOrder = $this->update($lockedOrder, $this->preparePosDraftData($data, $shift), $actor);
+
+            return $this->loadPosOrder($updatedOrder);
+        });
+    }
+
+    public function getPosDraft(SalesOrder $order, User $actor): SalesOrder
+    {
+        $shift = $this->requiredPosShift($actor);
+        $this->assertPosDraft($order, $actor, $shift);
+
+        return $this->loadPosOrder($order);
+    }
+
+    public function getCurrentPosDraft(User $actor): ?SalesOrder
+    {
+        $shift = CashRegisterShift::query()
+            ->where('user_id', $actor->id)
+            ->where('status', CashRegisterShiftStatus::OPEN)
+            ->latest('opened_at')
+            ->first();
+        if ($shift === null) {
+            return null;
+        }
+
+        $order = SalesOrder::query()
+            ->where('user_id', $actor->id)
+            ->where('cash_register_shift_id', $shift->id)
+            ->whereHas('store.users', fn ($query) => $query->whereKey($actor->id))
+            ->where('status', SalesOrderStatus::DRAFT)
+            ->where('payment_status', SalesOrderPaymentStatus::PENDING)
+            ->latest()
+            ->first();
+
+        return $order === null ? null : $this->loadPosOrder($order);
+    }
+
+    public function getPosReceipt(SalesOrder $order, User $actor): SalesOrder
+    {
+        if ($order->user_id !== $actor->id || $order->status !== SalesOrderStatus::COMPLETED) {
+            throw new InvalidArgumentException('This receipt is not available for the current cashier.');
+        }
+
+        return $this->loadPosOrder($order);
+    }
+
+    /** @param array<string, mixed> $data */
+    public function completePosSale(SalesOrder $order, array $data, User $actor): SalesOrder
+    {
+        return DB::transaction(function () use ($order, $data, $actor): SalesOrder {
+            $shift = $this->requiredPosShift($actor, true);
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            $this->assertPosDraft($lockedOrder, $actor, $shift);
+            $this->assertPosItemsAvailable($lockedOrder);
+
+            $total = round((float) $lockedOrder->total, 2);
+            if ($total <= 0) {
+                throw new InvalidArgumentException('The sale total must be greater than zero.');
+            }
+
+            $payments = $this->posPayments($data, $total);
+            $validatedOrder = $this->validate($lockedOrder, $actor);
+            $paidOrder = $this->pay($validatedOrder, $payments, $actor);
+            $preview = $this->previewFulfillment($paidOrder, $actor);
+
+            return $this->fulfill($paidOrder, $preview['token'], $actor);
+        });
+    }
+
+    public function discardPosDraft(SalesOrder $order, User $actor): void
+    {
+        DB::transaction(function () use ($order, $actor): void {
+            $shift = $this->requiredPosShift($actor, true);
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            $this->assertPosDraft($lockedOrder, $actor, $shift);
+            $this->cancel($lockedOrder, 'Discarded at POS checkout.', $actor);
         });
     }
 
@@ -458,7 +571,7 @@ final class SalesOrderService
         return $fulfilledOrder;
     }
 
-    /** @param array<int, array{payment_method: string, amount: float, reference?: string|null}> $payments */
+    /** @param array<int, array{payment_method: string, amount: float, reference?: string|null, tendered_amount?: float|null, change_amount?: float}> $payments */
     public function pay(SalesOrder $order, array $payments, User $actor): SalesOrder
     {
         return DB::transaction(function () use ($order, $payments, $actor): SalesOrder {
@@ -476,10 +589,16 @@ final class SalesOrderService
                     $shiftId = null;
                     if ($payment['payment_method'] === PaymentMethod::CASH->value) {
                         $this->requireAssignedCashier($lockedOrder, $actor);
-                        $shiftId = CashRegisterShift::query()
+                        $shiftQuery = CashRegisterShift::query()
                             ->where('user_id', $actor->id)
-                            ->where('status', CashRegisterShiftStatus::OPEN)
-                            ->value('id');
+                            ->where('status', CashRegisterShiftStatus::OPEN);
+                        if ($lockedOrder->cash_register_shift_id !== null) {
+                            $shiftQuery->whereKey($lockedOrder->cash_register_shift_id);
+                        }
+                        $shiftId = $shiftQuery->lockForUpdate()->value('id');
+                        if ($shiftId === null) {
+                            throw new InvalidArgumentException('No matching open shift was found for this cash payment.');
+                        }
                     }
                     $createdPayment = SalesOrderPayment::create([
                         'sales_order_id' => $lockedOrder->id,
@@ -488,6 +607,8 @@ final class SalesOrderService
                         'payment_method' => $payment['payment_method'],
                         'amount' => $amount,
                         'reference' => $payment['reference'] ?? null,
+                        'tendered_amount' => $payment['tendered_amount'] ?? null,
+                        'change_amount' => $payment['change_amount'] ?? 0,
                     ]);
                     if ($lockedOrder->status === SalesOrderStatus::FULFILLED) {
                         CustomerReceivableEntry::create([
@@ -605,6 +726,190 @@ final class SalesOrderService
     private function loadOrder(SalesOrder $order): SalesOrder
     {
         return $order->fresh(['customer', 'user', 'store', 'cashRegisterShift', 'fulfiller', 'items.productVariant.product.brand', 'items.saleUnit', 'items.stockAllocations.batch', 'payments.user', 'payments.cashRegisterShift', 'receivableEntries']) ?? $order;
+    }
+
+    private function loadPosOrder(SalesOrder $order): SalesOrder
+    {
+        return $order->fresh([
+            'customer',
+            'user',
+            'store',
+            'cashRegisterShift.register',
+            'fulfiller',
+            'items.productVariant.product.brand',
+            'items.productVariant.product.measurementUnit',
+            'items.productVariant.values',
+            'items.productVariant.activeSaleUnits',
+            'items.productVariant.batches' => fn (HasMany $query): HasMany => $query
+                ->where('store_id', $order->store_id)
+                ->where('status', 'active'),
+            'items.saleUnit',
+            'items.stockAllocations.batch',
+            'payments.user',
+            'payments.cashRegisterShift',
+        ]) ?? $order;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function preparePosDraftData(array $data, CashRegisterShift $shift): array
+    {
+        $register = $shift->register;
+        if ($register === null) {
+            throw new InvalidArgumentException('The current shift has no cash register.');
+        }
+
+        return [
+            'customer_id' => ($data['is_walk_in'] ?? false) ? null : ($data['customer_id'] ?? null),
+            'store_id' => $register->store_id,
+            'cash_register_shift_id' => $shift->id,
+            'discount_type' => $data['discount_type'],
+            'discount_value' => $data['discount_value'],
+            'items' => $this->normalizePosItems($data['items']),
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, array{product_variant_id: int, sale_unit_id: int|null, quantity: int, unit_price: float}>
+     */
+    private function normalizePosItems(array $items): array
+    {
+        $variantIds = collect($items)->pluck('product_variant_id')->map(fn ($id): int => (int) $id)->unique();
+        $variants = ProductVariant::query()
+            ->with('activeSaleUnits')
+            ->whereKey($variantIds)
+            ->where('status', 'active')
+            ->whereHas('product', fn ($query) => $query->where('status', 'active'))
+            ->get()
+            ->keyBy('id');
+
+        return array_map(function (array $item) use ($variants): array {
+            $variantId = (int) $item['product_variant_id'];
+            $variant = $variants->get($variantId);
+            if (! $variant instanceof ProductVariant) {
+                throw new InvalidArgumentException('A selected product is no longer available for sale.');
+            }
+
+            $saleUnitId = isset($item['sale_unit_id']) ? (int) $item['sale_unit_id'] : null;
+            $unitPrice = (float) $variant->price;
+            if ($saleUnitId !== null) {
+                $saleUnit = $variant->activeSaleUnits->firstWhere('id', $saleUnitId);
+                if (! $saleUnit instanceof ProductVariantUnit) {
+                    throw new InvalidArgumentException('A selected sale unit is no longer available.');
+                }
+                $unitPrice = (float) $saleUnit->price;
+            }
+
+            return [
+                'product_variant_id' => $variantId,
+                'sale_unit_id' => $saleUnitId,
+                'quantity' => (int) $item['quantity'],
+                'unit_price' => $unitPrice,
+            ];
+        }, $items);
+    }
+
+    private function requiredPosShift(User $actor, bool $lock = false): CashRegisterShift
+    {
+        $query = CashRegisterShift::query()
+            ->with('register')
+            ->where('user_id', $actor->id)
+            ->where('status', CashRegisterShiftStatus::OPEN)
+            ->latest('opened_at');
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        $shift = $query->first();
+        if ($shift === null || $shift->register === null || ! $actor->stores()->whereKey($shift->register->store_id)->exists()) {
+            throw new InvalidArgumentException('No open POS shift was found for this cashier.');
+        }
+
+        return $shift;
+    }
+
+    private function assertPosDraft(SalesOrder $order, User $actor, CashRegisterShift $shift): void
+    {
+        $register = $shift->register;
+        if ($order->status !== SalesOrderStatus::DRAFT
+            || $order->payment_status !== SalesOrderPaymentStatus::PENDING
+            || $order->user_id !== $actor->id
+            || $order->cash_register_shift_id !== $shift->id
+            || $register === null
+            || $order->store_id !== $register->store_id) {
+            throw new InvalidArgumentException('This POS draft is not available for the current shift.');
+        }
+    }
+
+    private function assertPosItemsAvailable(SalesOrder $order): void
+    {
+        $order->load('items');
+        $this->normalizePosItems($order->items->map(fn (SalesOrderItem $item): array => [
+            'product_variant_id' => $item->product_variant_id,
+            'sale_unit_id' => $item->sale_unit_id,
+            'quantity' => $item->quantity,
+        ])->all());
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<int, array{payment_method: string, amount: float, reference: string|null, tendered_amount: float|null, change_amount: float}>
+     */
+    private function posPayments(array $data, float $total): array
+    {
+        $reference = isset($data['qr_reference']) ? mb_trim((string) $data['qr_reference']) : null;
+        $reference = $reference === '' ? null : $reference;
+
+        if ($data['payment_mode'] === PaymentMethod::CASH->value) {
+            $received = round((float) $data['cash_received'], 2);
+            if ($received + 0.01 < $total) {
+                throw new InvalidArgumentException('Cash received must cover the sale total.');
+            }
+
+            return [[
+                'payment_method' => PaymentMethod::CASH->value,
+                'amount' => $total,
+                'reference' => null,
+                'tendered_amount' => $received,
+                'change_amount' => round(max(0, $received - $total), 2),
+            ]];
+        }
+
+        if ($data['payment_mode'] === PaymentMethod::QR->value) {
+            return [[
+                'payment_method' => PaymentMethod::QR->value,
+                'amount' => $total,
+                'reference' => $reference,
+                'tendered_amount' => null,
+                'change_amount' => 0.0,
+            ]];
+        }
+
+        $cashAmount = round((float) $data['cash_amount'], 2);
+        if ($cashAmount <= 0 || $cashAmount >= $total) {
+            throw new InvalidArgumentException('Split cash amount must be less than the sale total.');
+        }
+
+        return [
+            [
+                'payment_method' => PaymentMethod::CASH->value,
+                'amount' => $cashAmount,
+                'reference' => null,
+                'tendered_amount' => $cashAmount,
+                'change_amount' => 0.0,
+            ],
+            [
+                'payment_method' => PaymentMethod::QR->value,
+                'amount' => round($total - $cashAmount, 2),
+                'reference' => $reference,
+                'tendered_amount' => null,
+                'change_amount' => 0.0,
+            ],
+        ];
     }
 
     /** @param array<string, mixed> $item */

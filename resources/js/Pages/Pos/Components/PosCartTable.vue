@@ -38,16 +38,6 @@ function updateQuantity(index: number, quantity: number | null): void {
   items.value = updated;
 }
 
-function updatePrice(index: number, unitPrice: number | null): void {
-  if (unitPrice === null) return;
-
-  const updated = [...items.value];
-  const current = updated[index];
-  const nextPrice = Math.max(unitPrice, 0);
-  updated[index] = { ...current, unit_price: nextPrice, line_total: current.quantity * nextPrice };
-  items.value = updated;
-}
-
 function confirmRemove(index: number): void {
   confirm.require({
     message: t("Are you sure you want to remove this item?"),
@@ -125,8 +115,8 @@ function confirmRemove(index: number): void {
                 mode="currency"
                 :aria-label="`${t('Unit Price')}: ${item.product_name}`"
                 fluid
+                readonly
                 input-class="min-h-11 w-full tabular-nums"
-                @update:model-value="updatePrice(index, $event)"
               />
             </div>
 

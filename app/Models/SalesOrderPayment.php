@@ -24,6 +24,8 @@ final class SalesOrderPayment extends Model
         'cash_register_shift_id',
         'payment_method',
         'amount',
+        'tendered_amount',
+        'change_amount',
         'reference',
     ];
 
@@ -62,6 +64,8 @@ final class SalesOrderPayment extends Model
         return [
             'payment_method' => PaymentMethod::class,
             'amount' => 'decimal:2',
+            'tendered_amount' => 'decimal:2',
+            'change_amount' => 'decimal:2',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',
         ];

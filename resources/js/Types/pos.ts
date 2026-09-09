@@ -110,5 +110,15 @@ export type PosCartItem = SalesOrderLineItemForm;
 
 export type PosCustomer = CustomerOption;
 
-export type PosDiscountType = "amount" | "percentage";
+export type PosDiscountType = "flat" | "percentage";
+
+export type PosPaymentMode = "cash" | "qr" | "split";
+
+export interface PosPaymentPayload {
+  payment_mode: PosPaymentMode;
+  cash_received: number | null;
+  cash_amount: number | null;
+  qr_reference: string | null;
+  qr_confirmed: boolean;
+}
 import type { CustomerOption, SalesOrderLineItemForm } from "@/Types/sales-order-types";

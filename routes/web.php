@@ -95,6 +95,13 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // POS Routes
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
+    Route::post('/pos/sales', [PosController::class, 'store'])->name('pos.sales.store');
+    Route::get('/pos/sales/{salesOrder}/edit', [PosController::class, 'edit'])->name('pos.sales.edit');
+    Route::put('/pos/sales/{salesOrder}', [PosController::class, 'update'])->name('pos.sales.update');
+    Route::get('/pos/sales/{salesOrder}/payment', [PosController::class, 'payment'])->name('pos.sales.payment');
+    Route::post('/pos/sales/{salesOrder}/complete', [PosController::class, 'complete'])->name('pos.sales.complete');
+    Route::delete('/pos/sales/{salesOrder}', [PosController::class, 'discard'])->name('pos.sales.discard');
+    Route::get('/pos/sales/{salesOrder}/receipt', [PosController::class, 'receipt'])->name('pos.sales.receipt');
 
     // Cash Register Routes
     Route::get('/cash-registers', [CashRegisterController::class, 'index'])->name('cash-registers');

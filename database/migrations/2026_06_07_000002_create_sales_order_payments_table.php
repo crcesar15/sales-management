@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('cash_register_shift_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('payment_method', ['cash', 'credit_card', 'qr', 'transfer']);
             $table->decimal('amount', 12, 2);
+            $table->decimal('tendered_amount', 12, 2)->nullable();
+            $table->decimal('change_amount', 12, 2)->default(0);
             $table->string('reference', 255)->nullable();
             $table->timestamps();
 

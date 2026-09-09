@@ -8,21 +8,26 @@ import type { PosDiscountType } from "@/Types/pos";
 const props = defineProps<{
   subTotal: number;
   discountAmount: number;
+  taxAmount: number;
+  taxRate: number;
   total: number;
   discountType: PosDiscountType;
   discountValue: number;
   customerChoiceMade: boolean;
+  canPay: boolean;
+  processing: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: "updateDiscount", type: PosDiscountType, value: number | null): void;
+  (e: "pay"): void;
 }>();
 
 const { t } = useI18n();
 const { currencyCode, formatCurrency } = useCurrencyFormatter();
 
 const discountOptions = [
-  { label: currencyCode, value: "amount" },
+  { label: currencyCode, value: "flat" },
   { label: "%", value: "percentage" },
 ];
 const maximumDiscount = computed(() => (props.discountType === "percentage" ? 100 : props.subTotal));
@@ -56,8 +61,8 @@ function updateDiscountValue(value: number | null): void {
         />
         <InputNumber
           :model-value="discountValue"
-          :mode="discountType === 'amount' ? 'currency' : 'decimal'"
-          :currency="discountType === 'amount' ? currencyCode : undefined"
+          :mode="discountType === 'flat' ? 'currency' : 'decimal'"
+          :currency="discountType === 'flat' ? currencyCode : undefined"
           :suffix="discountType === 'percentage' ? '%' : undefined"
           :min="0"
           :max="maximumDiscount"
@@ -75,14 +80,33 @@ function updateDiscountValue(value: number | null): void {
       {{ t("Discount applied") }}: −{{ formatCurrency(String(discountAmount)) }}
     </div>
 
+    <div class="mt-3 flex items-center justify-between gap-4 text-surface-600 dark:text-surface-300">
+      <span>{{ t("Tax") }} ({{ taxRate }}%)</span>
+      <span class="font-medium tabular-nums">{{ formatCurrency(String(taxAmount)) }}</span>
+    </div>
+
     <div class="mt-4 flex items-center justify-between border-t border-surface-200 pt-4 text-lg font-bold dark:border-surface-700">
       <span>{{ t("Total") }}</span>
       <span class="tabular-nums">{{ formatCurrency(String(total)) }}</span>
     </div>
 
-    <Button :label="t('Pay')" icon="fa fa-credit-card" disabled raised class="mt-4 min-h-12 w-full uppercase" />
+    <Button
+      :label="t('Pay')"
+      icon="fa fa-credit-card"
+      :disabled="!canPay"
+      :loading="processing"
+      raised
+      class="mt-4 min-h-12 w-full uppercase"
+      @click="emit('pay')"
+    />
     <small class="mt-2 block text-center text-surface-500 dark:text-surface-400">
-      {{ customerChoiceMade ? t("Payment will be available on the next step") : t("Select a customer or Walk-in before payment") }}
+      {{
+        total <= 0
+          ? t("Total must be greater than zero")
+          : customerChoiceMade
+            ? t("Payment will be available on the next step")
+            : t("Select a customer or Walk-in before payment")
+      }}
     </small>
   </section>
 </template>

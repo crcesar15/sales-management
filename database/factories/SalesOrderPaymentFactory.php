@@ -26,6 +26,8 @@ final class SalesOrderPaymentFactory extends Factory
             'cash_register_shift_id' => null,
             'payment_method' => fake()->randomElement(PaymentMethod::cases())->value,
             'amount' => fake()->randomFloat(2, 10, 500),
+            'tendered_amount' => null,
+            'change_amount' => 0,
             'reference' => null,
         ];
     }

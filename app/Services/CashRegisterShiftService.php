@@ -8,9 +8,12 @@ use App\Enums\CashMovementType;
 use App\Enums\CashRegisterShiftStatus;
 use App\Enums\CashRegisterStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\SalesOrderPaymentStatus;
+use App\Enums\SalesOrderStatus;
 use App\Models\CashRegister;
 use App\Models\CashRegisterMovement;
 use App\Models\CashRegisterShift;
+use App\Models\SalesOrder;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -126,6 +129,7 @@ final class CashRegisterShiftService
         return DB::transaction(function () use ($shift, $closingBalance, $closingNotes, $discrepancyReason): CashRegisterShift {
             $lockedShift = CashRegisterShift::query()->lockForUpdate()->findOrFail($shift->id);
             $this->validateTransition($lockedShift->status->value, CashRegisterShiftStatus::CLOSED->value);
+            $this->requireNoOpenPosDrafts($lockedShift);
             $reconciliation = $this->reconciliation($lockedShift);
             $difference = round($closingBalance - $reconciliation['expected_closing'], 2);
             $this->validateDiscrepancyReason($difference, $discrepancyReason);
@@ -165,6 +169,7 @@ final class CashRegisterShiftService
         return DB::transaction(function () use ($shift, $manager, $closingBalance, $closingNotes, $discrepancyReason): CashRegisterShift {
             $lockedShift = CashRegisterShift::query()->lockForUpdate()->findOrFail($shift->id);
             $this->validateTransition($lockedShift->status->value, CashRegisterShiftStatus::FORCED_CLOSE->value);
+            $this->requireNoOpenPosDrafts($lockedShift);
             $reconciliation = $this->reconciliation($lockedShift);
             $difference = round($closingBalance - $reconciliation['expected_closing'], 2);
             $this->validateDiscrepancyReason($difference, $discrepancyReason);
@@ -247,6 +252,17 @@ final class CashRegisterShiftService
             'cash_out' => $cashOut,
             'expected_closing' => round($openingBalance + $cashIn - $cashOut + $cashSales, 2),
         ];
+    }
+
+    private function requireNoOpenPosDrafts(CashRegisterShift $shift): void
+    {
+        if (SalesOrder::query()
+            ->where('cash_register_shift_id', $shift->id)
+            ->where('status', SalesOrderStatus::DRAFT)
+            ->where('payment_status', SalesOrderPaymentStatus::PENDING)
+            ->exists()) {
+            throw new InvalidArgumentException('Complete or discard the active POS sale before closing this shift.');
+        }
     }
 
     private function validateTransition(string $from, string $to): void

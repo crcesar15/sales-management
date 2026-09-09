@@ -23,6 +23,8 @@ final class SalesOrderPaymentResource extends JsonResource
             'cash_register_shift_id' => $this->cash_register_shift_id,
             'payment_method' => $this->payment_method->value,
             'amount' => (float) $this->amount,
+            'tendered_amount' => $this->tendered_amount === null ? null : (float) $this->tendered_amount,
+            'change_amount' => (float) $this->change_amount,
             'reference' => $this->reference,
             'created_at' => $this->created_at?->toISOString(),
         ];

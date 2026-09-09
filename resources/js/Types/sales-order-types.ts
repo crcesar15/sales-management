@@ -22,6 +22,12 @@ export interface SalesOrderItem {
     sku?: string;
     option_values?: string | null;
     minimum_stock_level?: number | null;
+    sale_units?: Array<{
+      id: number;
+      name: string;
+      conversion_factor: number;
+      price: number;
+    }>;
     product?: {
       id: number;
       name: string;
@@ -70,6 +76,8 @@ export interface SalesOrderPayment {
   sales_order_id: number;
   payment_method: PaymentMethod;
   amount: number;
+  tendered_amount: number | null;
+  change_amount: number;
   reference: string | null;
 }
 

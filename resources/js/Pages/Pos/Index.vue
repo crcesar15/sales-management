@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { Button, Message, ProgressSpinner, useToast } from "primevue";
 import PosLayout from "@layouts/pos.vue";
@@ -11,22 +11,32 @@ import CustomerSelect from "@pages/SalesOrders/Components/CustomerSelect.vue";
 import { usePosStore } from "@/Composables/usePosStore";
 import { usePosClient } from "@/Composables/usePosClient";
 import { useStockLedger } from "@composables/useStockLedger";
-import { usePage } from "@inertiajs/vue3";
+import { router, usePage } from "@inertiajs/vue3";
 import { storeToRefs } from "pinia";
 import type { PosCartItem } from "@/Types/pos";
+import type { SalesOrderResponse } from "@/Types/sales-order-types";
+import { useAuth } from "@composables/useAuth";
+import { route } from "ziggy-js";
 
 defineOptions({ layout: PosLayout });
+
+const props = defineProps<{
+  draft: SalesOrderResponse | null;
+}>();
 
 const { t } = useI18n();
 const posStore = usePosStore();
 const posClient = usePosClient();
 const page = usePage();
 const toast = useToast();
+const { getSetting } = useAuth();
 const { cartItems } = storeToRefs(posStore);
 
 const showRegisterDialog = ref(false);
 const sessionLoading = ref(true);
 const sessionError = ref(false);
+const checkoutProcessing = ref(false);
+const canPay = computed(() => posStore.cartItems.length > 0 && posStore.customerChoiceMade && posStore.total > 0);
 
 const { getRemainingBase, getRemainingBaseExcludingLine } = useStockLedger(cartItems);
 
@@ -43,13 +53,19 @@ async function loadSession(): Promise<void> {
   sessionLoading.value = true;
   sessionError.value = false;
   showRegisterDialog.value = false;
-  posStore.clearSession();
+  const previousStoreId = posStore.store?.id ?? null;
+  const previousShiftId = posStore.shift?.id ?? null;
 
   try {
     const session = await posClient.getSession();
-    if (session.store) posStore.setStore(session.store);
-    if (session.register) posStore.setRegister(session.register);
-    posStore.setShift(session.shift);
+    if (
+      props.draft === null &&
+      previousStoreId !== null &&
+      (session.store?.id !== previousStoreId || session.shift?.id !== previousShiftId)
+    ) {
+      posStore.clearSale();
+    }
+    posStore.setSession(session);
 
     if (session.shift?.status !== "open") {
       showRegisterDialog.value = true;
@@ -61,24 +77,59 @@ async function loadSession(): Promise<void> {
   }
 }
 
-onMounted(() => {
+function checkoutPayload() {
+  return {
+    customer_id: posStore.customer?.id ?? null,
+    is_walk_in: posStore.isWalkIn,
+    discount_type: posStore.discountType,
+    discount_value: posStore.discountValue,
+    items: posStore.cartItems.map((item) => ({
+      product_variant_id: item.product_variant_id,
+      sale_unit_id: item.sale_unit_id,
+      quantity: item.quantity,
+    })),
+  };
+}
+
+function proceedToPayment(): void {
+  if (!canPay.value || checkoutProcessing.value) return;
+
+  checkoutProcessing.value = true;
+  const options = {
+    preserveScroll: true,
+    onError: (errors: Record<string, string>) => {
+      toast.add({
+        severity: "error",
+        summary: t("Unable to continue"),
+        detail: errors.checkout ?? errors.items ?? t("Please review the sale and try again"),
+        life: 4000,
+        group: "pos",
+      });
+    },
+    onFinish: () => {
+      checkoutProcessing.value = false;
+    },
+  };
+
+  if (posStore.draftId !== null) {
+    router.put(route("pos.sales.update", posStore.draftId), checkoutPayload(), options);
+    return;
+  }
+
+  router.post(route("pos.sales.store"), checkoutPayload(), options);
+}
+
+onMounted(async () => {
   // Set user info from Inertia page props
   const authUser = page.props.auth?.user as unknown as { id: number; name: string; email: string } | undefined;
   if (authUser) {
     posStore.setUserId(authUser.id);
   }
 
-  void loadSession();
+  posStore.setTaxRate(Number(getSetting("tax", "tax_rate", "0") ?? 0));
+  await loadSession();
+  if (props.draft !== null) posStore.hydrateDraft(props.draft);
 });
-
-watch(
-  () => `${posStore.store?.id ?? "none"}:${posStore.shift?.id ?? "none"}`,
-  (context, previousContext) => {
-    if (previousContext !== undefined && context !== previousContext) {
-      posStore.clearSale();
-    }
-  },
-);
 </script>
 
 <template>
@@ -126,11 +177,16 @@ watch(
         <PosCartSummary
           :sub-total="posStore.subTotal"
           :discount-amount="posStore.discountAmount"
+          :tax-amount="posStore.taxAmount"
+          :tax-rate="posStore.taxRate"
           :total="posStore.total"
           :discount-type="posStore.discountType"
           :discount-value="posStore.discountValue"
           :customer-choice-made="posStore.customerChoiceMade"
+          :can-pay="canPay"
+          :processing="checkoutProcessing"
           @update-discount="posStore.setDiscount"
+          @pay="proceedToPayment"
         />
       </div>
     </div>

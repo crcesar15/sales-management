@@ -29,6 +29,14 @@ final class SalesOrderItemResource extends JsonResource
                     ? $this->productVariant->values->pluck('value')->implode(' / ')
                     : null,
                 'minimum_stock_level' => $this->productVariant?->minimum_stock_level,
+                'sale_units' => $this->productVariant?->relationLoaded('activeSaleUnits')
+                    ? $this->productVariant->activeSaleUnits->map(fn ($unit): array => [
+                        'id' => $unit->id,
+                        'name' => $unit->name,
+                        'conversion_factor' => $unit->conversion_factor,
+                        'price' => (float) $unit->price,
+                    ])->values()
+                    : [],
                 'product' => $this->productVariant?->product ? [
                     'id' => $this->productVariant->product->id,
                     'name' => $this->productVariant->product->name,
