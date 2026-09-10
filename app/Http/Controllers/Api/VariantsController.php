@@ -8,7 +8,6 @@ use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Catalog\VariantVendorResource;
 use App\Http\Resources\Product\ProductVariantCollection;
-use App\Models\Batch;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
@@ -117,6 +116,12 @@ final class VariantsController extends Controller
                     ->orWhere('identifier', 'like', "%{$filter}%");
             });
 
+        if ($storeId > 0) {
+            $query->withSum([
+                'batches as fulfillable_stock' => fn ($query) => $query->fulfillableAt($storeId),
+            ], 'remaining_quantity');
+        }
+
         $variants = $query->orderBy('identifier')
             ->limit(20)
             ->get()
@@ -127,15 +132,8 @@ final class VariantsController extends Controller
                     ? $variant->values->map(fn ($v) => $v->value)->implode(' / ')
                     : null;
 
-                // When a store is specified, compute stock from that store's
-                // active batches only — the variant's aggregate `stock` column
-                // sums across all stores and would mislead the sales UI.
                 $stock = $storeId > 0
-                    ? (int) Batch::query()
-                        ->where('product_variant_id', $variant->id)
-                        ->where('store_id', $storeId)
-                        ->active()
-                        ->sum('remaining_quantity')
+                    ? (int) ($variant->getAttribute('fulfillable_stock') ?? 0)
                     : $variant->stock;
 
                 $data = [

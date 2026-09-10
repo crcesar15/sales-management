@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
 use App\Http\Controllers\Api\MeasurementUnitController;
 use App\Http\Controllers\Api\PermissionsController;
+use App\Http\Controllers\Api\PosSaleHandoverController;
 use App\Http\Controllers\Api\PosSessionController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
 use App\Http\Controllers\Api\RoleController;
@@ -31,6 +32,8 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
     Route::get('pos/session/shift/closing-summary', [PosSessionController::class, 'closingSummary'])->name('pos.session.shift.closing-summary');
     Route::patch('pos/session/shift/close', [PosSessionController::class, 'closeShift'])->name('pos.session.shift.close');
     Route::post('pos/session/shift/movements', [PosSessionController::class, 'addMovement'])->name('pos.session.shift.movements.store');
+    Route::post('pos/sales/{salesOrder}/handover-preview', [PosSaleHandoverController::class, 'preview'])
+        ->name('pos.sales.handover-preview');
 
     // Routes for Batches
     Route::get('batches/available', [BatchesController::class, 'available'])->name('batches.available');

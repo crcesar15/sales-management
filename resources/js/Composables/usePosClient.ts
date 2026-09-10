@@ -9,6 +9,7 @@ import type {
   ShiftReconciliation,
 } from "@/Types/pos";
 import { PosError, PosPermissionError, PosNetworkError } from "@/Types/pos";
+import type { SalesOrderHandoverPreview } from "@/Types/sales-order-types";
 import { router } from "@inertiajs/vue3";
 import axios from "axios";
 
@@ -81,6 +82,16 @@ export function usePosClient() {
     }
   }
 
+  async function generateHandoverPreview(salesOrderId: number): Promise<SalesOrderHandoverPreview> {
+    try {
+      const { data } = await apiClient.post<{ data: SalesOrderHandoverPreview }>(route("api.v1.pos.sales.handover-preview", salesOrderId));
+      return data.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  }
+
   return {
     loading,
     getSession,
@@ -89,6 +100,7 @@ export function usePosClient() {
     getClosingSummary,
     closeShift,
     addMovement,
+    generateHandoverPreview,
   };
 }
 

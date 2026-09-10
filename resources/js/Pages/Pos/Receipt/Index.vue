@@ -7,6 +7,7 @@ import { route } from "ziggy-js";
 import PosLayout from "@layouts/pos.vue";
 import { usePosStore } from "@composables/usePosStore";
 import PosReceiptPanel from "@pages/Pos/Components/PosReceiptPanel.vue";
+import PosFulfillmentRecord from "@pages/Pos/Components/PosFulfillmentRecord.vue";
 import type { SalesOrderResponse } from "@/Types/sales-order-types";
 
 defineOptions({ layout: PosLayout });
@@ -32,12 +33,13 @@ function printReceipt(): void {
 
 <template>
   <div class="min-h-full p-4 lg:p-6">
-    <div class="mx-auto max-w-2xl">
+    <div class="mx-auto flex max-w-2xl flex-col gap-4">
       <div class="no-print mb-4 flex justify-end gap-3">
         <Button :label="t('Print receipt')" icon="fa fa-print" severity="secondary" outlined @click="printReceipt" />
         <Button :label="t('New sale')" icon="fa fa-plus" raised @click="startNewSale" />
       </div>
       <PosReceiptPanel :order="order" />
+      <PosFulfillmentRecord :order="order" />
     </div>
   </div>
 </template>

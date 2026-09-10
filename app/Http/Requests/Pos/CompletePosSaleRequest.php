@@ -23,6 +23,7 @@ final class CompletePosSaleRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'handover_token' => ['required', 'uuid'],
             'payment_mode' => ['required', 'string', 'in:cash,qr,split'],
             'cash_received' => ['nullable', 'required_if:payment_mode,cash', 'numeric', 'min:0.01'],
             'cash_amount' => ['nullable', 'required_if:payment_mode,split', 'numeric', 'min:0.01'],

@@ -12,6 +12,7 @@ import PosPaymentMethodSelector from "./PosPaymentMethodSelector.vue";
 const props = defineProps<{
   total: number;
   processing: boolean;
+  disabled?: boolean;
   serverError?: string;
 }>();
 
@@ -205,10 +206,10 @@ const submit = handleSubmit((values) => {
 
     <Button
       type="submit"
-      :label="t('Confirm payment')"
+      :label="t('Confirm payment and handover')"
       icon="fa fa-check"
       :loading="processing"
-      :disabled="processing"
+      :disabled="processing || disabled"
       raised
       class="min-h-14 w-full uppercase"
     />

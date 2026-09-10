@@ -28,6 +28,20 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
+/**
+ * @phpstan-type HandoverAllocation array{
+ *     sales_order_item_id: int,
+ *     batch_id: int,
+ *     quantity: int,
+ *     product: string,
+ *     variant: string,
+ *     brand: string|null,
+ *     base_unit: string,
+ *     batch_identifier: string,
+ *     expiry_date: string|null
+ * }
+ * @phpstan-type HandoverPreview array{token: string, allocations: list<HandoverAllocation>}
+ */
 final class SalesOrderService
 {
     public function __construct(
@@ -221,24 +235,45 @@ final class SalesOrderService
     /** @param array<string, mixed> $data */
     public function completePosSale(SalesOrder $order, array $data, User $actor): SalesOrder
     {
-        return DB::transaction(function () use ($order, $data, $actor): SalesOrder {
-            $shift = $this->requiredPosShift($actor, true);
-            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
-            $this->assertPosDraft($lockedOrder, $actor, $shift);
-            $this->assertPosItemsAvailable($lockedOrder);
+        $handoverToken = (string) $data['handover_token'];
+        $previewLock = Cache::lock($this->handoverPreviewLockKey($handoverToken), 15);
+        if (! $previewLock->get()) {
+            throw new InvalidArgumentException('The handover list is currently being used. Generate a new list.');
+        }
 
-            $total = round((float) $lockedOrder->total, 2);
-            if ($total <= 0) {
-                throw new InvalidArgumentException('The sale total must be greater than zero.');
-            }
+        try {
+            $completedOrder = DB::transaction(function () use ($order, $data, $actor, $handoverToken): SalesOrder {
+                $shift = $this->requiredPosShift($actor, true);
+                $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+                $this->assertPosDraft($lockedOrder, $actor, $shift);
+                $this->assertPosItemsAvailable($lockedOrder);
+                $lockedOrder->load('items');
 
-            $payments = $this->posPayments($data, $total);
-            $validatedOrder = $this->validate($lockedOrder, $actor);
-            $paidOrder = $this->pay($validatedOrder, $payments, $actor);
-            $preview = $this->previewFulfillment($paidOrder, $actor);
+                $preview = $this->handoverPreview($handoverToken, $lockedOrder, $actor);
+                if (($preview['context'] ?? null) !== 'pos'
+                    || ($preview['shift_id'] ?? null) !== $shift->id
+                    || ($preview['order_fingerprint'] ?? null) !== $this->orderFingerprint($lockedOrder)) {
+                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
+                }
 
-            return $this->fulfill($paidOrder, $preview['token'], $actor);
-        });
+                $total = round((float) $lockedOrder->total, 2);
+                if ($total <= 0) {
+                    throw new InvalidArgumentException('The sale total must be greater than zero.');
+                }
+
+                $payments = $this->posPayments($data, $total);
+                $validatedOrder = $this->validate($lockedOrder, $actor);
+                $paidOrder = $this->pay($validatedOrder, $payments, $actor);
+
+                return $this->fulfillUsingPreview($paidOrder, $preview['allocations'], $actor);
+            });
+
+            Cache::forget($this->handoverPreviewCacheKey($handoverToken));
+
+            return $completedOrder;
+        } finally {
+            $previewLock->release();
+        }
     }
 
     public function discardPosDraft(SalesOrder $order, User $actor): void
@@ -342,17 +377,7 @@ final class SalesOrderService
             if ($lockedOrder->status !== SalesOrderStatus::DRAFT) {
                 throw new InvalidArgumentException('Only draft orders can be validated.');
             }
-            $lockedOrder->load('items');
-
-            foreach ($lockedOrder->items as $item) {
-                $requiredQuantity = $item->quantity * $item->conversion_factor;
-                $batches = $this->availableBatches($item->product_variant_id, $lockedOrder->store_id)->get();
-
-                if ($batches->sum('remaining_quantity') < $requiredQuantity) {
-                    throw new InvalidArgumentException('Insufficient available stock. Please update the order before validating it.');
-                }
-
-            }
+            $this->planFulfillmentAllocations($lockedOrder);
 
             $lockedOrder->update(['status' => SalesOrderStatus::VALIDATED, 'validated_at' => now()]);
             activity('sales_order')->performedOn($lockedOrder)->causedBy($actor)->log("Order {$lockedOrder->id} validated");
@@ -389,186 +414,44 @@ final class SalesOrderService
         $this->requirePaidOrNamedCustomer($order);
         $this->requireAssignedCashier($order, $actor);
 
-        $allocations = [];
-        foreach ($order->items as $item) {
-            $requiredQuantity = $item->quantity * $item->conversion_factor;
-            $batches = $this->availableBatches($item->product_variant_id, $order->store_id)->get();
+        return $this->storeHandoverPreview($order, $actor, $this->planFulfillmentAllocations($order), 5);
+    }
 
-            if ($batches->sum('remaining_quantity') < $requiredQuantity) {
-                throw new InvalidArgumentException('Insufficient available stock to generate the handover list.');
-            }
+    /** @return HandoverPreview */
+    public function previewPosFulfillment(SalesOrder $order, User $actor): array
+    {
+        $shift = $this->requiredPosShift($actor);
+        $this->assertPosDraft($order, $actor, $shift);
+        $order = SalesOrder::query()
+            ->with(['items.productVariant.product.brand', 'items.productVariant.product.measurementUnit'])
+            ->findOrFail($order->id);
 
-            $remainingQuantity = $requiredQuantity;
-            foreach ($batches as $batch) {
-                if ($remainingQuantity === 0) {
-                    break;
-                }
-
-                $quantity = min($remainingQuantity, (int) $batch->remaining_quantity);
-                $productVariant = $item->productVariant;
-                $product = $productVariant?->product;
-                if ($product === null) {
-                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
-                }
-
-                $measurementUnit = $product->getRelation('measurementUnit');
-                $allocations[] = [
-                    'sales_order_item_id' => $item->id,
-                    'batch_id' => $batch->id,
-                    'quantity' => $quantity,
-                    'product' => $product->name,
-                    'variant' => $productVariant->name ?? $productVariant->identifier ?? '---',
-                    'brand' => $product->brand?->name,
-                    'base_unit' => $measurementUnit instanceof MeasurementUnit ? $measurementUnit->name : 'Unit',
-                    'batch_identifier' => $batch->batch_identifier ?? "#{$batch->id}",
-                    'expiry_date' => $batch->expiry_date?->toDateString(),
-                ];
-                $remainingQuantity -= $quantity;
-            }
-        }
-
-        $token = (string) Str::uuid();
-        Cache::put($this->handoverPreviewCacheKey($token), [
-            'order_id' => $order->id,
-            'actor_id' => $actor->id,
-            'allocations' => array_map(
-                fn (array $allocation): array => [
-                    'sales_order_item_id' => $allocation['sales_order_item_id'],
-                    'batch_id' => $allocation['batch_id'],
-                    'quantity' => $allocation['quantity'],
-                ],
-                $allocations,
-            ),
-        ], now()->addMinutes(5));
-
-        return ['token' => $token, 'allocations' => $allocations];
+        return $this->storeHandoverPreview(
+            $order,
+            $actor,
+            $this->planFulfillmentAllocations($order),
+            10,
+            $shift->id,
+            'pos',
+        );
     }
 
     public function fulfill(SalesOrder $order, string $handoverToken, User $actor): SalesOrder
     {
-        $preview = Cache::get($this->handoverPreviewCacheKey($handoverToken));
-        if (! is_array($preview)
-            || ($preview['order_id'] ?? null) !== $order->id
-            || ($preview['actor_id'] ?? null) !== $actor->id
-            || ! isset($preview['allocations'])
-            || ! is_array($preview['allocations'])) {
-            throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
+        $previewLock = Cache::lock($this->handoverPreviewLockKey($handoverToken), 15);
+        if (! $previewLock->get()) {
+            throw new InvalidArgumentException('The handover list is currently being used. Generate a new list.');
         }
 
-        $fulfilledOrder = DB::transaction(function () use ($order, $preview, $actor): SalesOrder {
-            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
-            if ($lockedOrder->status !== SalesOrderStatus::VALIDATED) {
-                throw new InvalidArgumentException('Only validated orders can be fulfilled.');
-            }
-            $this->requirePaidOrNamedCustomer($lockedOrder);
-            $this->requireAssignedCashier($lockedOrder, $actor);
-            $lockedOrder->load('items');
+        try {
+            $preview = $this->handoverPreview($handoverToken, $order, $actor);
+            $fulfilledOrder = $this->fulfillUsingPreview($order, $preview['allocations'], $actor);
+            Cache::forget($this->handoverPreviewCacheKey($handoverToken));
 
-            $items = $lockedOrder->items->keyBy('id');
-            $allocations = $preview['allocations'];
-            $quantitiesByItem = [];
-            $quantitiesByBatch = [];
-            foreach ($allocations as $allocation) {
-                if (! is_array($allocation)
-                    || ! isset($allocation['sales_order_item_id'], $allocation['batch_id'], $allocation['quantity'])
-                    || ! is_int($allocation['sales_order_item_id'])
-                    || ! is_int($allocation['batch_id'])
-                    || ! is_int($allocation['quantity'])
-                    || $allocation['quantity'] <= 0) {
-                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
-                }
-
-                $item = $items->get($allocation['sales_order_item_id']);
-                if ($item === null) {
-                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
-                }
-
-                $quantitiesByItem[$item->id] = ($quantitiesByItem[$item->id] ?? 0) + $allocation['quantity'];
-                $quantitiesByBatch[$allocation['batch_id']] = ($quantitiesByBatch[$allocation['batch_id']] ?? 0) + $allocation['quantity'];
-            }
-
-            foreach ($lockedOrder->items as $item) {
-                $requiredQuantity = $item->quantity * $item->conversion_factor;
-                if (($quantitiesByItem[$item->id] ?? 0) !== $requiredQuantity) {
-                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
-                }
-            }
-
-            $batches = Batch::query()
-                ->whereIn('id', array_keys($quantitiesByBatch))
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('id');
-
-            foreach ($allocations as $allocation) {
-                $item = $items->get($allocation['sales_order_item_id']);
-                $batch = $batches->get($allocation['batch_id']);
-                if ($item === null
-                    || $batch === null
-                    || $batch->product_variant_id !== $item->product_variant_id
-                    || $batch->store_id !== $lockedOrder->store_id
-                    || $batch->status !== 'active'
-                    || $batch->expiry_date?->lessThan(today())) {
-                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
-                }
-            }
-
-            foreach ($quantitiesByBatch as $batchId => $quantity) {
-                $batch = $batches->get($batchId);
-                if ($batch === null || $batch->remaining_quantity < $quantity) {
-                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
-                }
-            }
-
-            SalesOrderStockAllocation::query()
-                ->whereIn('sales_order_item_id', $lockedOrder->items->pluck('id'))
-                ->delete();
-
-            foreach ($allocations as $allocation) {
-                $item = $items->get($allocation['sales_order_item_id']);
-                $item?->stockAllocations()->create([
-                    'batch_id' => $allocation['batch_id'],
-                    'quantity' => $allocation['quantity'],
-                ]);
-            }
-
-            foreach ($quantitiesByBatch as $batchId => $quantity) {
-                $batch = $batches->get($batchId);
-                $batch?->decrement('remaining_quantity', $quantity);
-                $batch?->increment('sold_quantity', $quantity);
-                $batch?->refresh();
-                if ($batch?->remaining_quantity === 0) {
-                    $batch->update(['status' => 'closed']);
-                }
-            }
-
-            foreach ($lockedOrder->items->pluck('product_variant_id')->unique() as $variantId) {
-                ProductVariant::query()->whereKey($variantId)->firstOrFail()->recalculateStock();
-            }
-
-            $updates = ['fulfilled_by' => $actor->id, 'fulfilled_at' => now()];
-            if ($lockedOrder->payment_status === SalesOrderPaymentStatus::PAID) {
-                $updates += ['status' => SalesOrderStatus::COMPLETED, 'completed_at' => now()];
-            } else {
-                $updates['status'] = SalesOrderStatus::FULFILLED;
-                CustomerReceivableEntry::create([
-                    'customer_id' => $lockedOrder->customer_id,
-                    'sales_order_id' => $lockedOrder->id,
-                    'user_id' => $actor->id,
-                    'type' => 'charge',
-                    'amount' => $this->remainingBalance($lockedOrder),
-                ]);
-            }
-            $lockedOrder->update($updates);
-            activity('sales_order')->performedOn($lockedOrder)->causedBy($actor)->log("Order {$lockedOrder->id} fulfilled");
-
-            return $this->loadOrder($lockedOrder);
-        });
-
-        Cache::forget($this->handoverPreviewCacheKey($handoverToken));
-
-        return $fulfilledOrder;
+            return $fulfilledOrder;
+        } finally {
+            $previewLock->release();
+        }
     }
 
     /** @param array<int, array{payment_method: string, amount: float, reference?: string|null, tendered_amount?: float|null, change_amount?: float}> $payments */
@@ -685,23 +568,258 @@ final class SalesOrderService
         });
     }
 
-    /** @return \Illuminate\Database\Eloquent\Builder<Batch> */
-    private function availableBatches(int $variantId, int $storeId): \Illuminate\Database\Eloquent\Builder
+    /** @param array<int, mixed> $allocations */
+    private function fulfillUsingPreview(SalesOrder $order, array $allocations, User $actor): SalesOrder
     {
-        return Batch::query()
-            ->where('product_variant_id', $variantId)
-            ->where('store_id', $storeId)
-            ->where('status', 'active')
-            ->where('remaining_quantity', '>', 0)
-            ->where(fn ($query) => $query->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', today()))
-            ->orderByRaw('expiry_date IS NULL')
-            ->orderBy('expiry_date')
-            ->orderBy('created_at');
+        return DB::transaction(function () use ($order, $allocations, $actor): SalesOrder {
+            $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($lockedOrder->status !== SalesOrderStatus::VALIDATED) {
+                throw new InvalidArgumentException('Only validated orders can be fulfilled.');
+            }
+            $this->requirePaidOrNamedCustomer($lockedOrder);
+            $this->requireAssignedCashier($lockedOrder, $actor);
+            $lockedOrder->load('items');
+
+            $items = $lockedOrder->items->keyBy('id');
+            $quantitiesByItem = [];
+            $quantitiesByBatch = [];
+            foreach ($allocations as $allocation) {
+                if (! is_array($allocation)
+                    || ! isset($allocation['sales_order_item_id'], $allocation['batch_id'], $allocation['quantity'])
+                    || ! is_int($allocation['sales_order_item_id'])
+                    || ! is_int($allocation['batch_id'])
+                    || ! is_int($allocation['quantity'])
+                    || $allocation['quantity'] <= 0) {
+                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
+                }
+
+                $item = $items->get($allocation['sales_order_item_id']);
+                if ($item === null) {
+                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
+                }
+
+                $quantitiesByItem[$item->id] = ($quantitiesByItem[$item->id] ?? 0) + $allocation['quantity'];
+                $quantitiesByBatch[$allocation['batch_id']] = ($quantitiesByBatch[$allocation['batch_id']] ?? 0) + $allocation['quantity'];
+            }
+
+            foreach ($lockedOrder->items as $item) {
+                $requiredQuantity = $item->quantity * $item->conversion_factor;
+                if (($quantitiesByItem[$item->id] ?? 0) !== $requiredQuantity) {
+                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
+                }
+            }
+
+            $batches = Batch::query()
+                ->whereIn('id', array_keys($quantitiesByBatch))
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach ($allocations as $allocation) {
+                $item = $items->get($allocation['sales_order_item_id']);
+                $batch = $batches->get($allocation['batch_id']);
+                if ($item === null
+                    || $batch === null
+                    || $batch->product_variant_id !== $item->product_variant_id
+                    || $batch->store_id !== $lockedOrder->store_id
+                    || $batch->status !== 'active'
+                    || $batch->expiry_date?->lessThan(today())) {
+                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
+                }
+            }
+
+            foreach ($quantitiesByBatch as $batchId => $quantity) {
+                $batch = $batches->get($batchId);
+                if ($batch === null || $batch->remaining_quantity < $quantity) {
+                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
+                }
+            }
+
+            SalesOrderStockAllocation::query()
+                ->whereIn('sales_order_item_id', $lockedOrder->items->pluck('id'))
+                ->delete();
+
+            foreach ($allocations as $allocation) {
+                $item = $items->get($allocation['sales_order_item_id']);
+                $item?->stockAllocations()->create([
+                    'batch_id' => $allocation['batch_id'],
+                    'quantity' => $allocation['quantity'],
+                ]);
+            }
+
+            foreach ($quantitiesByBatch as $batchId => $quantity) {
+                $batch = $batches->get($batchId);
+                $batch?->decrement('remaining_quantity', $quantity);
+                $batch?->increment('sold_quantity', $quantity);
+                $batch?->refresh();
+                if ($batch?->remaining_quantity === 0) {
+                    $batch->update(['status' => 'closed']);
+                }
+            }
+
+            foreach ($lockedOrder->items->pluck('product_variant_id')->unique() as $variantId) {
+                ProductVariant::query()->whereKey($variantId)->firstOrFail()->recalculateStock();
+            }
+
+            $updates = ['fulfilled_by' => $actor->id, 'fulfilled_at' => now()];
+            if ($lockedOrder->payment_status === SalesOrderPaymentStatus::PAID) {
+                $updates += ['status' => SalesOrderStatus::COMPLETED, 'completed_at' => now()];
+            } else {
+                $updates['status'] = SalesOrderStatus::FULFILLED;
+                CustomerReceivableEntry::create([
+                    'customer_id' => $lockedOrder->customer_id,
+                    'sales_order_id' => $lockedOrder->id,
+                    'user_id' => $actor->id,
+                    'type' => 'charge',
+                    'amount' => $this->remainingBalance($lockedOrder),
+                ]);
+            }
+            $lockedOrder->update($updates);
+            activity('sales_order')->performedOn($lockedOrder)->causedBy($actor)->log("Order {$lockedOrder->id} fulfilled");
+
+            return $this->loadOrder($lockedOrder);
+        });
+    }
+
+    /**
+     * @param  list<HandoverAllocation>  $allocations
+     * @return HandoverPreview
+     */
+    private function storeHandoverPreview(
+        SalesOrder $order,
+        User $actor,
+        array $allocations,
+        int $ttlMinutes,
+        ?int $shiftId = null,
+        string $context = 'sales_order',
+    ): array {
+        $token = (string) Str::uuid();
+        Cache::put($this->handoverPreviewCacheKey($token), [
+            'order_id' => $order->id,
+            'actor_id' => $actor->id,
+            'shift_id' => $shiftId,
+            'context' => $context,
+            'order_fingerprint' => $this->orderFingerprint($order),
+            'allocations' => array_map(
+                fn (array $allocation): array => [
+                    'sales_order_item_id' => $allocation['sales_order_item_id'],
+                    'batch_id' => $allocation['batch_id'],
+                    'quantity' => $allocation['quantity'],
+                ],
+                $allocations,
+            ),
+        ], now()->addMinutes($ttlMinutes));
+
+        return ['token' => $token, 'allocations' => $allocations];
+    }
+
+    /** @return list<HandoverAllocation> */
+    private function planFulfillmentAllocations(SalesOrder $order): array
+    {
+        $order->loadMissing(['items.productVariant.product.brand', 'items.productVariant.product.measurementUnit']);
+        $variantIds = $order->items->pluck('product_variant_id')->unique();
+        $batchesByVariant = Batch::query()
+            ->whereIn('product_variant_id', $variantIds)
+            ->fulfillableAt($order->store_id)
+            ->fefo()
+            ->get()
+            ->groupBy('product_variant_id');
+        $virtualRemaining = [];
+        $allocations = [];
+
+        foreach ($order->items as $item) {
+            $remainingQuantity = (int) ($item->quantity * $item->conversion_factor);
+            $batches = $batchesByVariant->get($item->product_variant_id, collect());
+
+            foreach ($batches as $batch) {
+                if ($remainingQuantity === 0) {
+                    break;
+                }
+
+                $availableQuantity = $virtualRemaining[$batch->id] ?? (int) $batch->remaining_quantity;
+                if ($availableQuantity === 0) {
+                    continue;
+                }
+
+                $quantity = min($remainingQuantity, $availableQuantity);
+                $productVariant = $item->productVariant;
+                $product = $productVariant?->product;
+                if ($product === null) {
+                    throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
+                }
+
+                $measurementUnit = $product->getRelation('measurementUnit');
+                $allocations[] = [
+                    'sales_order_item_id' => $item->id,
+                    'batch_id' => $batch->id,
+                    'quantity' => $quantity,
+                    'product' => $product->name,
+                    'variant' => $productVariant->name ?? $productVariant->identifier ?? '---',
+                    'brand' => $product->brand?->name,
+                    'base_unit' => $measurementUnit instanceof MeasurementUnit ? $measurementUnit->name : 'Unit',
+                    'batch_identifier' => $batch->batch_identifier ?? "#{$batch->id}",
+                    'expiry_date' => $batch->expiry_date?->toDateString(),
+                ];
+                $remainingQuantity -= $quantity;
+                $virtualRemaining[$batch->id] = $availableQuantity - $quantity;
+            }
+
+            if ($remainingQuantity > 0) {
+                throw new InvalidArgumentException('Insufficient available stock to generate the handover list.');
+            }
+        }
+
+        return $allocations;
     }
 
     private function handoverPreviewCacheKey(string $token): string
     {
         return "sales-order-handover-preview:{$token}";
+    }
+
+    private function handoverPreviewLockKey(string $token): string
+    {
+        return "sales-order-handover-preview-lock:{$token}";
+    }
+
+    /** @return array{order_id: int, actor_id: int, allocations: array<int, mixed>, shift_id?: int|null, context?: string, order_fingerprint?: string} */
+    private function handoverPreview(string $token, SalesOrder $order, User $actor): array
+    {
+        $preview = Cache::get($this->handoverPreviewCacheKey($token));
+        if (! is_array($preview)
+            || ($preview['order_id'] ?? null) !== $order->id
+            || ($preview['actor_id'] ?? null) !== $actor->id
+            || ! isset($preview['allocations'])
+            || ! is_array($preview['allocations'])) {
+            throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
+        }
+
+        return $preview;
+    }
+
+    private function orderFingerprint(SalesOrder $order): string
+    {
+        $order->loadMissing('items');
+        $items = $order->items
+            ->sortBy('id')
+            ->map(fn (SalesOrderItem $item): array => [
+                'id' => $item->id,
+                'product_variant_id' => $item->product_variant_id,
+                'sale_unit_id' => $item->sale_unit_id,
+                'quantity' => $item->quantity,
+                'conversion_factor' => $item->conversion_factor,
+            ])
+            ->values()
+            ->all();
+
+        return hash('sha256', json_encode([
+            'order_id' => $order->id,
+            'actor_id' => $order->user_id,
+            'store_id' => $order->store_id,
+            'shift_id' => $order->cash_register_shift_id,
+            'items' => $items,
+        ], JSON_THROW_ON_ERROR));
     }
 
     private function requireAssignedCashier(SalesOrder $order, User $actor): void
@@ -742,7 +860,12 @@ final class SalesOrderService
             'items.productVariant.activeSaleUnits',
             'items.productVariant.batches' => fn (HasMany $query): HasMany => $query
                 ->where('store_id', $order->store_id)
-                ->where('status', 'active'),
+                ->where('status', 'active')
+                ->where('remaining_quantity', '>', 0)
+                ->where(fn ($query) => $query->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', today()))
+                ->orderByRaw('expiry_date IS NULL')
+                ->orderBy('expiry_date')
+                ->orderBy('created_at'),
             'items.saleUnit',
             'items.stockAllocations.batch',
             'payments.user',

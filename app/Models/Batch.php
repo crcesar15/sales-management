@@ -69,8 +69,27 @@ final class Batch extends Model
         $query->where('status', 'active');
     }
 
+    /** @param  Builder<self>  $query */
+    public function scopeFulfillableAt(Builder $query, int $storeId): void
+    {
+        $query->where('store_id', $storeId)
+            ->active()
+            ->where('remaining_quantity', '>', 0)
+            ->where(fn (Builder $query) => $query
+                ->whereNull('expiry_date')
+                ->orWhereDate('expiry_date', '>=', today()));
+    }
+
+    /** @param  Builder<self>  $query */
+    public function scopeFefo(Builder $query): void
+    {
+        $query->orderByRaw('expiry_date IS NULL')
+            ->orderBy('expiry_date')
+            ->orderBy('created_at');
+    }
+
     /**
-     * Batches available for FIFO consumption.
+     * Batches available for FEFO consumption.
      *
      * @param  Builder<self>  $query
      * @return Builder<self>
@@ -78,10 +97,8 @@ final class Batch extends Model
     public function scopeAvailable(Builder $query, int $variantId, int $storeId): Builder
     {
         return $query->where('product_variant_id', $variantId)
-            ->where('store_id', $storeId)
-            ->active()
-            ->where('remaining_quantity', '>', 0)
-            ->orderBy('created_at', 'asc');
+            ->fulfillableAt($storeId)
+            ->fefo();
     }
 
     /**
