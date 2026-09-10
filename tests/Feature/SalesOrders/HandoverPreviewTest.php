@@ -7,6 +7,7 @@ use App\Enums\PermissionsEnum;
 use App\Models\Batch;
 use App\Models\CashRegister;
 use App\Models\CashRegisterShift;
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Store;
@@ -35,6 +36,7 @@ beforeEach(function (): void {
     ]);
     $this->service = app(SalesOrderService::class);
     $this->order = $this->service->create([
+        'customer_id' => Customer::factory()->create()->id,
         'store_id' => $this->store->id,
         'cash_register_shift_id' => $this->shift->id,
         'items' => [[

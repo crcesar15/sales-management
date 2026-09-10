@@ -16,6 +16,7 @@ use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\CashRegisterShiftService;
+use App\Services\SalesOrderService;
 use Inertia\Testing\AssertableInertia;
 
 beforeEach(function (): void {
@@ -61,6 +62,8 @@ beforeEach(function (): void {
             'unit_price' => 1,
         ]],
     ];
+    $this->handoverToken = fn (SalesOrder $order): string => app(SalesOrderService::class)
+        ->previewPosFulfillment($order, $this->cashier)['token'];
 });
 
 it('creates a durable POS draft from the active shift and server prices', function (): void {
@@ -132,6 +135,7 @@ it('completes a cash sale and records tendered cash and change', function (): vo
 
     $this->actingAs($this->cashier)
         ->post(route('pos.sales.complete', $order), [
+            'handover_token' => ($this->handoverToken)($order),
             'payment_mode' => 'cash',
             'cash_received' => 250,
             'cash_amount' => null,
@@ -141,12 +145,15 @@ it('completes a cash sale and records tendered cash and change', function (): vo
         ->assertRedirect(route('pos.sales.receipt', $order));
 
     $payment = $order->payments()->sole();
+    $allocation = $order->items()->sole()->stockAllocations()->sole();
     expect($order->refresh()->status)->toBe(SalesOrderStatus::COMPLETED)
         ->and($order->payment_status)->toBe(SalesOrderPaymentStatus::PAID)
         ->and((float) $payment->amount)->toBe(200.0)
         ->and((float) $payment->tendered_amount)->toBe(250.0)
         ->and((float) $payment->change_amount)->toBe(50.0)
         ->and($payment->cash_register_shift_id)->toBe($this->shift->id)
+        ->and($allocation->batch_id)->toBe($this->batch->id)
+        ->and($allocation->quantity)->toBe(2)
         ->and($this->batch->refresh()->remaining_quantity)->toBe(8);
 });
 
@@ -156,6 +163,7 @@ it('completes a manually confirmed QR sale without requiring a reference', funct
 
     $this->actingAs($this->cashier)
         ->post(route('pos.sales.complete', $order), [
+            'handover_token' => ($this->handoverToken)($order),
             'payment_mode' => 'qr',
             'qr_confirmed' => true,
         ])
@@ -174,6 +182,7 @@ it('splits payment between cash and the automatically calculated QR remainder', 
 
     $this->actingAs($this->cashier)
         ->post(route('pos.sales.complete', $order), [
+            'handover_token' => ($this->handoverToken)($order),
             'payment_mode' => 'split',
             'cash_amount' => 80,
             'qr_reference' => 'QR-123',
@@ -193,11 +202,13 @@ it('splits payment between cash and the automatically calculated QR remainder', 
 it('rolls the full checkout back when stock is no longer available', function (): void {
     $this->actingAs($this->cashier)->post(route('pos.sales.store'), ($this->draftPayload)());
     $order = SalesOrder::query()->sole();
+    $handoverToken = ($this->handoverToken)($order);
     $this->batch->update(['remaining_quantity' => 0]);
 
     $this->actingAs($this->cashier)
         ->from(route('pos.sales.payment', $order))
         ->post(route('pos.sales.complete', $order), [
+            'handover_token' => $handoverToken,
             'payment_mode' => 'cash',
             'cash_received' => 200,
         ])
@@ -212,10 +223,12 @@ it('rolls the full checkout back when stock is no longer available', function ()
 it('does not complete a draft when its product becomes inactive', function (): void {
     $this->actingAs($this->cashier)->post(route('pos.sales.store'), ($this->draftPayload)());
     $order = SalesOrder::query()->sole();
+    $handoverToken = ($this->handoverToken)($order);
     $this->variant->update(['status' => 'inactive']);
 
     $this->actingAs($this->cashier)
         ->post(route('pos.sales.complete', $order), [
+            'handover_token' => $handoverToken,
             'payment_mode' => 'cash',
             'cash_received' => 200,
         ])
@@ -257,6 +270,7 @@ it('requires explicit QR confirmation', function (): void {
 
     $this->actingAs($this->cashier)
         ->post(route('pos.sales.complete', $order), [
+            'handover_token' => ($this->handoverToken)($order),
             'payment_mode' => 'qr',
             'qr_confirmed' => false,
         ])
@@ -270,6 +284,7 @@ it('does not duplicate payments when a completed checkout is submitted again', f
     $this->actingAs($this->cashier)->post(route('pos.sales.store'), ($this->draftPayload)());
     $order = SalesOrder::query()->sole();
     $payload = [
+        'handover_token' => ($this->handoverToken)($order),
         'payment_mode' => 'cash',
         'cash_received' => 200,
     ];
@@ -282,6 +297,59 @@ it('does not duplicate payments when a completed checkout is submitted again', f
         ->assertSessionHasErrors('payment');
 
     expect($order->payments()->count())->toBe(1);
+});
+
+it('requires a current handover preview before completing a sale', function (): void {
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), ($this->draftPayload)());
+    $order = SalesOrder::query()->sole();
+
+    $this->actingAs($this->cashier)
+        ->post(route('pos.sales.complete', $order), [
+            'payment_mode' => 'cash',
+            'cash_received' => 200,
+        ])
+        ->assertSessionHasErrors('handover_token');
+
+    expect($order->refresh()->status)->toBe(SalesOrderStatus::DRAFT)
+        ->and($order->payments()->exists())->toBeFalse();
+});
+
+it('rejects an expired handover preview without recording payment', function (): void {
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), ($this->draftPayload)());
+    $order = SalesOrder::query()->sole();
+    $handoverToken = ($this->handoverToken)($order);
+    $this->travel(11)->minutes();
+
+    $this->actingAs($this->cashier)
+        ->post(route('pos.sales.complete', $order), [
+            'handover_token' => $handoverToken,
+            'payment_mode' => 'cash',
+            'cash_received' => 200,
+        ])
+        ->assertSessionHasErrors('payment');
+
+    expect($order->refresh()->status)->toBe(SalesOrderStatus::DRAFT)
+        ->and($order->payments()->exists())->toBeFalse();
+});
+
+it('rejects a handover preview generated before the draft was changed', function (): void {
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), ($this->draftPayload)());
+    $order = SalesOrder::query()->sole();
+    $handoverToken = ($this->handoverToken)($order);
+    $updatedPayload = ($this->draftPayload)();
+    $updatedPayload['items'][0]['quantity'] = 3;
+    $this->actingAs($this->cashier)->put(route('pos.sales.update', $order), $updatedPayload);
+
+    $this->actingAs($this->cashier)
+        ->post(route('pos.sales.complete', $order), [
+            'handover_token' => $handoverToken,
+            'payment_mode' => 'cash',
+            'cash_received' => 300,
+        ])
+        ->assertSessionHasErrors('payment');
+
+    expect($order->refresh()->status)->toBe(SalesOrderStatus::DRAFT)
+        ->and($order->payments()->exists())->toBeFalse();
 });
 
 it('discards an unpaid POS draft', function (): void {
