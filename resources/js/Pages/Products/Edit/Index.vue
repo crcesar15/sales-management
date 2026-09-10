@@ -10,10 +10,16 @@ import { route } from "ziggy-js";
 import { computed, ref } from "vue";
 import { configureYupLocale } from "@/validations/yupLocale";
 import type { Brand } from "@app-types/brand-types";
+import type { BrandResponse } from "@app-types/brand-types";
 import type { Category } from "@app-types/category-types";
+import type { CategoryResponse } from "@app-types/category-types";
 import type { MeasurementUnit } from "@app-types/measurement-unit-types";
+import type { MeasurementUnitResponse } from "@app-types/measurement-unit-types";
 import type { ProductOption, ProductVariantInline } from "@app-types/product-types";
 import AppLayout from "@layouts/admin.vue";
+import CreateBrandDialog from "@pages/Products/Components/CreateBrandDialog.vue";
+import CreateCategoryDialog from "@pages/Products/Components/CreateCategoryDialog.vue";
+import CreateMeasurementUnitDialog from "@pages/Products/Components/CreateMeasurementUnitDialog.vue";
 import ProductImages from "@pages/Products/Components/ProductImages.vue";
 import OptionsEditor from "@pages/Products/Edit/Components/OptionsEditor.vue";
 import VariantsPanel from "@pages/Products/Edit/Components/VariantsPanel.vue";
@@ -48,6 +54,13 @@ const props = defineProps<{
 const toast = useToast();
 const { t } = useI18n();
 configureYupLocale(t);
+
+const brands = ref<Array<Pick<Brand, "id" | "name">>>([...props.brands]);
+const categories = ref<Array<Pick<Category, "id" | "name">>>([...props.categories]);
+const measurementUnits = ref<Array<Pick<MeasurementUnit, "id" | "name">>>([...props.measurementUnits]);
+const showBrandEditor = ref(false);
+const showCategoryEditor = ref(false);
+const showMeasurementUnitEditor = ref(false);
 
 // Product type selector
 const productTypeOptions = [
@@ -130,6 +143,25 @@ const [measurementUnitId, measurementUnitIdAttrs] = defineField("measurement_uni
 const [categoriesIds, categoriesIdsAttrs] = defineField("categories_ids");
 const [barcode, barcodeAttrs] = defineField("barcode");
 const [identifier, identifierAttrs] = defineField("identifier");
+
+const addOption = <T extends { id: number; name: string }>(options: T[], option: T): T[] => {
+  return [...options, option].sort((a, b) => a.name.localeCompare(b.name));
+};
+
+const onBrandCreated = (brand: BrandResponse) => {
+  brands.value = addOption(brands.value, brand);
+  brandId.value = brand.id;
+};
+
+const onCategoryCreated = (category: CategoryResponse) => {
+  categories.value = addOption(categories.value, category);
+  categoriesIds.value = [...new Set([...(categoriesIds.value ?? []), category.id])];
+};
+
+const onMeasurementUnitCreated = (measurementUnit: MeasurementUnitResponse) => {
+  measurementUnits.value = addOption(measurementUnits.value, measurementUnit);
+  measurementUnitId.value = measurementUnit.id;
+};
 
 // Description char counter
 const descriptionCharCount = computed(() => (description.value ?? "").length);
@@ -342,17 +374,29 @@ const onSubmit = handleSubmit((values) => {
           </template>
           <template #content>
             <div class="flex flex-col gap-2 mb-3">
-              <label for="categories">
-                {{ t("Categories") }}
-                <span class="text-red-400">*</span>
-              </label>
+              <div class="flex items-center justify-between">
+                <label for="categories">
+                  {{ t("Categories") }}
+                  <span class="text-red-400">*</span>
+                </label>
+                <Button
+                  v-can="'category.create'"
+                  v-tooltip.top="t('Add Category')"
+                  icon="fa fa-plus"
+                  severity="secondary"
+                  text
+                  rounded
+                  size="small"
+                  @click="showCategoryEditor = true"
+                />
+              </div>
               <MultiSelect
                 id="categories"
                 v-model="categoriesIds"
                 v-bind="categoriesIdsAttrs"
                 display="chip"
                 filter
-                :options="props.categories"
+                :options="categories"
                 option-label="name"
                 option-value="id"
                 :class="{ 'p-invalid': submitCount > 0 && !!errors.categories_ids }"
@@ -362,14 +406,26 @@ const onSubmit = handleSubmit((values) => {
               </small>
             </div>
             <div class="flex flex-col gap-2 mb-3">
-              <label for="brand">{{ t("Brand") }}</label>
+              <div class="flex items-center justify-between">
+                <label for="brand">{{ t("Brand") }}</label>
+                <Button
+                  v-can="'brand.create'"
+                  v-tooltip.top="t('Add Brand')"
+                  icon="fa fa-plus"
+                  severity="secondary"
+                  text
+                  rounded
+                  size="small"
+                  @click="showBrandEditor = true"
+                />
+              </div>
               <Select
                 id="brand"
                 v-model="brandId"
                 v-bind="brandIdAttrs"
                 filter
                 show-clear
-                :options="props.brands"
+                :options="brands"
                 option-label="name"
                 option-value="id"
                 :class="{ 'p-invalid': submitCount > 0 && !!errors.brand_id }"
@@ -379,13 +435,25 @@ const onSubmit = handleSubmit((values) => {
               </small>
             </div>
             <div class="flex flex-col gap-2 mb-3">
-              <label for="measurement-unit">{{ t("Measurement Unit") }}</label>
+              <div class="flex items-center justify-between">
+                <label for="measurement-unit">{{ t("Measurement Unit") }}</label>
+                <Button
+                  v-can="'measurement_unit.create'"
+                  v-tooltip.top="t('Add Measurement Unit')"
+                  icon="fa fa-plus"
+                  severity="secondary"
+                  text
+                  rounded
+                  size="small"
+                  @click="showMeasurementUnitEditor = true"
+                />
+              </div>
               <Select
                 id="measurement-unit"
                 v-model="measurementUnitId"
                 v-bind="measurementUnitIdAttrs"
                 show-clear
-                :options="props.measurementUnits"
+                :options="measurementUnits"
                 option-label="name"
                 option-value="id"
               />
@@ -403,5 +471,8 @@ const onSubmit = handleSubmit((values) => {
         />
       </div>
     </div>
+    <CreateBrandDialog v-model:show-modal="showBrandEditor" @created="onBrandCreated" />
+    <CreateCategoryDialog v-model:show-modal="showCategoryEditor" @created="onCategoryCreated" />
+    <CreateMeasurementUnitDialog v-model:show-modal="showMeasurementUnitEditor" @created="onMeasurementUnitCreated" />
   </div>
 </template>
