@@ -6,347 +6,368 @@ $sidebar-width-collapsed: 4rem;
 $sidebar-transition: 200ms ease;
 
 .layout-sidebar {
-    position: fixed;
-    width: $sidebar-width-expanded;
-    height: 100vh;
-    z-index: 999;
-    user-select: none;
-    top: 0;
-    left: 0;
-    transition: width $sidebar-transition;
-    background-color: var(--surface-overlay);
-    border-right: 1px solid var(--surface-border);
-    padding: 0.5rem;
+  position: fixed;
+  width: $sidebar-width-expanded;
+  height: 100vh;
+  z-index: 999;
+  user-select: none;
+  top: 0;
+  left: 0;
+  transition: width $sidebar-transition;
+  background-color: var(--surface-overlay);
+  border-right: 1px solid var(--surface-border);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  // ========== Header Section (Logo + Toggle) ==========
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+
+    .logo-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-color);
+      gap: 0.75rem;
+      padding: 0.25rem;
+      border-radius: var(--p-content-border-radius);
+      transition: background 150ms ease;
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+      }
+    }
+
+    .logo-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: var(--p-content-border-radius);
+      background: var(--primary-color);
+      color: var(--primary-contrast-color);
+      font-size: 1.25rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .sidebar-collapse-btn {
+      display: none; // Hidden by default (mobile), shown on desktop via media query
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      background: transparent;
+      border-radius: var(--p-content-border-radius);
+      cursor: pointer;
+      color: var(--text-color-secondary);
+      transition: all 150ms ease;
+      flex-shrink: 0;
+
+      &:hover {
+        background: var(--surface-hover);
+        color: var(--text-color);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  // ========== Menu Section (Scrollable) ==========
+  .sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .sidebar-direct-links {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
 
-    // ========== Header Section (Logo + Toggle) ==========
+  // ========== User Section (Fixed at Bottom) ==========
+  .sidebar-user {
+    flex-shrink: 0;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--surface-border);
+
+    .user-button {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 0.5rem;
+      border: none;
+      background: transparent;
+      border-radius: var(--p-content-border-radius);
+      cursor: pointer;
+      transition: background 150ms ease;
+      text-align: left;
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: -2px;
+      }
+    }
+
+    .user-avatar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: var(--primary-contrast-color);
+      font-size: 1rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .user-info {
+      flex: 1;
+      margin-left: 0.75rem;
+      overflow: hidden;
+      transition: opacity $sidebar-transition;
+    }
+
+    .user-name {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-menu-icon {
+      color: var(--text-color-secondary);
+      font-size: 0.875rem;
+      margin-left: 0.5rem;
+      transition: opacity $sidebar-transition;
+    }
+  }
+
+  // ========== Collapsed State ==========
+  &.sidebar-collapsed {
+    width: $sidebar-width-collapsed;
+
     .sidebar-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.75rem 0.5rem;
-        margin-bottom: 0.5rem;
-        flex-shrink: 0;
+      justify-content: center;
+      padding: 0.75rem 0;
 
-        .logo-link {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: var(--text-color);
-            gap: 0.75rem;
-            padding: 0.25rem;
-            border-radius: var(--p-content-border-radius);
-            transition: background 150ms ease;
+      .logo-link {
+        display: none;
+      }
 
-            &:hover {
-                background: var(--surface-hover);
-            }
-
-            &:focus-visible {
-                outline: 2px solid var(--primary-color);
-                outline-offset: 2px;
-            }
-        }
-
-        .logo-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: var(--p-content-border-radius);
-            background: var(--primary-color);
-            color: var(--primary-contrast-color);
-            font-size: 1.25rem;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .logo-text {
-            font-size: 1.25rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .sidebar-collapse-btn {
-            display: none; // Hidden by default (mobile), shown on desktop via media query
-            align-items: center;
-            justify-content: center;
-            width: 2rem;
-            height: 2rem;
-            border: none;
-            background: transparent;
-            border-radius: var(--p-content-border-radius);
-            cursor: pointer;
-            color: var(--text-color-secondary);
-            transition: all 150ms ease;
-            flex-shrink: 0;
-
-            &:hover {
-                background: var(--surface-hover);
-                color: var(--text-color);
-            }
-
-            &:focus-visible {
-                outline: 2px solid var(--primary-color);
-                outline-offset: 2px;
-            }
-        }
+      .sidebar-collapse-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+      }
     }
 
-    // ========== Menu Section (Scrollable) ==========
-    .sidebar-menu {
-        flex: 1;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    // ========== User Section (Fixed at Bottom) ==========
     .sidebar-user {
-        flex-shrink: 0;
-        padding-top: 0.5rem;
-        margin-top: 0.5rem;
-        border-top: 1px solid var(--surface-border);
+      .user-info,
+      .user-menu-icon {
+        opacity: 0;
+        width: 0;
+        margin: 0;
+      }
 
-        .user-button {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 0.5rem;
-            border: none;
-            background: transparent;
-            border-radius: var(--p-content-border-radius);
-            cursor: pointer;
-            transition: background 150ms ease;
-            text-align: left;
-
-            &:hover {
-                background: var(--surface-hover);
-            }
-
-            &:focus-visible {
-                outline: 2px solid var(--primary-color);
-                outline-offset: -2px;
-            }
-        }
-
-        .user-avatar {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 50%;
-            background: var(--primary-color);
-            color: var(--primary-contrast-color);
-            font-size: 1rem;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .user-info {
-            flex: 1;
-            margin-left: 0.75rem;
-            overflow: hidden;
-            transition: opacity $sidebar-transition;
-        }
-
-        .user-name {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-color);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-menu-icon {
-            color: var(--text-color-secondary);
-            font-size: 0.875rem;
-            margin-left: 0.5rem;
-            transition: opacity $sidebar-transition;
-        }
+      .user-button {
+        justify-content: center;
+      }
     }
 
-    // ========== Collapsed State ==========
-    &.sidebar-collapsed {
-        width: $sidebar-width-collapsed;
+    .sidebar-direct-links,
+    .layout-panel-menu {
+      .menu-item {
+        justify-content: center;
+        padding: 0.625rem;
+      }
 
-        .sidebar-header {
-            justify-content: center;
-            padding: 0.75rem 0;
-
-            .sidebar-collapse-btn {
-                width: 2.5rem;
-                height: 2.5rem;
-            }
-        }
-
-        .sidebar-user {
-            .user-info,
-            .user-menu-icon {
-                opacity: 0;
-                width: 0;
-                margin: 0;
-            }
-
-            .user-button {
-                justify-content: center;
-            }
-        }
-
-        .layout-panel-menu {
-            .menu-item {
-                justify-content: center;
-                padding: 0.625rem;
-            }
-
-            .menu-label,
-            .menu-chevron {
-                opacity: 0;
-                width: 0;
-                margin: 0;
-                overflow: hidden;
-            }
-
-            .p-panelmenu-content {
-                display: none;
-            }
-        }
+      .menu-label,
+      .menu-chevron {
+        opacity: 0;
+        width: 0;
+        margin: 0;
+        overflow: hidden;
+      }
     }
 
     .layout-panel-menu {
-        border: none;
-        background: transparent;
+      .p-panelmenu-content {
+        display: none;
+      }
 
-        // ========== Remove PrimeVue Default Borders ==========
-        .p-panelmenu-panel,
-        .p-panelmenu-header,
-        .p-panelmenu-header-content,
-        .p-panelmenu-content {
-            border: none !important;
-            background: transparent !important;
-            padding: 0 !important;
-        }
+      .menu-parent.active-group {
+        background: var(--p-highlight-background);
+      }
+    }
+  }
 
-        // ========== Menu Item Base Styles ==========
-        .menu-item {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            padding: 0.625rem 1rem;
-            border-radius: var(--p-content-border-radius);
-            color: var(--text-color);
-            text-decoration: none;
-            transition: all 150ms ease;
-            margin: 0.125rem 0;
+  .sidebar-direct-links,
+  .layout-panel-menu {
+    .menu-item {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      padding: 0.625rem 1rem;
+      border-radius: var(--p-content-border-radius);
+      color: var(--text-color);
+      text-decoration: none;
+      transition:
+        background-color 150ms ease,
+        color 150ms ease;
+      margin: 0.125rem 0;
 
-            &:hover {
-                background: var(--surface-hover);
-            }
+      &:hover {
+        background: var(--surface-hover);
+      }
 
-            &:focus-visible {
-                outline: 2px solid var(--primary-color);
-                outline-offset: -2px;
-            }
-        }
+      &:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: -2px;
+      }
+    }
+
+    .menu-icon {
+      width: 1.25rem;
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--text-color-secondary);
+      transition: color 150ms ease;
+    }
+
+    .menu-label {
+      margin-left: 0.75rem;
+      font-size: 0.9rem;
+      font-weight: 450;
+      white-space: nowrap;
+    }
+
+    .active-route {
+      font-weight: 600;
+      color: var(--primary-color);
+      background: var(--p-highlight-background);
+
+      .menu-icon {
+        color: var(--primary-color);
+      }
+    }
+  }
+
+  .layout-panel-menu {
+    border: none;
+    background: transparent;
+
+    // ========== Remove PrimeVue Default Borders ==========
+    .p-panelmenu-panel,
+    .p-panelmenu-header,
+    .p-panelmenu-header-content,
+    .p-panelmenu-content {
+      border: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+    }
+
+    .menu-chevron {
+      margin-left: auto;
+      font-size: 0.7rem;
+      color: var(--text-color-secondary);
+      transition: transform 200ms ease;
+    }
+
+    // ========== Parent Items (Groups) ==========
+    .menu-parent {
+      font-weight: 500;
+
+      .menu-icon {
+        color: var(--text-color);
+      }
+
+      &.active-group {
+        color: var(--primary-color);
 
         .menu-icon {
-            width: 1.25rem;
-            text-align: center;
-            font-size: 0.95rem;
-            color: var(--text-color-secondary);
-            transition: color 150ms ease;
+          color: var(--primary-color);
+        }
+      }
+    }
+
+    // Expanded state - rotate chevron
+    .p-panelmenu-header[data-p-active="true"] {
+      .menu-chevron {
+        transform: rotate(180deg);
+      }
+    }
+
+    .p-panelmenu-header:focus-visible .menu-item {
+      outline: 2px solid var(--primary-color);
+      outline-offset: -2px;
+    }
+
+    // ========== Child Items (Submenu) ==========
+    .p-panelmenu-content {
+      .menu-item {
+        padding-left: 1.75rem;
+        font-weight: 400;
+
+        .menu-icon {
+          font-size: 0.85rem;
+          width: 1rem;
         }
 
         .menu-label {
-            margin-left: 0.75rem;
-            font-size: 0.9rem;
-            font-weight: 450;
-            white-space: nowrap;
+          font-size: 0.875rem;
         }
-
-        .menu-chevron {
-            margin-left: auto;
-            font-size: 0.7rem;
-            color: var(--text-color-secondary);
-            transition: transform 200ms ease;
-        }
-
-        // ========== Parent Items (Groups) ==========
-        .menu-parent {
-            font-weight: 500;
-
-            .menu-icon {
-                color: var(--text-color);
-            }
-        }
-
-        // Expanded state - rotate chevron
-        .p-panelmenu-panel.p-panelmenu-panel-active {
-            .menu-chevron {
-                transform: rotate(180deg);
-            }
-        }
-
-        // ========== Child Items (Submenu) ==========
-        .p-panelmenu-content {
-            .menu-item {
-                padding-left: 1.75rem;
-                font-weight: 400;
-
-                .menu-icon {
-                    font-size: 0.85rem;
-                    width: 1rem;
-                }
-
-                .menu-label {
-                    font-size: 0.875rem;
-                }
-            }
-        }
-
-        // ========== Active Route ==========
-        .active-route {
-            font-weight: 600;
-            color: var(--primary-color);
-            background: var(--p-highlight-background);
-            position: relative;
-
-            &::before {
-                content: '';
-                position: absolute;
-                left: 0;
-                top: 0.375rem;
-                bottom: 0.375rem;
-                width: 3px;
-                background: var(--primary-color);
-                border-radius: 0 2px 2px 0;
-            }
-
-            .menu-icon {
-                color: var(--primary-color);
-            }
-        }
-
-        // ========== Visual Separators ==========
-        .menu-separator {
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            position: relative;
-
-            &::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0.75rem;
-                right: 0.75rem;
-                height: 1px;
-                background: var(--surface-border);
-            }
-        }
+      }
     }
+
+    // ========== Visual Separators ==========
+    .menu-separator {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      position: relative;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0.75rem;
+        right: 0.75rem;
+        height: 1px;
+        background: var(--surface-border);
+      }
+    }
+  }
 }
