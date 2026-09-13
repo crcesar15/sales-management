@@ -1,54 +1,40 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
-import { Link, usePage, router } from "@inertiajs/vue3";
+import { onBeforeUnmount, onMounted, shallowRef } from "vue";
+import { Link } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
 import PanelMenu from "primevue/panelmenu";
-import Menu from "primevue/menu";
-import type { MenuItem } from "primevue/menuitem";
 import { useLayout } from "./Composables/useLayout";
 import { useMenuItems } from "../Composables/useMenuItems";
 import type { SidebarMenuItem } from "../Types/menu";
+import AppUserMenu from "./AppUserMenu.vue";
 
-const page = usePage();
 const { t } = useI18n();
-const { isDarkMode, toggleDarkMode, isSidebarCollapsed, toggleSidebar, layoutState, onMenuToggle } = useLayout();
+const { isSidebarCollapsed, toggleSidebar, layoutState, onMenuToggle } = useLayout();
 const { directMenuItems, groupedMenuItems, expandedKeys, updateExpandedKeys, isActiveRoute, isActiveGroup } = useMenuItems();
 
-const userMenu = useTemplateRef<{ toggle: (event: Event) => void }>("userMenu");
+const isMobileViewport = shallowRef(false);
 
-// ========================================
-// User Section Logic
-// ========================================
-const userName = computed(() => {
-  const user = page.props.auth?.user as { name?: string } | undefined;
-  return user?.name || t("User");
+onMounted(() => {
+  updateViewport();
+  window.addEventListener("resize", updateViewport);
 });
 
-const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", updateViewport);
+});
 
-const userMenuItems = computed<MenuItem[]>(() => [
-  {
-    label: t("Profile"),
-    icon: "fa fa-user",
-    command: () => router.visit(route("profile")),
-  },
-  { separator: true },
-  {
-    label: isDarkMode.value ? t("Light Mode") : t("Dark Mode"),
-    icon: isDarkMode.value ? "fa fa-sun" : "fa fa-moon",
-    command: () => toggleDarkMode(),
-  },
-  { separator: true },
-  {
-    label: t("Logout"),
-    icon: "fa fa-sign-out-alt",
-    command: () => router.post(route("logout")),
-  },
-]);
+function toggleSidebarControl(): void {
+  if (isMobileViewport.value) {
+    onMenuToggle();
+    return;
+  }
 
-function toggleUserMenu(event: Event): void {
-  userMenu.value?.toggle(event);
+  toggleSidebar();
+}
+
+function updateViewport(): void {
+  isMobileViewport.value = window.innerWidth < 992;
 }
 
 function onNavigate(): void {
@@ -85,14 +71,14 @@ function onPanelClose(event: { item: SidebarMenuItem }): void {
         <span class="logo-text">SAKAI</span>
       </Link>
       <button
-        v-tooltip.right="isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
+        v-tooltip.right="isMobileViewport ? t('Close navigation') : isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
         class="sidebar-collapse-btn"
-        :aria-label="isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
-        :aria-expanded="!isSidebarCollapsed"
+        :aria-label="isMobileViewport ? t('Close navigation') : isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
+        :aria-expanded="isMobileViewport ? true : !isSidebarCollapsed"
         aria-controls="app-sidebar-navigation"
-        @click="toggleSidebar"
+        @click="toggleSidebarControl"
       >
-        <i class="fa fa-bars" aria-hidden="true" />
+        <i :class="isMobileViewport ? 'fa fa-times' : 'fa fa-bars'" aria-hidden="true" />
       </button>
     </div>
 
@@ -153,13 +139,7 @@ function onPanelClose(event: { item: SidebarMenuItem }): void {
 
     <!-- User Section: Profile + Dropdown -->
     <div class="sidebar-user">
-      <button v-ripple class="user-button" @click="toggleUserMenu">
-        <span class="user-avatar">{{ userInitial }}</span>
-        <span class="user-info">
-          <span class="user-name">{{ userName }}</span>
-        </span>
-      </button>
-      <Menu ref="userMenu" :model="userMenuItems" popup />
+      <AppUserMenu />
     </div>
   </aside>
 </template>

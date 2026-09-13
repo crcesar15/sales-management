@@ -17,25 +17,27 @@ $sidebar-width-collapsed: 4rem;
     padding-bottom: 2rem;
 }
 
+.mobile-topbar {
+    display: none;
+}
+
 // ========== Mobile Menu Toggle Button ==========
 .mobile-menu-toggle {
     display: none;
-    position: fixed;
-    top: 1rem;
-    left: 1rem;
-    z-index: 998;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 44px;
+    height: 44px;
     align-items: center;
     justify-content: center;
-    background: var(--surface-card);
-    border: 1px solid var(--surface-border);
+    padding: 0;
+    background: transparent;
+    border: none;
     border-radius: var(--p-content-border-radius);
     cursor: pointer;
     color: var(--text-color);
     font-size: 1.25rem;
-    transition: all 150ms ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition:
+        background-color 150ms ease,
+        color 150ms ease;
 
     &:hover {
         background: var(--surface-hover);

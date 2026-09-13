@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from "vue";
+import { usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Toast from "primevue/toast";
 import { useLayout } from "./Composables/useLayout";
 import AppFooter from "./AppFooter.vue";
 import AppSidebar from "./AppSidebar.vue";
+import AppUserMenu from "./AppUserMenu.vue";
 
+const page = usePage();
 const { t } = useI18n();
 const { layoutState, isSidebarActive, isSidebarCollapsed, resetMenu, onMenuToggle } = useLayout();
 
@@ -15,6 +18,7 @@ const mobileMenuToggle = useTemplateRef<HTMLButtonElement>("mobileMenuToggle");
 
 const isMobileSidebarOpen = computed(() => isMobileViewport.value && layoutState.staticMenuMobileActive);
 const isMobileSidebarHidden = computed(() => isMobileViewport.value && !isMobileSidebarOpen.value);
+const appName = computed(() => page.props.appConfig?.name || "Sales Management");
 
 watch(isSidebarActive, (newVal) => {
   if (newVal) {
@@ -46,7 +50,7 @@ watch(isMobileSidebarOpen, (isOpen, _wasOpen, onCleanup) => {
   void nextTick(() => {
     if (isCancelled) return;
 
-    document.querySelector<HTMLElement>("#app-sidebar-navigation a, #app-sidebar-navigation [role='button']")?.focus();
+    document.querySelector<HTMLButtonElement>(".sidebar-collapse-btn")?.focus();
   });
 });
 
@@ -123,17 +127,20 @@ function onDocumentKeydown(event: KeyboardEvent): void {
 
 <template>
   <div class="layout-wrapper" :class="containerClass">
-    <!-- Mobile Menu Toggle (visible only on mobile) -->
-    <button
-      ref="mobileMenuToggle"
-      class="mobile-menu-toggle"
-      :aria-label="isMobileSidebarOpen ? t('Close navigation') : t('Open navigation')"
-      :aria-expanded="isMobileSidebarOpen"
-      aria-controls="app-sidebar"
-      @click="onMenuToggle"
-    >
-      <i class="fa fa-bars" aria-hidden="true" />
-    </button>
+    <header class="mobile-topbar" :inert="isMobileSidebarOpen" :aria-hidden="isMobileSidebarOpen ? 'true' : undefined">
+      <button
+        ref="mobileMenuToggle"
+        class="mobile-menu-toggle"
+        :aria-label="isMobileSidebarOpen ? t('Close navigation') : t('Open navigation')"
+        :aria-expanded="isMobileSidebarOpen"
+        aria-controls="app-sidebar"
+        @click="onMenuToggle"
+      >
+        <i class="fa fa-bars" aria-hidden="true" />
+      </button>
+      <span class="mobile-topbar-title">{{ appName }}</span>
+      <AppUserMenu compact />
+    </header>
 
     <AppSidebar :inert="isMobileSidebarHidden" :aria-hidden="isMobileSidebarHidden ? 'true' : undefined" />
     <div class="layout-main-container" :inert="isMobileSidebarOpen" :aria-hidden="isMobileSidebarOpen ? 'true' : undefined">
