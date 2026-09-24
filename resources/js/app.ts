@@ -62,7 +62,7 @@ const AuraPreset = definePreset(Aura, {
       dark: {
         primary: {
           color: "{primary.400}",
-          contrastColor: "{surface.900}",
+          contrastColor: "#ffffff",
           hoverColor: "{primary.300}",
           activeColor: "{primary.200}",
         },
