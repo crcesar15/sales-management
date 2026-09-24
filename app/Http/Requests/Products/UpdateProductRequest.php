@@ -28,8 +28,6 @@ final class UpdateProductRequest extends FormRequest
             'status' => ['sometimes', 'in:active,inactive,archived'],
             'categories_ids' => ['nullable', 'array'],
             'categories_ids.*' => ['exists:categories,id'],
-            'barcode' => ['sometimes', 'nullable', 'string', 'max:100'],
-            'identifier' => ['sometimes', 'nullable', 'string', 'max:50'],
             'pending_media_ids' => ['nullable', 'array'],
             'pending_media_ids.*' => ['exists:pending_media_uploads,id,user_id,' . $this->user()?->id],
             'remove_media_ids' => ['nullable', 'array'],

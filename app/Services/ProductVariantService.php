@@ -12,6 +12,7 @@ use App\Models\ProductVariantOptionValue;
 use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 final class ProductVariantService
 {
@@ -150,7 +151,7 @@ final class ProductVariantService
             $valueIds = $data['option_value_ids'];
 
             if ($this->isDuplicateCombination($product, $valueIds)) {
-                throw new Exception('A variant with this combination of option values already exists.');
+                throw new InvalidArgumentException('A variant with this combination of option values already exists.');
             }
 
             $variant = ProductVariant::create([
@@ -211,11 +212,13 @@ final class ProductVariantService
 
         return $product->variants()
             ->when($excludeVariantId, fn ($q) => $q->where('id', '!=', $excludeVariantId))
-            ->whereHas('values', fn ($q) => $q->whereIn('product_option_values.id', $valueIds))
-            ->withCount([
-                'values as matching_count' => fn ($q) => $q->whereIn('product_option_values.id', $valueIds),
-            ])
-            ->having('matching_count', $combinationSize)
+            ->whereHas(
+                'values',
+                fn ($q) => $q->whereIn('product_option_values.id', $valueIds),
+                '=',
+                $combinationSize,
+            )
+            ->whereDoesntHave('values', fn ($q) => $q->whereNotIn('product_option_values.id', $valueIds))
             ->exists();
     }
 

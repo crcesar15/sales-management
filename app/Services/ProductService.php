@@ -157,12 +157,6 @@ final class ProductService
                     $currentMediaIds = $freshProduct->getMedia('images')->pluck('id')->toArray();
                     app(ProductVariantService::class)->syncVariantImages($defaultVariant, $currentMediaIds);
 
-                    if (isset($data['barcode']) || isset($data['identifier'])) {
-                        $defaultVariant->update([
-                            'barcode' => $data['barcode'] ?? $defaultVariant->barcode,
-                            'identifier' => $data['identifier'] ?? $defaultVariant->identifier,
-                        ]);
-                    }
                 }
             }
 

@@ -66,6 +66,7 @@ const searchUnits = (event: { query: string }) => {
 };
 
 interface BaseUnitRow {
+  id: number;
   isBase: true;
   name: string;
   conversion_factor: number;
@@ -74,8 +75,11 @@ interface BaseUnitRow {
   type: "sale" | "purchase";
 }
 
-const saleUnitsWithBase = computed(() => {
-  const base: BaseUnitRow = {
+type VariantUnitRow = VariantUnitResource & { isBase?: false };
+
+const saleUnitsWithBase = computed<Array<BaseUnitRow | VariantUnitRow>>(() => {
+    const base: BaseUnitRow = {
+      id: 0,
     isBase: true,
     name: `${baseUnitName.value} (${t("Base").toLowerCase()})`,
     conversion_factor: 1,
@@ -86,8 +90,9 @@ const saleUnitsWithBase = computed(() => {
   return [base, ...saleUnits.value];
 });
 
-const purchaseUnitsWithBase = computed(() => {
-  const base: BaseUnitRow = {
+const purchaseUnitsWithBase = computed<Array<BaseUnitRow | VariantUnitRow>>(() => {
+    const base: BaseUnitRow = {
+      id: 0,
     isBase: true,
     name: `${baseUnitName.value} (${t("Base").toLowerCase()})`,
     conversion_factor: 1,
@@ -204,7 +209,7 @@ const applySuggestedPrice = () => {
 const deleteForm = useForm({});
 
 const onSubmit = handleSubmit(async (values) => {
-  const payload: Record<string, unknown> = {
+  const payload = {
     type: formType.value,
     name: values.name,
     conversion_factor: values.conversion_factor,
@@ -231,14 +236,18 @@ const onSubmit = handleSubmit(async (values) => {
   };
 
   if (isEditing.value) {
-    router.put(route("variant.units.update", [props.product.id, props.variant.id, editing.value!.id]), payload as any, {
+    const unit = editing.value;
+
+    if (!unit) return;
+
+    router.put(route("variant.units.update", [props.product.id, props.variant.id, unit.id]), payload, {
       onSuccess,
       onError,
     });
     return;
   }
 
-  router.post(route("variant.units.store", [props.product.id, props.variant.id]), payload as any, {
+  router.post(route("variant.units.store", [props.product.id, props.variant.id]), payload, {
     onSuccess,
     onError,
   });
@@ -312,7 +321,7 @@ watch(formType, () => {
       >
         <!-- Sale Units Tab -->
         <TabPanel value="sale">
-          <div class="overflow-x-auto">
+          <div class="hidden overflow-x-auto md:block">
             <DataTable :value="saleUnitsWithBase">
               <Column :header="t('Name')">
                 <template #body="{ data: unit }">
@@ -346,6 +355,7 @@ watch(formType, () => {
                         icon="fa fa-pen"
                         text
                         rounded
+                        :aria-label="t('Edit unit')"
                         v-tooltip.top="t('Edit')"
                         @click="openEdit(unit as VariantUnitResource)"
                       />
@@ -355,6 +365,7 @@ watch(formType, () => {
                         text
                         rounded
                         severity="danger"
+                        :aria-label="t('Delete unit')"
                         v-tooltip.top="t('Delete')"
                         @click="onDelete(unit as VariantUnitResource)"
                       />
@@ -371,6 +382,33 @@ watch(formType, () => {
               </template>
             </DataTable>
           </div>
+          <div class="flex flex-col gap-3 md:hidden">
+            <div v-for="unit in saleUnitsWithBase" :key="unit.isBase ? 'sale-base' : unit.id" class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="m-0 font-medium" :class="{ 'italic text-surface-500 dark:text-surface-400': unit.isBase }">{{ unit.name }}</p>
+                  <p class="m-0 text-sm text-surface-500 dark:text-surface-400">{{ conversionDisplay(unit) }}</p>
+                </div>
+                <Tag v-if="unit.isBase" :value="t('Base')" severity="info" />
+                <Tag v-else :value="statusLabel(unit.status)" :severity="unit.status === 'active' ? 'success' : 'warn'" />
+              </div>
+              <div class="mt-3 flex items-center justify-between gap-3">
+                <span class="font-medium">{{ unit.price !== null && unit.price !== undefined ? formatCurrency(String(unit.price)) : "—" }}</span>
+                <div v-if="!unit.isBase" class="flex gap-1">
+                  <Button v-can="'inventory.edit'" icon="fa fa-pen" text rounded :aria-label="t('Edit unit')" @click="openEdit(unit as VariantUnitResource)" />
+                  <Button
+                    v-can="'inventory.edit'"
+                    icon="fa fa-trash"
+                    text
+                    rounded
+                    severity="danger"
+                    :aria-label="t('Delete unit')"
+                    @click="onDelete(unit as VariantUnitResource)"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="flex justify-end mt-3">
             <Button v-can="'inventory.edit'" :label="t('Add Sale Unit')" icon="fa fa-plus" @click="openCreate" />
           </div>
@@ -378,7 +416,7 @@ watch(formType, () => {
 
         <!-- Purchase Units Tab -->
         <TabPanel value="purchase">
-          <div class="overflow-x-auto">
+          <div class="hidden overflow-x-auto md:block">
             <DataTable :value="purchaseUnitsWithBase">
               <Column :header="t('Name')">
                 <template #body="{ data: unit }">
@@ -407,6 +445,7 @@ watch(formType, () => {
                         icon="fa fa-pen"
                         text
                         rounded
+                        :aria-label="t('Edit unit')"
                         v-tooltip.top="t('Edit')"
                         @click="openEdit(unit as VariantUnitResource)"
                       />
@@ -416,6 +455,7 @@ watch(formType, () => {
                         text
                         rounded
                         severity="danger"
+                        :aria-label="t('Delete unit')"
                         v-tooltip.top="t('Delete')"
                         @click="onDelete(unit as VariantUnitResource)"
                       />
@@ -431,6 +471,30 @@ watch(formType, () => {
                 </div>
               </template>
             </DataTable>
+          </div>
+          <div class="flex flex-col gap-3 md:hidden">
+            <div v-for="unit in purchaseUnitsWithBase" :key="unit.isBase ? 'purchase-base' : unit.id" class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="m-0 font-medium" :class="{ 'italic text-surface-500 dark:text-surface-400': unit.isBase }">{{ unit.name }}</p>
+                  <p class="m-0 text-sm text-surface-500 dark:text-surface-400">{{ conversionDisplay(unit) }}</p>
+                </div>
+                <Tag v-if="unit.isBase" :value="t('Base')" severity="info" />
+                <Tag v-else :value="statusLabel(unit.status)" :severity="unit.status === 'active' ? 'success' : 'warn'" />
+              </div>
+              <div v-if="!unit.isBase" class="mt-3 flex justify-end gap-1">
+                <Button v-can="'inventory.edit'" icon="fa fa-pen" text rounded :aria-label="t('Edit unit')" @click="openEdit(unit as VariantUnitResource)" />
+                <Button
+                  v-can="'inventory.edit'"
+                  icon="fa fa-trash"
+                  text
+                  rounded
+                  severity="danger"
+                  :aria-label="t('Delete unit')"
+                  @click="onDelete(unit as VariantUnitResource)"
+                />
+              </div>
+            </div>
           </div>
           <div class="flex justify-end mt-3">
             <Button v-can="'inventory.edit'" :label="t('Add Purchase Unit')" icon="fa fa-plus" @click="openCreate" />
@@ -453,7 +517,7 @@ watch(formType, () => {
             <span class="text-red-400">*</span>
           </label>
           <AutoComplete
-            id="unit-name"
+            input-id="unit-name"
             v-model="nameField"
             v-bind="nameAttrs"
             :suggestions="filteredUnits"
@@ -489,7 +553,7 @@ watch(formType, () => {
             <span class="text-red-400">*</span>
           </label>
           <InputNumber
-            id="unit-conversion"
+            input-id="unit-conversion"
             v-model="conversionField"
             v-bind="conversionAttrs"
             :min="1"
@@ -510,7 +574,7 @@ watch(formType, () => {
             <span class="text-red-400">*</span>
           </label>
           <InputNumber
-            id="unit-price"
+            input-id="unit-price"
             v-model="priceField"
             v-bind="priceAttrs"
             mode="currency"
@@ -538,7 +602,7 @@ watch(formType, () => {
         <div class="flex flex-col gap-2">
           <label for="unit-status">{{ t("Status") }}</label>
           <Select
-            id="unit-status"
+            input-id="unit-status"
             v-model="statusField"
             v-bind="statusAttrs"
             :options="statusOptions"
@@ -549,7 +613,7 @@ watch(formType, () => {
 
         <div class="flex flex-col gap-2">
           <label for="unit-sort-order">{{ t("Display Order") }}</label>
-          <InputNumber id="unit-sort-order" v-model="sortOrderField" v-bind="sortOrderAttrs" :min="0" :use-grouping="false" />
+          <InputNumber input-id="unit-sort-order" v-model="sortOrderField" v-bind="sortOrderAttrs" :min="0" :use-grouping="false" />
         </div>
       </form>
 

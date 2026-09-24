@@ -302,7 +302,7 @@ const onSort = (event: DataTableSortEvent) => {
                 text
                 rounded
                 :aria-label="t('Manage')"
-                @click="router.visit(route('inventory.variants.show', { product: data.product_id, variant: data.id }))"
+                @click="router.visit(route('inventory.variants.show', { variant: data.id }))"
               />
             </template>
           </Column>

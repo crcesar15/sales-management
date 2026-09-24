@@ -71,45 +71,45 @@ final class InventoryController extends Controller
         $variant->load([
             'values.option',
             'images',
-            'product.brand',
-            'product.categories',
-            'product.measurementUnit',
-            'product.media',
             'saleUnits',
             'purchaseUnits',
         ]);
 
         $breakdown = $this->stockService->getVariantStockBreakdown($variant);
 
-        $product = $variant->product;
+        $product = $variant->product()->firstOrFail();
+        $product->load(['brand', 'categories', 'measurementUnit', 'media']);
+        $siblings = ProductVariant::query()
+            ->where('product_id', $variant->product_id)
+            ->with('values.option')
+            ->orderBy('id')
+            ->get();
 
         return Inertia::render('Inventory/Show/Index', [
             'measurementUnits' => MeasurementUnit::query()->orderBy('name')->get(['id', 'name', 'abbreviation']),
             'product' => [
-                'id' => $product?->id,
-                'name' => $product?->name,
-                'description' => $product?->description,
-                'status' => $product?->status,
-                'brand' => $product?->brand ? [
+                'id' => $product->id,
+                'name' => $product->name,
+                'status' => $product->status,
+                'brand' => $product->brand ? [
                     'id' => $product->brand->id,
                     'name' => $product->brand->name,
                 ] : null,
-                'categories' => $product?->categories->map(fn ($c) => [
-                    'id' => $c->id,
-                    'name' => $c->name,
-                ]) ?? [],
-                'measurement_unit' => $product?->measurementUnit ? [
+                'categories' => $product->categories->map(fn (Category $category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                ]),
+                'measurement_unit' => $product->measurementUnit ? [
                     'id' => $product->measurementUnit->id,
                     'name' => $product->measurementUnit->name,
                     'abbreviation' => $product->measurementUnit->abbreviation,
                 ] : null,
-                'media' => $product?->getMedia('images')->map(fn ($m) => [
+                'media' => $product->getMedia('images')->map(fn ($m) => [
                     'id' => $m->id,
                     'thumb_url' => $m->getUrl('thumb'),
                     'full_url' => $m->getUrl(),
-                ]) ?? [],
-                'deleted_at' => $product?->deleted_at?->toISOString(),
-                'created_at' => $product?->created_at?->toISOString(),
+                ]),
+                'has_variants' => $product->options()->exists(),
             ],
             'variant' => [
                 'id' => $variant->id,
@@ -117,9 +117,9 @@ final class InventoryController extends Controller
                 'identifier' => $variant->identifier,
                 'barcode' => $variant->barcode,
                 'price' => (float) $variant->price,
-                'purchase_price' => (float) $variant->purchase_price,
+                'purchase_price' => $variant->purchase_price !== null ? (float) $variant->purchase_price : null,
                 'margin_type' => $variant->margin_type->value,
-                'margin_value' => (float) $variant->margin_value,
+                'margin_value' => $variant->margin_value !== null ? (float) $variant->margin_value : null,
                 'stock' => (int) $breakdown['total_quantity'],
                 'minimum_stock_level' => $variant->minimum_stock_level,
                 'has_expiration' => $variant->has_expiration,
@@ -156,6 +156,13 @@ final class InventoryController extends Controller
                 'created_at' => $variant->created_at?->toISOString(),
                 'updated_at' => $variant->updated_at?->toISOString(),
             ],
+            'siblings' => $siblings->map(fn (ProductVariant $sibling) => [
+                'id' => $sibling->id,
+                'label' => $sibling->values->isNotEmpty()
+                    ? $sibling->values->map(fn ($value) => $value->option?->name . ': ' . $value->value)->join(' / ')
+                    : $product->name,
+                'status' => $sibling->status,
+            ]),
             'stores' => $breakdown['stores']->map(fn ($row) => [
                 'store_id' => $row['store']?->id,
                 'store_name' => $row['store']?->name,

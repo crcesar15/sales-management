@@ -8,7 +8,6 @@ use App\Enums\PermissionsEnum;
 use App\Http\Requests\Products\GenerateVariantsRequest;
 use App\Http\Requests\Products\StoreVariantRequest;
 use App\Http\Requests\Products\SyncVariantImagesRequest;
-use App\Http\Requests\Products\UpdateVariantRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\ProductVariantService;
@@ -38,19 +37,16 @@ final class ProductVariantController extends Controller
     public function store(StoreVariantRequest $request, Product $product): RedirectResponse
     {
         try {
-            $this->variantService->storeManual($product, $request->validated());
+            $variant = $this->variantService->storeManual($product, $request->validated());
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors($e->getMessage());
         }
 
+        if (auth()->user()?->can(PermissionsEnum::INVENTORY_VIEW->value) ?? false) {
+            return redirect()->route('inventory.variants.show', $variant);
+        }
+
         return redirect()->route('products.edit', $product);
-    }
-
-    public function update(UpdateVariantRequest $request, Product $product, ProductVariant $variant): RedirectResponse
-    {
-        $this->variantService->update($variant, $request->validated());
-
-        return redirect()->back();
     }
 
     public function destroy(Product $product, ProductVariant $variant): RedirectResponse

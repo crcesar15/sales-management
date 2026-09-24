@@ -1,6 +1,5 @@
 import type { MeasurementUnit } from "./measurement-unit-types";
 import type { VariantOptionValue, ProductMedia } from "./product-types";
-import type { StockStoreBreakdown } from "./stock-overview-types";
 
 export interface InventoryVariantListItem {
   id: number;
@@ -47,13 +46,12 @@ export interface InventoryVariantDetail {
   stock: number;
   minimum_stock_level: number | null;
   has_expiration: boolean;
-  status: string;
+  status: "active" | "inactive" | "archived";
   name: string;
   values: VariantOptionValue[];
   images: ProductMedia[];
   sale_units: VariantUnitResource[];
   purchase_units: VariantUnitResource[];
-  stores: StockStoreBreakdown[];
   created_at: string;
   updated_at: string;
 }
@@ -61,14 +59,30 @@ export interface InventoryVariantDetail {
 export interface InventoryProductDetail {
   id: number;
   name: string;
-  description: string | null;
   status: string;
   brand: { id: number; name: string } | null;
-  categories: Array<{ id: number; name: string }>;
+  categories: { id: number; name: string }[];
   measurement_unit: MeasurementUnit | null;
   media: ProductMedia[];
-  deleted_at: string | null;
-  created_at: string | null;
+  has_variants: boolean;
+}
+
+export interface VariantNavigationItem {
+  id: number;
+  label: string;
+  status: "active" | "inactive" | "archived";
+}
+
+export interface VariantOverviewPayload {
+  identifier: string | null;
+  barcode: string | null;
+  purchase_price: number | null;
+  margin_type: "percent" | "amount";
+  margin_value: number | null;
+  price: number;
+  minimum_stock_level: number | null;
+  has_expiration: boolean;
+  status: "active" | "inactive" | "archived";
 }
 
 export interface VariantUnitResource {

@@ -16,7 +16,7 @@ final class SyncVariantImagesRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionsEnum::PRODUCTS_EDIT->value) ?? false;
+        return $this->user()?->can(PermissionsEnum::INVENTORY_EDIT->value) ?? false;
     }
 
     /**
@@ -25,7 +25,7 @@ final class SyncVariantImagesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'media_ids' => ['sometimes', 'array'],
+            'media_ids' => ['required', 'array'],
             'media_ids.*' => ['required', 'integer', 'exists:media,id'],
         ];
     }

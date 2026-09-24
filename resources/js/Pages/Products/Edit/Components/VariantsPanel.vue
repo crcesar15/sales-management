@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { Badge, Button, Card, Chip, Column, ConfirmDialog, DataTable, Tag, useConfirm, useToast } from "primevue";
+import { Button, Card, Column, ConfirmDialog, DataTable, Tag, useConfirm } from "primevue";
 
 import { router } from "@inertiajs/vue3";
-import { useI18n } from "vue-i18n";
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
-import type { ProductMedia, ProductOption, ProductVariantInline } from "@app-types/product-types";
+import type { ProductOption, ProductVariantInline } from "@app-types/product-types";
 import ManualVariantDialog from "./ManualVariantDialog.vue";
-import EditVariantImageDialog from "./EditVariantImageDialog.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -15,73 +14,52 @@ const props = withDefaults(
     variants: ProductVariantInline[];
     options: ProductOption[];
     disabled?: boolean;
-    productMedia?: ProductMedia[];
   }>(),
   {
     disabled: false,
-    productMedia: () => [],
   },
 );
-const _toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
 
 const generating = ref(false);
-const showManualDialog = ref(false);
-const imageDialogVisible = ref(false);
-const editingVariant = ref<ProductVariantInline | null>(null);
-const editingVariantData = ref<ProductVariantInline | null>(null);
+const showCreateDialog = ref(false);
 
-// Can generate variants: only when there's exactly 1 variant with no option values
 const canGenerateVariants = computed(() => {
   return props.options.length > 0 && props.variants.length === 1 && (!props.variants[0].values || props.variants[0].values.length === 0);
 });
 
-const isDefaultVariant = (data: ProductVariantInline) => {
-  return !data.values || data.values.length === 0;
-};
-
-const rowClass = (data: ProductVariantInline) => {
-  return isDefaultVariant(data) ? "bg-blue-50 dark:bg-blue-900/20" : "";
-};
+const isDefaultVariant = (variant: ProductVariantInline) => !variant.values || variant.values.length === 0;
 
 const statusLabel = (status: string) => {
-  const map: Record<string, string> = {
+  const labels: Record<string, string> = {
     active: t("Active"),
     inactive: t("Inactive"),
     archived: t("Archived"),
   };
-  return map[status] ?? status;
+
+  return labels[status] ?? status;
 };
 
-const statusSeverity = (status: string) => {
-  const map: Record<string, "success" | "warn" | "danger"> = {
+const statusSeverity = (status: string): "success" | "warn" | "danger" | "info" => {
+  const severities: Record<string, "success" | "warn" | "danger"> = {
     active: "success",
     inactive: "warn",
     archived: "danger",
   };
-  return map[status] ?? "info";
+
+  return severities[status] ?? "info";
 };
 
-// Open variant image dialog
-const openImageDialog = (variant: ProductVariantInline) => {
-  if (props.disabled) return;
-  editingVariant.value = variant;
-  imageDialogVisible.value = true;
-};
-
-// Generate variants from all options
 const onGenerateVariants = () => {
   generating.value = true;
-  const optionsData = props.options.map((o) => ({
-    name: o.name,
-    values: o.values.map((v) => v.value),
-  }));
-
   router.post(
     route("variant.generate", props.productId),
     {
-      options: optionsData,
+      options: props.options.map((option) => ({
+        name: option.name,
+        values: option.values.map((value) => value.value),
+      })),
     },
     {
       onFinish: () => {
@@ -91,14 +69,7 @@ const onGenerateVariants = () => {
   );
 };
 
-// Open edit dialog for a variant
-const openEditDialog = (variant: ProductVariantInline) => {
-  editingVariantData.value = variant;
-  showManualDialog.value = true;
-};
-
-// Delete variant with confirmation
-const onDeleteVariant = (data: ProductVariantInline) => {
+const onDeleteVariant = (variant: ProductVariantInline) => {
   confirm.require({
     group: "variantDelete",
     message: t("This variant will be permanently deleted."),
@@ -107,7 +78,7 @@ const onDeleteVariant = (data: ProductVariantInline) => {
     rejectProps: { label: t("Cancel"), severity: "secondary", outlined: true },
     acceptProps: { label: t("Delete"), severity: "danger" },
     accept: () => {
-      router.delete(route("variant.destroy", { product: props.productId, variant: data.id }));
+      router.delete(route("variant.destroy", { product: props.productId, variant: variant.id }));
     },
   });
 };
@@ -116,11 +87,12 @@ const onDeleteVariant = (data: ProductVariantInline) => {
 <template>
   <Card>
     <template #title>
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-2">
         <span>{{ t("Variants") }}</span>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <Button
             v-if="canGenerateVariants"
+            v-can="'product.edit'"
             :label="t('Generate Variants')"
             icon="fa fa-wand-magic-sparkles"
             size="small"
@@ -130,135 +102,78 @@ const onDeleteVariant = (data: ProductVariantInline) => {
             @click="onGenerateVariants"
           />
           <Button
-            v-if="props.options.length > 0"
+            v-if="options.length > 0"
+            v-can="'product.edit'"
             :label="t('Add Variant')"
             icon="fa fa-plus"
             size="small"
-            outlined
             :disabled="disabled"
-            @click="
-              editingVariantData = null;
-              showManualDialog = true;
-            "
+            @click="showCreateDialog = true"
           />
         </div>
       </div>
-      <div v-if="disabled" class="text-orange-500 text-sm mt-2">
-        <i class="fa fa-lock mr-1" />
+      <p v-if="disabled" class="mb-0 mt-2 text-sm text-orange-600 dark:text-orange-300">
+        <i class="fa fa-lock mr-1" aria-hidden="true" />
         {{ t("Confirm options to manage variants") }}
-      </div>
+      </p>
     </template>
     <template #content>
-      <DataTable :value="props.variants" data-key="id" :row-class="rowClass">
-        <!-- Option Values Column -->
+      <DataTable :value="variants" data-key="id">
         <Column :header="t('Options')">
-          <template #body="{ data }">
-            <div v-if="isDefaultVariant(data)" class="flex items-center gap-1">
-              <Tag :value="t('Default')" />
-            </div>
+          <template #body="{ data }: { data: ProductVariantInline }">
+            <Tag v-if="isDefaultVariant(data)" :value="t('Default')" severity="secondary" />
             <div v-else class="flex flex-wrap gap-1">
-              <Chip v-for="val in data.values" :key="val.id" :label="`${val.option_name}: ${val.value}`" />
+              <Tag v-for="value in data.values" :key="value.id" :value="`${value.option_name}: ${value.value}`" severity="secondary" />
             </div>
           </template>
         </Column>
-
-        <!-- Images Column -->
-        <Column :header="t('Images')" class="w-32">
-          <template #body="{ data }">
-            <div class="flex items-center gap-1 cursor-pointer" @click="openImageDialog(data)">
-              <img
-                v-for="img in (data.images ?? []).slice(0, 1)"
-                :key="img.id"
-                :src="img.thumb_url"
-                class="h-[75px] w-[75px] rounded-md border-2 border-surface-500 object-cover dark:border-surface-400"
-              />
-              <Badge v-if="(data.images ?? []).length > 1" class="text-xs text-gray-500">+{{ data.images.length - 1 }}</Badge>
-              <div
-                v-if="(data.images ?? []).length === 0"
-                class="h-[75px] w-[75px] rounded-md border-dashed border-2 border-surface-400 dark:border-surface-500 flex items-center justify-center p-6"
-              >
-                <i class="fa fa-image text-surface-400 dark:text-surface-500" />
-              </div>
-            </div>
-          </template>
+        <Column :header="t('Price')">
+          <template #body="{ data }: { data: ProductVariantInline }">{{ data.price }}</template>
         </Column>
-
-        <!-- Identifier Column -->
-        <Column field="identifier" :header="t('Identifier')">
-          <template #body="{ data }">
-            <span>{{ data.identifier ?? "—" }}</span>
-          </template>
+        <Column :header="t('Stock')">
+          <template #body="{ data }: { data: ProductVariantInline }">{{ data.stock }}</template>
         </Column>
-
-        <!-- Barcode Column -->
-        <Column field="barcode" :header="t('Barcode')">
-          <template #body="{ data }">
-            <span>{{ data.barcode ?? "—" }}</span>
-          </template>
-        </Column>
-
-        <!-- Status Column -->
-        <Column field="status" :header="t('Status')">
-          <template #body="{ data }">
+        <Column :header="t('Status')">
+          <template #body="{ data }: { data: ProductVariantInline }">
             <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
           </template>
         </Column>
-
-        <!-- Actions Column -->
-        <Column :header="t('Actions')" class="w-24">
-          <template #body="{ data }">
-            <div class="flex gap-1">
+        <Column :header="t('Actions')" class="w-40">
+          <template #body="{ data }: { data: ProductVariantInline }">
+            <div class="flex items-center gap-1">
               <Button
-                icon="fa fa-arrow-up-right-from-square"
-                text
-                rounded
-                v-tooltip.top="t('Manage')"
-                :aria-label="t('Manage variant')"
-                @click="
-                  router.visit(route('inventory.variants.show', { product: productId, variant: data.id }), { data: { from: 'product' } })
-                "
+                v-can="'inventory.view'"
+                :label="t('Configure')"
+                icon="fa fa-sliders"
+                size="small"
+                outlined
+                @click="router.visit(route('inventory.variants.show', { variant: data.id }))"
               />
-              <Button icon="fa fa-pen" text rounded v-tooltip.top="t('Edit')" :disabled="disabled" @click="openEditDialog(data)" />
               <Button
+                v-if="!isDefaultVariant(data)"
+                v-can="'product.delete'"
                 icon="fa fa-trash"
                 text
                 rounded
-                v-tooltip.top="t('Delete')"
-                :disabled="disabled || isDefaultVariant(data)"
+                severity="danger"
+                :aria-label="t('Delete Variant')"
                 @click="onDeleteVariant(data)"
               />
             </div>
           </template>
         </Column>
-
         <template #empty>
-          <div class="text-center text-gray-500 py-4">
-            {{ t("No variants yet. Add options and generate variants.") }}
-          </div>
+          <div class="py-4 text-center text-surface-500 dark:text-surface-400">{{ t("No variants yet. Add options and generate variants.") }}</div>
         </template>
       </DataTable>
 
-      <!-- Manual Variant Dialog -->
       <ManualVariantDialog
-        v-if="showManualDialog"
-        :product-id="props.productId"
-        :options="props.options"
-        :visible="showManualDialog"
-        :variant="editingVariantData ?? undefined"
-        @close="showManualDialog = false"
+        v-if="showCreateDialog"
+        :product-id="productId"
+        :options="options"
+        :visible="showCreateDialog"
+        @close="showCreateDialog = false"
       />
-
-      <!-- Variant Image Dialog -->
-      <EditVariantImageDialog
-        v-if="imageDialogVisible && editingVariant"
-        :visible="imageDialogVisible"
-        :product-id="props.productId"
-        :variant="editingVariant"
-        :product-media="props.productMedia"
-        @close="imageDialogVisible = false"
-      />
-
-      <!-- Delete Confirmation -->
       <ConfirmDialog group="variantDelete" />
     </template>
   </Card>

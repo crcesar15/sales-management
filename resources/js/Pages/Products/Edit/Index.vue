@@ -103,9 +103,6 @@ const onRemoveMediaIdsUpdate = (ids: number[]) => {
   removeMediaIds.value = ids;
 };
 
-// Default variant data
-const defaultVariant = computed(() => props.product.variants?.[0]);
-
 // Schema
 const schema = toTypedSchema(
   object({
@@ -115,8 +112,6 @@ const schema = toTypedSchema(
     brand_id: number().nullable().optional(),
     measurement_unit_id: number().nullable().optional(),
     categories_ids: array().of(number().required()).required().min(1, t("At least one category is required")),
-    barcode: string().nullable().optional().max(100),
-    identifier: string().nullable().optional().max(50),
   }),
 );
 
@@ -130,8 +125,6 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount 
     brand_id: props.product.brand_id ?? null,
     measurement_unit_id: props.product.measurement_unit_id ?? null,
     categories_ids: props.product.categories?.map((c) => c.id) ?? [],
-    barcode: defaultVariant.value?.barcode ?? "",
-    identifier: defaultVariant.value?.identifier ?? "",
   },
 });
 
@@ -141,8 +134,6 @@ const [status, statusAttrs] = defineField("status");
 const [brandId, brandIdAttrs] = defineField("brand_id");
 const [measurementUnitId, measurementUnitIdAttrs] = defineField("measurement_unit_id");
 const [categoriesIds, categoriesIdsAttrs] = defineField("categories_ids");
-const [barcode, barcodeAttrs] = defineField("barcode");
-const [identifier, identifierAttrs] = defineField("identifier");
 
 const addOption = <T extends { id: number; name: string }>(options: T[], option: T): T[] => {
   return [...options, option].sort((a, b) => a.name.localeCompare(b.name));
@@ -169,20 +160,14 @@ const onDescriptionInput = () => {};
 
 // Submit
 const onSubmit = handleSubmit((values) => {
-  const payload: Record<string, unknown> = {
+  const payload = {
     ...values,
     pending_media_ids: pendingMedia.value.map((m) => m.id),
     remove_media_ids: removeMediaIds.value,
+    has_variants: hasVariants.value,
   };
 
-  payload.has_variants = hasVariants.value;
-
-  if (!hasVariants.value) {
-    payload.barcode = values.barcode || null;
-    payload.identifier = values.identifier || null;
-  }
-
-  router.put(route("products.update", props.product.id), payload as any, {
+  router.put(route("products.update", props.product.id), payload, {
     onSuccess: () => {
       toast.add({
         severity: "success",
@@ -275,25 +260,6 @@ const onSubmit = handleSubmit((values) => {
           </template>
         </Card>
 
-        <!-- Details Card (Simple Product mode) -->
-        <Card v-if="!hasVariants" class="mb-4">
-          <template #title>
-            {{ t("Details") }}
-          </template>
-          <template #content>
-            <div class="grid grid-cols-12 gap-4">
-              <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
-                <label for="identifier">{{ t("Identifier") }}</label>
-                <InputText id="identifier" v-model="identifier" v-bind="identifierAttrs" autocomplete="off" />
-              </div>
-              <div class="flex flex-col lg:col-span-6 md:col-span-6 col-span-12 gap-2 mb-3">
-                <label for="barcode">{{ t("Barcode") }}</label>
-                <InputText id="barcode" v-model="barcode" v-bind="barcodeAttrs" autocomplete="off" />
-              </div>
-            </div>
-          </template>
-        </Card>
-
         <!-- Options Card (Variant mode) -->
         <Card v-if="hasVariants" class="mb-4">
           <template #title>
@@ -313,12 +279,10 @@ const onSubmit = handleSubmit((values) => {
 
         <!-- Variants Panel -->
         <VariantsPanel
-          v-if="hasVariants"
           :product-id="props.product.id"
           :variants="productVariants"
           :options="serverOptions"
           :disabled="!optionsLocked"
-          :product-media="existingMedia"
           class="mb-4"
         />
       </div>
@@ -461,14 +425,6 @@ const onSubmit = handleSubmit((values) => {
           </template>
         </Card>
 
-        <!-- Manage Inventory -->
-        <Button
-          :label="t('Manage Inventory')"
-          icon="fa fa-warehouse"
-          outlined
-          class="w-full"
-          @click="router.visit(route('inventory.variants.show', { product: props.product.id, variant: defaultVariant?.id }))"
-        />
       </div>
     </div>
     <CreateBrandDialog v-model:show-modal="showBrandEditor" @created="onBrandCreated" />

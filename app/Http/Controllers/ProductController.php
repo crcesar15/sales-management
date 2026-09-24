@@ -12,11 +12,14 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\MeasurementUnit;
 use App\Models\Product;
+use App\Models\ProductOption;
+use App\Models\ProductOptionValue;
+use App\Models\ProductVariant;
 use App\Services\ProductService;
 use Illuminate\Http\RedirectResponse;
-use InvalidArgumentException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use InvalidArgumentException;
 
 final class ProductController extends Controller
 {
@@ -89,7 +92,7 @@ final class ProductController extends Controller
             'measurementUnit',
             'media',
             'variants' => fn ($q) => $q
-                ->with('values.option', 'images'),
+                ->with('values.option'),
             'options.values',
         ]);
 
@@ -101,34 +104,27 @@ final class ProductController extends Controller
             'full_url' => $m->getUrl(),
         ]);
 
-        $variants = $product->variants->map(fn ($v) => [
-            'id' => $v->id,
-            'name' => $v->name,
-            'price' => (float) $v->price,
-            'stock' => $v->stock,
-            'barcode' => $v->barcode,
-            'identifier' => $v->identifier,
-            'status' => $v->status,
-            'values' => $v->values->map(fn ($val) => [
-                'id' => $val->id,
-                'value' => $val->value,
-                'option_name' => $val->option?->name,
-            ]),
-            'images' => $v->images->map(fn ($img) => [
-                'id' => $img->id,
-                'thumb_url' => $img->getUrl('thumb'),
-                'full_url' => $img->getUrl(),
-            ]),
-        ]);
+        $variants = $product->variants->map(fn (ProductVariant $variant) => [
+            'id' => $variant->id,
+            'name' => $variant->name,
+            'price' => (float) $variant->price,
+            'stock' => $variant->stock,
+            'status' => $variant->status,
+            'values' => $variant->values->map(fn (ProductOptionValue $value) => [
+                'id' => $value->id,
+                'value' => $value->value,
+                'option_name' => $value->option?->name,
+            ])->all(),
+        ])->all();
 
-        $options = $product->options->map(fn ($o) => [
-            'id' => $o->id,
-            'name' => $o->name,
-            'values' => $o->values->map(fn ($v) => [
-                'id' => $v->id,
-                'value' => $v->value,
-            ]),
-        ]);
+        $options = $product->options->map(fn (ProductOption $option) => [
+            'id' => $option->id,
+            'name' => $option->name,
+            'values' => $option->values->map(fn (ProductOptionValue $value) => [
+                'id' => $value->id,
+                'value' => $value->value,
+            ])->all(),
+        ])->all();
 
         return Inertia::render('Products/Edit/Index', [
             'product' => [

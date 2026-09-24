@@ -138,12 +138,11 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::delete('/products/{product}/options/{option}/values/{value}', [OptionValueController::class, 'destroy'])->name('value.destroy');
     Route::post('/products/{product}/variants/generate', [ProductVariantController::class, 'generate'])->name('variant.generate');
     Route::post('/products/{product}/variants', [ProductVariantController::class, 'store'])->name('variant.store');
-    Route::put('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])->name('variant.update');
-    Route::delete('/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variant.destroy');
-    Route::put('/products/{product}/variants/{variant}/images', [ProductVariantController::class, 'syncImages'])->name('variant.images.sync');
 
     // Product Variant Units
     Route::scopeBindings()->group(function (): void {
+        Route::delete('/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variant.destroy');
+        Route::put('/products/{product}/variants/{variant}/images', [ProductVariantController::class, 'syncImages'])->name('variant.images.sync');
         Route::post('/products/{product}/variants/{variant}/units', [ProductVariantUnitController::class, 'store'])->name('variant.units.store');
         Route::put('/products/{product}/variants/{variant}/units/{unit}', [ProductVariantUnitController::class, 'update'])->name('variant.units.update');
         Route::delete('/products/{product}/variants/{variant}/units/{unit}', [ProductVariantUnitController::class, 'destroy'])->name('variant.units.destroy');

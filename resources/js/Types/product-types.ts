@@ -48,10 +48,7 @@ export interface ProductVariantInline {
   status: string;
   price: number;
   stock: number;
-  barcode: string | null;
-  identifier: string | null;
   values?: VariantOptionValue[];
-  images?: ProductMedia[];
 }
 
 export interface ProductMedia {

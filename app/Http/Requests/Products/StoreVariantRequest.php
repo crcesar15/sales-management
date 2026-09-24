@@ -28,9 +28,9 @@ final class StoreVariantRequest extends FormRequest
             'identifier' => ['nullable', 'string', 'max:50', 'unique:product_variants,identifier'],
             'barcode' => ['nullable', 'string', 'max:100'],
             'price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'status' => ['required', 'in:active,inactive,archived'],
+            'status' => ['sometimes', 'in:active,inactive,archived'],
             'option_value_ids' => ['required', 'array', 'min:1'],
-            'option_value_ids.*' => ['required', 'integer', 'exists:product_option_values,id'],
+            'option_value_ids.*' => ['required', 'integer', 'distinct', 'exists:product_option_values,id'],
         ];
     }
 
@@ -44,12 +44,18 @@ final class StoreVariantRequest extends FormRequest
             assert($product instanceof Product);
             $valueIds = $this->input('option_value_ids', []);
 
-            $validCount = ProductOptionValue::whereIn('id', $valueIds)
+            $optionIds = ProductOptionValue::whereIn('id', $valueIds)
                 ->whereHas('option', fn ($q) => $q->where('product_id', $product->id))
-                ->count();
+                ->pluck('product_option_id')
+                ->all();
+            $optionCount = $product->options()->count();
 
-            if ($validCount !== count($valueIds)) {
+            if (count($optionIds) !== count($valueIds)) {
                 $validator->errors()->add('option_value_ids', 'All option values must belong to this product.');
+            }
+
+            if (count($valueIds) !== $optionCount || count(array_unique($optionIds)) !== $optionCount) {
+                $validator->errors()->add('option_value_ids', 'Select exactly one value for each product option.');
             }
         });
     }
