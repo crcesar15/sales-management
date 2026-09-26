@@ -120,7 +120,13 @@ onUnmounted(() => {
         <Card>
           <template #content>
             <Tabs v-model:value="activeTab">
-              <TabList>
+              <TabList
+                :pt="{
+                  activeBar: {
+                    class: 'border-2 border-primary',
+                  },
+                }"
+              >
                 <Tab value="overview">
                   <span class="flex items-center gap-2">
                     {{ t("Overview") }}
@@ -135,7 +141,13 @@ onUnmounted(() => {
                   </span>
                 </Tab>
               </TabList>
-              <TabPanels>
+              <TabPanels
+                :pt="{
+                  root: {
+                    class: ['!my-0 !px-0'],
+                  },
+                }"
+              >
                 <TabPanel value="overview">
                   <OverviewTab :variant="variant" :can-edit="canEdit" @update:dirty="overviewDirty = $event" />
                 </TabPanel>
@@ -163,3 +175,9 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.p-tab-active {
+  @apply bg-primary-50 dark:bg-primary-900;
+}
+</style>
