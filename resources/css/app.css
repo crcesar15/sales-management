@@ -3,13 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* adjust the font size for mobile */
-@media (max-width: 768px) {
-    html {
-        font-size: 12px !important;
-    }
-}
-
 .p-badge {
     font-size: 0.95rem;
 }

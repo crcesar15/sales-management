@@ -157,7 +157,7 @@ onUnmounted(() => {
         </Card>
       </main>
 
-      <aside class="order-first col-span-12 lg:order-last lg:col-span-4" :aria-label="t('Summary')">
+      <aside class="col-span-12 lg:col-span-4" :aria-label="t('Summary')">
         <VariantContextPanel :product="product" :variant="variant" :stores="stores" :can-edit-product="canEditProduct" />
       </aside>
     </div>

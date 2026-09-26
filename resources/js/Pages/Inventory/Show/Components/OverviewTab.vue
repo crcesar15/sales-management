@@ -166,12 +166,20 @@ const onSubmit = handleSubmit((values) => {
           </small>
         </div>
         <div class="col-span-12 md:col-span-4 flex flex-col gap-2">
-          <label for="has-expiration">{{ t("Requires Expiration Date") }}</label>
+          <div class="flex items-center gap-2">
+            <label for="has-expiration">{{ t("Requires Expiration Date") }}</label>
+            <i
+              v-tooltip.top="t('When enabled, expiry date will be required when receiving or editing batches')"
+              class="fa fa-circle-question cursor-help text-sm text-surface-500 dark:text-surface-400"
+              :aria-label="t('When enabled, expiry date will be required when receiving or editing batches')"
+              role="img"
+              tabindex="0"
+            />
+          </div>
           <div class="flex min-h-10 items-center gap-3">
             <ToggleSwitch input-id="has-expiration" v-model="hasExpiration" v-bind="hasExpirationAttrs" :disabled="!canEdit" />
             <span class="text-sm text-surface-600 dark:text-surface-300">{{ hasExpiration ? t("Yes") : t("No") }}</span>
           </div>
-          <small class="text-surface-500 dark:text-surface-400">{{ t("When enabled, expiry date will be required when receiving or editing batches") }}</small>
         </div>
       </div>
     </section>
