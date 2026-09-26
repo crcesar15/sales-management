@@ -26,6 +26,7 @@ import { route } from "ziggy-js";
 import { toTypedSchema } from "@vee-validate/yup";
 import { useForm as useVeeForm } from "vee-validate";
 import { number, object, string } from "yup";
+import type { AutoCompleteOptionSelectEvent } from "primevue/autocomplete";
 import type { InventoryVariantDetail, InventoryProductDetail, VariantUnitResource } from "@/Types/inventory-variant-types";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { useAuth } from "@/Composables/useAuth";
@@ -55,14 +56,20 @@ const currentType = computed(() => activeTab.value);
 const baseUnitName = computed(() => props.product.measurement_unit?.name ?? t("Unit"));
 const baseUnitAbbr = computed(() => props.product.measurement_unit?.abbreviation ?? baseUnitName.value);
 
+type MeasurementUnitSuggestion = Pick<MeasurementUnitResponse, "id" | "name" | "abbreviation">;
+
 const allMeasurementUnits = computed(() => props.measurementUnits);
-const filteredUnits = ref<Pick<MeasurementUnitResponse, "id" | "name" | "abbreviation">[]>([]);
+const filteredUnits = ref<MeasurementUnitSuggestion[]>([]);
 
 const searchUnits = (event: { query: string }) => {
   const query = event.query.trim().toLowerCase();
   filteredUnits.value = query
     ? allMeasurementUnits.value.filter((u) => u.name.toLowerCase().includes(query) || u.abbreviation.toLowerCase().includes(query))
     : allMeasurementUnits.value;
+};
+
+const selectMeasurementUnit = (event: AutoCompleteOptionSelectEvent) => {
+  nameField.value = (event.value as MeasurementUnitSuggestion).name;
 };
 
 interface BaseUnitRow {
@@ -120,6 +127,7 @@ const conversionDisplay = (unit: { name: string; conversion_factor: number; isBa
 // VeeValidate + Yup schema for the create/edit dialog.
 const schema = toTypedSchema(
   object({
+    type: string().required().oneOf(["sale", "purchase"]),
     name: string().required().max(100),
     conversion_factor: number().required().integer().min(1),
     price: number()
@@ -138,6 +146,7 @@ const { handleSubmit, errors, defineField, setErrors, resetForm, validateField, 
   validationSchema: schema,
   validateOnMount: false,
   initialValues: {
+    type: "sale",
     name: "",
     conversion_factor: 1,
     price: null,
@@ -173,6 +182,7 @@ const openCreate = () => {
   setFormType(currentType.value);
   resetForm({
     values: {
+      type: currentType.value,
       name: "",
       conversion_factor: 1,
       price: currentType.value === "sale" ? 0 : null,
@@ -189,6 +199,7 @@ const openEdit = (unit: VariantUnitResource) => {
   setFormType(unit.type);
   resetForm({
     values: {
+      type: unit.type,
       name: unit.name,
       conversion_factor: unit.conversion_factor,
       price: unit.price,
@@ -523,6 +534,7 @@ watch(formType, () => {
             :suggestions="filteredUnits"
             option-label="name"
             @complete="searchUnits"
+            @option-select="selectMeasurementUnit"
             :delay="0"
             :min-length="1"
             :invalid="submitCount > 0 && !!errors.name"
