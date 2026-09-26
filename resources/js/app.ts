@@ -78,8 +78,8 @@ const AuraPreset = definePreset(Aura, {
 });
 
 const i18n = createI18n({
-  locale: "es", // default locale
-  fallbackLocale: "es",
+  locale: "en", // default locale
+  fallbackLocale: "en",
   messages,
   legacy: false,
 });
