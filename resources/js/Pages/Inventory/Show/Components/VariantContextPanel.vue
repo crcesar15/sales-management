@@ -63,14 +63,14 @@ const isLowStock = computed(() => {
 
         <section class="flex flex-col gap-3" :aria-label="t('Stock status')">
           <div class="flex items-center justify-between gap-3">
-            <span class="text-sm leading-5 text-surface-500 dark:text-surface-400">{{ t("Total Stock") }}</span>
+            <span class="text-base leading-5">{{ t("Total Stock") }}</span>
             <span class="inline-flex items-center gap-2 text-base font-bold leading-6">
               <i v-if="isLowStock" class="fa-solid fa-triangle-exclamation text-red-500" :title="t('Low Stock')" aria-hidden="true" />
               {{ variant.stock }}
             </span>
           </div>
           <div class="flex items-center justify-between gap-3">
-            <span class="text-sm leading-5 text-surface-500 dark:text-surface-400">{{ t("Minimum Stock Level") }}</span>
+            <span class="text-base leading-5">{{ t("Minimum Stock Level") }}</span>
             <span class="text-base font-medium leading-6">{{ variant.minimum_stock_level ?? "—" }}</span>
           </div>
           <p v-if="isLowStock" class="m-0 text-sm font-medium leading-5 text-red-600 dark:text-red-300">

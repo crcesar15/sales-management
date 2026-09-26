@@ -144,7 +144,7 @@ onUnmounted(() => {
               <TabPanels
                 :pt="{
                   root: {
-                    class: ['!my-0 !px-0'],
+                    class: ['!mx-0 !px-0'],
                   },
                 }"
               >

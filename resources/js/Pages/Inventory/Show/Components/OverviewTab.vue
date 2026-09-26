@@ -129,7 +129,7 @@ const onSubmit = handleSubmit((values) => {
         </div>
       </div>
     </section>
-
+    <hr class="m-0">
     <section class="flex flex-col gap-4" aria-labelledby="variant-policy-heading">
       <div>
         <h2 id="variant-policy-heading" class="m-0 text-lg font-semibold">{{ t("Inventory Policy") }}</h2>
@@ -183,7 +183,7 @@ const onSubmit = handleSubmit((values) => {
         </div>
       </div>
     </section>
-
+    <hr class="m-0">
     <section class="flex flex-col gap-4" aria-labelledby="variant-pricing-heading">
       <div>
         <h2 id="variant-pricing-heading" class="m-0 text-lg font-semibold">{{ t("Pricing") }}</h2>
