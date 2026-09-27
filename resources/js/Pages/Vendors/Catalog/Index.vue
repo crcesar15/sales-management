@@ -9,7 +9,8 @@ import {
   IconField,
   InputIcon,
   ConfirmDialog,
-  SelectButton,
+  Select,
+  Popover,
   Tag,
   Badge,
   useToast,
@@ -55,67 +56,66 @@ const filter = ref(props.filters.filter ?? "");
 const status = ref(props.filters.status ?? "active");
 const sortField = ref(props.filters.order_by ?? "created_at");
 const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
+const filterPopover = ref();
+
+const statusOptions = computed(() => [
+  { label: t("All"), value: "all" },
+  { label: t("Active"), value: "active" },
+  { label: t("Inactive"), value: "inactive" },
+  { label: t("Archived"), value: "archived" },
+]);
+
+const hasActiveFilters = computed(() => status.value !== "active" || filter.value !== "");
+
+const activeFilterCount = computed(() => {
+  let count = 0;
+  if (status.value !== "active") count++;
+  if (filter.value !== "") count++;
+  return count;
+});
 
 const catalogItems = computed(() => props.catalog.data);
 
+function applyFilters(overrides: Record<string, unknown> = {}) {
+  router.visit(route("vendors.catalog", props.vendor.id), {
+    data: {
+      filter: filter.value,
+      status: status.value,
+      order_by: sortField.value,
+      order_direction: sortOrder.value === -1 ? "desc" : "asc",
+      ...overrides,
+    },
+    preserveState: true,
+    replace: true,
+  });
+}
+
+function resetFilters() {
+  status.value = "active";
+  filter.value = "";
+  applyFilters();
+}
+
 let filterTimer: ReturnType<typeof setTimeout>;
-watch(filter, (val) => {
+watch(filter, () => {
   clearTimeout(filterTimer);
   filterTimer = setTimeout(() => {
-    router.visit(route("vendors.catalog", props.vendor.id), {
-      data: {
-        filter: val,
-        status: status.value,
-        order_by: sortField.value,
-        order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      },
-      preserveState: true,
-      replace: true,
-    });
+    applyFilters();
   }, 300);
 });
 
-watch(status, (val) => {
-  router.visit(route("vendors.catalog", props.vendor.id), {
-    data: {
-      status: val,
-      filter: filter.value,
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-    },
-    preserveState: true,
-    replace: true,
-  });
+watch(status, () => {
+  applyFilters();
 });
 
 const onPage = (event: DataTablePageEvent) => {
-  router.visit(route("vendors.catalog", props.vendor.id), {
-    data: {
-      page: event.page + 1,
-      per_page: event.rows,
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      filter: filter.value,
-      status: status.value,
-    },
-    preserveState: true,
-    replace: true,
-  });
+  applyFilters({ page: event.page + 1, per_page: event.rows });
 };
 
 const onSort = (event: DataTableSortEvent) => {
   sortField.value = typeof event.sortField === "string" ? event.sortField : "created_at";
   sortOrder.value = event.sortOrder ?? 1;
-  router.visit(route("vendors.catalog", props.vendor.id), {
-    data: {
-      order_by: sortField.value,
-      order_direction: sortOrder.value === -1 ? "desc" : "asc",
-      filter: filter.value,
-      status: status.value,
-    },
-    preserveState: true,
-    replace: true,
-  });
+  applyFilters();
 };
 
 const addEntry = () => {
@@ -201,29 +201,43 @@ const goBack = () => {
           </template>
 
           <template #header>
-            <div class="grid grid-cols-12">
-              <div class="md:col-span-6 col-span-12 flex md:justify-start justify-center">
-                <SelectButton
-                  v-model="status"
-                  :allow-empty="false"
-                  :options="[
-                    { label: t('All'), value: 'all' },
-                    { label: t('Active'), value: 'active' },
-                    { label: t('Inactive'), value: 'inactive' },
-                  ]"
-                  option-label="label"
-                  option-value="value"
-                />
-              </div>
-              <div
-                class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
-              >
-                <IconField icon-position="left" class="w-full">
-                  <InputIcon class="fa fa-search" />
-                  <InputText v-model="filter" :placeholder="t('Search')" fluid />
-                </IconField>
-              </div>
+            <div class="flex items-center gap-2">
+              <Button
+                type="button"
+                icon="fa fa-filter"
+                :label="t('Filters')"
+                :severity="hasActiveFilters ? 'primary' : 'secondary'"
+                outlined
+                :pt="{ label: { class: 'hidden sm:inline' } }"
+                @click="filterPopover.toggle($event)"
+              />
+              <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
+              <IconField icon-position="left" class="flex-1 sm:flex-none sm:w-80 sm:ml-auto">
+                <InputIcon class="fa fa-search" />
+                <InputText v-model="filter" :placeholder="t('Search')" class="w-full" />
+              </IconField>
             </div>
+
+            <Popover ref="filterPopover">
+              <div class="flex flex-col gap-4 p-4 min-w-72">
+                <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
+                  <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
+                <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                  <Button
+                    type="button"
+                    :label="t('Clear')"
+                    icon="fa fa-times"
+                    severity="secondary"
+                    text
+                    size="small"
+                    :disabled="!hasActiveFilters"
+                    @click="resetFilters"
+                  />
+                </div>
+              </div>
+            </Popover>
           </template>
 
           <Column field="product_name" :header="t('Product')" sortable>

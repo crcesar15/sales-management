@@ -4,7 +4,9 @@ import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import PButton from "primevue/button";
 import Tag from "primevue/tag";
-import SelectButton from "primevue/selectbutton";
+import PSelect from "primevue/select";
+import Popover from "primevue/popover";
+import Badge from "primevue/badge";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import InputText from "primevue/inputtext";
@@ -18,7 +20,9 @@ export default {
     DataTable,
     Column,
     Tag,
-    SelectButton,
+    PSelect,
+    Popover,
+    Badge,
     IconField,
     InputIcon,
     InputText,
@@ -47,6 +51,8 @@ export default {
       },
       loading: false,
       status: "all",
+      filterTimer: null,
+      suppressFilterUpdates: false,
       selectedProduct: {},
       showProductEditor: false,
     };
@@ -54,19 +60,54 @@ export default {
   watch: {
     "pagination.filter": {
       handler() {
-        this.pagination.page = 1;
-        this.fetchProducts();
+        if (this.suppressFilterUpdates) return;
+
+        clearTimeout(this.filterTimer);
+        this.filterTimer = setTimeout(() => this.applyFilters(), 300);
       },
     },
     status() {
-      this.pagination.page = 1;
-      this.fetchProducts();
+      if (!this.suppressFilterUpdates) this.applyFilters();
+    },
+  },
+  computed: {
+    statusOptions() {
+      return [
+        { label: this.$t("All"), value: "all" },
+        { label: this.$t("Active"), value: "active" },
+        { label: this.$t("Inactive"), value: "inactive" },
+        { label: this.$t("Archived"), value: "archived" },
+      ];
+    },
+    hasActiveFilters() {
+      return this.status !== "all" || this.pagination.filter !== "";
+    },
+    activeFilterCount() {
+      let count = 0;
+      if (this.status !== "all") count++;
+      if (this.pagination.filter !== "") count++;
+      return count;
     },
   },
   mounted() {
     this.fetchProducts();
   },
   methods: {
+    applyFilters() {
+      this.pagination.page = 1;
+      this.fetchProducts();
+    },
+    resetFilters() {
+      clearTimeout(this.filterTimer);
+      this.suppressFilterUpdates = true;
+      this.status = "all";
+      this.pagination.filter = "";
+
+      this.$nextTick(() => {
+        this.suppressFilterUpdates = false;
+        this.applyFilters();
+      });
+    },
     fetchProducts() {
       this.loading = true;
 
@@ -212,43 +253,43 @@ export default {
                 {{ $t("No products found") }}
               </template>
               <template #header>
-                <div class="grid grid-cols-12">
-                  <div class="xl:col-span-3 lg:col-span-4 md:col-span-6 col-span-12 flex md:justify-start justify-center">
-                    <SelectButton
-                      v-model="status"
-                      :allow-empty="false"
-                      :options="[
-                        {
-                          label: $t('All'),
-                          value: 'all',
-                        },
-                        {
-                          label: $t('Active'),
-                          value: 'active',
-                        },
-                        {
-                          label: $t('Inactive'),
-                          value: 'inactive',
-                        },
-                        {
-                          label: $t('Archived'),
-                          value: 'archived',
-                        },
-                      ]"
-                      option-label="label"
-                      option-value="value"
-                      aria-labelledby="basic"
-                    />
-                  </div>
-                  <div
-                    class="flex xl:col-span-3 xl:col-start-10 lg:col-span-4 lg:col-start-9 md:col-span-6 md:col-start-7 col-span-12 md:justify-end justify-center"
-                  >
-                    <IconField icon-position="left" class="w-full">
-                      <InputIcon class="fa fa-search" />
-                      <InputText v-model="pagination.filter" :placeholder="$t('Search')" class="w-full" />
-                    </IconField>
-                  </div>
+                <div class="flex items-center gap-2">
+                  <PButton
+                    type="button"
+                    icon="fa fa-filter"
+                    :label="$t('Filters')"
+                    :severity="hasActiveFilters ? 'primary' : 'secondary'"
+                    outlined
+                    :pt="{ label: { class: 'hidden sm:inline' } }"
+                    @click="$refs.filterPopover.toggle($event)"
+                  />
+                  <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
+                  <IconField icon-position="left" class="flex-1 sm:flex-none sm:w-80 sm:ml-auto">
+                    <InputIcon class="fa fa-search" />
+                    <InputText v-model="pagination.filter" :placeholder="$t('Search')" class="w-full" />
+                  </IconField>
                 </div>
+
+                <Popover ref="filterPopover">
+                  <div class="flex flex-col gap-4 p-4 min-w-72">
+                    <div>
+                      <label class="text-sm font-medium mb-1 block">{{ $t("Status") }}</label>
+                      <PSelect v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />
+                    </div>
+                    <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                      <PButton
+                        type="button"
+                        :label="$t('Clear')"
+                        icon="fa fa-times"
+                        severity="secondary"
+                        text
+                        size="small"
+                        :disabled="!hasActiveFilters"
+                        @click="resetFilters"
+                      />
+                    </div>
+                  </div>
+                </Popover>
               </template>
               <Column field="name" :header="$t('Name')" sortable>
                 <template #body="{ data }">
