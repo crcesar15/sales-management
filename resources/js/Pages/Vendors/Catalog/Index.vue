@@ -165,14 +165,15 @@ const goBack = () => {
 
 <template>
   <div>
-    <div class="flex flex-row justify-between mb-3">
-      <div class="flex">
-        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="goBack" />
-        <h2 class="text-2xl font-bold flex items-center m-0">{{ vendor.fullname }} — {{ t("Catalog") }}</h2>
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <div class="flex min-w-0 items-center gap-2 sm:gap-3">
+        <Button icon="fa fa-arrow-left" text severity="secondary" class="shrink-0 hover:shadow-md" @click="goBack" />
+        <h2 class="m-0 min-w-0 text-2xl font-bold leading-tight sm:text-2xl sm:leading-normal">
+          <span class="hidden sm:inline">{{ vendor.fullname }} —</span>
+          {{ t("Catalog") }}
+        </h2>
       </div>
-      <div class="flex flex-col justify-center">
-        <Button v-can="'catalog.create'" :label="t('Add Entry')" icon="fa fa-plus" raised class="uppercase" @click="addEntry" />
-      </div>
+      <Button v-can="'catalog.create'" :label="t('Add Entry')" icon="fa fa-plus" raised class="shrink-0 uppercase" @click="addEntry" />
     </div>
 
     <ConfirmDialog />
