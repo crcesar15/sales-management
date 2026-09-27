@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { ref, computed, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 
 const props = defineProps<{
   visible: boolean;
@@ -18,6 +19,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const { datePickerFormat } = useDatetimeFormatter();
 const toast = useToast();
 const loading = ref(false);
 const fieldErrors = ref<Record<string, string>>({});
@@ -129,7 +131,7 @@ function submit() {
           {{ t("Expiry Date") }}
           <span v-if="hasExpiration" class="text-red-400">*</span>
         </label>
-        <DatePicker id="expiry-date" v-model="expiryDate" show-icon class="w-full" :class="{ 'p-invalid': fieldErrors.expiry_date }" />
+        <DatePicker id="expiry-date" v-model="expiryDate" show-icon class="w-full" :class="{ 'p-invalid': fieldErrors.expiry_date }" :date-format="datePickerFormat" />
         <small v-if="fieldErrors.expiry_date" class="text-red-500">{{ fieldErrors.expiry_date }}</small>
         <small v-else class="text-surface-500">{{ t("Updating the expiry date will recalculate the expiry status") }}</small>
       </div>

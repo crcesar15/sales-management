@@ -8,6 +8,7 @@ import { object, number, string, date } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import POLineItemsTable from "../Components/POLineItemsTable.vue";
 import POFinancialSummary from "../Components/POFinancialSummary.vue";
 import type { LineItem } from "../Components/POLineItemsTable.vue";
@@ -36,6 +37,7 @@ interface AdditionalContact {
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
+const { datePickerFormat } = useDatetimeFormatter();
 const submitting = ref(false);
 
 const vendorOptions = computed(() => props.vendors.map((v) => ({ name: v.fullname, value: v.id })));
@@ -248,13 +250,20 @@ function goBack() {
                     v-model="orderDate"
                     v-bind="orderDateAttrs"
                     show-icon
+                    :date-format="datePickerFormat"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.order_date }"
                   />
                   <small v-if="submitCount > 0 && errors.order_date" class="text-red-400 dark:text-red-300">{{ errors.order_date }}</small>
                 </div>
                 <div class="flex flex-col gap-1">
                   <label for="expected-arrival-date">{{ t("Expected Arrival Date") }}</label>
-                  <DatePicker id="expected-arrival-date" v-model="expectedArrivalDate" v-bind="expectedArrivalDateAttrs" show-icon />
+                  <DatePicker
+                    id="expected-arrival-date"
+                    v-model="expectedArrivalDate"
+                    v-bind="expectedArrivalDateAttrs"
+                    show-icon
+                    :date-format="datePickerFormat"
+                  />
                 </div>
               </div>
             </div>

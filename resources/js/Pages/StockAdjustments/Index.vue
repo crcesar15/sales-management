@@ -19,7 +19,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const { formatDate } = useDatetimeFormatter();
+const { formatDate, datePickerFormat } = useDatetimeFormatter();
 
 const ALL = "__all__";
 
@@ -153,11 +153,11 @@ function formatQuantity(val: number): string {
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date From") }}</label>
-                  <DatePicker v-model="dateFrom" :show-icon="true" date-format="yy-mm-dd" class="w-full" @date-select="applyFilters()" />
+                  <DatePicker v-model="dateFrom" :show-icon="true" :date-format="datePickerFormat" class="w-full" @date-select="applyFilters()" />
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date To") }}</label>
-                  <DatePicker v-model="dateTo" :show-icon="true" date-format="yy-mm-dd" class="w-full" @date-select="applyFilters()" />
+                  <DatePicker v-model="dateTo" :show-icon="true" :date-format="datePickerFormat" class="w-full" @date-select="applyFilters()" />
                 </div>
                 <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
                   <Button

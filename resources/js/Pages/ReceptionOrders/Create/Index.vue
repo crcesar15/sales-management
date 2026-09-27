@@ -25,7 +25,7 @@ const props = defineProps<{
 const toast = useToast();
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
-const { formatDate } = useDatetimeFormatter();
+const { formatDate, datePickerFormat } = useDatetimeFormatter();
 
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
 
@@ -273,6 +273,7 @@ function goBack() {
                     v-model="receptionDate"
                     v-bind="receptionDateAttrs"
                     show-icon
+                    :date-format="datePickerFormat"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.reception_date }"
                   />
                   <small v-if="submitCount > 0 && errors.reception_date" class="text-red-400 dark:text-red-300">

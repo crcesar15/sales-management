@@ -39,7 +39,7 @@ const props = defineProps<{
   stores: Array<{ id: number; name: string }>;
 }>();
 
-const { formatDate, formatDatetime } = useDatetimeFormatter();
+const { formatDate, formatDatetime, datePickerFormat } = useDatetimeFormatter();
 const { t } = useI18n();
 
 const status = ref(props.filters.status || "all");
@@ -223,11 +223,11 @@ function editOrder(order: ReceptionOrderResponse) {
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date From") }}</label>
-                  <DatePicker v-model="dateFrom" :show-icon="true" :placeholder="t('From')" date-format="yy-mm-dd" class="w-full" />
+                  <DatePicker v-model="dateFrom" :show-icon="true" :placeholder="t('From')" :date-format="datePickerFormat" class="w-full" />
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date To") }}</label>
-                  <DatePicker v-model="dateTo" :show-icon="true" :placeholder="t('To')" date-format="yy-mm-dd" class="w-full" />
+                  <DatePicker v-model="dateTo" :show-icon="true" :placeholder="t('To')" :date-format="datePickerFormat" class="w-full" />
                 </div>
                 <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
                   <Button

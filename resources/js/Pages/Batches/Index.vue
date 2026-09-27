@@ -35,7 +35,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const { formatDate, formatDatetime } = useDatetimeFormatter();
+const { formatDate, formatDatetime, datePickerFormat } = useDatetimeFormatter();
 
 const ALL = "__all__";
 
@@ -191,8 +191,8 @@ function openEditModal(batch: BatchResponse) {
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Expiry Date") }}</label>
                   <div class="flex gap-2">
-                    <DatePicker v-model="expiryFrom" :placeholder="t('From')" show-icon class="w-full" />
-                    <DatePicker v-model="expiryTo" :placeholder="t('To')" show-icon class="w-full" />
+                    <DatePicker v-model="expiryFrom" :placeholder="t('From')" show-icon class="w-full" :date-format="datePickerFormat" />
+                    <DatePicker v-model="expiryTo" :placeholder="t('To')" show-icon class="w-full" :date-format="datePickerFormat" />
                   </div>
                 </div>
                 <div class="flex items-center gap-2">

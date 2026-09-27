@@ -2,6 +2,7 @@
 import { DataTable, Column, Button, InputNumber, DatePicker, InputText, Tag, useConfirm } from "primevue";
 import { useI18n } from "vue-i18n";
 import { computed } from "vue";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 
 export interface ReceptionLineItem {
   id: string;
@@ -31,6 +32,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const confirm = useConfirm();
+const { datePickerFormat } = useDatetimeFormatter();
 
 const items = computed({
   get: () => props.modelValue,
@@ -159,7 +161,8 @@ function formatConversion(item: ReceptionLineItem): string {
         <div class="flex flex-col gap-1">
           <DatePicker
             :model-value="data.expiry_date"
-            :placeholder="t('Select date')"
+             :placeholder="t('Select date')"
+             :date-format="datePickerFormat"
             show-icon
             size="small"
             :disabled="disabled"

@@ -11,6 +11,7 @@ import { ref, computed, watch } from "vue";
 import axios from "axios";
 import AppLayout from "@layouts/admin.vue";
 import { useBatchClient } from "@/Composables/useBatchClient";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import type { ProductResponse } from "@app-types/product-types";
 import type { AvailableBatch } from "@/Types/stock-adjustment-types";
 
@@ -24,6 +25,7 @@ const props = defineProps<{
 const toast = useToast();
 const { t } = useI18n();
 const { fetchAvailableBatchesApi } = useBatchClient();
+const { datePickerFormat } = useDatetimeFormatter();
 
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
 const reasonOptions = computed(() => props.reasons.map((r) => ({ name: t(r.label), value: r.value })));
@@ -430,7 +432,7 @@ const submit = handleSubmit((formValues) => {
                   <DatePicker
                     id="expiry_date"
                     :model-value="values.expiry_date ? new Date(values.expiry_date) : null"
-                    date-format="yy-mm-dd"
+                    :date-format="datePickerFormat"
                     show-icon
                     :placeholder="requiresExpiration ? t('Select expiry date') : t('Select expiry date (optional)')"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.expiry_date }"

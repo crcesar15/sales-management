@@ -10,6 +10,7 @@ import { route } from "ziggy-js";
 import type { RoleResponse } from "@/Types/role-types";
 import type { UserResponse } from "@/Types/user-types";
 import AppLayout from "@layouts/admin.vue";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 
 // Layout
 defineOptions({ layout: AppLayout });
@@ -21,6 +22,7 @@ const props = defineProps<{
 // Set composables
 const toast = useToast();
 const { t } = useI18n();
+const { datePickerFormat } = useDatetimeFormatter();
 
 // Schema
 const schema = toTypedSchema(
@@ -195,6 +197,7 @@ const submit = handleSubmit((values) => {
                     id="date-of-birth"
                     v-model="dateOfBirth"
                     v-bind="dateOfBirthAttrs"
+                    :date-format="datePickerFormat"
                     :pt="{ pcInputText: { root: 'w-full' } }"
                   />
                 </div>

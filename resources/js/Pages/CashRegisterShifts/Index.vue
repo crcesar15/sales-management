@@ -23,7 +23,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const { formatCurrencySymbol } = useCurrencyFormatter();
 
-const { formatDatetime } = useDatetimeFormatter();
+const { formatDatetime, datePickerFormat } = useDatetimeFormatter();
 
 const ALL = "__all__";
 
@@ -233,11 +233,11 @@ const onShiftOpened = () => {
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date From") }}</label>
-                  <DatePicker v-model="dateFrom" show-icon fluid @date-select="applyFilters()" />
+                  <DatePicker v-model="dateFrom" :date-format="datePickerFormat" show-icon fluid @date-select="applyFilters()" />
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date To") }}</label>
-                  <DatePicker v-model="dateTo" show-icon fluid @date-select="applyFilters()" />
+                  <DatePicker v-model="dateTo" :date-format="datePickerFormat" show-icon fluid @date-select="applyFilters()" />
                 </div>
                 <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
                   <Button

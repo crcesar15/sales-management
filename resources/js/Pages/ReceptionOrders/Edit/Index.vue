@@ -8,6 +8,7 @@ import { object, number, string, date } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import ReceptionLineItemsTable from "../Components/ReceptionLineItems.vue";
 import type { ReceptionLineItem } from "../Components/ReceptionLineItems.vue";
 import type { ReceptionOrderResponse } from "@/Types/reception-order-types";
@@ -22,6 +23,7 @@ const props = defineProps<{
 
 const toast = useToast();
 const { t } = useI18n();
+const { datePickerFormat } = useDatetimeFormatter();
 
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
 
@@ -180,6 +182,7 @@ function goBack() {
                     v-model="receptionDate"
                     v-bind="receptionDateAttrs"
                     show-icon
+                    :date-format="datePickerFormat"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.reception_date }"
                   />
                   <small v-if="submitCount > 0 && errors.reception_date" class="text-red-400 dark:text-red-300">
