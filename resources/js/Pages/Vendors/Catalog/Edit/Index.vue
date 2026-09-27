@@ -44,12 +44,15 @@ const goBack = () => {
 
 <template>
   <div>
-    <div class="flex justify-between mb-3">
-      <div class="flex items-center gap-3">
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <div class="flex min-w-0 items-center gap-2 sm:gap-3">
         <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
-        <h2 class="text-2xl font-bold m-0">{{ vendor.fullname }} — {{ t("Edit Catalog Entry") }}</h2>
+        <h2 class="m-0 min-w-0 text-2xl font-bold leading-tight sm:text-2xl sm:leading-normal">
+          <span class="hidden sm:inline">{{ vendor.fullname }} —</span>
+          {{ t("Edit Catalog Entry") }}
+        </h2>
       </div>
-      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" @click="formRef?.submit" />
+      <Button icon="fa fa-save" :label="t('Save')" raised class="shrink-0 uppercase" @click="formRef?.submit" />
     </div>
 
     <CatalogEntryForm ref="formRef" :vendor="vendor" :initial-values="catalog" :is-editing="true" @submit="handleSubmit" />
