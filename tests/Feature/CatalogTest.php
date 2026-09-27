@@ -6,6 +6,7 @@ use App\Enums\RolesEnum;
 use App\Models\Catalog;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\ProductVariantUnit;
 use App\Models\Vendor;
 
 use function Pest\Laravel\actingAs;
@@ -132,6 +133,40 @@ it('admin creates a catalog entry', function () {
         ->assertRedirect(route('catalog'));
 
     expect(Catalog::where('vendor_id', $vendor->id)->where('product_variant_id', $variant->id)->exists())->toBeTrue();
+});
+
+it('provides existing catalog keys on the vendor catalog create page', function () {
+    $admin = App\Models\User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $vendor = Vendor::factory()->create();
+    $variant = ProductVariant::factory()->for(Product::factory())->create();
+    $purchaseUnit = ProductVariantUnit::query()->create([
+        'product_variant_id' => $variant->id,
+        'type' => 'purchase',
+        'name' => 'Carton',
+        'conversion_factor' => 24,
+        'status' => 'active',
+        'sort_order' => 1,
+    ]);
+    Catalog::factory()->create([
+        'vendor_id' => $vendor->id,
+        'product_variant_id' => $variant->id,
+        'unit_id' => null,
+    ]);
+    Catalog::factory()->create([
+        'vendor_id' => $vendor->id,
+        'product_variant_id' => $variant->id,
+        'unit_id' => $purchaseUnit->id,
+    ]);
+
+    actingAs($admin)
+        ->get(route('vendors.catalog.create', $vendor))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Vendors/Catalog/Create/Index')
+            ->where('existingCatalogKeys', [$variant->id . ':base', $variant->id . ':' . $purchaseUnit->id])
+        );
 });
 
 it('duplicate vendor_variant_unit returns validation error', function () {

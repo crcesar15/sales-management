@@ -111,6 +111,18 @@ final class CatalogService
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function existingKeysForVendor(int $vendorId): array
+    {
+        return Catalog::query()
+            ->where('vendor_id', $vendorId)
+            ->get(['product_variant_id', 'unit_id'])
+            ->map(fn (Catalog $catalog): string => sprintf('%d:%s', $catalog->product_variant_id, $catalog->unit_id ?? 'base'))
+            ->all();
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      */
     public function update(Catalog $catalog, array $data): Catalog

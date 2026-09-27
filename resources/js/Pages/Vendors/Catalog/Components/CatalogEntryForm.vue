@@ -1,35 +1,19 @@
 <script setup lang="ts">
-import { Card, InputNumber, Textarea, Select, AutoComplete, ToggleSwitch, useToast } from "primevue";
+import { Card, InputNumber, Textarea, Select, ToggleSwitch, useToast } from "primevue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string, number } from "yup";
-import { route } from "ziggy-js";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import axios from "axios";
-import type { CatalogPayload, CatalogResponse } from "@/Types/catalog-types";
+import CatalogProductPicker from "./CatalogProductPicker.vue";
+import type { CatalogPayload, CatalogProductUnitOption, CatalogResponse } from "@/Types/catalog-types";
 import type { VendorResponse } from "@/Types/vendor-types";
-import type { PurchaseUnitResponse } from "@/Types/product-variant-types";
-import type { ProductResponse } from "@app-types/product-types";
-
-interface VariantOption {
-  id: number;
-  name: string;
-  product: ProductResponse;
-  identifier: string;
-  variantLabel: string;
-}
-
-interface VariantOptionValue {
-  id: number;
-  value: string;
-  option_name: string;
-}
 
 const props = defineProps<{
   vendor: VendorResponse;
   initialValues?: Partial<CatalogResponse>;
   isEditing?: boolean;
+  existingCatalogKeys?: string[];
 }>();
 
 const emit = defineEmits<{
@@ -65,7 +49,7 @@ const schema = toTypedSchema(
   }),
 );
 
-const { handleSubmit, errors, defineField, setFieldValue, setErrors, values, submitCount } = useForm({
+const { handleSubmit, errors, defineField, setFieldValue, setErrors, submitCount } = useForm({
   validationSchema: schema,
   validateOnMount: false,
   initialValues: {
@@ -80,7 +64,6 @@ const { handleSubmit, errors, defineField, setFieldValue, setErrors, values, sub
   },
 });
 
-const [unitId, unitIdAttrs] = defineField("unit_id");
 const [price, priceAttrs] = defineField("price");
 const [paymentTerms, paymentTermsAttrs] = defineField("payment_terms");
 const [details, detailsAttrs] = defineField("details");
@@ -88,134 +71,44 @@ const [status, statusAttrs] = defineField("status");
 const [minimumOrderQuantity, minimumOrderQuantityAttrs] = defineField("minimum_order_quantity");
 const [leadTimeDays, leadTimeDaysAttrs] = defineField("lead_time_days");
 
-// Variant autocomplete
-const variantSearchResults = ref<VariantOption[]>([]);
-const variantSearchLoading = ref(false);
-const selectedVariant = ref<VariantOption | null>(null);
+function initialProductUnitOption(): CatalogProductUnitOption | null {
+  const variant = props.initialValues?.product_variant;
+  if (!variant?.product) return null;
 
-// Pre-populate selected variant in edit mode
-if (props.isEditing && props.initialValues?.product_variant_id) {
-  const pv = props.initialValues.product_variant;
-  if (pv) {
-    const variantLabel =
-      pv.values?.length > 0
-        ? pv.values.map((v: { option_name: string; value: string }) => `${v.option_name}: ${v.value}`).join(", ")
-        : pv.identifier || pv.name;
-    const brand = pv.product?.brand?.name;
-    const displayName = brand ? `${pv.product.name} — ${brand} (${variantLabel})` : `${pv.product.name} (${variantLabel})`;
-    selectedVariant.value = {
-      id: pv.id,
-      name: displayName,
-      identifier: pv.identifier,
-      variantLabel,
-      product: pv.product,
-    };
-  }
-}
+  const purchaseUnit = props.initialValues?.purchase_unit;
+  const baseUnitName = variant.product.measurement_unit?.name ?? null;
+  const variantIdentity = variant.values?.length
+    ? variant.values.map((value) => `${value.option_name}: ${value.value}`).join(", ")
+    : variant.identifier || variant.name;
 
-async function searchVariants(event: { query: string }) {
-  if (!event.query || event.query.length < 2) {
-    variantSearchResults.value = [];
-    return;
-  }
-  variantSearchLoading.value = true;
-  try {
-    const response = await axios.get(route("api.v1.variants"), {
-      params: { filter: event.query, per_page: 15 },
-    });
-    variantSearchResults.value = (response.data.data || []).map((v: Record<string, unknown>) => {
-      const values = v.values as VariantOptionValue[];
-      const variantLabel =
-        values?.length > 0
-          ? values.map((val: VariantOptionValue) => `${val.option_name}: ${val.value}`).join(", ")
-          : (v.identifier as string) || (v.name as string);
-
-      let item = {
-        id: v.id as number,
-        product: v.product as ProductResponse,
-        values: values,
-        identifier: v.identifier as string,
-        variantLabel,
-        name: "",
-      };
-
-      if (item.product?.name) {
-        const brand = item.product.brand?.name;
-        item.name = brand ? `${item.product.name} — ${brand} (${variantLabel})` : `${item.product.name} (${variantLabel})`;
-      } else {
-        item.name = variantLabel;
-      }
-      return item;
-    });
-  } catch {
-    variantSearchLoading.value = false;
-  } finally {
-    variantSearchLoading.value = false;
-  }
-}
-
-function onVariantSelect(event: { value: VariantOptionValue }) {
-  setFieldValue("product_variant_id", event.value.id);
-  setFieldValue("unit_id", BASE_UNIT_ID);
-  purchaseUnits.value = [];
-  selectedPurchaseUnit.value = null;
-  loadPurchaseUnits(event.value.id);
-}
-
-// Purchase units
-const purchaseUnits = ref<PurchaseUnitResponse[]>([]);
-const selectedPurchaseUnit = ref<PurchaseUnitResponse | null>(null);
-const unitsLoading = ref(false);
-
-const purchaseUnitOptions = computed(() => {
-  const baseUnit = selectedVariant.value?.product?.measurement_unit;
-  const baseOption: PurchaseUnitResponse = {
-    id: BASE_UNIT_ID,
-    name: baseUnit ? `${baseUnit.name} (${t("base unit")})` : t("Base unit"),
-    conversion_factor: 1,
+  return {
+    key: `${variant.id}:${purchaseUnit?.id ?? "base"}`,
+    product_variant_id: variant.id,
+    unit_id: purchaseUnit?.id ?? null,
+    product_name: variant.product.name,
+    brand_name: variant.product.brand?.name ?? null,
+    base_unit_name: baseUnitName,
+    variant_identity: variantIdentity,
+    unit_name: purchaseUnit?.name ?? baseUnitName ?? t("Base unit"),
+    conversion_factor: purchaseUnit?.conversion_factor ?? 1,
   };
-  return [baseOption, ...purchaseUnits.value];
-});
-
-// Pre-populate purchase unit in edit mode
-if (props.isEditing && props.initialValues?.product_variant_id) {
-  const pu = props.initialValues.purchase_unit;
-  if (pu) {
-    selectedPurchaseUnit.value = pu;
-    purchaseUnits.value = [pu];
-  } else {
-    selectedPurchaseUnit.value = null;
-  }
 }
 
-async function loadPurchaseUnits(variantId: number) {
-  unitsLoading.value = true;
-  try {
-    const response = await axios.get(route("api.v1.variants.purchase-units", variantId));
-    purchaseUnits.value = response.data.data || [];
-  } catch {
-    purchaseUnits.value = [];
-  } finally {
-    unitsLoading.value = false;
-  }
-}
+const selectedProductUnit = ref<CatalogProductUnitOption | null>(initialProductUnitOption());
+const addedKeys = computed(() => new Set(props.existingCatalogKeys ?? []));
 
-function onUnitSelect(value: number) {
-  if (value === BASE_UNIT_ID) {
-    selectedPurchaseUnit.value = null;
-  } else {
-    const unit = purchaseUnits.value.find((u) => u.id === value);
-    selectedPurchaseUnit.value = unit || null;
-  }
+function onProductUnitSelect(selection: CatalogProductUnitOption | null) {
+  selectedProductUnit.value = selection;
+  setFieldValue("product_variant_id", selection?.product_variant_id);
+  setFieldValue("unit_id", selection?.unit_id ?? BASE_UNIT_ID);
 }
 
 const conversionFactorLabel = computed(() => {
-  const baseUnit = selectedVariant.value?.product?.measurement_unit;
-  const baseName = baseUnit?.name ?? t("unit");
-  if (selectedPurchaseUnit.value) {
-    return `1 ${selectedPurchaseUnit.value.name} = ${selectedPurchaseUnit.value.conversion_factor} ${baseName}`;
-  }
-  return `1 ${baseName} (${t("base unit")})`;
+  const selection = selectedProductUnit.value;
+  if (!selection) return "";
+  if (selection.unit_id === null) return `1 ${selection.unit_name} (${t("base unit")})`;
+
+  return `1 ${selection.unit_name} = ${selection.conversion_factor} ${selection.base_unit_name ?? t("unit")}`;
 });
 
 // Advanced terms toggle
@@ -260,94 +153,22 @@ defineExpose({
         <Card class="mb-4">
           <template #title>{{ t("Product & Pricing") }}</template>
           <template #content>
-            <!-- Variant -->
+            <!-- Product and purchase unit -->
             <div class="flex flex-col gap-1 mb-4">
-              <label for="variant">
+              <label for="catalog-product-search">
                 {{ t("Product") }}
                 <span class="text-red-500">*</span>
               </label>
-              <AutoComplete
-                id="variant"
-                v-model="selectedVariant"
-                :suggestions="variantSearchResults"
-                option-label="name"
-                :placeholder="t('Type to search products...')"
-                :loading="variantSearchLoading"
+              <CatalogProductPicker
+                :model-value="selectedProductUnit"
+                :added-keys="addedKeys"
                 :disabled="isEditing"
                 :invalid="submitCount > 0 && !!errors.product_variant_id"
-                dropdown
-                force-selection
-                @complete="searchVariants"
-                @item-select="onVariantSelect"
-              >
-                <template #header>
-                  <div
-                    class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 text-sm font-semibold text-surface-500 uppercase tracking-wide border-b border-surface-200 dark:border-surface-700"
-                  >
-                    <span class="col-span-5">{{ t("Product") }}</span>
-                    <span class="col-span-4">{{ t("Brand") }}</span>
-                    <span class="col-span-3">{{ t("Unit") }}</span>
-                  </div>
-                </template>
-                <template #option="{ option }">
-                  <!-- Desktop: grid row -->
-                  <div class="hidden lg:grid grid-cols-12 gap-2 items-center w-full py-1">
-                    <div class="col-span-5 flex flex-col gap-0.5 min-w-0">
-                      <span class="font-medium text-sm truncate">{{ option.product?.name ?? option.name }}</span>
-                      <span class="text-sm text-surface-500 truncate">{{ option.variantLabel }}</span>
-                    </div>
-                    <div class="col-span-4 text-sm text-surface-500 truncate">
-                      {{ option.product?.brand?.name ?? "—" }}
-                    </div>
-                    <div class="col-span-3">
-                      <span v-if="option.product?.measurement_unit?.name">
-                        {{ option.product.measurement_unit.name }}
-                      </span>
-                      <span v-else>—</span>
-                    </div>
-                  </div>
-                  <!-- Mobile: card layout -->
-                  <div class="lg:hidden flex flex-col gap-1.5 py-2 w-full">
-                    <div class="flex items-center justify-between">
-                      <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                        <span class="font-medium text-sm truncate">{{ option.product?.name ?? option.name }}</span>
-                        <span class="text-xs text-surface-500 truncate">
-                          <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} ·</span>
-                          {{ option.variantLabel }}
-                          <span v-if="option.product?.measurement_unit" class="ml-1">({{ option.product.measurement_unit.name }})</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </template>
-              </AutoComplete>
+                @update:model-value="onProductUnitSelect"
+              />
+              <small v-if="conversionFactorLabel" class="text-surface-500">{{ conversionFactorLabel }}</small>
               <small v-if="submitCount > 0 && errors.product_variant_id" class="text-red-400 dark:text-red-300">
                 {{ errors.product_variant_id }}
-              </small>
-            </div>
-
-            <!-- Purchase Unit -->
-            <div class="flex flex-col gap-1 mb-4">
-              <label for="purchase-unit">
-                {{ t("Purchase Unit") }}
-                <span class="text-red-500">*</span>
-              </label>
-              <Select
-                id="purchase-unit"
-                v-model="unitId"
-                v-bind="unitIdAttrs"
-                :options="purchaseUnitOptions"
-                option-label="name"
-                option-value="id"
-                :placeholder="t('Select purchase unit')"
-                :loading="unitsLoading"
-                :disabled="!values.product_variant_id || isEditing"
-                :class="{ 'p-invalid': submitCount > 0 && !!errors.unit_id }"
-                @update:model-value="onUnitSelect"
-              />
-              <small class="text-surface-500">{{ conversionFactorLabel }}</small>
-              <small v-if="submitCount > 0 && errors.unit_id" class="text-red-400 dark:text-red-300">
-                {{ errors.unit_id }}
               </small>
             </div>
 

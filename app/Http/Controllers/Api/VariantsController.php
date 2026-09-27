@@ -106,6 +106,10 @@ final class VariantsController extends Controller
             $relations[] = 'activeSaleUnits';
         }
 
+        if (in_array('purchaseUnits', $includeList, true)) {
+            $relations[] = 'activePurchaseUnits';
+        }
+
         $query = ProductVariant::query()
             ->with($relations)
             ->where('status', '!=', 'archived')
@@ -160,6 +164,14 @@ final class VariantsController extends Controller
                         'name' => $unit->name,
                         'conversion_factor' => $unit->conversion_factor,
                         'price' => (float) $unit->price,
+                    ])->values()->toArray();
+                }
+
+                if ($variant->relationLoaded('activePurchaseUnits') && $variant->activePurchaseUnits->isNotEmpty()) {
+                    $data['purchase_units'] = $variant->activePurchaseUnits->map(fn ($unit) => [
+                        'id' => $unit->id,
+                        'name' => $unit->name,
+                        'conversion_factor' => $unit->conversion_factor,
                     ])->values()->toArray();
                 }
 

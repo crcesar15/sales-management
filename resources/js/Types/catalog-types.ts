@@ -47,6 +47,35 @@ export interface CatalogPayload {
   lead_time_days?: number | null;
 }
 
+export interface CatalogVariantSearchResult {
+  id: number;
+  identifier: string | null;
+  option_values: string | null;
+  product: {
+    id: number;
+    name: string;
+    brand: { id: number; name: string } | null;
+    measurement_unit: { id: number; name: string } | null;
+  } | null;
+  purchase_units?: Array<{
+    id: number;
+    name: string;
+    conversion_factor: number;
+  }>;
+}
+
+export interface CatalogProductUnitOption {
+  key: string;
+  product_variant_id: number;
+  unit_id: number | null;
+  product_name: string;
+  brand_name: string | null;
+  base_unit_name: string | null;
+  variant_identity: string | null;
+  unit_name: string;
+  conversion_factor: number;
+}
+
 export interface CatalogGroupedEntry {
   product_variant_id: number;
   product_name: string;

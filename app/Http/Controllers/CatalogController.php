@@ -16,9 +16,9 @@ use App\Models\ProductVariant;
 use App\Models\Vendor;
 use App\Services\CatalogService;
 use Illuminate\Http\RedirectResponse;
-use InvalidArgumentException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use InvalidArgumentException;
 
 final class CatalogController extends Controller
 {
@@ -103,6 +103,7 @@ final class CatalogController extends Controller
 
         return Inertia::render('Vendors/Catalog/Create/Index', [
             'vendor' => $vendor,
+            'existingCatalogKeys' => $this->catalogService->existingKeysForVendor($vendor->id),
         ]);
     }
 
@@ -120,7 +121,14 @@ final class CatalogController extends Controller
     {
         $this->authorize(PermissionsEnum::CATALOG_EDIT);
 
-        $catalog->load(['vendor', 'productVariant.product', 'purchaseUnit']);
+        $catalog->load([
+            'vendor',
+            'productVariant.product.brand',
+            'productVariant.product.measurementUnit',
+            'productVariant.values.option',
+            'productVariant.activePurchaseUnits',
+            'purchaseUnit',
+        ]);
 
         return Inertia::render('Vendors/Catalog/Edit/Index', [
             'vendor' => $vendor,

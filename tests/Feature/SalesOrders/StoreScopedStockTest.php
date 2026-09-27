@@ -9,6 +9,7 @@ use App\Models\CashRegister;
 use App\Models\CashRegisterShift;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\ProductVariantUnit;
 use App\Models\SalesOrder;
 use App\Models\Store;
 use App\Models\User;
@@ -117,6 +118,30 @@ it('returns canonical variant fields without derived display aliases', function 
         ->not->toHaveKey('variant_label')
         ->not->toHaveKey('label')
         ->not->toHaveKey('sale_units');
+});
+
+it('includes active purchase units when requested by the variant search endpoint', function () {
+    $purchaseUnit = ProductVariantUnit::query()->create([
+        'product_variant_id' => $this->variant->id,
+        'type' => 'purchase',
+        'name' => 'Carton',
+        'conversion_factor' => 24,
+        'status' => 'active',
+        'sort_order' => 1,
+    ]);
+
+    $response = actingAs($this->actor, 'sanctum')
+        ->getJson(route('api.v1.variants.search', [
+            'filter' => $this->variant->product->name,
+            'includes' => 'purchaseUnits',
+        ]));
+
+    $response->assertSuccessful()
+        ->assertJsonPath('data.0.purchase_units.0', [
+            'id' => $purchaseUnit->id,
+            'name' => 'Carton',
+            'conversion_factor' => 24,
+        ]);
 });
 
 it('rejects creating a sales order without a store_id', function () {

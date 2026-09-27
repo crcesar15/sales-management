@@ -1,4 +1,5 @@
 import type { AxiosResponse } from "axios";
+import type { CatalogVariantSearchResult } from "@/Types/catalog-types";
 import type { PurchasePriceHistory } from "@/Types/inventory-variant-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
@@ -6,9 +7,15 @@ import { route } from "ziggy-js";
 export function useVariantClient() {
   const { apiClient, loading } = useApi();
 
-  const searchVariantsApi = async (filter: string) => {
+  const searchVariantsApi = async (
+    filter: string,
+    includes: string[] = [],
+  ): Promise<AxiosResponse<{ data: CatalogVariantSearchResult[] }>> => {
     return await apiClient.get(route("api.v1.variants.search"), {
-      params: { filter },
+      params: {
+        filter,
+        ...(includes.length > 0 ? { includes: includes.join(",") } : {}),
+      },
     });
   };
 
