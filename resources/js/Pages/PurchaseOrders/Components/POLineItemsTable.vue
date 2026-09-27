@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { DataTable, Column, Button, InputNumber, AutoComplete, Tag, useToast, useConfirm } from "primevue";
+import { Badge, Button, InputNumber, Tag, useToast, useConfirm } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { ref, computed, watch } from "vue";
-import { usePurchaseOrderClient } from "@/Composables/usePurchaseOrderClient";
+import type { VendorCatalogEntry } from "@/Types/catalog-types";
 import POVariantVendorsDialog from "./POVariantVendorsDialog.vue";
+import POProductSearch from "./POProductSearch.vue";
 
 export interface LineItem {
   id: string;
@@ -39,18 +40,11 @@ const { t } = useI18n();
 const { formatCurrency, currencyCode } = useCurrencyFormatter();
 const toast = useToast();
 const confirm = useConfirm();
-const { fetchVendorCatalogApi } = usePurchaseOrderClient();
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const searchResults = ref<any[]>([]);
-const searchLoading = ref(false);
-const selectedEntry = ref<Record<string, unknown> | null>(null);
-const expandedRows = ref<LineItem[]>([]);
-
 const vendorsDialogVisible = ref(false);
 const vendorsDialogVariantId = ref<number | null>(null);
 const vendorsDialogProductName = ref("");
 const vendorsDialogVariantLabel = ref("");
+const expandedItemDetails = ref<string[]>([]);
 
 function openVendorsDialog(item: LineItem) {
   vendorsDialogVariantId.value = item.product_variant_id;
@@ -59,83 +53,96 @@ function openVendorsDialog(item: LineItem) {
   vendorsDialogVisible.value = true;
 }
 
+function isItemDetailsExpanded(itemId: string): boolean {
+  return expandedItemDetails.value.includes(itemId);
+}
+
+function toggleItemDetails(itemId: string) {
+  expandedItemDetails.value = isItemDetailsExpanded(itemId)
+    ? expandedItemDetails.value.filter((id) => id !== itemId)
+    : [...expandedItemDetails.value, itemId];
+}
+
 const items = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
+    get: () => props.modelValue,
+    set: (val) => emit("update:modelValue", val),
 });
 
-function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" {
-  if (stock === null || stock === undefined) return "success";
+function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" | "secondary" {
+  if (stock === null || stock === undefined) return "secondary";
   if (stock === 0) return "danger";
   if (minStock && stock <= minStock) return "warn";
+
   return "success";
 }
 
-function getStockLabel(stock: number | null | undefined): string {
-  if (stock === null || stock === undefined) return "—";
-  if (stock === 0) return t("Out of stock");
-  return `${t("In stock")}: ${String(stock)}`;
+function stockLabel(item: LineItem): string {
+  if (item.stock === null || item.stock === undefined || !item.base_unit) return t("Stock unavailable");
+
+  return `${String(item.stock)} ${item.base_unit.name}`;
 }
 
-function hasExpandableData(item: LineItem): boolean {
-  return !!(item.minimum_order_quantity || item.lead_time_days || item.payment_terms || item.details || item.purchase_unit);
+function purchaseUnitLabel(item: LineItem): string {
+  return item.purchase_unit?.name ?? item.base_unit?.name ?? "—";
 }
 
-async function searchVariants(event: { query: string }) {
-  if (!props.vendorId) {
-    toast.add({ severity: "warn", summary: t("Warning"), detail: t("Select a vendor first"), life: 3000 });
-    return;
-  }
-  if (!event.query || event.query.length < 2) {
-    searchResults.value = [];
-    return;
-  }
-  searchLoading.value = true;
-  try {
-    const response = await fetchVendorCatalogApi(props.vendorId, event.query);
-    const data = response.data?.data || response.data || [];
-    searchResults.value = Array.isArray(data) ? data : [];
-  } catch {
-    searchResults.value = [];
-    toast.add({ severity: "error", summary: t("Error"), detail: t("Failed to search products"), life: 3000 });
-  } finally {
-    searchLoading.value = false;
-  }
+function hasVariantLabel(item: LineItem): boolean {
+  return Boolean(item.variant_label) && item.variant_label !== item.product_name;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function onEntrySelect(event: { value: any }) {
-  const entry = event.value;
+function minimumPurchaseUnits(minimumOrderQuantity: number | null | undefined): number {
+  const minimum = Number(minimumOrderQuantity ?? 1);
+
+  return Number.isFinite(minimum) ? Math.max(1, Math.ceil(minimum)) : 1;
+}
+
+function conversionLabel(item: LineItem): string | null {
+  const baseUnit = item.base_unit?.name;
+  const conversionFactor = item.purchase_unit?.conversion_factor ?? 1;
+
+  if (!baseUnit || conversionFactor === 1) return null;
+
+  return `1 ${purchaseUnitLabel(item)} = ${String(conversionFactor)} ${baseUnit}`;
+}
+
+function getInputLabel(label: string, item: LineItem): string {
+  return `${t(label)}: ${item.product_name}, ${item.variant_label}`;
+}
+
+function getRemoveLabel(item: LineItem): string {
+  return `${t("Delete")}: ${item.product_name}, ${item.variant_label}`;
+}
+
+function onEntrySelect(entry: VendorCatalogEntry) {
   const variant = entry.product_variant;
+  if (!variant) return;
   const variantId = variant.id;
   const catalogId = entry.id;
 
   const exists = items.value.some((i) => i.catalog_id === catalogId);
   if (exists) {
     toast.add({ severity: "warn", summary: t("Warning"), detail: t("Product already added"), life: 3000 });
-    selectedEntry.value = null;
     return;
   }
 
-  const productName = variant?.product?.name ?? variant?.name ?? "—";
-  const variantLabel = variant?.name ?? variant?.identifier ?? productName;
+  const productName = variant.product?.name ?? variant.name ?? "—";
+  const variantLabel = variant.name || variant.identifier || productName;
   const purchaseUnit = entry.purchase_unit;
-  const measurementUnit = variant?.product?.measurement_unit;
-  const unitLabel = purchaseUnit?.name ?? measurementUnit?.name;
-  const displayLabel = unitLabel ? `${variantLabel} (${unitLabel})` : variantLabel;
-  const price = parseFloat(String(entry.price ?? variant?.price ?? 0));
+  const measurementUnit = variant.product?.measurement_unit;
+  const price = Number(entry.price);
+  const quantity = minimumPurchaseUnits(entry.minimum_order_quantity);
 
   const newItem: LineItem = {
     id: crypto.randomUUID(),
     catalog_id: catalogId,
     product_variant_id: Number(variantId),
     product_name: productName,
-    variant_label: displayLabel,
-    quantity: entry.minimum_order_quantity ?? 1,
+    variant_label: variantLabel,
+    quantity,
     price,
-    total: (entry.minimum_order_quantity ?? 1) * price,
-    stock: variant?.stock ?? null,
-    minimum_stock_level: variant?.minimum_stock_level ?? null,
+    total: quantity * price,
+    stock: variant.stock ?? null,
+    minimum_stock_level: variant.minimum_stock_level ?? null,
     payment_terms: getPaymentTermsLabel(entry.payment_terms),
     details: entry.details ?? null,
     unit_id: entry.unit_id ?? null,
@@ -146,10 +153,11 @@ function onEntrySelect(event: { value: any }) {
   };
 
   emit("update:modelValue", [...items.value, newItem]);
-  selectedEntry.value = null;
 }
 
-function getPaymentTermsLabel(paymentTerms: string): string {
+function getPaymentTermsLabel(paymentTerms: string | null): string | null {
+  if (paymentTerms === null) return null;
+
   switch (paymentTerms) {
     case "debit":
       return t("Cash");
@@ -183,7 +191,10 @@ function updatePrice(index: number, price: number) {
 }
 
 function removeItem(index: number) {
+  const item = items.value[index];
   const updated = items.value.filter((_, i) => i !== index);
+  expandedItemDetails.value = expandedItemDetails.value.filter((id) => id !== item.id);
+
   emit("update:modelValue", updated);
 }
 
@@ -205,252 +216,142 @@ function confirmRemoveItem(index: number) {
 watch(
   () => props.vendorId,
   () => {
+    expandedItemDetails.value = [];
     if (items.value.length > 0) {
       emit("update:modelValue", []);
     }
-    selectedEntry.value = null;
-    searchResults.value = [];
-    expandedRows.value = [];
   },
 );
 </script>
 
 <template>
   <div>
-    <div class="flex flex-col gap-2 mb-3">
-      <label>{{ t("Add Product") }}</label>
-      <AutoComplete
-        v-model="selectedEntry"
-        :suggestions="searchResults"
-        option-label="id"
-        :placeholder="t('Search product...')"
-        :empty-search-message="t('No results found')"
-        :loading="searchLoading"
-        :disabled="!vendorId"
-        dropdown
-        force-selection
-        class="w-full"
-        @complete="searchVariants"
-        @item-select="onEntrySelect"
-      >
-        <template #header>
-          <div
-            class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 text-sm font-semibold text-surface-500 uppercase tracking-wide border-b border-surface-200 dark:border-surface-700"
-          >
-            <span class="col-span-3">{{ t("Product") }}</span>
-            <span class="col-span-2">{{ t("Brand") }}</span>
-            <span class="col-span-1">{{ t("Unit") }}</span>
-            <span class="col-span-2">{{ t("Price") }}</span>
-            <span class="col-span-2">{{ t("Stock") }}</span>
-            <span class="col-span-2">{{ t("Details") }}</span>
-          </div>
-        </template>
-        <template #option="{ option }">
-          <!-- Desktop: grid row -->
-          <div class="hidden lg:grid grid-cols-12 gap-2 items-center w-full py-1">
-            <div class="col-span-3 flex flex-col gap-0.5 min-w-0">
-              <span class="font-medium text-sm truncate">{{ option.product_variant?.product?.name ?? option.product_variant?.name }}</span>
-              <span class="text-sm text-surface-500 truncate">
-                {{ option.product_variant?.name ?? option.product_variant?.identifier }}
-              </span>
-            </div>
-            <div class="col-span-2 text-sm text-surface-500 truncate">
-              {{ option.product_variant?.product?.brand?.name ?? "—" }}
-            </div>
-            <div class="col-span-1">
-              <span v-if="option.purchase_unit?.name" class="ml-1">
-                {{ option.purchase_unit.name }}
-                <span v-if="option.purchase_unit.conversion_factor !== 1" class="text-surface-500 ml-1">
-                  (x{{ option.purchase_unit.conversion_factor }} {{ option.product_variant.product.measurement_unit?.name }})
-                </span>
-              </span>
-              <span v-else-if="option.product_variant?.product?.measurement_unit" class="ml-1">
-                {{ option.product_variant.product.measurement_unit.name }}
-              </span>
-            </div>
-            <div class="col-span-2">
-              <Tag
-                :value="getStockLabel(option.product_variant?.stock)"
-                :severity="getStockSeverity(option.product_variant?.stock, option.product_variant?.minimum_stock_level)"
-                class="text-sm"
-                rounded
-              />
-            </div>
-            <div class="col-span-2 font-medium text-sm">
-              {{ formatCurrency(String(option.price)) }}
-            </div>
-            <div class="col-span-2 flex flex-col gap-0.5 text-sm min-w-0">
-              <span v-if="option.minimum_order_quantity" class="truncate">{{ t("Min. Order") }}: {{ option.minimum_order_quantity }}</span>
-              <span v-if="option.lead_time_days" class="truncate">{{ t("Lead time") }}: {{ option.lead_time_days }} {{ t("days") }}</span>
-              <span v-if="option.payment_terms" class="truncate">
-                {{ getPaymentTermsLabel(option.payment_terms) }}
-              </span>
-            </div>
-          </div>
-          <!-- Mobile: card layout -->
-          <div class="lg:hidden flex flex-col gap-1.5 py-2 w-full">
-            <div class="flex items-center justify-between">
-              <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                <span class="font-medium text-sm truncate">
-                  {{ option.product_variant?.product?.name ?? option.product_variant?.name }}
-                </span>
-                <span class="text-xs text-surface-500 truncate">
-                  <span v-if="option.product_variant?.product?.brand?.name">{{ option.product_variant.product.brand.name }} ·</span>
-                  {{ option.product_variant?.name ?? option.product_variant?.identifier }}
-                  <span v-if="option.purchase_unit?.name" class="ml-1">({{ option.purchase_unit.name }})</span>
-                  <span v-else-if="option.product_variant?.product?.measurement_unit" class="ml-1">
-                    ({{ option.product_variant.product.measurement_unit.name }})
-                  </span>
-                </span>
-              </div>
-              <div class="flex flex-col items-end gap-2">
-                <span class="font-medium">{{ formatCurrency(String(option.price)) }}</span>
-                <Tag
-                  :value="getStockLabel(option.product_variant?.stock)"
-                  :severity="getStockSeverity(option.product_variant?.stock, option.product_variant?.minimum_stock_level)"
-                  class="text-xs"
-                />
-              </div>
-            </div>
-            <div v-if="option.payment_terms" class="text-xs text-surface-500">
-              {{ getPaymentTermsLabel(option.payment_terms) }}
-            </div>
-            <div class="flex items-center gap-3 text-sm">
-              <span v-if="option.minimum_order_quantity" class="text-xs text-surface-500">
-                {{ t("Min. Order") }}: {{ option.minimum_order_quantity }}
-              </span>
-              <span v-if="option.lead_time_days" class="text-xs text-surface-500">
-                {{ t("Lead time") }}: {{ option.lead_time_days }} {{ t("days") }}
-              </span>
-            </div>
-          </div>
-        </template>
-      </AutoComplete>
-      <small v-if="!vendorId" class="text-surface-400">{{ t("Select a vendor first to add products") }}</small>
+    <POProductSearch :vendor-id="vendorId" @select="onEntrySelect" />
+
+    <div
+      v-if="items.length === 0"
+      class="mt-4 flex flex-col items-center justify-center border-y border-surface-200 py-10 text-surface-500 dark:border-surface-700 dark:text-surface-400"
+    >
+      <i class="fa fa-cart-plus mb-3 text-4xl" aria-hidden="true"></i>
+      <span class="mb-1 text-lg font-medium">{{ t("No items added yet") }}</span>
+      <small v-if="!vendorId">{{ t("Select a vendor first to add products") }}</small>
+      <small v-else>{{ t("Use the search above to add products") }}</small>
     </div>
 
-    <DataTable
-      v-model:expanded-rows="expandedRows"
-      :value="items"
-      data-key="id"
-      class="mt-4 border-t-2 border-surface-200 dark:border-surface-700"
-      striped-rows
-      row-hover
-      scrollable
-      scroll-direction="both"
-    >
-      <template #empty>
-        <div class="flex flex-col items-center justify-center py-10 text-surface-400">
-          <i class="fa fa-cart-plus text-4xl mb-3"></i>
-          <span class="font-medium text-lg mb-1">{{ t("No items added yet") }}</span>
-          <small v-if="!vendorId">{{ t("Select a vendor first to add products") }}</small>
-          <small v-else>{{ t("Use the search above to add products") }}</small>
-        </div>
-      </template>
+    <div v-else class="mt-4 border-y border-surface-200 dark:border-surface-700 2xl:border">
+      <div
+        aria-hidden="true"
+        class="hidden 2xl:grid 2xl:grid-cols-[minmax(8rem,1.4fr)_minmax(9rem,1.1fr)_minmax(7rem,0.85fr)_minmax(9rem,1fr)_minmax(5rem,0.6fr)_5rem] 2xl:items-center 2xl:gap-3 2xl:border-b 2xl:border-surface-200 2xl:bg-surface-100 2xl:px-3 2xl:py-2 2xl:text-sm 2xl:font-semibold dark:2xl:border-surface-700 dark:2xl:bg-surface-800"
+      >
+        <span>{{ t("Product") }}</span>
+        <span>{{ t("Purchase Unit") }}</span>
+        <span>{{ t("Unit Price") }}</span>
+        <span>{{ t("Quantity") }}</span>
+        <span>{{ t("Line Total") }}</span>
+        <span></span>
+      </div>
 
-      <Column expander style="width: 3rem" />
-
-      <Column :header="t('Product')" style="min-width: 180px">
-        <template #body="{ data }">
-          <span class="font-medium">{{ data.product_name }}</span>
-          <div class="text-sm text-surface-500">{{ data.variant_label }}</div>
-        </template>
-      </Column>
-
-      <Column :header="t('Stock')" style="min-width: 90px">
-        <template #body="{ data }">
-          <Tag
-            :value="getStockLabel(data.stock)"
-            :severity="getStockSeverity(data.stock, data.minimum_stock_level)"
-            class="text-xs"
-            rounded
-          />
-        </template>
-      </Column>
-
-      <Column :header="t('Unit Price')" style="min-width: 150px">
-        <template #body="{ data, index }">
-          <InputNumber
-            :model-value="data.price"
-            :min="0.01"
-            :min-fraction-digits="2"
-            :max-fraction-digits="4"
-            mode="currency"
-            :currency="currencyCode"
-            size="small"
-            input-class="w-full tabular-nums"
-            @update:model-value="(val: number) => updatePrice(index, val)"
-          />
-        </template>
-      </Column>
-
-      <Column :header="t('Quantity')" style="min-width: 140px">
-        <template #body="{ data, index }">
-          <div class="flex flex-col gap-0.5">
-            <InputNumber
-              :model-value="data.quantity"
-              :min="0.01"
-              :max="99999"
-              :step="1"
-              :min-fraction-digits="1"
-              :max-fraction-digits="2"
-              show-buttons
-              size="small"
-              input-class="tabular-nums w-32"
-              @update:model-value="(val: number) => updateQuantity(index, val)"
-            ></InputNumber>
-            <small v-if="data.minimum_order_quantity" class="text-surface-400 text-xs">
-              {{ t("Min. Order") }}: {{ data.minimum_order_quantity }}
-            </small>
-          </div>
-        </template>
-      </Column>
-
-      <Column :header="t('Line Total')" style="min-width: 120px">
-        <template #body="{ data }">
-          <span class="font-semibold tabular-nums">{{ formatCurrency(String(data.total)) }}</span>
-        </template>
-      </Column>
-
-      <Column style="min-width: 80px; width: 80px">
-        <template #body="{ data, index }">
-          <div class="flex gap-1">
-            <Button v-tooltip.top="t('View Vendors')" icon="fa fa-store" text rounded @click="openVendorsDialog(data)" />
-            <Button v-tooltip.top="t('Delete')" icon="fa fa-trash-can" text rounded @click="confirmRemoveItem(index)" />
-          </div>
-        </template>
-      </Column>
-
-      <template #expansion="{ data }">
-        <div v-if="hasExpandableData(data)" class="px-4 py-3">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div v-if="data.minimum_order_quantity">
-              <span class="text-surface-500 block mb-1">{{ t("Min. Order") }}</span>
-              <span class="font-medium">{{ data.minimum_order_quantity }}</span>
+      <ul class="divide-y divide-surface-200 dark:divide-surface-700">
+        <li v-for="(item, index) in items" :key="item.id" class="px-1 py-4 xl:px-3 xl:py-3">
+          <div
+            class="grid grid-cols-2 gap-x-3 gap-y-4 2xl:grid-cols-[minmax(8rem,1.4fr)_minmax(9rem,1.1fr)_minmax(7rem,0.85fr)_minmax(9rem,1fr)_minmax(5rem,0.6fr)_5rem] 2xl:items-start 2xl:gap-3"
+          >
+            <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+              <div class="min-w-0">
+                <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">{{ item.product_name }}</span>
+                <Badge v-if="hasVariantLabel(item)" :value="item.variant_label" severity="secondary" class="mt-1 w-fit max-w-full truncate" />
+              </div>
             </div>
-            <div v-if="data.lead_time_days">
-              <span class="text-surface-500 block mb-1">{{ t("Lead Time") }}</span>
-              <span class="font-medium">{{ data.lead_time_days }} {{ t("days") }}</span>
+
+            <div class="col-span-2 flex min-w-0 flex-col gap-1 2xl:col-span-1 2xl:pt-1">
+              <span class="font-medium">{{ purchaseUnitLabel(item) }}</span>
+              <span v-if="conversionLabel(item)" class="text-sm text-surface-500 dark:text-surface-400">{{ conversionLabel(item) }}</span>
             </div>
-            <div v-if="data.payment_terms">
-              <span class="text-surface-500 block mb-1">{{ t("Payment Terms") }}</span>
-              <span class="font-medium">{{ data.payment_terms }}</span>
+
+            <div class="col-span-2 min-w-0 min-[360px]:col-span-1 2xl:col-span-1">
+              <label :for="`purchase-order-price-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Unit Price") }}</label>
+              <InputNumber
+                :input-id="`purchase-order-price-${item.id}`"
+                :model-value="item.price"
+                :aria-label="getInputLabel('Unit Price', item)"
+                :min="0.01"
+                :min-fraction-digits="2"
+                :max-fraction-digits="4"
+                mode="currency"
+                :currency="currencyCode"
+                fluid
+                input-class="min-h-[44px] w-full tabular-nums 2xl:!text-sm"
+                @update:model-value="(val: number | null) => updatePrice(index, val ?? item.price)"
+              />
             </div>
-            <div v-if="data.details">
-              <span class="text-surface-500 block mb-1">{{ t("Details") }}</span>
-              <span class="font-medium">{{ data.details }}</span>
+
+            <div class="col-span-2 min-w-0 min-[360px]:col-span-1 2xl:col-span-1">
+              <label :for="`purchase-order-quantity-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Quantity") }}</label>
+              <InputNumber
+                :input-id="`purchase-order-quantity-${item.id}`"
+                :model-value="item.quantity"
+                :aria-label="getInputLabel('Quantity', item)"
+                :min="minimumPurchaseUnits(item.minimum_order_quantity)"
+                :max="99999"
+                :step="1"
+                :min-fraction-digits="0"
+                :max-fraction-digits="0"
+                show-buttons
+                button-layout="horizontal"
+                decrement-button-icon="fa fa-minus"
+                increment-button-icon="fa fa-plus"
+                decrement-button-class="!min-h-[44px] !min-w-[44px]"
+                increment-button-class="!min-h-[44px] !min-w-[44px]"
+                fluid
+                input-class="min-h-[44px] min-w-0 w-full tabular-nums 2xl:!text-sm"
+                @update:model-value="(val: number | null) => updateQuantity(index, val ?? item.quantity)"
+              />
             </div>
-            <div v-if="data.purchase_unit">
-              <span class="text-surface-500 block mb-1">{{ t("Purchase Unit") }}</span>
-              <span class="font-medium">{{ data.purchase_unit.name }}</span>
-              <span v-if="data.purchase_unit.conversion_factor !== 1" class="text-surface-500 ml-1">
-                (x{{ data.purchase_unit.conversion_factor }} {{ data.base_unit.name }})
-              </span>
+
+            <div class="min-w-0 pt-2 2xl:pt-3">
+              <span class="block text-base font-medium 2xl:sr-only">{{ t("Line Total") }}</span>
+              <span class="block font-semibold tabular-nums">{{ formatCurrency(String(item.total)) }}</span>
+            </div>
+
+            <div class="flex items-center justify-end 2xl:pt-1">
+              <Button
+                v-tooltip.top="t('Details')"
+                :aria-controls="`purchase-order-item-details-${item.id}`"
+                :aria-expanded="isItemDetailsExpanded(item.id)"
+                :aria-label="t('Details')"
+                icon="fa fa-circle-info"
+                text
+                rounded
+                size="large"
+                @click="toggleItemDetails(item.id)"
+              />
+              <Button v-tooltip.top="t('View Vendors')" :aria-label="t('View Vendors')" icon="fa fa-store" text rounded size="large" @click="openVendorsDialog(item)" />
+              <Button v-tooltip.top="t('Delete')" :aria-label="getRemoveLabel(item)" icon="fa fa-trash-can" text rounded size="large" @click="confirmRemoveItem(index)" />
             </div>
           </div>
-        </div>
-      </template>
-    </DataTable>
+          <div v-if="isItemDetailsExpanded(item.id)" :id="`purchase-order-item-details-${item.id}`" class="mt-4 border-t border-surface-200 pt-3 dark:border-surface-700">
+            <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm min-[480px]:grid-cols-2 2xl:grid-cols-4">
+              <div class="flex items-center justify-between gap-3">
+                <dt class="text-surface-500 dark:text-surface-400">{{ t("Current Stock") }}</dt>
+                <dd class="m-0"><Tag :value="stockLabel(item)" :severity="getStockSeverity(item.stock, item.minimum_stock_level)" class="text-xs" rounded /></dd>
+              </div>
+              <div v-if="item.minimum_order_quantity" class="flex items-center justify-between gap-3">
+                <dt class="text-surface-500 dark:text-surface-400">{{ t("Min. Order") }}</dt>
+                <dd class="m-0 font-medium tabular-nums">{{ minimumPurchaseUnits(item.minimum_order_quantity) }}</dd>
+              </div>
+              <div v-if="item.lead_time_days" class="flex items-center justify-between gap-3">
+                <dt class="text-surface-500 dark:text-surface-400">{{ t("Lead Time") }}</dt>
+                <dd class="m-0">{{ item.lead_time_days }} {{ t("days") }}</dd>
+              </div>
+              <div v-if="item.payment_terms" class="flex items-center justify-between gap-3">
+                <dt class="text-surface-500 dark:text-surface-400">{{ t("Payment Terms") }}</dt>
+                <dd class="m-0 text-right">{{ item.payment_terms }}</dd>
+              </div>
+            </dl>
+          </div>
+        </li>
+      </ul>
+    </div>
 
     <POVariantVendorsDialog
       v-model:visible="vendorsDialogVisible"

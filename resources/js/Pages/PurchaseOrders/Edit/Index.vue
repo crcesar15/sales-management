@@ -164,7 +164,7 @@ function goBack() {
 
 <template>
   <div>
-    <div class="flex justify-between mb-3">
+    <div class="mb-6 flex items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Edit Purchase Order") }}</h2>
@@ -175,8 +175,8 @@ function goBack() {
     <ConfirmDialog />
 
     <div class="grid grid-cols-12 gap-4">
-      <div class="lg:col-span-8 col-span-12">
-        <Card class="mb-4">
+      <div class="col-span-12 flex flex-col gap-4 lg:col-span-8">
+        <Card class="!border !border-surface-200 !shadow-none dark:!border-surface-700">
           <template #title>{{ t("Order Details") }}</template>
           <template #content>
             <div class="flex flex-col gap-4">
@@ -204,6 +204,7 @@ function goBack() {
                   <Button
                     v-if="selectedVendor?.id"
                     v-tooltip.top="t('Vendor Information')"
+                    :aria-label="t('Vendor Information')"
                     icon="fa fa-eye"
                     text
                     size="small"
@@ -249,7 +250,7 @@ function goBack() {
                   </div>
                 </Popover>
               </div>
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div class="flex flex-col gap-1">
                   <label for="order-date">
                     {{ t("Order Date") }}
@@ -273,30 +274,32 @@ function goBack() {
           </template>
         </Card>
 
-        <Card class="mb-4">
+        <Card class="!border !border-surface-200 !shadow-none dark:!border-surface-700">
           <template #title>{{ t("Products") }}</template>
           <template #content>
             <POLineItemsTable v-model="lineItems" :vendor-id="selectedVendor?.id ?? null" />
-            <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
+            <small v-if="itemsError" class="mt-2 block text-red-400 dark:text-red-300">{{ itemsError }}</small>
           </template>
         </Card>
       </div>
 
-      <div class="lg:col-span-4 col-span-12">
-        <POFinancialSummary
-          :sub-total="subTotal"
-          :total="total"
-          :discount="discount"
-          :discount-attrs="discountAttrs"
-          :max-discount="subTotal"
-          :notes="notes"
-          :notes-attrs="notesAttrs"
-          :submit-count="submitCount"
-          :errors="errors"
-          @update:discount="setFieldValue('discount', $event)"
-          @update:notes="setFieldValue('notes', $event)"
-        />
-      </div>
+      <aside class="col-span-12 lg:col-span-4">
+        <div class="lg:sticky lg:top-4">
+          <POFinancialSummary
+            :sub-total="subTotal"
+            :total="total"
+            :discount="discount"
+            :discount-attrs="discountAttrs"
+            :max-discount="subTotal"
+            :notes="notes"
+            :notes-attrs="notesAttrs"
+            :submit-count="submitCount"
+            :errors="errors"
+            @update:discount="setFieldValue('discount', $event)"
+            @update:notes="setFieldValue('notes', $event)"
+          />
+        </div>
+      </aside>
     </div>
   </div>
 </template>

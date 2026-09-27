@@ -34,6 +34,23 @@ export interface CatalogResponse extends Catalog {
   id: number;
 }
 
+export interface VendorCatalogEntry extends Omit<CatalogResponse, "purchase_unit" | "product_variant"> {
+  purchase_unit: { id: number; name: string; conversion_factor: number } | null;
+  product_variant: {
+    id: number;
+    identifier: string | null;
+    name: string | null;
+    stock: number | null;
+    minimum_stock_level: number | null;
+    product: {
+      id: number;
+      name: string;
+      brand: { id: number; name: string } | null;
+      measurement_unit: { id: number; name: string; abbreviation: string } | null;
+    } | null;
+  } | null;
+}
+
 export interface CatalogPayload {
   [key: string]: any;
   vendor_id: number;

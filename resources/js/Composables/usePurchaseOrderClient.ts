@@ -1,11 +1,12 @@
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
 import type { AxiosResponse } from "axios";
+import type { VendorCatalogEntry } from "@/Types/catalog-types";
 
 export function usePurchaseOrderClient() {
   const { apiClient, loading } = useApi();
 
-  const fetchVendorCatalogApi = async (vendorId: number, query?: string): Promise<AxiosResponse> => {
+  const fetchVendorCatalogApi = async (vendorId: number, query?: string): Promise<AxiosResponse<{ data: VendorCatalogEntry[] }>> => {
     const params: Record<string, unknown> = {
       per_page: 50,
       status: "active",

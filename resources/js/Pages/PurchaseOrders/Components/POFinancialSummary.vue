@@ -66,7 +66,7 @@ function updateNotes(val: string | null) {
 </script>
 
 <template>
-  <Card>
+  <Card class="!border !border-surface-200 !shadow-none dark:!border-surface-700">
     <template #title>{{ t("Summary") }}</template>
     <template #content>
       <div class="flex flex-col gap-3">
