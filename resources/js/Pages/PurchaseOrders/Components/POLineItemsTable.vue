@@ -22,7 +22,7 @@ export interface LineItem {
   details?: string | null;
   unit_id?: number | null;
   purchase_unit?: { id: number; name: string; conversion_factor: number } | null;
-  base_unit?: { id: number; name: string } | null;
+  base_unit?: { id: number; name: string; abbreviation?: string } | null;
   minimum_order_quantity?: number | null;
   lead_time_days?: number | null;
 }
@@ -79,7 +79,7 @@ function getStockSeverity(stock: number | null | undefined, minStock: number | n
 function stockLabel(item: LineItem): string {
   if (item.stock === null || item.stock === undefined || !item.base_unit) return t("Stock unavailable");
 
-  return `${String(item.stock)} ${item.base_unit.name}`;
+  return `${String(item.stock)} ${item.base_unit.abbreviation ?? item.base_unit.name}`;
 }
 
 function purchaseUnitLabel(item: LineItem): string {
@@ -147,7 +147,7 @@ function onEntrySelect(entry: VendorCatalogEntry) {
     details: entry.details ?? null,
     unit_id: entry.unit_id ?? null,
     purchase_unit: purchaseUnit ?? (measurementUnit ? { id: measurementUnit.id, name: measurementUnit.name, conversion_factor: 1 } : null),
-    base_unit: measurementUnit ? { id: measurementUnit.id, name: measurementUnit.name } : null,
+    base_unit: measurementUnit ? { id: measurementUnit.id, name: measurementUnit.name, abbreviation: measurementUnit.abbreviation } : null,
     minimum_order_quantity: entry.minimum_order_quantity ?? null,
     lead_time_days: entry.lead_time_days ?? null,
   };

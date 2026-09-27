@@ -90,7 +90,7 @@ const lineItems = ref<LineItem[]>(
       unit_id: catalog?.unit_id ?? null,
       purchase_unit:
         purchaseUnit ?? (measurementUnit ? { id: measurementUnit.id, name: measurementUnit.name, conversion_factor: 1 } : null),
-      base_unit: measurementUnit ? { id: measurementUnit.id, name: measurementUnit.name } : null,
+      base_unit: measurementUnit ? { id: measurementUnit.id, name: measurementUnit.name, abbreviation: measurementUnit.abbreviation } : null,
       minimum_order_quantity: catalog?.minimum_order_quantity ?? null,
       lead_time_days: catalog?.lead_time_days ?? null,
     };

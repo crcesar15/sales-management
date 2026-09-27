@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, Button, DataTable, Column, Popover, Stepper, StepList, Step, Tag } from "primevue";
+import { Badge, Card, Button, DataTable, Column, Popover, Stepper, StepList, Step, Tag } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
@@ -121,19 +121,54 @@ const stepperPt = computed(() => {
   return pt;
 });
 
-const expandedRows = ref<Record<string, boolean>>({});
+const expandedItemDetails = ref<number[]>([]);
 
-function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" {
-  if (stock === null || stock === undefined) return "success";
+function isItemDetailsExpanded(itemId: number): boolean {
+  return expandedItemDetails.value.includes(itemId);
+}
+
+function toggleItemDetails(itemId: number) {
+  expandedItemDetails.value = isItemDetailsExpanded(itemId)
+    ? expandedItemDetails.value.filter((id) => id !== itemId)
+    : [...expandedItemDetails.value, itemId];
+}
+
+function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" | "secondary" {
+  if (stock === null || stock === undefined) return "secondary";
   if (stock === 0) return "danger";
   if (minStock && stock <= minStock) return "warn";
+
   return "success";
 }
 
-function getStockLabel(stock: number | null | undefined): string {
-  if (stock === null || stock === undefined) return "—";
-  if (stock === 0) return t("Out of stock");
-  return `${t("In stock")}: ${String(stock)}`;
+function purchaseUnitLabel(item: PurchaseOrderResponse["line_items"][number]): string {
+  return item.catalog_entry?.unit?.name ?? item.product_variant?.product?.measurement_unit?.name ?? "—";
+}
+
+function conversionLabel(item: PurchaseOrderResponse["line_items"][number]): string | null {
+  const baseUnit = item.product_variant?.product?.measurement_unit?.name;
+  const conversionFactor = item.catalog_entry?.unit?.conversion_factor ?? 1;
+
+  if (!baseUnit || conversionFactor === 1) return null;
+
+  return `1 ${purchaseUnitLabel(item)} = ${String(conversionFactor)} ${baseUnit}`;
+}
+
+function stockLabel(item: PurchaseOrderResponse["line_items"][number]): string {
+  const stock = item.product_variant?.stock;
+  const baseUnit = item.product_variant?.product?.measurement_unit;
+
+  if (stock === null || stock === undefined || !baseUnit) return t("Stock unavailable");
+
+  return `${String(stock)} ${baseUnit.abbreviation ?? baseUnit.name}`;
+}
+
+function variantLabel(item: PurchaseOrderResponse["line_items"][number]): string | null {
+  return item.product_variant?.name || item.product_variant?.identifier || null;
+}
+
+function hasVariantLabel(item: PurchaseOrderResponse["line_items"][number]): boolean {
+  return Boolean(variantLabel(item)) && variantLabel(item) !== item.product_variant?.product?.name;
 }
 
 function formatQuantity(q: number | string | null | undefined): string {
@@ -153,11 +188,6 @@ function getPaymentTermsLabel(paymentTerms: string | null | undefined): string |
     default:
       return paymentTerms;
   }
-}
-
-function hasExpandableData(item: PurchaseOrderResponse["line_items"][number]): boolean {
-  const catalog = item.catalog_entry;
-  return !!(catalog?.minimum_order_quantity || catalog?.lead_time_days || catalog?.payment_terms || catalog?.details || catalog?.unit);
 }
 
 function paymentMethodLabel(type: string | null): string | null {
@@ -315,112 +345,128 @@ function formatFileSize(bytes: number): string {
           </template>
         </Card>
 
-        <Card class="mb-4">
+        <Card class="mb-4 !border !border-surface-200 !shadow-none dark:!border-surface-700">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <DataTable
-              v-model:expanded-rows="expandedRows"
-              :value="purchaseOrder.line_items ?? []"
-              data-key="id"
-              class="mt-4 border-t-2 border-surface-200 dark:border-surface-700"
+            <div
+              v-if="purchaseOrder.line_items.length === 0"
+              class="flex flex-col items-center justify-center border-y border-surface-200 py-10 text-surface-500 dark:border-surface-700 dark:text-surface-400"
             >
-              <template #empty>
-                {{ t("No items") }}
-              </template>
-              <Column expander style="width: 3rem" />
-              <Column :header="t('Product')" style="min-width: 180px">
-                <template #body="{ data }">
-                  <span class="font-medium">{{ data.product_variant?.product?.name ?? "---" }}</span>
-                  <div class="text-sm text-surface-500">{{ data.product_variant?.name ?? data.product_variant?.identifier ?? "---" }}</div>
-                </template>
-              </Column>
-              <Column :header="t('Stock')" style="min-width: 90px">
-                <template #body="{ data }">
-                  <Tag
-                    :value="getStockLabel(data.product_variant?.stock)"
-                    :severity="getStockSeverity(data.product_variant?.stock, data.product_variant?.minimum_stock_level)"
-                    class="text-xs"
-                    rounded
-                  />
-                </template>
-              </Column>
-              <Column :header="t('Quantity')" style="min-width: 90px">
-                <template #body="{ data }">
-                  {{ formatQuantity(data.quantity) }}
-                </template>
-              </Column>
-              <Column :header="t('Received')" style="min-width: 120px">
-                <template #body="{ data }">
-                  <span
-                    :class="
-                      Number(data.received_quantity) >= Number(data.quantity)
-                        ? 'text-green-600'
-                        : Number(data.received_quantity) > 0
-                          ? 'text-amber-600'
-                          : 'text-surface-500'
-                    "
+              <i class="fa fa-cart-plus mb-3 text-4xl" aria-hidden="true"></i>
+              <span class="text-lg font-medium">{{ t("No items") }}</span>
+            </div>
+
+            <div v-else class="border-y border-surface-200 dark:border-surface-700 2xl:border">
+              <div
+                aria-hidden="true"
+                class="hidden 2xl:grid 2xl:grid-cols-[minmax(8rem,1.3fr)_minmax(9rem,1.1fr)_minmax(7rem,0.85fr)_minmax(7rem,0.7fr)_minmax(7rem,0.8fr)_minmax(6rem,0.7fr)_6rem] 2xl:items-center 2xl:gap-3 2xl:border-b 2xl:border-surface-200 2xl:bg-surface-100 2xl:px-3 2xl:py-2 2xl:text-sm 2xl:font-semibold dark:2xl:border-surface-700 dark:2xl:bg-surface-800"
+              >
+                <span>{{ t("Product") }}</span>
+                <span>{{ t("Purchase Unit") }}</span>
+                <span>{{ t("Unit Price") }}</span>
+                <span>{{ t("Quantity") }}</span>
+                <span>{{ t("Received") }}</span>
+                <span>{{ t("Line Total") }}</span>
+                <span></span>
+              </div>
+
+              <ul class="divide-y divide-surface-200 dark:divide-surface-700">
+                <li v-for="item in purchaseOrder.line_items" :key="item.id" class="px-1 py-4 xl:px-3 xl:py-3">
+                  <div
+                    class="grid grid-cols-2 gap-x-3 gap-y-4 2xl:grid-cols-[minmax(8rem,1.3fr)_minmax(9rem,1.1fr)_minmax(7rem,0.85fr)_minmax(7rem,0.7fr)_minmax(7rem,0.8fr)_minmax(6rem,0.7fr)_6rem] 2xl:items-start 2xl:gap-3"
                   >
-                    {{ formatQuantity(data.received_quantity) }} / {{ formatQuantity(data.quantity) }}
-                  </span>
-                </template>
-              </Column>
-              <Column :header="t('Unit Price')" style="min-width: 120px">
-                <template #body="{ data }">
-                  {{ formatCurrency(String(data.price)) }}
-                </template>
-              </Column>
-              <Column :header="t('Line Total')" style="min-width: 120px">
-                <template #body="{ data }">
-                  <span class="font-medium">{{ formatCurrency(String(data.total)) }}</span>
-                </template>
-              </Column>
-              <Column :header="t('Actions')" style="min-width: 60px">
-                <template #body="{ data }">
-                  <Button
-                    v-tooltip.top="t('View Vendors')"
-                    icon="fa fa-store"
-                    text
-                    @click="
-                      openVariantVendors(
-                        data.product_variant_id,
-                        data.product_variant?.product?.name ?? '',
-                        data.product_variant?.name ?? data.product_variant?.identifier ?? '',
-                      )
-                    "
-                  />
-                </template>
-              </Column>
-              <template #expansion="{ data }">
-                <div v-if="hasExpandableData(data)" class="px-4 py-3">
-                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div v-if="data.catalog_entry?.minimum_order_quantity">
-                      <span class="text-surface-500 block mb-1">{{ t("Min. Order") }}</span>
-                      <span class="font-medium">{{ formatQuantity(data.catalog_entry.minimum_order_quantity) }}</span>
+                    <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+                      <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">{{ item.product_variant?.product?.name ?? "—" }}</span>
+                      <Badge v-if="hasVariantLabel(item)" :value="variantLabel(item) ?? ''" severity="secondary" class="mt-1 w-fit max-w-full truncate" />
                     </div>
-                    <div v-if="data.catalog_entry?.lead_time_days">
-                      <span class="text-surface-500 block mb-1">{{ t("Lead Time") }}</span>
-                      <span class="font-medium">{{ data.catalog_entry.lead_time_days }} {{ t("days") }}</span>
+
+                    <div class="col-span-2 flex min-w-0 flex-col gap-1 2xl:col-span-1 2xl:pt-1">
+                      <span class="font-medium">{{ purchaseUnitLabel(item) }}</span>
+                      <span v-if="conversionLabel(item)" class="text-sm text-surface-500 dark:text-surface-400">{{ conversionLabel(item) }}</span>
                     </div>
-                    <div v-if="data.catalog_entry?.payment_terms">
-                      <span class="text-surface-500 block mb-1">{{ t("Payment Terms") }}</span>
-                      <span class="font-medium">{{ getPaymentTermsLabel(data.catalog_entry.payment_terms) }}</span>
+
+                    <div class="col-span-2 min-w-0 min-[360px]:col-span-1 2xl:col-span-1 2xl:pt-2">
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Unit Price") }}</span>
+                      <span class="block font-medium tabular-nums">{{ formatCurrency(String(item.price)) }}</span>
                     </div>
-                    <div v-if="data.catalog_entry?.details">
-                      <span class="text-surface-500 block mb-1">{{ t("Details") }}</span>
-                      <span class="font-medium">{{ data.catalog_entry.details }}</span>
+
+                    <div class="col-span-2 min-w-0 min-[360px]:col-span-1 2xl:col-span-1 2xl:pt-2">
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Quantity") }}</span>
+                      <span class="block tabular-nums">{{ formatQuantity(item.quantity) }}</span>
                     </div>
-                    <div v-if="data.catalog_entry?.unit">
-                      <span class="text-surface-500 block mb-1">{{ t("Purchase Unit") }}</span>
-                      <span class="font-medium">{{ data.catalog_entry.unit.name }}</span>
-                      <span v-if="data.catalog_entry.unit.conversion_factor !== 1" class="text-surface-500 ml-1">
-                        (x{{ formatQuantity(data.catalog_entry.unit.conversion_factor) }}
-                        {{ data.product_variant?.product?.measurement_unit?.name }})
+
+                    <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Received") }}</span>
+                      <span
+                        class="block tabular-nums"
+                        :class="
+                          Number(item.received_quantity) >= Number(item.quantity)
+                            ? 'text-green-600 dark:text-green-300'
+                            : Number(item.received_quantity) > 0
+                              ? 'text-amber-600 dark:text-amber-300'
+                              : 'text-surface-500 dark:text-surface-400'
+                        "
+                      >
+                        {{ formatQuantity(item.received_quantity) }} / {{ formatQuantity(item.quantity) }}
                       </span>
                     </div>
+
+                    <div class="min-w-0 pt-2 2xl:pt-3">
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Line Total") }}</span>
+                      <span class="block font-semibold tabular-nums">{{ formatCurrency(String(item.total)) }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-end 2xl:pt-1">
+                      <Button
+                        v-tooltip.top="t('Details')"
+                        :aria-controls="`purchase-order-item-details-${item.id}`"
+                        :aria-expanded="isItemDetailsExpanded(item.id)"
+                        :aria-label="t('Details')"
+                        icon="fa fa-circle-info"
+                        text
+                        rounded
+                        size="large"
+                        @click="toggleItemDetails(item.id)"
+                      />
+                      <Button
+                        v-tooltip.top="t('View Vendors')"
+                        :aria-label="t('View Vendors')"
+                        icon="fa fa-store"
+                        text
+                        rounded
+                        size="large"
+                        @click="openVariantVendors(item.product_variant_id, item.product_variant?.product?.name ?? '', variantLabel(item) ?? '')"
+                      />
+                    </div>
                   </div>
-                </div>
-              </template>
-            </DataTable>
+
+                  <div v-if="isItemDetailsExpanded(item.id)" :id="`purchase-order-item-details-${item.id}`" class="mt-4 border-t border-surface-200 pt-3 dark:border-surface-700">
+                    <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm min-[480px]:grid-cols-2 2xl:grid-cols-4">
+                      <div class="flex items-center justify-between gap-3">
+                        <dt class="text-surface-500 dark:text-surface-400">{{ t("Current Stock") }}</dt>
+                        <dd class="m-0"><Tag :value="stockLabel(item)" :severity="getStockSeverity(item.product_variant?.stock, item.product_variant?.minimum_stock_level)" class="text-xs" rounded /></dd>
+                      </div>
+                      <div v-if="item.catalog_entry?.minimum_order_quantity" class="flex items-center justify-between gap-3">
+                        <dt class="text-surface-500 dark:text-surface-400">{{ t("Min. Order") }}</dt>
+                        <dd class="m-0 font-medium tabular-nums">{{ formatQuantity(item.catalog_entry.minimum_order_quantity) }}</dd>
+                      </div>
+                      <div v-if="item.catalog_entry?.lead_time_days" class="flex items-center justify-between gap-3">
+                        <dt class="text-surface-500 dark:text-surface-400">{{ t("Lead Time") }}</dt>
+                        <dd class="m-0">{{ item.catalog_entry.lead_time_days }} {{ t("days") }}</dd>
+                      </div>
+                      <div v-if="item.catalog_entry?.payment_terms" class="flex items-center justify-between gap-3">
+                        <dt class="text-surface-500 dark:text-surface-400">{{ t("Payment Terms") }}</dt>
+                        <dd class="m-0 text-right">{{ getPaymentTermsLabel(item.catalog_entry.payment_terms) }}</dd>
+                      </div>
+                      <div v-if="item.catalog_entry?.details" class="col-span-full flex flex-col gap-1">
+                        <dt class="text-surface-500 dark:text-surface-400">{{ t("Details") }}</dt>
+                        <dd class="m-0 whitespace-pre-line">{{ item.catalog_entry.details }}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </template>
         </Card>
 
