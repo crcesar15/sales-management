@@ -109,13 +109,6 @@ const submit = handleSubmit((formValues) => {
       </div>
       <div class="flex flex-col justify-center gap-2">
         <div class="flex justify-end gap-2">
-          <Button
-            icon="fa fa-table-list"
-            :label="t('View Catalog')"
-            outlined
-            class="uppercase"
-            @click="router.visit(route('vendors.catalog', props.vendor.id))"
-          />
           <Button icon="fa fa-save" :label="t('Save')" class="uppercase" raised :loading="isSubmitting" @click="submit" />
         </div>
       </div>
@@ -250,6 +243,14 @@ const submit = handleSubmit((formValues) => {
             </div>
           </template>
         </Card>
+        <div class="block mt-4">
+          <Button
+            icon="fa fa-table-list"
+            :label="t('View Catalog')"
+            class="w-full"
+            @click="router.visit(route('vendors.catalog', props.vendor.id))"
+          />
+        </div>
       </div>
     </div>
   </div>
