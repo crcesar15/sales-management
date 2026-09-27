@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Requests\PurchaseOrders;
 
 use App\Enums\PermissionsEnum;
-use App\Models\Catalog;
+use App\Http\Requests\PurchaseOrders\Concerns\ValidatesPurchaseOrderItems;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class UpdatePurchaseOrderRequest extends FormRequest
 {
+    use ValidatesPurchaseOrderItems;
+
     public function authorize(): bool
     {
         return $this->user()?->can(PermissionsEnum::PURCHASE_ORDERS_EDIT->value) ?? false;
@@ -31,7 +33,7 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             'items.*.product_variant_id' => ['required_with:items', 'integer', 'exists:product_variants,id'],
             'items.*.catalog_id' => ['required_with:items', 'integer', 'exists:catalog,id'],
             'items.*.unit_id' => ['nullable', 'integer', 'exists:product_variant_units,id'],
-            'items.*.quantity' => ['required_with:items', 'numeric', 'min:0.01'],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
             'items.*.price' => ['required_with:items', 'numeric', 'min:0'],
         ];
     }
@@ -58,23 +60,7 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             }
 
             $vendorId = $this->integer('vendor_id') ?: $po->vendor_id;
-            $catalogIds = array_map(fn (array $item) => $item['catalog_id'], $items);
-
-            $activeCatalogIds = Catalog::query()
-                ->where('vendor_id', $vendorId)
-                ->where('status', 'active')
-                ->whereIn('id', $catalogIds)
-                ->pluck('id')
-                ->toArray();
-
-            foreach ($catalogIds as $catalogId) {
-                if (! in_array($catalogId, $activeCatalogIds)) {
-                    $validator->errors()->add(
-                        'items',
-                        "Catalog entry ID {$catalogId} is not in the vendor's active catalog.",
-                    );
-                }
-            }
+            $this->validatePurchaseOrderItems($validator, $vendorId, $items);
         });
     }
 }

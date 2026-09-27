@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Requests\PurchaseOrders;
 
 use App\Enums\PermissionsEnum;
-use App\Models\Catalog;
+use App\Http\Requests\PurchaseOrders\Concerns\ValidatesPurchaseOrderItems;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StorePurchaseOrderRequest extends FormRequest
 {
+    use ValidatesPurchaseOrderItems;
+
     public function authorize(): bool
     {
         return $this->user()?->can(PermissionsEnum::PURCHASE_ORDERS_CREATE->value) ?? false;
@@ -31,7 +33,7 @@ final class StorePurchaseOrderRequest extends FormRequest
             'items.*.product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'items.*.catalog_id' => ['required', 'integer', 'exists:catalog,id'],
             'items.*.unit_id' => ['nullable', 'integer', 'exists:product_variant_units,id'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['required', 'numeric', 'min:0'],
         ];
     }
@@ -49,23 +51,7 @@ final class StorePurchaseOrderRequest extends FormRequest
                 return;
             }
 
-            $catalogIds = array_map(fn (array $item) => $item['catalog_id'], $items);
-
-            $activeCatalogIds = Catalog::query()
-                ->where('vendor_id', $vendorId)
-                ->where('status', 'active')
-                ->whereIn('id', $catalogIds)
-                ->pluck('id')
-                ->toArray();
-
-            foreach ($catalogIds as $catalogId) {
-                if (! in_array($catalogId, $activeCatalogIds)) {
-                    $validator->errors()->add(
-                        'items',
-                        "Catalog entry ID {$catalogId} is not in the vendor's active catalog.",
-                    );
-                }
-            }
+            $this->validatePurchaseOrderItems($validator, $vendorId, $items);
 
             $discount = $this->input('discount');
             if ($discount !== null && $discount > 0) {
