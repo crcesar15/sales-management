@@ -97,7 +97,7 @@ const formatPaymentTerms = (terms: string | null): string => {
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
         <Button icon="fa fa-arrow-left" text rounded @click="goBack" />
-        <h2 class="text-2xl font-bold m-0">{{ t("Product Catalog Details") }}</h2>
+        <h2 class="text-2xl font-bold m-0">{{ t("Vendors") }}</h2>
       </div>
       <div class="flex flex-col justify-center">
         <Button
@@ -205,15 +205,15 @@ const formatPaymentTerms = (terms: string | null): string => {
                 </template>
               </Column>
 
-              <Column field="payment_terms" :header="t('Payment')">
-                <template #body="{ data }">
-                  <Badge severity="secondary" size="xlarge" class="capitalize" :value="formatPaymentTerms(data.payment_terms)" />
-                </template>
-              </Column>
-
               <Column field="purchase_unit.name" :header="t('Purchase Unit')">
                 <template #body="{ data }">
                   <Badge class="capitalize" size="xlarge" severity="secondary" :value="data.purchase_unit?.name ?? t('Base unit')" />
+                </template>
+              </Column>
+
+              <Column field="payment_terms" :header="t('Payment')">
+                <template #body="{ data }">
+                  <Badge severity="secondary" size="xlarge" class="capitalize" :value="formatPaymentTerms(data.payment_terms)" />
                 </template>
               </Column>
 
