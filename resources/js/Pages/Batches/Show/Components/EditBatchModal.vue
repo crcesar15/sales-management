@@ -19,17 +19,17 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const { datePickerFormat } = useDatetimeFormatter();
+const { parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 const toast = useToast();
 const loading = ref(false);
 const fieldErrors = ref<Record<string, string>>({});
 
 const batchIdentifier = ref(props.batchIdentifier ?? "");
-const expiryDate = ref<Date | null>(props.expiryDate ? new Date(props.expiryDate) : null);
+const expiryDate = ref<Date | null>(parseDateOnly(props.expiryDate));
 
 const isDirty = computed(() => {
   const identifierChanged = (batchIdentifier.value || null) !== props.batchIdentifier;
-  const dateChanged = (expiryDate.value ? expiryDate.value.toISOString().split("T")[0] : null) !== (props.expiryDate ?? null);
+  const dateChanged = toDateOnly(expiryDate.value) !== (props.expiryDate ?? null);
   return identifierChanged || dateChanged;
 });
 
@@ -42,7 +42,7 @@ watch(
 watch(
   () => props.expiryDate,
   (val) => {
-    expiryDate.value = val ? new Date(val) : null;
+    expiryDate.value = parseDateOnly(val);
   },
 );
 
@@ -59,7 +59,7 @@ function handleDismiss(value: boolean) {
   emit("update:visible", value);
   if (!value) {
     batchIdentifier.value = props.batchIdentifier ?? "";
-    expiryDate.value = props.expiryDate ? new Date(props.expiryDate) : null;
+    expiryDate.value = parseDateOnly(props.expiryDate);
   }
 }
 
@@ -75,7 +75,7 @@ function submit() {
     route("batches.update", { batch: props.batchId }),
     {
       batch_identifier: batchIdentifier.value || null,
-      expiry_date: expiryDate.value ? expiryDate.value.toISOString().split("T")[0] : null,
+      expiry_date: toDateOnly(expiryDate.value),
     },
     {
       preserveScroll: true,

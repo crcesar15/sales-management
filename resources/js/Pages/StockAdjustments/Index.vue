@@ -19,14 +19,14 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const { formatDate, datePickerFormat } = useDatetimeFormatter();
+const { formatDate, parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
 const ALL = "__all__";
 
 const storeId = ref<string | number>(props.filters.store_id ?? ALL);
 const reason = ref(props.filters.reason || ALL);
-const dateFrom = ref<Date | null>(props.filters.date_from ? new Date(props.filters.date_from) : null);
-const dateTo = ref<Date | null>(props.filters.date_to ? new Date(props.filters.date_to) : null);
+const dateFrom = ref<Date | null>(parseDateOnly(props.filters.date_from));
+const dateTo = ref<Date | null>(parseDateOnly(props.filters.date_to));
 const filterPopover = ref();
 
 const reasonOptions = computed(() => [
@@ -66,17 +66,13 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
     data: {
       store_id: storeId.value === ALL ? "" : storeId.value,
       reason: reason.value === ALL ? "" : reason.value,
-      date_from: dateFrom.value ? formatDateParam(dateFrom.value) : "",
-      date_to: dateTo.value ? formatDateParam(dateTo.value) : "",
+      date_from: toDateOnly(dateFrom.value) ?? "",
+      date_to: toDateOnly(dateTo.value) ?? "",
       ...overrides,
     },
     preserveState: true,
     replace: true,
   });
-}
-
-function formatDateParam(val: Date): string {
-  return val.toISOString().split("T")[0];
 }
 
 watch(storeId, () => applyFilters());

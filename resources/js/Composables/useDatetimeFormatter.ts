@@ -9,6 +9,10 @@ const DATE_PICKER_FORMATS: Record<string, string> = {
   "DD-MM-YYYY": "dd-mm-yy",
 };
 
+function extractDateOnly(date: string): string | null {
+  return date.match(/^\d{4}-\d{2}-\d{2}/)?.[0] ?? null;
+}
+
 export function useDatetimeFormatter() {
   const { getSetting } = useAuth();
   const timezone = getSetting("general", "timezone") ?? "UTC";
@@ -30,5 +34,31 @@ export function useDatetimeFormatter() {
     return moment(date).tz(timezone).format(dateFormat);
   }
 
-  return { formatDatetime, formatDate, datePickerFormat };
+  function formatDateOnly(date: string | null): string {
+    if (!date) return "---";
+
+    const dateOnly = extractDateOnly(date);
+    if (!dateOnly) return "---";
+
+    return moment(dateOnly, "YYYY-MM-DD", true).format(dateFormat);
+  }
+
+  function parseDateOnly(date: string | null): Date | null {
+    if (!date) return null;
+
+    const dateOnly = extractDateOnly(date);
+    if (!dateOnly || !moment(dateOnly, "YYYY-MM-DD", true).isValid()) return null;
+
+    const [year, month, day] = dateOnly.split("-").map(Number);
+
+    return new Date(year, month - 1, day);
+  }
+
+  function toDateOnly(date: Date | null | undefined): string | null {
+    if (!date || Number.isNaN(date.getTime())) return null;
+
+    return `${String(date.getFullYear())}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  return { formatDatetime, formatDate, formatDateOnly, parseDateOnly, toDateOnly, datePickerFormat };
 }

@@ -23,7 +23,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const { formatCurrencySymbol } = useCurrencyFormatter();
 
-const { formatDatetime, datePickerFormat } = useDatetimeFormatter();
+const { formatDatetime, parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
 const ALL = "__all__";
 
@@ -31,8 +31,8 @@ const ALL = "__all__";
 const status = ref(props.filters.status === "all" || !props.filters.status ? ALL : props.filters.status);
 const registerId = ref<string | number>(props.filters.cash_register_id ?? ALL);
 const cashierId = ref<string | number>(props.filters.user_id ?? ALL);
-const dateFrom = ref<Date | null>(props.filters.date_from ? new Date(props.filters.date_from) : null);
-const dateTo = ref<Date | null>(props.filters.date_to ? new Date(props.filters.date_to) : null);
+const dateFrom = ref<Date | null>(parseDateOnly(props.filters.date_from ?? null));
+const dateTo = ref<Date | null>(parseDateOnly(props.filters.date_to ?? null));
 const filterPopover = ref();
 
 const statusOptions = computed(() => [
@@ -66,19 +66,14 @@ const activeFilterCount = computed(() => {
   return count;
 });
 
-function formatDateParam(date: Date | null): string | null {
-  if (!date) return null;
-  return date.toISOString().split("T")[0];
-}
-
 function applyFilters(overrides: Record<string, unknown> = {}) {
   router.visit(route("shifts"), {
     data: {
       status: status.value === ALL ? null : status.value,
       cash_register_id: registerId.value === ALL ? null : registerId.value,
       user_id: cashierId.value === ALL ? null : cashierId.value,
-      date_from: formatDateParam(dateFrom.value),
-      date_to: formatDateParam(dateTo.value),
+      date_from: toDateOnly(dateFrom.value),
+      date_to: toDateOnly(dateTo.value),
       ...overrides,
     },
     preserveState: true,

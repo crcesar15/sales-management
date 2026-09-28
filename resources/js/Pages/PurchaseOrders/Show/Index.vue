@@ -26,7 +26,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
-const { formatDate, formatDatetime } = useDatetimeFormatter();
+const { formatDateOnly, formatDatetime } = useDatetimeFormatter();
 
 const advanceModalVisible = ref(false);
 const markAsPaidModalVisible = ref(false);
@@ -318,14 +318,14 @@ function formatFileSize(bytes: number): string {
                   <i class="fa fa-calendar text-surface-400 w-4 text-center" />
                   {{ t("Order Date") }}
                 </span>
-                <span class="font-medium">{{ formatDate(purchaseOrder.order_date) }}</span>
+                <span class="font-medium">{{ formatDateOnly(purchaseOrder.order_date) }}</span>
               </div>
               <div class="flex flex-col gap-1">
                 <span class="text-sm text-surface-500 flex items-center gap-1.5">
                   <i class="fa fa-truck text-surface-400 w-4 text-center" />
                   {{ t("Expected Arrival Date") }}
                 </span>
-                <span class="font-medium">{{ formatDate(purchaseOrder.expected_arrival_date) }}</span>
+                <span class="font-medium">{{ formatDateOnly(purchaseOrder.expected_arrival_date) }}</span>
               </div>
               <div class="flex flex-col gap-1">
                 <span class="text-sm text-surface-500 flex items-center gap-1.5">
@@ -532,7 +532,7 @@ function formatFileSize(bytes: number): string {
               </Column>
               <Column :header="t('Reception Date')" style="min-width: 120px">
                 <template #body="{ data }">
-                  {{ formatDate(data.reception_date) }}
+                  {{ formatDateOnly(data.reception_date) }}
                 </template>
               </Column>
               <Column :header="t('Store')" style="min-width: 120px">

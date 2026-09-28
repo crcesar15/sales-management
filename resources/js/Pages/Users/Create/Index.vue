@@ -20,7 +20,7 @@ const props = defineProps<{
 // Set composables
 const toast = useToast();
 const { t } = useI18n();
-const { datePickerFormat } = useDatetimeFormatter();
+const { toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
 // Schema
 const schema = toTypedSchema(
@@ -67,8 +67,7 @@ const [passwordConfirmation, passwordConfirmationAttrs] = defineField("password_
 
 // Submit
 const submit = handleSubmit((values) => {
-  const dateValue =
-    values.date_of_birth instanceof Date ? values.date_of_birth.toISOString().split("T")[0] : (values.date_of_birth ?? null);
+  const dateValue = values.date_of_birth instanceof Date ? toDateOnly(values.date_of_birth) : (values.date_of_birth ?? null);
 
   router.post(
     route("users.store"),

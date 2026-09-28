@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { DataTable, Column, Tag, Chip } from "primevue";
 import { useI18n } from "vue-i18n";
+import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import type { ExpiryAlertItem } from "@/Types/stock-alert-types";
 
 defineProps<{
   alerts: ExpiryAlertItem[];
 }>();
 
-const { t, d } = useI18n();
+const { t } = useI18n();
+const { formatDateOnly, parseDateOnly } = useDatetimeFormatter();
 
 function daysRemaining(item: ExpiryAlertItem): number {
   if (!item.expiry_date) return 0;
-  const expiry = new Date(item.expiry_date);
+  const expiry = parseDateOnly(item.expiry_date);
+  if (!expiry) return 0;
   const now = new Date();
-  const diff = expiry.getTime() - now.getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  const expiryDay = Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((expiryDay - today) / (1000 * 60 * 60 * 24));
 }
 
 function expirySeverity(item: ExpiryAlertItem): "danger" | "warning" {
@@ -68,7 +72,7 @@ function expiryLabel(item: ExpiryAlertItem): string {
 
     <Column field="expiry_date" :header="t('Expiry Date')">
       <template #body="{ data }">
-        {{ d(new Date(data.expiry_date), "short") }}
+        {{ formatDateOnly(data.expiry_date) }}
       </template>
     </Column>
 

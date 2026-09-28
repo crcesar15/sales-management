@@ -22,7 +22,7 @@ const props = defineProps<{
 // Set composables
 const toast = useToast();
 const { t } = useI18n();
-const { datePickerFormat } = useDatetimeFormatter();
+const { parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
 // Schema
 const schema = toTypedSchema(
@@ -65,7 +65,7 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, submitCount 
     username: props.user.username,
     phone: props.user.phone ?? "",
     status: props.user.status,
-    date_of_birth: props.user.date_of_birth ? new Date(props.user.date_of_birth) : null,
+    date_of_birth: parseDateOnly(props.user.date_of_birth),
     roles: (props.user.roles as RoleResponse[]).map((role) => role.id),
   },
 });
@@ -83,8 +83,7 @@ const [passwordConfirmation, passwordConfirmationAttrs] = defineField("password_
 
 // Submit
 const submit = handleSubmit((values) => {
-  const dateValue =
-    values.date_of_birth instanceof Date ? values.date_of_birth.toISOString().split("T")[0] : (values.date_of_birth ?? null);
+  const dateValue = values.date_of_birth instanceof Date ? toDateOnly(values.date_of_birth) : (values.date_of_birth ?? null);
 
   const payload = {
     ...values,

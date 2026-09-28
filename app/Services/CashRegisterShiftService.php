@@ -16,6 +16,7 @@ use App\Models\CashRegisterShift;
 use App\Models\SalesOrder;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -51,11 +52,11 @@ final class CashRegisterShiftService
             )
             ->when(
                 isset($filters['date_from']),
-                fn ($q) => $q->where('opened_at', '>=', $filters['date_from']),
+                fn ($q) => $q->where('opened_at', '>=', Carbon::parse($filters['date_from'], config('app.timezone'))->startOfDay()),
             )
             ->when(
                 isset($filters['date_to']),
-                fn ($q) => $q->where('opened_at', '<=', $filters['date_to']),
+                fn ($q) => $q->where('opened_at', '<=', Carbon::parse($filters['date_to'], config('app.timezone'))->endOfDay()),
             )
             ->orderBy('opened_at', 'desc')
             ->paginate($perPage)

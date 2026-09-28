@@ -20,7 +20,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const { formatDate, formatDatetime } = useDatetimeFormatter();
+const { formatDateOnly, formatDatetime } = useDatetimeFormatter();
 const closeModalVisible = ref(false);
 const editModalVisible = ref(false);
 
@@ -92,14 +92,14 @@ const missingPercent = computed(() => {
                     #{{ batch.reception_order.id }}
                   </a>
                   <span v-if="batch.reception_order.reception_date" class="text-surface-500">
-                    — {{ formatDate(batch.reception_order.reception_date) }}
+                    — {{ formatDateOnly(batch.reception_order.reception_date) }}
                   </span>
                 </span>
               </div>
               <div>
                 <span class="text-surface-500 block">{{ t("Expiry Date") }}</span>
                 <div class="flex items-center gap-2">
-                  <span class="font-medium">{{ formatDate(batch.expiry_date) }}</span>
+                  <span class="font-medium">{{ formatDateOnly(batch.expiry_date) }}</span>
                   <ExpiryBadge v-if="batch.expiry_status" :status="batch.expiry_status" />
                 </div>
               </div>

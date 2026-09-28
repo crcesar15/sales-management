@@ -25,7 +25,7 @@ const props = defineProps<{
 const toast = useToast();
 const { t } = useI18n();
 const { fetchAvailableBatchesApi } = useBatchClient();
-const { datePickerFormat } = useDatetimeFormatter();
+const { parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
 const reasonOptions = computed(() => props.reasons.map((r) => ({ name: t(r.label), value: r.value })));
@@ -431,13 +431,13 @@ const submit = handleSubmit((formValues) => {
                   </label>
                   <DatePicker
                     id="expiry_date"
-                    :model-value="values.expiry_date ? new Date(values.expiry_date) : null"
+                    :model-value="parseDateOnly(values.expiry_date ?? null)"
                     :date-format="datePickerFormat"
                     show-icon
                     :placeholder="requiresExpiration ? t('Select expiry date') : t('Select expiry date (optional)')"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.expiry_date }"
                     @update:model-value="
-                      setFieldValue('expiry_date', $event && $event instanceof Date ? $event.toISOString().split('T')[0] : null)
+                      setFieldValue('expiry_date', $event instanceof Date ? toDateOnly($event) : null)
                     "
                   />
                   <small v-if="submitCount > 0 && errors.expiry_date" class="text-red-400 dark:text-red-300">

@@ -11,6 +11,7 @@ use App\Models\ProductVariant;
 use App\Models\StockAdjustment;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -31,8 +32,8 @@ final class StockAdjustmentService
 
         $query->when($filters['store_id'] ?? null, fn ($q, $storeId) => $q->where('store_id', $storeId))
             ->when($filters['reason'] ?? null, fn ($q, $reason) => $q->where('reason', $reason))
-            ->when($filters['date_from'] ?? null, fn ($q, $from) => $q->where('created_at', '>=', $from))
-            ->when($filters['date_to'] ?? null, fn ($q, $to) => $q->where('created_at', '<=', $to))
+            ->when($filters['date_from'] ?? null, fn ($q, $from) => $q->where('created_at', '>=', Carbon::parse($from, config('app.timezone'))->startOfDay()))
+            ->when($filters['date_to'] ?? null, fn ($q, $to) => $q->where('created_at', '<=', Carbon::parse($to, config('app.timezone'))->endOfDay()))
             ->orderBy('created_at', 'desc');
 
         return $query->paginate($perPage)->withQueryString();

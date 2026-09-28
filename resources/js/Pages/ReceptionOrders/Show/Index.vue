@@ -22,7 +22,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
-const { formatDate, formatDatetime } = useDatetimeFormatter();
+const { formatDateOnly, formatDatetime } = useDatetimeFormatter();
 
 const completeModalVisible = ref(false);
 const cancelModalVisible = ref(false);
@@ -173,7 +173,7 @@ function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): st
                   <i class="fa fa-calendar text-surface-400 w-4 text-center" />
                   {{ t("Reception Date") }}
                 </span>
-                <span class="font-medium">{{ formatDate(receptionOrder.reception_date) }}</span>
+                <span class="font-medium">{{ formatDateOnly(receptionOrder.reception_date) }}</span>
               </div>
               <div class="flex flex-col gap-1">
                 <span class="text-sm text-surface-500 flex items-center gap-1.5">
@@ -236,7 +236,7 @@ function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): st
 
                     <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
                       <span class="block text-base font-medium 2xl:sr-only">{{ t("Expiry Date") }}</span>
-                      <span class="block">{{ item.expiry_date ? formatDate(item.expiry_date) : "—" }}</span>
+                      <span class="block">{{ item.expiry_date ? formatDateOnly(item.expiry_date) : "—" }}</span>
                     </div>
 
                     <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
@@ -278,7 +278,7 @@ function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): st
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-surface-500">{{ t("Reception Date") }}</span>
-                <span class="font-medium">{{ formatDate(receptionOrder.reception_date) }}</span>
+                <span class="font-medium">{{ formatDateOnly(receptionOrder.reception_date) }}</span>
               </div>
               <Divider class="!my-1" />
               <div class="flex flex-col gap-2">

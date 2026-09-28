@@ -505,6 +505,29 @@ it('filters adjustments by date_to', function () {
         );
 });
 
+it('includes adjustments created later on the selected end date', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $store = Store::factory()->create(['status' => 'active']);
+    $variant = ProductVariant::factory()->create([
+        'product_id' => Product::factory()->create()->id,
+    ]);
+    $batch = createActiveBatch($variant, $store, 100);
+
+    $service = app(StockAdjustmentService::class);
+    $adjustment = $service->apply(adjustmentPayload($variant, $store, ['batch_id' => $batch->id]), $admin);
+
+    StockAdjustment::where('id', $adjustment->id)->update(['created_at' => now()->endOfDay()]);
+
+    actingAs($admin)
+        ->get(route('stock-adjustments', ['date_to' => now()->toDateString()]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('adjustments.meta.total', 1)
+        );
+});
+
 it('filters adjustments by date range', function () {
     $batch1 = createActiveBatch($this->variant, $this->store, 100);
     $batch2 = createActiveBatch($this->variant, $this->store, 100);

@@ -22,7 +22,7 @@ const { t } = useI18n();
 const toast = useToast();
 const { getSetting } = useAuth();
 const { formatCurrency } = useCurrencyFormatter();
-const { formatDate } = useDatetimeFormatter();
+const { formatDateOnly } = useDatetimeFormatter();
 const { fetchPurchasePriceHistory } = useVariantClient();
 
 const currency = getSetting("finance", "currency") ?? "USD";
@@ -127,7 +127,7 @@ const chartData = computed(() => {
   const history = [...(priceHistory.value?.history ?? [])].reverse();
 
   return {
-    labels: history.map((entry) => formatDate(entry.date)),
+    labels: history.map((entry) => formatDateOnly(entry.date)),
     datasets: [
       {
         label: t("Purchase Price"),
@@ -258,7 +258,7 @@ const breakdownText = computed(() => {
           </div>
           <ul v-if="priceHistory.history.length" class="m-0 flex list-none flex-col gap-2 p-0 text-sm">
             <li v-for="entry in priceHistory.history" :key="`${entry.po_id}-${entry.date}`" class="flex justify-between gap-3">
-              <span>{{ formatDate(entry.date) }}<span v-if="entry.vendor_name"> · {{ entry.vendor_name }}</span></span>
+              <span>{{ formatDateOnly(entry.date) }}<span v-if="entry.vendor_name"> · {{ entry.vendor_name }}</span></span>
               <span class="font-medium">{{ formatCurrency(String(entry.price)) }}</span>
             </li>
           </ul>

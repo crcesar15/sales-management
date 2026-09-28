@@ -38,7 +38,7 @@ interface AdditionalContact {
 
 const toast = useToast();
 const { t } = useI18n();
-const { datePickerFormat } = useDatetimeFormatter();
+const { parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
 const vendorOptions = computed(() => props.vendors.map((v) => ({ name: v.fullname, value: v.id })));
 const vendorInfoPopover = ref();
@@ -58,8 +58,8 @@ const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, sub
   validateOnMount: false,
   initialValues: {
     vendor_id: props.purchaseOrder.vendor_id,
-    order_date: props.purchaseOrder.order_date ? new Date(props.purchaseOrder.order_date) : undefined,
-    expected_arrival_date: props.purchaseOrder.expected_arrival_date ? new Date(props.purchaseOrder.expected_arrival_date) : null,
+    order_date: parseDateOnly(props.purchaseOrder.order_date) ?? undefined,
+    expected_arrival_date: parseDateOnly(props.purchaseOrder.expected_arrival_date),
     discount: props.purchaseOrder.discount ?? 0,
     notes: props.purchaseOrder.notes,
   },
@@ -132,8 +132,8 @@ const submit = handleSubmit((formValues) => {
 
   const payload = {
     vendor_id: formValues.vendor_id,
-    order_date: formValues.order_date ? formValues.order_date.toISOString().split("T")[0] : "",
-    expected_arrival_date: formValues.expected_arrival_date ? formValues.expected_arrival_date.toISOString().split("T")[0] : null,
+    order_date: toDateOnly(formValues.order_date) ?? "",
+    expected_arrival_date: toDateOnly(formValues.expected_arrival_date),
     discount: formValues.discount ?? 0,
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({

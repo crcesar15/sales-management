@@ -37,7 +37,7 @@ interface AdditionalContact {
 const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
-const { datePickerFormat } = useDatetimeFormatter();
+const { toDateOnly, datePickerFormat } = useDatetimeFormatter();
 const submitting = ref(false);
 
 const vendorOptions = computed(() => props.vendors.map((v) => ({ name: v.fullname, value: v.id })));
@@ -116,8 +116,8 @@ const submit = handleSubmit((formValues) => {
 
   const payload = {
     vendor_id: formValues.vendor_id,
-    order_date: formValues.order_date ? formValues.order_date.toISOString().split("T")[0] : "",
-    expected_arrival_date: formValues.expected_arrival_date ? formValues.expected_arrival_date.toISOString().split("T")[0] : null,
+    order_date: toDateOnly(formValues.order_date) ?? "",
+    expected_arrival_date: toDateOnly(formValues.expected_arrival_date),
     discount: formValues.discount ?? 0,
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({

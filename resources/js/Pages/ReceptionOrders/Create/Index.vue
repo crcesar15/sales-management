@@ -25,7 +25,7 @@ const props = defineProps<{
 const toast = useToast();
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
-const { formatDate, datePickerFormat } = useDatetimeFormatter();
+const { formatDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
 
@@ -109,13 +109,13 @@ const submit = handleSubmit((formValues) => {
   const payload = {
     purchase_order_id: formValues.purchase_order_id,
     store_id: formValues.store_id,
-    reception_date: formValues.reception_date ? formValues.reception_date.toISOString().split("T")[0] : null,
+    reception_date: toDateOnly(formValues.reception_date),
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
       purchase_order_item_id: item.purchase_order_item_id,
       product_variant_id: item.product_variant_id,
       quantity: Number(item.quantity),
-      expiry_date: item.expiry_date ? item.expiry_date.toISOString().split("T")[0] : null,
+      expiry_date: toDateOnly(item.expiry_date),
       batch_identifier: item.batch_identifier || null,
     })),
   };
@@ -191,7 +191,7 @@ function goBack() {
                         <div class="flex items-center gap-3 text-xs text-surface-500">
                           <span v-if="slotProps.option.order_date">
                             <i class="fa fa-calendar mr-1" />
-                            {{ formatDate(slotProps.option.order_date) }}
+                            {{ formatDateOnly(slotProps.option.order_date) }}
                           </span>
                           <span>{{ slotProps.option.line_items?.length ?? 0 }} {{ t("items") }}</span>
                         </div>

@@ -27,6 +27,24 @@ beforeEach(function () {
     actingAs($this->cashier);
 });
 
+it('includes shifts opened later on the selected end date', function () {
+    $cashier = User::factory()->create();
+    $register = CashRegister::factory()->create([
+        'store_id' => Store::factory(),
+        'status' => CashRegisterStatus::ACTIVE->value,
+    ]);
+
+    CashRegisterShift::factory()->create([
+        'cash_register_id' => $register->id,
+        'user_id' => $cashier->id,
+        'opened_at' => now()->endOfDay(),
+    ]);
+
+    $shifts = app(CashRegisterShiftService::class)->list(['date_to' => now()->toDateString()]);
+
+    expect($shifts->total())->toBe(1);
+});
+
 it('allows closing an open shift (open -> closed)', function () {
     $shift = CashRegisterShift::factory()->create([
         'cash_register_id' => $this->register->id,

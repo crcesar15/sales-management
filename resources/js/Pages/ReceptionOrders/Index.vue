@@ -39,14 +39,14 @@ const props = defineProps<{
   stores: Array<{ id: number; name: string }>;
 }>();
 
-const { formatDate, formatDatetime, datePickerFormat } = useDatetimeFormatter();
+const { formatDateOnly, formatDatetime, parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 const { t } = useI18n();
 
 const status = ref(props.filters.status || "all");
 const vendorId = ref<number | null>(props.filters.vendor_id ?? null);
 const storeId = ref<number | null>(props.filters.store_id ?? null);
-const dateFrom = ref<Date | null>(props.filters.from ? new Date(props.filters.from) : null);
-const dateTo = ref<Date | null>(props.filters.to ? new Date(props.filters.to) : null);
+const dateFrom = ref<Date | null>(parseDateOnly(props.filters.from));
+const dateTo = ref<Date | null>(parseDateOnly(props.filters.to));
 const sortField = ref(props.filters.order_by ?? "created_at");
 const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
 const filterPopover = ref();
@@ -85,7 +85,7 @@ const activeFilterCount = computed(() => {
 const orders = computed(() =>
   props.receptionOrders.data.map((item) => ({
     ...item,
-    reception_date: formatDate(item.reception_date),
+    reception_date: formatDateOnly(item.reception_date),
     created_at: formatDatetime(item.created_at),
   })),
 );
@@ -97,8 +97,8 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
       status: status.value === "all" ? null : status.value,
       vendor_id: vendorId.value ?? "",
       store_id: storeId.value ?? "",
-      from: dateFrom.value ? dateFrom.value.toISOString().split("T")[0] : "",
-      to: dateTo.value ? dateTo.value.toISOString().split("T")[0] : "",
+      from: toDateOnly(dateFrom.value) ?? "",
+      to: toDateOnly(dateTo.value) ?? "",
       order_by: sortField.value,
       order_direction: sortOrder.value === -1 ? "desc" : "asc",
       ...overrides,

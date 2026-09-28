@@ -35,15 +35,15 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const { formatDate, formatDatetime, datePickerFormat } = useDatetimeFormatter();
+const { formatDateOnly, formatDatetime, parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
 const ALL = "__all__";
 
 const status = ref(props.filters.status || ALL);
 const storeId = ref<string | number>(props.filters.store_id ?? ALL);
 const expiringSoon = ref(props.filters.expiring_soon ?? false);
-const expiryFrom = ref<Date | null>(props.filters.expiry_from ? new Date(props.filters.expiry_from) : null);
-const expiryTo = ref<Date | null>(props.filters.expiry_to ? new Date(props.filters.expiry_to) : null);
+const expiryFrom = ref<Date | null>(parseDateOnly(props.filters.expiry_from));
+const expiryTo = ref<Date | null>(parseDateOnly(props.filters.expiry_to));
 const filterPopover = ref();
 
 const productName = ref(props.filters.product_name ?? "");
@@ -96,8 +96,8 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
       status: status.value === ALL ? "" : status.value,
       store_id: storeId.value === ALL ? "" : storeId.value,
       expiring_soon: expiringSoon.value,
-      expiry_from: expiryFrom.value ? expiryFrom.value.toISOString().split("T")[0] : "",
-      expiry_to: expiryTo.value ? expiryTo.value.toISOString().split("T")[0] : "",
+      expiry_from: toDateOnly(expiryFrom.value) ?? "",
+      expiry_to: toDateOnly(expiryTo.value) ?? "",
       product_name: productName.value,
       ...overrides,
     },
@@ -251,7 +251,7 @@ function openEditModal(batch: BatchResponse) {
                     'bg-red-500': data.expiry_status === 'expired',
                   }"
                 />
-                <span>{{ formatDate(data.expiry_date) }}</span>
+                <span>{{ formatDateOnly(data.expiry_date) }}</span>
               </div>
             </template>
           </Column>

@@ -10,7 +10,7 @@ defineProps<{
 }>();
 
 const { t } = useI18n();
-const { formatDate } = useDatetimeFormatter();
+const { formatDateOnly } = useDatetimeFormatter();
 </script>
 
 <template>
@@ -45,7 +45,7 @@ const { formatDate } = useDatetimeFormatter();
             <div class="col-span-2 flex items-center justify-between border-t border-surface-200 pt-3 dark:border-surface-700">
               <span class="font-medium text-surface-600 dark:text-surface-300">{{ t("Expiry") }}</span>
               <span class="font-medium text-surface-900 dark:text-surface-50">
-                {{ allocation.expiry_date ? formatDate(allocation.expiry_date) : "---" }}
+                {{ allocation.expiry_date ? formatDateOnly(allocation.expiry_date) : "---" }}
               </span>
             </div>
           </div>
@@ -76,7 +76,7 @@ const { formatDate } = useDatetimeFormatter();
           :pt="{ headerCell: { class: '!bg-surface-200 dark:!bg-surface-800' } }"
         />
         <Column :header="t('Expiry')" :pt="{ headerCell: { class: '!bg-surface-200 dark:!bg-surface-800' } }">
-          <template #body="{ data }">{{ data.expiry_date ? formatDate(data.expiry_date) : "---" }}</template>
+          <template #body="{ data }">{{ data.expiry_date ? formatDateOnly(data.expiry_date) : "---" }}</template>
         </Column>
       </DataTable>
     </div>

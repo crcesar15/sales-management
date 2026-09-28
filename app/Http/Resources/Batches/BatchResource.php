@@ -39,7 +39,7 @@ final class BatchResource extends JsonResource
             'reception_order_id' => $batch->reception_order_id,
             'reception_order' => $this->whenLoaded('receptionOrder', fn () => [
                 'id' => $batch->receptionOrder?->id,
-                'reception_date' => $batch->receptionOrder?->reception_date,
+                'reception_date' => $batch->receptionOrder?->reception_date?->toDateString(),
             ]),
             'expiry_date' => $batch->getAttribute('expiry_date')?->toDateString(),
             'expiry_status' => $batch->expiry_status,

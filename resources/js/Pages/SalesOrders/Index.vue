@@ -43,14 +43,14 @@ const props = defineProps<{
   canViewAll: boolean;
 }>();
 
-const { formatDatetime, datePickerFormat } = useDatetimeFormatter();
+const { formatDatetime, parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
 
 const search = ref(props.filters.search ?? "");
 const status = ref(props.filters.status || "all");
-const dateFrom = ref<Date | null>(props.filters.from ? new Date(props.filters.from) : null);
-const dateTo = ref<Date | null>(props.filters.to ? new Date(props.filters.to) : null);
+const dateFrom = ref<Date | null>(parseDateOnly(props.filters.from ?? null));
+const dateTo = ref<Date | null>(parseDateOnly(props.filters.to ?? null));
 const sortField = ref("created_at");
 const sortOrder = ref(-1);
 const filterPopover = ref();
@@ -80,8 +80,8 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
     data: {
       search: search.value || "",
       status: status.value === "all" ? "" : status.value,
-      from: dateFrom.value ? dateFrom.value.toISOString().split("T")[0] : "",
-      to: dateTo.value ? dateTo.value.toISOString().split("T")[0] : "",
+      from: toDateOnly(dateFrom.value) ?? "",
+      to: toDateOnly(dateTo.value) ?? "",
       order_by: sortField.value,
       order_direction: sortOrder.value === -1 ? "desc" : "asc",
       ...overrides,

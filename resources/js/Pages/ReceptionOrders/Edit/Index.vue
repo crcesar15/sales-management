@@ -23,7 +23,7 @@ const props = defineProps<{
 
 const toast = useToast();
 const { t } = useI18n();
-const { datePickerFormat } = useDatetimeFormatter();
+const { datePickerFormat, parseDateOnly, toDateOnly } = useDatetimeFormatter();
 
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
 
@@ -40,7 +40,7 @@ const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, sub
   validateOnMount: false,
   initialValues: {
     store_id: props.receptionOrder.store_id,
-    reception_date: props.receptionOrder.reception_date ? new Date(props.receptionOrder.reception_date) : null,
+    reception_date: parseDateOnly(props.receptionOrder.reception_date),
     notes: props.receptionOrder.notes ?? null,
   },
 });
@@ -65,7 +65,7 @@ const lineItems = ref<ReceptionLineItem[]>(
     variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
     quantity: Number(item.quantity),
     max_quantity: poRemainingByItem.get(item.purchase_order_item_id) ?? undefined,
-    expiry_date: item.expiry_date ? new Date(item.expiry_date) : null,
+    expiry_date: parseDateOnly(item.expiry_date),
     batch_identifier: item.batch_identifier ?? "",
     purchase_unit: item.catalog_entry?.unit ?? null,
     base_unit: item.product_variant?.product?.measurement_unit
@@ -92,13 +92,13 @@ const submit = handleSubmit((formValues) => {
 
   const payload = {
     store_id: formValues.store_id,
-    reception_date: formValues.reception_date ? formValues.reception_date.toISOString().split("T")[0] : null,
+    reception_date: toDateOnly(formValues.reception_date),
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
       purchase_order_item_id: item.purchase_order_item_id,
       product_variant_id: item.product_variant_id,
       quantity: Number(item.quantity),
-      expiry_date: item.expiry_date ? item.expiry_date.toISOString().split("T")[0] : null,
+      expiry_date: toDateOnly(item.expiry_date),
       batch_identifier: item.batch_identifier || null,
     })),
   };
