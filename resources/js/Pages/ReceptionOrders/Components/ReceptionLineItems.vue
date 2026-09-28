@@ -47,7 +47,7 @@ function hasVariantLabel(item: ReceptionLineItem): boolean {
 }
 
 function conversionLabel(item: ReceptionLineItem): string | null {
-  const baseUnit = item.base_unit?.name;
+  const baseUnit = item.base_unit?.abbreviation;
   const conversionFactor = item.purchase_unit?.conversion_factor ?? 1;
 
   if (!baseUnit || conversionFactor === 1) return null;
