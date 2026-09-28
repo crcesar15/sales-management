@@ -75,7 +75,7 @@ final class ReceptionOrderController extends Controller
 
         $purchaseOrders = PurchaseOrder::query()
             ->whereIn('status', ['sent', 'partially_received'])
-            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit', 'lineItems.catalog.unit'])
+            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit', 'lineItems.unit'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function (PurchaseOrder $po) {
@@ -124,16 +124,8 @@ final class ReceptionOrderController extends Controller
             'store',
             'user',
             'lineItems.productVariant.product.measurementUnit',
+            'lineItems.purchaseOrderItem.unit',
         ]);
-
-        $poLineItemIds = $receptionOrder->lineItems->pluck('purchase_order_item_id')->filter()->unique()->toArray();
-        $poLineItems = PurchaseOrderProduct::with('catalog.unit')
-            ->whereIn('id', $poLineItemIds)->get()->keyBy('id');
-
-        $receptionOrder->lineItems->each(fn ($item) => $item->setRelation(
-            'catalogEntry',
-            $poLineItems->get($item->purchase_order_item_id)?->catalog,
-        ));
 
         return Inertia::render('ReceptionOrders/Show/Index', [
             'receptionOrder' => $receptionOrder,
@@ -151,8 +143,9 @@ final class ReceptionOrderController extends Controller
 
         $receptionOrder->load([
             'purchaseOrder.lineItems.productVariant.product',
-            'purchaseOrder.lineItems.catalog.unit',
+            'purchaseOrder.lineItems.unit',
             'lineItems.productVariant.product.measurementUnit',
+            'lineItems.purchaseOrderItem.unit',
         ]);
 
         /** @var PurchaseOrder $purchaseOrder */
@@ -165,15 +158,6 @@ final class ReceptionOrderController extends Controller
             $claimed = (float) ($claimedQuantities[$item->id] ?? 0);
             $item->setAttribute('remaining_quantity', (string) ($ordered - $claimed));
         });
-
-        $poLineItemIds = $receptionOrder->lineItems->pluck('purchase_order_item_id')->filter()->unique()->toArray();
-        $poLineItems = PurchaseOrderProduct::with('catalog.unit')
-            ->whereIn('id', $poLineItemIds)->get()->keyBy('id');
-
-        $receptionOrder->lineItems->each(fn ($item) => $item->setRelation(
-            'catalogEntry',
-            $poLineItems->get($item->purchase_order_item_id)?->catalog,
-        ));
 
         return Inertia::render('ReceptionOrders/Edit/Index', [
             'receptionOrder' => $receptionOrder,

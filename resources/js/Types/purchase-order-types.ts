@@ -29,6 +29,7 @@ export interface PurchaseOrderLineItem {
     unit?: { id: number; name: string; conversion_factor: number } | null;
   };
   unit_id: number | null;
+  unit?: { id: number; name: string; conversion_factor: number } | null;
   quantity: number;
   received_quantity: number;
   remaining_quantity: number;

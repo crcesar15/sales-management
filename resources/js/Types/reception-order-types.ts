@@ -16,11 +16,15 @@ export interface ReceptionOrderLineItem {
   total: number;
   expiry_date: string | null;
   batch_identifier: string | null;
+  purchase_unit?: PurchaseUnitResponse | null;
   product_variant: Pick<ProductVariantResponse, "id" | "name" | "identifier" | "stock" | "minimum_stock_level" | "has_expiration"> & {
     product: Pick<ProductVariantResponse["product"], "id" | "name"> & {
       measurement_unit?: { id: number; name: string; abbreviation: string } | null;
     };
   };
+  purchase_order_item?: {
+    unit?: PurchaseUnitResponse | null;
+  } | null;
   catalog_entry?: {
     id: number;
     price: number;

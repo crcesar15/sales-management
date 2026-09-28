@@ -139,7 +139,7 @@ final class UpdateReceptionOrderRequest extends FormRequest
         foreach ($po->receptionOrders()->where('status', '!=', 'cancelled')->where('id', '!=', $excludeReceptionOrderId)->with('lineItems')->get() as $receptionOrder) {
             foreach ($receptionOrder->lineItems as $lineItem) {
                 $poItemId = (int) $lineItem->purchase_order_item_id;
-                $quantities[$poItemId] = bcadd((string) ($quantities[$poItemId] ?? '0'), (string) $lineItem->quantity, 4);
+                $quantities[$poItemId] = number_format((float) ($quantities[$poItemId] ?? 0) + (float) $lineItem->quantity, 4, '.', '');
             }
         }
 

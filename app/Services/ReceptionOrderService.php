@@ -30,7 +30,7 @@ final class ReceptionOrderService
                 'store',
                 'user',
                 'lineItems.productVariant.product.measurementUnit',
-                'lineItems.catalogEntry.unit',
+                'lineItems.purchaseOrderItem.unit',
             ])
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
             ->when($filters['purchase_order_id'] ?? null, fn ($q, $poId) => $q->where('purchase_order_id', $poId))
@@ -175,7 +175,7 @@ final class ReceptionOrderService
             $receptionOrder->load('lineItems');
 
             $poLineItemIds = $receptionOrder->lineItems->pluck('purchase_order_item_id')->filter()->unique()->toArray();
-            $poLineItems = PurchaseOrderProduct::with('catalog.unit')
+            $poLineItems = PurchaseOrderProduct::with('unit')
                 ->whereIn('id', $poLineItemIds)
                 ->get()
                 ->keyBy('id');
@@ -184,8 +184,7 @@ final class ReceptionOrderService
 
             foreach ($receptionOrder->lineItems as $lineItem) {
                 $poLineItem = $poLineItems->get($lineItem->purchase_order_item_id);
-                $catalogEntry = $poLineItem?->catalog;
-                $conversionFactor = $catalogEntry?->unit->conversion_factor ?? 1;
+                $conversionFactor = $poLineItem?->unit?->conversion_factor ?? 1;
 
                 $baseQuantity = (int) round($lineItem->quantity * $conversionFactor);
 
@@ -257,6 +256,33 @@ final class ReceptionOrderService
         });
     }
 
+    /**
+     * Get the total claimed quantities per PO line item for a PO, from all non-cancelled reception orders.
+     *
+     * Public so ReceptionOrderController can reuse it in create()/edit() instead of duplicating the quantity sum.
+     *
+     * @return array<int, string> keyed by purchase_order_item_id
+     */
+    public function getClaimedQuantities(PurchaseOrder $po, ?int $excludeReceptionOrderId = null): array
+    {
+        $receptionOrders = $po->receptionOrders()
+            ->where('status', '!=', 'cancelled')
+            ->when($excludeReceptionOrderId, fn ($q) => $q->where('id', '!=', $excludeReceptionOrderId))
+            ->with('lineItems')
+            ->get();
+
+        $quantities = [];
+
+        foreach ($receptionOrders as $receptionOrder) {
+            foreach ($receptionOrder->lineItems as $lineItem) {
+                $poItemId = (int) $lineItem->purchase_order_item_id;
+                $quantities[$poItemId] = number_format((float) ($quantities[$poItemId] ?? 0) + (float) $lineItem->quantity, 4, '.', '');
+            }
+        }
+
+        return $quantities;
+    }
+
     private function guardPurchaseOrderStatus(PurchaseOrder $po): void
     {
         $blocked = ['draft', 'awaiting_approval', 'cancelled', 'received'];
@@ -313,32 +339,5 @@ final class ReceptionOrderService
                 );
             }
         }
-    }
-
-    /**
-     * Get the total claimed quantities per PO line item for a PO, from all non-cancelled reception orders.
-     *
-     * Public so ReceptionOrderController can reuse it in create()/edit() instead of duplicating the bcadd loop.
-     *
-     * @return array<int, string> keyed by purchase_order_item_id
-     */
-    public function getClaimedQuantities(PurchaseOrder $po, ?int $excludeReceptionOrderId = null): array
-    {
-        $receptionOrders = $po->receptionOrders()
-            ->where('status', '!=', 'cancelled')
-            ->when($excludeReceptionOrderId, fn ($q) => $q->where('id', '!=', $excludeReceptionOrderId))
-            ->with('lineItems')
-            ->get();
-
-        $quantities = [];
-
-        foreach ($receptionOrders as $receptionOrder) {
-            foreach ($receptionOrder->lineItems as $lineItem) {
-                $poItemId = (int) $lineItem->purchase_order_item_id;
-                $quantities[$poItemId] = bcadd((string) ($quantities[$poItemId] ?? '0'), (string) $lineItem->quantity, 4);
-            }
-        }
-
-        return $quantities;
     }
 }

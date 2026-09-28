@@ -46,7 +46,9 @@ function productName(item: ReceptionOrderResponse["line_items"][number]): string
 }
 
 function variantLabel(item: ReceptionOrderResponse["line_items"][number]): string {
-  return item.product_variant?.name ?? item.product_variant?.identifier ?? productName(item);
+  const name = item.product_variant?.name?.trim();
+
+  return name || item.product_variant?.identifier || productName(item);
 }
 
 function hasVariantLabel(item: ReceptionOrderResponse["line_items"][number]): boolean {
@@ -54,7 +56,7 @@ function hasVariantLabel(item: ReceptionOrderResponse["line_items"][number]): bo
 }
 
 function purchaseUnitLabel(item: ReceptionOrderResponse["line_items"][number]): string {
-  return item.catalog_entry?.unit?.name ?? item.product_variant?.product?.measurement_unit?.name ?? "—";
+  return item.purchase_order_item?.unit?.name ?? item.purchase_unit?.name ?? item.product_variant?.product?.measurement_unit?.name ?? "—";
 }
 
 function formatQuantity(q: number | string | null | undefined): string {
@@ -63,8 +65,8 @@ function formatQuantity(q: number | string | null | undefined): string {
 }
 
 function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): string | null {
-  const baseUnit = item.product_variant?.product?.measurement_unit?.name;
-  const conversionFactor = item.catalog_entry?.unit?.conversion_factor ?? 1;
+  const baseUnit = item.product_variant?.product?.measurement_unit?.abbreviation;
+  const conversionFactor = item.purchase_order_item?.unit?.conversion_factor ?? item.purchase_unit?.conversion_factor ?? 1;
 
   if (!baseUnit || conversionFactor === 1) return null;
 

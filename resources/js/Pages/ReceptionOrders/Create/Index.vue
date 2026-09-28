@@ -81,7 +81,7 @@ watch(
           expiry_date: null,
           batch_identifier: "",
           has_expiration: item.product_variant?.has_expiration ?? false,
-          purchase_unit: item.catalog?.unit ?? null,
+          purchase_unit: item.unit ?? null,
           base_unit: item.product_variant?.product?.measurement_unit
             ? {
                 id: item.product_variant.product.measurement_unit.id,
