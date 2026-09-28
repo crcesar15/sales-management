@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, Button, DataTable, Column, Divider, Popover, Tag } from "primevue";
+import { Badge, Button, Card, Divider, Popover } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
@@ -41,17 +41,20 @@ function goToEdit() {
   router.visit(route("reception-orders.edit", props.receptionOrder.id));
 }
 
-function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" {
-  if (stock === null || stock === undefined) return "success";
-  if (stock === 0) return "danger";
-  if (minStock && stock <= minStock) return "warn";
-  return "success";
+function productName(item: ReceptionOrderResponse["line_items"][number]): string {
+  return item.product_variant?.product?.name ?? "—";
 }
 
-function getStockLabel(stock: number | null | undefined): string {
-  if (stock === null || stock === undefined) return "—";
-  if (stock === 0) return t("Out of stock");
-  return `${t("In stock")}: ${String(stock)}`;
+function variantLabel(item: ReceptionOrderResponse["line_items"][number]): string {
+  return item.product_variant?.name ?? item.product_variant?.identifier ?? productName(item);
+}
+
+function hasVariantLabel(item: ReceptionOrderResponse["line_items"][number]): boolean {
+  return variantLabel(item) !== productName(item);
+}
+
+function purchaseUnitLabel(item: ReceptionOrderResponse["line_items"][number]): string {
+  return item.catalog_entry?.unit?.name ?? item.product_variant?.product?.measurement_unit?.name ?? "—";
 }
 
 function formatQuantity(q: number | string | null | undefined): string {
@@ -59,11 +62,13 @@ function formatQuantity(q: number | string | null | undefined): string {
   return String(parseFloat(String(q)));
 }
 
-function formatConversion(item: ReceptionOrderResponse["line_items"][number]): string {
-  if (!item.catalog_entry?.unit || item.catalog_entry.unit.conversion_factor <= 1) return "";
-  const baseName =
-    item.product_variant?.product?.measurement_unit?.abbreviation ?? item.product_variant?.product?.measurement_unit?.name ?? t("units");
-  return `1 ${item.catalog_entry.unit.name} = ${item.catalog_entry.unit.conversion_factor} ${baseName}`;
+function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): string | null {
+  const baseUnit = item.product_variant?.product?.measurement_unit?.name;
+  const conversionFactor = item.catalog_entry?.unit?.conversion_factor ?? 1;
+
+  if (!baseUnit || conversionFactor === 1) return null;
+
+  return `1 ${purchaseUnitLabel(item)} = ${String(conversionFactor)} ${baseUnit}`;
 }
 </script>
 
@@ -181,62 +186,72 @@ function formatConversion(item: ReceptionOrderResponse["line_items"][number]): s
           </template>
         </Card>
 
-        <Card class="mb-4">
+        <Card class="mb-4 !border !border-surface-200 !shadow-none dark:!border-surface-700">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <DataTable :value="receptionOrder.line_items" data-key="id" class="mt-4 border-t-2 border-surface-200 dark:border-surface-700">
-              <template #empty>
-                {{ t("No items") }}
-              </template>
-              <Column :header="t('Product')" style="min-width: 180px">
-                <template #body="{ data }">
-                  <span class="font-medium">{{ data.product_variant?.product?.name ?? "—" }}</span>
-                  <div class="text-sm text-surface-500">{{ data.product_variant?.name ?? data.product_variant?.identifier ?? "—" }}</div>
-                </template>
-              </Column>
-              <Column :header="t('Stock')" style="min-width: 90px">
-                <template #body="{ data }">
-                  <Tag
-                    :value="getStockLabel(data.product_variant?.stock)"
-                    :severity="getStockSeverity(data.product_variant?.stock, data.product_variant?.minimum_stock_level)"
-                    class="text-xs"
-                    rounded
-                  />
-                </template>
-              </Column>
-              <Column :header="t('Quantity')" style="min-width: 90px">
-                <template #body="{ data }">
-                  {{ formatQuantity(data.quantity) }}
-                </template>
-              </Column>
-              <Column :header="t('Conversion')" style="min-width: 160px">
-                <template #body="{ data }">
-                  <span v-if="formatConversion(data)" class="text-sm text-surface-500">{{ formatConversion(data) }}</span>
-                  <span v-else class="text-surface-500">
-                    {{
-                      data.product_variant?.product?.measurement_unit?.abbreviation ??
-                      data.product_variant?.product?.measurement_unit?.name ??
-                      t("units")
-                    }}
-                  </span>
-                </template>
-              </Column>
-              <Column :header="t('Expiry Date')" style="min-width: 120px">
-                <template #body="{ data }">
-                  {{ data.expiry_date ? formatDate(data.expiry_date) : "—" }}
-                </template>
-              </Column>
-              <Column :header="t('Batch Identifier')" style="min-width: 160px">
-                <template #body="{ data }">
-                  {{ data.batch_identifier || "—" }}
-                </template>
-              </Column>
-              <Column :header="t('Line Total')" style="min-width: 120px">
-                <template #body="{ data }">
-                  <span class="font-semibold tabular-nums">{{ formatCurrency(String(data.total)) }}</span>
-                </template>
-              </Column>
-            </DataTable>
+            <div
+              v-if="receptionOrder.line_items.length === 0"
+              class="flex flex-col items-center justify-center border-y border-surface-200 py-10 text-surface-500 dark:border-surface-700 dark:text-surface-400"
+            >
+              <i class="fa fa-box-open mb-3 text-4xl" aria-hidden="true"></i>
+              <span class="text-lg font-medium">{{ t("No items") }}</span>
+            </div>
+
+            <div v-else class="2xl:border 2xl:border-surface-200 dark:2xl:border-surface-700">
+              <div
+                aria-hidden="true"
+                class="hidden 2xl:grid 2xl:grid-cols-[minmax(8rem,1.35fr)_minmax(9rem,1.1fr)_minmax(7rem,0.7fr)_minmax(10rem,1.1fr)_minmax(10rem,1.1fr)_minmax(6rem,0.7fr)] 2xl:items-center 2xl:gap-3 2xl:border-b 2xl:border-surface-200 2xl:bg-surface-100 2xl:px-3 2xl:py-2 2xl:text-sm 2xl:font-semibold dark:2xl:border-surface-700 dark:2xl:bg-surface-800"
+              >
+                <span>{{ t("Product") }}</span>
+                <span>{{ t("Purchase Unit") }}</span>
+                <span>{{ t("Quantity") }}</span>
+                <span>{{ t("Expiry Date") }}</span>
+                <span>{{ t("Batch Identifier") }}</span>
+                <span>{{ t("Line Total") }}</span>
+              </div>
+
+              <ul class="flex flex-col gap-3 2xl:block 2xl:divide-y 2xl:divide-surface-200 dark:2xl:divide-surface-700">
+                <li
+                  v-for="item in receptionOrder.line_items"
+                  :key="item.id"
+                  class="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/60 2xl:rounded-none 2xl:border-0 2xl:bg-transparent 2xl:px-3 2xl:py-3 dark:2xl:bg-transparent"
+                >
+                  <div
+                    class="grid grid-cols-2 gap-x-3 gap-y-4 2xl:grid-cols-[minmax(8rem,1.35fr)_minmax(9rem,1.1fr)_minmax(7rem,0.7fr)_minmax(10rem,1.1fr)_minmax(10rem,1.1fr)_minmax(6rem,0.7fr)] 2xl:items-start 2xl:gap-3"
+                  >
+                    <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+                      <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">{{ productName(item) }}</span>
+                      <Badge v-if="hasVariantLabel(item)" :value="variantLabel(item)" severity="secondary" class="mt-1 w-fit max-w-full truncate" />
+                    </div>
+
+                    <div class="col-span-2 flex min-w-0 flex-col gap-1 2xl:col-span-1 2xl:pt-1">
+                      <span class="font-medium">{{ purchaseUnitLabel(item) }}</span>
+                      <span v-if="conversionLabel(item)" class="text-sm text-surface-500 dark:text-surface-400">{{ conversionLabel(item) }}</span>
+                    </div>
+
+                    <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Quantity") }}</span>
+                      <span class="block tabular-nums">{{ formatQuantity(item.quantity) }}</span>
+                    </div>
+
+                    <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Expiry Date") }}</span>
+                      <span class="block">{{ item.expiry_date ? formatDate(item.expiry_date) : "—" }}</span>
+                    </div>
+
+                    <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Batch Identifier") }}</span>
+                      <span class="block break-words">{{ item.batch_identifier || "—" }}</span>
+                    </div>
+
+                    <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Line Total") }}</span>
+                      <span class="block font-semibold tabular-nums">{{ formatCurrency(String(item.total)) }}</span>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </template>
         </Card>
 
@@ -266,7 +281,7 @@ function formatConversion(item: ReceptionOrderResponse["line_items"][number]): s
                 <span class="font-medium">{{ formatDate(receptionOrder.reception_date) }}</span>
               </div>
               <Divider class="!my-1" />
-              <div class="flex gap-2">
+              <div class="flex flex-col gap-2">
                 <Button
                   v-if="canEdit"
                   v-can="'reception_order.edit'"
