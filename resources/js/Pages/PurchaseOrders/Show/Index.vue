@@ -356,7 +356,7 @@ function formatFileSize(bytes: number): string {
               <span class="text-lg font-medium">{{ t("No items") }}</span>
             </div>
 
-            <div v-else class="border-y border-surface-200 dark:border-surface-700 2xl:border">
+            <div v-else class="2xl:border 2xl:border-surface-200 dark:2xl:border-surface-700">
               <div
                 aria-hidden="true"
                 class="hidden 2xl:grid 2xl:grid-cols-[minmax(8rem,1.3fr)_minmax(9rem,1.1fr)_minmax(7rem,0.85fr)_minmax(7rem,0.7fr)_minmax(7rem,0.8fr)_minmax(6rem,0.7fr)_6rem] 2xl:items-center 2xl:gap-3 2xl:border-b 2xl:border-surface-200 2xl:bg-surface-100 2xl:px-3 2xl:py-2 2xl:text-sm 2xl:font-semibold dark:2xl:border-surface-700 dark:2xl:bg-surface-800"
@@ -370,8 +370,12 @@ function formatFileSize(bytes: number): string {
                 <span></span>
               </div>
 
-              <ul class="divide-y divide-surface-200 dark:divide-surface-700">
-                <li v-for="item in purchaseOrder.line_items" :key="item.id" class="px-1 py-4 xl:px-3 xl:py-3">
+              <ul class="flex flex-col gap-3 2xl:block 2xl:divide-y 2xl:divide-surface-200 dark:2xl:divide-surface-700">
+                <li
+                  v-for="item in purchaseOrder.line_items"
+                  :key="item.id"
+                  class="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/60 2xl:rounded-none 2xl:border-0 2xl:bg-transparent 2xl:px-3 2xl:py-3 dark:2xl:bg-transparent"
+                >
                   <div
                     class="grid grid-cols-2 gap-x-3 gap-y-4 2xl:grid-cols-[minmax(8rem,1.3fr)_minmax(9rem,1.1fr)_minmax(7rem,0.85fr)_minmax(7rem,0.7fr)_minmax(7rem,0.8fr)_minmax(6rem,0.7fr)_6rem] 2xl:items-start 2xl:gap-3"
                   >

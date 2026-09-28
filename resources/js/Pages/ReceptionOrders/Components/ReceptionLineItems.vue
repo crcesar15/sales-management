@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { DataTable, Column, Button, InputNumber, DatePicker, InputText, Tag, useConfirm } from "primevue";
-import { useI18n } from "vue-i18n";
+import { Badge, Button, ConfirmDialog, DatePicker, InputNumber, InputText, useConfirm } from "primevue";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 
 export interface ReceptionLineItem {
@@ -33,23 +33,34 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const confirm = useConfirm();
 const { datePickerFormat } = useDatetimeFormatter();
-
 const items = computed({
   get: () => props.modelValue,
   set: (val) => emit("update:modelValue", val),
 });
 
-function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" {
-  if (stock === null || stock === undefined) return "success";
-  if (stock === 0) return "danger";
-  if (minStock && stock <= minStock) return "warn";
-  return "success";
+function purchaseUnitLabel(item: ReceptionLineItem): string {
+  return item.purchase_unit?.name ?? item.base_unit?.name ?? "—";
 }
 
-function getStockLabel(stock: number | null | undefined): string {
-  if (stock === null || stock === undefined) return "—";
-  if (stock === 0) return t("Out of stock");
-  return `${t("In stock")}: ${String(stock)}`;
+function hasVariantLabel(item: ReceptionLineItem): boolean {
+  return Boolean(item.variant_label) && item.variant_label !== item.product_name;
+}
+
+function conversionLabel(item: ReceptionLineItem): string | null {
+  const baseUnit = item.base_unit?.name;
+  const conversionFactor = item.purchase_unit?.conversion_factor ?? 1;
+
+  if (!baseUnit || conversionFactor === 1) return null;
+
+  return `1 ${purchaseUnitLabel(item)} = ${String(conversionFactor)} ${baseUnit}`;
+}
+
+function getInputLabel(label: string, item: ReceptionLineItem): string {
+  return `${t(label)}: ${item.product_name}, ${item.variant_label}`;
+}
+
+function getRemoveLabel(item: ReceptionLineItem): string {
+  return `${t("Delete")}: ${item.product_name}, ${item.variant_label}`;
 }
 
 function updateQuantity(index: number, quantity: number) {
@@ -71,8 +82,10 @@ function updateBatchIdentifier(index: number, value: string) {
 }
 
 function removeItem(index: number) {
-  const updated = items.value.filter((_, i) => i !== index);
-  emit("update:modelValue", updated);
+  emit(
+    "update:modelValue",
+    items.value.filter((_, itemIndex) => itemIndex !== index),
+  );
 }
 
 function confirmRemoveItem(index: number) {
@@ -89,120 +102,131 @@ function confirmRemoveItem(index: number) {
     },
   });
 }
-
-function formatConversion(item: ReceptionLineItem): string {
-  console.log(item);
-  if (!item.purchase_unit || item.purchase_unit.conversion_factor <= 1) return "";
-  const baseName = item.base_unit?.abbreviation ?? item.base_unit?.name ?? t("units");
-  return `1 ${item.purchase_unit.name} = ${item.purchase_unit.conversion_factor} ${baseName}`;
-}
 </script>
 
 <template>
-  <DataTable
-    :value="items"
-    data-key="id"
-    class="mt-4 border-t-2 border-surface-200 dark:border-surface-700"
-    striped-rows
-    row-hover
-    scrollable
-    scroll-direction="both"
+  <div
+    v-if="items.length === 0"
+    class="mt-4 flex flex-col items-center justify-center border-y border-surface-200 py-10 text-surface-500 dark:border-surface-700 dark:text-surface-400"
   >
-    <template #empty>
-      <div class="flex flex-col items-center justify-center py-10 text-surface-400">
-        <i class="fa fa-box-open text-4xl mb-3"></i>
-        <span class="font-medium text-lg mb-1">{{ t("No items added yet") }}</span>
-        <small>{{ t("Select a purchase order to add items") }}</small>
-      </div>
-    </template>
+    <i class="fa fa-box-open mb-3 text-4xl" aria-hidden="true"></i>
+    <span class="mb-1 text-lg font-medium">{{ t("No items added yet") }}</span>
+    <small>{{ t("Select a purchase order to add items") }}</small>
+  </div>
 
-    <Column :header="t('Product')" style="min-width: 180px">
-      <template #body="{ data }">
-        <span class="font-medium">{{ data.product_name }}</span>
-        <div class="text-sm text-surface-500">{{ data.variant_label }}</div>
-      </template>
-    </Column>
+  <div v-else class="mt-4 2xl:border 2xl:border-surface-200 dark:2xl:border-surface-700">
+    <div
+      aria-hidden="true"
+      class="hidden 2xl:grid 2xl:grid-cols-[minmax(8rem,1.35fr)_minmax(9rem,1.1fr)_minmax(9rem,1fr)_minmax(6rem,0.65fr)_minmax(10rem,1.15fr)_minmax(10rem,1.15fr)_5rem] 2xl:items-center 2xl:gap-3 2xl:border-b 2xl:border-surface-200 2xl:bg-surface-100 2xl:px-3 2xl:py-2 2xl:text-sm 2xl:font-semibold dark:2xl:border-surface-700 dark:2xl:bg-surface-800"
+    >
+      <span>{{ t("Product") }}</span>
+      <span>{{ t("Purchase Unit") }}</span>
+      <span>{{ t("Quantity") }}</span>
+      <span>{{ t("Remaining") }}</span>
+      <span>{{ t("Expiry Date") }}</span>
+      <span>{{ t("Batch Identifier") }}</span>
+      <span></span>
+    </div>
 
-    <Column :header="t('Stock')" style="min-width: 90px">
-      <template #body="{ data }">
-        <Tag
-          :value="getStockLabel(data.stock)"
-          :severity="getStockSeverity(data.stock, data.minimum_stock_level)"
-          class="text-xs"
-          rounded
-        />
-      </template>
-    </Column>
+    <ul class="flex flex-col gap-3 2xl:block 2xl:divide-y 2xl:divide-surface-200 dark:2xl:divide-surface-700">
+      <li
+        v-for="(item, index) in items"
+        :key="item.id"
+        class="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/60 2xl:rounded-none 2xl:border-0 2xl:bg-transparent 2xl:px-3 2xl:py-3 dark:2xl:bg-transparent"
+      >
+        <div
+          class="grid grid-cols-2 gap-x-3 gap-y-4 2xl:grid-cols-[minmax(8rem,1.35fr)_minmax(9rem,1.1fr)_minmax(9rem,1fr)_minmax(6rem,0.65fr)_minmax(10rem,1.15fr)_minmax(10rem,1.15fr)_5rem] 2xl:items-start 2xl:gap-3"
+        >
+          <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+            <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">{{ item.product_name }}</span>
+            <Badge v-if="hasVariantLabel(item)" :value="item.variant_label" severity="secondary" class="mt-1 w-fit max-w-full truncate" />
+          </div>
 
-    <Column :header="t('Quantity')" style="min-width: 140px">
-      <template #body="{ data, index }">
-        <InputNumber
-          :model-value="data.quantity"
-          :min="0.01"
-          :max="data.max_quantity ?? 99999"
-          :step="1"
-          :min-fraction-digits="1"
-          :max-fraction-digits="2"
-          show-buttons
-          size="small"
-          input-class="tabular-nums w-32"
-          :disabled="disabled"
-          @update:model-value="(val: number) => updateQuantity(index, val)"
-        />
-        <small v-if="data.max_quantity != null" class="text-surface-500 block mt-1">{{ t("Max") }}: {{ data.max_quantity }}</small>
-      </template>
-    </Column>
+          <div class="col-span-2 flex min-w-0 flex-col gap-1 2xl:col-span-1 2xl:pt-1">
+            <span class="font-medium">{{ purchaseUnitLabel(item) }}</span>
+            <span v-if="conversionLabel(item)" class="text-sm text-surface-500 dark:text-surface-400">{{ conversionLabel(item) }}</span>
+          </div>
 
-    <Column :header="t('Expiry Date')" style="min-width: 180px">
-      <template #header>
-        <span>{{ t("Expiry Date") }}</span>
-      </template>
-      <template #body="{ data, index }">
-        <div class="flex flex-col gap-1">
-          <DatePicker
-            :model-value="data.expiry_date"
-             :placeholder="t('Select date')"
-             :date-format="datePickerFormat"
-            show-icon
-            size="small"
-            :disabled="disabled"
-            :class="{ 'p-invalid': data.has_expiration && !data.expiry_date }"
-            class="w-full"
-            @update:model-value="
-              (val: Date | Date[] | (Date | null)[] | null | undefined) =>
-                updateExpiryDate(index, Array.isArray(val) ? null : (val ?? null))
-            "
-          />
-          <small v-if="data.has_expiration && !data.expiry_date" class="text-red-400 dark:text-red-300">{{ t("Required") }}</small>
+          <div class="col-span-2 min-w-0 2xl:col-span-1">
+            <label :for="`reception-order-quantity-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Quantity") }}</label>
+            <InputNumber
+              :input-id="`reception-order-quantity-${item.id}`"
+              :model-value="item.quantity"
+              :aria-label="getInputLabel('Quantity', item)"
+              :min="0.01"
+              :max="item.max_quantity ?? 99999"
+              :step="1"
+              :min-fraction-digits="1"
+              :max-fraction-digits="2"
+              show-buttons
+              button-layout="horizontal"
+              decrement-button-icon="fa fa-minus"
+              increment-button-icon="fa fa-plus"
+              decrement-button-class="!min-h-[44px] !min-w-[44px]"
+              increment-button-class="!min-h-[44px] !min-w-[44px]"
+              fluid
+              input-class="min-h-[44px] min-w-0 w-full tabular-nums 2xl:!text-sm"
+              :disabled="disabled"
+              @update:model-value="(val: number | null) => updateQuantity(index, val ?? item.quantity)"
+            />
+          </div>
+
+          <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+            <span class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Remaining") }}</span>
+            <span class="block font-semibold tabular-nums">{{ item.max_quantity ?? "—" }}</span>
+          </div>
+
+          <div class="col-span-2 min-w-0 2xl:col-span-1">
+            <label :for="`reception-order-expiry-date-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Expiry Date") }}</label>
+            <DatePicker
+              :input-id="`reception-order-expiry-date-${item.id}`"
+              :model-value="item.expiry_date"
+              :aria-label="getInputLabel('Expiry Date', item)"
+              :placeholder="t('Select date')"
+              :date-format="datePickerFormat"
+              show-icon
+              fluid
+              input-class="min-h-[44px] w-full 2xl:!text-sm"
+              :disabled="disabled"
+              :class="{ 'p-invalid': item.has_expiration && !item.expiry_date }"
+              @update:model-value="
+                (val: Date | Date[] | (Date | null)[] | null | undefined) => updateExpiryDate(index, Array.isArray(val) ? null : (val ?? null))
+              "
+            />
+            <small v-if="item.has_expiration && !item.expiry_date" class="mt-1 block text-red-400 dark:text-red-300">{{ t("Required") }}</small>
+          </div>
+
+          <div class="col-span-2 min-w-0 2xl:col-span-1">
+            <label :for="`reception-order-batch-identifier-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Batch Identifier") }}</label>
+            <InputText
+              :id="`reception-order-batch-identifier-${item.id}`"
+              :model-value="item.batch_identifier"
+              :aria-label="getInputLabel('Batch Identifier', item)"
+              :placeholder="t('Optional')"
+              fluid
+              class="min-h-[44px] w-full 2xl:!text-sm"
+              :disabled="disabled"
+              @update:model-value="(val: string | undefined) => updateBatchIdentifier(index, val ?? '')"
+            />
+          </div>
+
+          <div class="col-span-2 flex items-start justify-end 2xl:col-span-1">
+            <Button
+              v-if="!disabled"
+              v-tooltip.top="t('Delete')"
+              :aria-label="getRemoveLabel(item)"
+              icon="fa fa-trash-can"
+              text
+              rounded
+              size="large"
+              @click="confirmRemoveItem(index)"
+            />
+          </div>
         </div>
-      </template>
-    </Column>
 
-    <Column :header="t('Batch Identifier')" style="min-width: 160px">
-      <template #body="{ data, index }">
-        <InputText
-          :model-value="data.batch_identifier"
-          :placeholder="t('Optional')"
-          size="small"
-          class="w-full"
-          :disabled="disabled"
-          @update:model-value="(val: string | undefined) => updateBatchIdentifier(index, val ?? '')"
-        />
-      </template>
-    </Column>
+      </li>
+    </ul>
+  </div>
 
-    <Column :header="t('Conversion')" style="min-width: 160px">
-      <template #body="{ data }">
-        <span v-if="formatConversion(data)">{{ formatConversion(data) }}</span>
-        <span v-else>{{ data.base_unit?.abbreviation ?? data.base_unit?.name ?? t("units") }}</span>
-      </template>
-    </Column>
-
-    <Column v-if="!disabled" style="min-width: 80px; width: 80px">
-      <template #body="{ index }">
-        <Button v-tooltip.top="t('Delete')" icon="fa fa-trash-can" text rounded severity="danger" @click="confirmRemoveItem(index)" />
-      </template>
-    </Column>
-  </DataTable>
   <ConfirmDialog />
 </template>
