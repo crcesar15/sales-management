@@ -119,20 +119,20 @@ it('admin creates a catalog entry', function () {
     $variant = ProductVariant::factory()->create(['product_id' => $product->id]);
 
     actingAs($admin)
-        ->post(route('catalog.store'), [
+        ->post(route('vendors.catalog.store', $vendor), [
             'vendor_id' => $vendor->id,
             'product_variant_id' => $variant->id,
             'unit_id' => null,
             'price' => 99.99,
-            'payment_terms' => 'debit',
+            'payment_terms' => 'immediate',
             'details' => 'Test details',
             'status' => 'active',
             'minimum_order_quantity' => 10,
             'lead_time_days' => 5,
         ])
-        ->assertRedirect(route('catalog'));
+        ->assertRedirect(route('vendors.catalog', $vendor));
 
-    expect(Catalog::where('vendor_id', $vendor->id)->where('product_variant_id', $variant->id)->exists())->toBeTrue();
+    expect(Catalog::where('vendor_id', $vendor->id)->where('product_variant_id', $variant->id)->value('payment_terms'))->toBe('immediate');
 });
 
 it('provides existing catalog keys on the vendor catalog create page', function () {
@@ -184,12 +184,12 @@ it('duplicate vendor_variant_unit returns validation error', function () {
     ]);
 
     actingAs($admin)
-        ->post(route('catalog.store'), [
+        ->post(route('vendors.catalog.store', $vendor), [
             'vendor_id' => $vendor->id,
             'product_variant_id' => $variant->id,
             'unit_id' => null,
             'price' => 99.99,
-            'payment_terms' => 'debit',
+            'payment_terms' => 'immediate',
             'details' => null,
             'status' => 'active',
         ])
@@ -229,6 +229,24 @@ it('negative price returns validation error', function () {
             'status' => 'active',
         ])
         ->assertSessionHasErrors(['price']);
+});
+
+it('invalid payment terms return validation error', function () {
+    $admin = App\Models\User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $vendor = Vendor::factory()->create();
+    $variant = ProductVariant::factory()->for(Product::factory())->create();
+
+    actingAs($admin)
+        ->post(route('vendors.catalog.store', $vendor), [
+            'vendor_id' => $vendor->id,
+            'product_variant_id' => $variant->id,
+            'price' => 99.99,
+            'payment_terms' => 'debit',
+            'status' => 'active',
+        ])
+        ->assertSessionHasErrors(['payment_terms']);
 });
 
 // ─── Update ───────────────────────────────────────────────────────────────────
