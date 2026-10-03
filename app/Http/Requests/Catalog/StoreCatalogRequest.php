@@ -36,7 +36,7 @@ final class StoreCatalogRequest extends FormRequest
             'product_variant_id' => ['required', 'exists:product_variants,id'],
             'unit_id' => ['nullable', 'exists:product_variant_units,id'],
             'price' => ['required', 'numeric', 'min:0'],
-            'payment_terms' => ['nullable', 'string', 'max:15'],
+            'payment_terms' => ['nullable', 'string', Rule::in(['immediate', 'credit', 'both'])],
             'details' => ['nullable', 'string', 'max:300'],
             'status' => ['required', 'in:active,inactive'],
             'minimum_order_quantity' => ['nullable', 'integer', 'min:0'],

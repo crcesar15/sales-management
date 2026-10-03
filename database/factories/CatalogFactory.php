@@ -21,7 +21,7 @@ final class CatalogFactory extends Factory
     {
         return [
             'price' => fake()->randomFloat(2, 1, 1000),
-            'payment_terms' => fake()->randomElement(['debit', 'credit']),
+            'payment_terms' => fake()->randomElement(['immediate', 'credit', 'both']),
             'details' => fake()->text(100),
             'unit_id' => null,
             'minimum_order_quantity' => null,

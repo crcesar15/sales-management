@@ -313,15 +313,16 @@ export default {
               <Column field="price" :header="$t('Price')" />
               <Column field="payment_terms" :header="$t('Payment Terms')">
                 <template #body="slotProps">
-                  <span v-if="slotProps.data.payment_terms === 'debit'">
-                    {{ $t("Cash") }}
+                  <span v-if="['debit', 'immediate'].includes(slotProps.data.payment_terms)">
+                    {{ $t("Immediate payment") }}
                   </span>
                   <span v-else-if="slotProps.data.payment_terms === 'credit'">
                     {{ $t("Credit") }}
                   </span>
-                  <span v-else>
-                    {{ $t("Both") }}
+                  <span v-else-if="slotProps.data.payment_terms === 'both'">
+                    {{ $t("Immediate payment or credit") }}
                   </span>
+                  <span v-else>—</span>
                 </template>
               </Column>
               <Column field="details" :header="$t('Details')" />

@@ -54,7 +54,12 @@ const deleteEntry = (entry: CatalogResponse) => {
 
 const formatPaymentTerms = (terms: string | null): string => {
   if (!terms) return "—";
-  const map: Record<string, string> = { debit: "Cash", credit: "Credit", both: "Both" };
+  const map: Record<string, string> = {
+    debit: t("Immediate payment"),
+    immediate: t("Immediate payment"),
+    credit: t("Credit"),
+    both: t("Immediate payment or credit"),
+  };
   return map[terms] ?? terms;
 };
 </script>

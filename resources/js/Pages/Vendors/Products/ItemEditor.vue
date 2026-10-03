@@ -38,8 +38,9 @@ export default {
       price: "",
       status: "active",
       payment_terms: [
-        { label: "Cash", value: "debit" },
-        { label: "Credit", value: "credit" },
+        { label: i18n.global.t("Immediate payment"), value: "immediate" },
+        { label: i18n.global.t("Credit"), value: "credit" },
+        { label: i18n.global.t("Immediate payment or credit"), value: "both" },
       ],
       statusOptions: [
         { label: i18n.global.t("Active"), value: "active" },
@@ -66,7 +67,7 @@ export default {
 
         this.productId = val?.id;
         this.price = val?.price;
-        this.paymentTerm = val?.payment_terms;
+        this.paymentTerm = val?.payment_terms === "debit" ? "immediate" : val?.payment_terms;
         this.details = val?.details;
         this.status = val?.status || "active";
       },

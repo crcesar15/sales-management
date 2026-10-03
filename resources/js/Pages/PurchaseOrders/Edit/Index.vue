@@ -113,11 +113,12 @@ function getPaymentTermsLabel(paymentTerms: string | null | undefined): string |
   if (!paymentTerms) return null;
   switch (paymentTerms) {
     case "debit":
-      return t("Cash");
+    case "immediate":
+      return t("Immediate payment");
     case "credit":
       return t("Credit");
     case "both":
-      return t("Cash / Credit");
+      return t("Immediate payment or credit");
     default:
       return paymentTerms;
   }

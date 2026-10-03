@@ -2,11 +2,11 @@
 import { Card, InputNumber, Textarea, Select, ToggleSwitch, useToast } from "primevue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
-import { object, string, number } from "yup";
+import { mixed, number, object, string } from "yup";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import CatalogProductPicker from "./CatalogProductPicker.vue";
-import type { CatalogPayload, CatalogProductUnitOption, CatalogResponse } from "@/Types/catalog-types";
+import type { CatalogPaymentTerms, CatalogPayload, CatalogProductUnitOption, CatalogResponse } from "@/Types/catalog-types";
 import type { VendorResponse } from "@/Types/vendor-types";
 
 const props = defineProps<{
@@ -31,9 +31,9 @@ const statusOptions = [
 ];
 
 const paymentTermOptions = [
-  { name: t("Cash"), value: "debit" },
+  { name: t("Immediate payment"), value: "immediate" },
   { name: t("Credit"), value: "credit" },
-  { name: t("Both"), value: "both" },
+  { name: t("Immediate payment or credit"), value: "both" },
 ];
 
 const schema = toTypedSchema(
@@ -41,7 +41,7 @@ const schema = toTypedSchema(
     product_variant_id: number().required(t("Product is required")),
     unit_id: number().required(t("Purchase unit is required")),
     price: number().required(t("Price is required")).min(0, t("Price must be at least 0")),
-    payment_terms: string().nullable().optional(),
+    payment_terms: mixed<CatalogPaymentTerms>().nullable().optional().oneOf(["immediate", "credit", "both"]),
     details: string().nullable().optional().max(300, t("Details must not exceed 300 characters")),
     status: string().required(t("Status is required")).oneOf(["active", "inactive"]),
     minimum_order_quantity: number().nullable().optional().min(0, t("Must be at least 0")),
@@ -56,7 +56,7 @@ const { handleSubmit, errors, defineField, setFieldValue, setErrors, submitCount
     product_variant_id: props.initialValues?.product_variant_id ?? undefined,
     unit_id: props.initialValues?.unit_id ?? BASE_UNIT_ID,
     price: props.initialValues?.price ?? 0,
-    payment_terms: props.initialValues?.payment_terms ?? null,
+    payment_terms: props.initialValues?.payment_terms === "debit" ? "immediate" : (props.initialValues?.payment_terms ?? null),
     details: props.initialValues?.details ?? "",
     status: props.initialValues?.status ?? "active",
     minimum_order_quantity: props.initialValues?.minimum_order_quantity ?? null,

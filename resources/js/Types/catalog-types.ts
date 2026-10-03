@@ -1,5 +1,8 @@
 import type { ProductResponse } from "./product-types";
 
+export type CatalogPaymentTerms = "immediate" | "credit" | "both";
+export type CatalogPaymentTermsResponse = CatalogPaymentTerms | "debit";
+
 export interface Catalog {
   // columns
   id: number;
@@ -7,7 +10,7 @@ export interface Catalog {
   product_variant_id: number;
   unit_id: number | null;
   price: number;
-  payment_terms: string | null;
+  payment_terms: CatalogPaymentTermsResponse | null;
   details: string | null;
   status: "active" | "inactive";
   minimum_order_quantity: number | null;
@@ -57,7 +60,7 @@ export interface CatalogPayload {
   product_variant_id: number;
   unit_id?: number | null;
   price: number;
-  payment_terms?: string | null;
+  payment_terms?: CatalogPaymentTerms | null;
   details?: string | null;
   status: "active" | "inactive";
   minimum_order_quantity?: number | null;
@@ -108,7 +111,7 @@ export interface CatalogVariantVendor {
   vendor: { id: number; fullname: string } | null;
   price: number;
   unit: { id: number; name: string; conversion_factor: number } | null;
-  payment_terms: string | null;
+  payment_terms: CatalogPaymentTermsResponse | null;
   measurement_unit: { id: number; name: string } | null;
   minimum_order_quantity: number | null;
   lead_time_days: number | null;
