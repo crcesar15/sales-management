@@ -8,6 +8,7 @@ import {
   DatePicker,
   Popover,
   Badge,
+  Tag,
   type DataTablePageEvent,
   type DataTableSortEvent,
 } from "primevue";
@@ -46,6 +47,7 @@ const status = ref(props.filters.status || "all");
 const vendorId = ref<number | null>(props.filters.vendor_id ?? null);
 const dateFrom = ref<Date | null>(parseDateOnly(props.filters.from));
 const dateTo = ref<Date | null>(parseDateOnly(props.filters.to));
+const paymentStatus = ref(props.filters.is_paid ?? "all");
 const sortField = ref(props.filters.order_by ?? "created_at");
 const sortOrder = ref(props.filters.order_direction === "desc" ? -1 : 1);
 const filterPopover = ref();
@@ -66,8 +68,14 @@ const vendorOptions = computed(() => [
   ...props.vendors.map((v) => ({ label: v.fullname, value: v.id })),
 ]);
 
+const paymentStatusOptions = computed(() => [
+  { label: t("All"), value: "all" },
+  { label: t("Paid"), value: "paid" },
+  { label: t("Unpaid"), value: "unpaid" },
+]);
+
 const hasActiveFilters = computed(
-  () => status.value !== "all" || vendorId.value !== null || dateFrom.value !== null || dateTo.value !== null,
+  () => status.value !== "all" || vendorId.value !== null || dateFrom.value !== null || dateTo.value !== null || paymentStatus.value !== "all",
 );
 
 const activeFilterCount = computed(() => {
@@ -76,6 +84,7 @@ const activeFilterCount = computed(() => {
   if (vendorId.value !== null) count++;
   if (dateFrom.value !== null) count++;
   if (dateTo.value !== null) count++;
+  if (paymentStatus.value !== "all") count++;
   return count;
 });
 
@@ -94,6 +103,7 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
       vendor_id: vendorId.value ?? "",
       from: toDateOnly(dateFrom.value) ?? "",
       to: toDateOnly(dateTo.value) ?? "",
+      is_paid: paymentStatus.value === "all" ? "" : paymentStatus.value,
       order_by: sortField.value,
       order_direction: sortOrder.value === -1 ? "desc" : "asc",
       ...overrides,
@@ -108,6 +118,7 @@ function resetFilters() {
   vendorId.value = null;
   dateFrom.value = null;
   dateTo.value = null;
+  paymentStatus.value = "all";
   applyFilters();
 }
 
@@ -115,6 +126,7 @@ watch(status, () => applyFilters());
 watch(vendorId, () => applyFilters());
 watch(dateFrom, () => applyFilters());
 watch(dateTo, () => applyFilters());
+watch(paymentStatus, () => applyFilters());
 
 const onPage = (event: DataTablePageEvent) => {
   applyFilters({ page: event.page + 1, per_page: event.rows });
@@ -204,6 +216,10 @@ const editOrder = (po: PurchaseOrderResponse) => {
                   />
                 </div>
                 <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Payment Status") }}</label>
+                  <Select v-model="paymentStatus" :options="paymentStatusOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
+                <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date From") }}</label>
                    <DatePicker v-model="dateFrom" :show-icon="true" :placeholder="t('From')" :date-format="datePickerFormat" class="w-full" />
                 </div>
@@ -244,6 +260,11 @@ const editOrder = (po: PurchaseOrderResponse) => {
           <Column field="status" :header="t('Status')" sortable style="width: 140px">
             <template #body="{ data }">
               <POStatusBadge :status="data.status" />
+            </template>
+          </Column>
+          <Column field="is_paid" :header="t('Payment Status')" style="width: 140px">
+            <template #body="{ data }">
+              <Tag :value="data.is_paid ? t('Paid') : t('Unpaid')" :severity="data.is_paid ? 'success' : 'secondary'" rounded />
             </template>
           </Column>
           <Column field="total" :header="t('Total')" sortable>

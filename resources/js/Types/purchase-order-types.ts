@@ -100,6 +100,7 @@ export interface PurchaseOrderFilters {
   vendor_id: number | null;
   from: string;
   to: string;
+  is_paid: "paid" | "unpaid" | null;
   filter?: string;
   order_by?: string;
   order_direction?: string;

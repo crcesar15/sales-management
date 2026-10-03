@@ -23,17 +23,20 @@ final class PurchaseOrderService
     ];
 
     /**
-     * @param  array{status?: string|null, vendor_id?: int|null, from?: string|null, to?: string|null}  $filters
+     * @param  array{status?: string|null, vendor_id?: int|null, from?: string|null, to?: string|null, is_paid?: bool|null}  $filters
      * @return LengthAwarePaginator<int, PurchaseOrder>
      */
     public function list(array $filters, int $perPage): LengthAwarePaginator
     {
+        $isPaid = $filters['is_paid'] ?? null;
+
         return PurchaseOrder::query()
             ->with(['vendor', 'user', 'lineItems.productVariant.product'])
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
             ->when($filters['vendor_id'] ?? null, fn ($q, $vendorId) => $q->where('vendor_id', $vendorId))
             ->when($filters['from'] ?? null, fn ($q, $from) => $q->whereDate('order_date', '>=', $from))
             ->when($filters['to'] ?? null, fn ($q, $to) => $q->whereDate('order_date', '<=', $to))
+            ->when($isPaid !== null, fn ($q) => $q->where('is_paid', $isPaid))
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();

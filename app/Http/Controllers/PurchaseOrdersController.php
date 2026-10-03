@@ -36,12 +36,19 @@ final class PurchaseOrdersController extends Controller
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_VIEW);
 
+        $isPaid = match ($request->string('is_paid', '')->toString()) {
+            'paid' => true,
+            'unpaid' => false,
+            default => null,
+        };
+
         $purchaseOrders = $this->poService->list(
             filters: [
                 'status' => $request->string('status', '')->toString() ?: null,
                 'vendor_id' => $request->integer('vendor_id') ?: null,
                 'from' => $request->string('from', '')->toString() ?: null,
                 'to' => $request->string('to', '')->toString() ?: null,
+                'is_paid' => $isPaid,
             ],
             perPage: $request->integer('per_page', 25),
         );
@@ -53,6 +60,11 @@ final class PurchaseOrdersController extends Controller
                 'vendor_id' => $request->integer('vendor_id') ?: null,
                 'from' => $request->string('from', '')->toString(),
                 'to' => $request->string('to', '')->toString(),
+                'is_paid' => match ($isPaid) {
+                    true => 'paid',
+                    false => 'unpaid',
+                    default => null,
+                },
             ],
             'vendors' => Vendor::query()
                 ->orderBy('fullname')
