@@ -127,12 +127,12 @@ final class CatalogController extends Controller
             'productVariant.product.measurementUnit',
             'productVariant.values.option',
             'productVariant.activePurchaseUnits',
-            'purchaseUnit',
+            'unit',
         ]);
 
         return Inertia::render('Vendors/Catalog/Edit/Index', [
             'vendor' => $vendor,
-            'catalog' => $catalog,
+            'catalog' => (new CatalogResource($catalog))->resolve(),
         ]);
     }
 

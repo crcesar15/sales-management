@@ -88,7 +88,8 @@ function initialProductUnitOption(): CatalogProductUnitOption | null {
     product_name: variant.product.name,
     brand_name: variant.product.brand?.name ?? null,
     base_unit_name: baseUnitName,
-    variant_identity: variantIdentity,
+    variant_identity: variant.values?.length ? variantIdentity : null,
+    variant_options: variant.values ?? [],
     unit_name: purchaseUnit?.name ?? baseUnitName ?? t("Base unit"),
     conversion_factor: purchaseUnit?.conversion_factor ?? 1,
   };
@@ -102,14 +103,6 @@ function onProductUnitSelect(selection: CatalogProductUnitOption | null) {
   setFieldValue("product_variant_id", selection?.product_variant_id);
   setFieldValue("unit_id", selection?.unit_id ?? BASE_UNIT_ID);
 }
-
-const conversionFactorLabel = computed(() => {
-  const selection = selectedProductUnit.value;
-  if (!selection) return "";
-  if (selection.unit_id === null) return `1 ${selection.unit_name} (${t("base unit")})`;
-
-  return `1 ${selection.unit_name} = ${selection.conversion_factor} ${selection.base_unit_name ?? t("unit")}`;
-});
 
 // Advanced terms toggle
 const showAdvancedTerms = ref(!!props.initialValues?.minimum_order_quantity || !!props.initialValues?.lead_time_days);
@@ -155,7 +148,7 @@ defineExpose({
           <template #content>
             <!-- Product and purchase unit -->
             <div class="flex flex-col gap-1 mb-4">
-              <label for="catalog-product-search">
+              <label id="catalog-product-label" :for="selectedProductUnit ? undefined : 'catalog-product-search'">
                 {{ t("Product") }}
                 <span class="text-red-500">*</span>
               </label>
@@ -164,10 +157,11 @@ defineExpose({
                 :added-keys="addedKeys"
                 :disabled="isEditing"
                 :invalid="submitCount > 0 && !!errors.product_variant_id"
+                labelledby="catalog-product-label"
+                error-message-id="catalog-product-error"
                 @update:model-value="onProductUnitSelect"
               />
-              <small v-if="conversionFactorLabel" class="text-surface-500">{{ conversionFactorLabel }}</small>
-              <small v-if="submitCount > 0 && errors.product_variant_id" class="text-red-400 dark:text-red-300">
+              <small id="catalog-product-error" v-if="submitCount > 0 && errors.product_variant_id" class="text-red-400 dark:text-red-300">
                 {{ errors.product_variant_id }}
               </small>
             </div>

@@ -136,6 +136,14 @@ final class VariantsController extends Controller
                     ? $variant->values->map(fn ($v) => $v->value)->implode(' / ')
                     : null;
 
+                $variantOptions = $variant->values
+                    ->map(fn ($value) => [
+                        'option_name' => $value->option?->name,
+                        'value' => $value->value,
+                    ])
+                    ->values()
+                    ->toArray();
+
                 $stock = $storeId > 0
                     ? (int) ($variant->getAttribute('fulfillable_stock') ?? 0)
                     : $variant->stock;
@@ -144,6 +152,7 @@ final class VariantsController extends Controller
                     'id' => $variant->id,
                     'identifier' => $variant->identifier,
                     'option_values' => $optionValues,
+                    'variant_options' => $variantOptions,
                     'price' => (float) $variant->price,
                     'stock' => $stock,
                     'minimum_stock_level' => $variant->minimum_stock_level,

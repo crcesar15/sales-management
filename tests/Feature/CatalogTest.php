@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Enums\RolesEnum;
 use App\Models\Catalog;
 use App\Models\Product;
+use App\Models\ProductOption;
+use App\Models\ProductOptionValue;
 use App\Models\ProductVariant;
 use App\Models\ProductVariantUnit;
 use App\Models\Vendor;
@@ -166,6 +168,63 @@ it('provides existing catalog keys on the vendor catalog create page', function 
         ->assertInertia(fn ($page) => $page
             ->component('Vendors/Catalog/Create/Index')
             ->where('existingCatalogKeys', [$variant->id . ':base', $variant->id . ':' . $purchaseUnit->id])
+        );
+});
+
+it('returns named variant options from the catalog product search', function () {
+    $admin = App\Models\User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $product = Product::factory()->create(['name' => 'Named option catalog product']);
+    $variant = ProductVariant::factory()->create(['product_id' => $product->id]);
+    $color = ProductOption::query()->create([
+        'product_id' => $product->id,
+        'name' => 'Color',
+    ]);
+    $red = ProductOptionValue::query()->create([
+        'product_option_id' => $color->id,
+        'value' => 'Red',
+    ]);
+    $variant->values()->attach($red);
+
+    actingAs($admin, 'sanctum')
+        ->getJson(route('api.v1.variants.search', ['filter' => $product->name]))
+        ->assertSuccessful()
+        ->assertJsonPath('data.0.option_values', 'Red')
+        ->assertJsonPath('data.0.variant_options', [
+            ['option_name' => 'Color', 'value' => 'Red'],
+        ]);
+});
+
+it('provides flattened variant options on the catalog edit page', function () {
+    $admin = App\Models\User::factory()->create();
+    $admin->assignRole(RolesEnum::ADMIN);
+
+    $vendor = Vendor::factory()->create();
+    $product = Product::factory()->create();
+    $variant = ProductVariant::factory()->create(['product_id' => $product->id]);
+    $size = ProductOption::query()->create([
+        'product_id' => $product->id,
+        'name' => 'Size',
+    ]);
+    $large = ProductOptionValue::query()->create([
+        'product_option_id' => $size->id,
+        'value' => 'Large',
+    ]);
+    $variant->values()->attach($large);
+    $catalog = Catalog::factory()->create([
+        'vendor_id' => $vendor->id,
+        'product_variant_id' => $variant->id,
+    ]);
+
+    actingAs($admin)
+        ->get(route('vendors.catalog.edit', [$vendor, $catalog]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Vendors/Catalog/Edit/Index')
+            ->where('catalog.product_variant.values', [
+                ['option_name' => 'Size', 'value' => 'Large'],
+            ])
         );
 });
 

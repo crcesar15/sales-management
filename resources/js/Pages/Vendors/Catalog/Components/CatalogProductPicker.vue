@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Badge, useToast } from "primevue";
+import { Badge, Button, useToast } from "primevue";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useVariantClient } from "@composables/useVariantClient";
-import type { CatalogProductUnitOption, CatalogVariantSearchResult } from "@/Types/catalog-types";
+import type { CatalogProductUnitOption, CatalogVariantOption, CatalogVariantSearchResult } from "@/Types/catalog-types";
 
 interface UnitRow extends CatalogProductUnitOption {
   variant: CatalogVariantSearchResult;
@@ -14,6 +14,8 @@ const props = defineProps<{
   addedKeys: Set<string>;
   disabled?: boolean;
   invalid?: boolean;
+  labelledby?: string;
+  errorMessageId?: string;
 }>();
 
 const emit = defineEmits<{
@@ -27,6 +29,9 @@ const { searchVariantsApi } = useVariantClient();
 function buildUnitRows(variant: CatalogVariantSearchResult): UnitRow[] {
   const productName = variant.product?.name ?? "—";
   const baseUnitName = variant.product?.measurement_unit?.name ?? t("Base unit");
+  const variantIdentity = variant.variant_options.length
+    ? variant.variant_options.map(variantOptionLabel).join(" / ")
+    : variant.option_values;
   const baseRow: UnitRow = {
     key: `${variant.id}:base`,
     product_variant_id: variant.id,
@@ -34,7 +39,8 @@ function buildUnitRows(variant: CatalogVariantSearchResult): UnitRow[] {
     product_name: productName,
     brand_name: variant.product?.brand?.name ?? null,
     base_unit_name: variant.product?.measurement_unit?.name ?? null,
-    variant_identity: variant.option_values,
+    variant_identity: variantIdentity,
+    variant_options: variant.variant_options,
     unit_name: baseUnitName,
     conversion_factor: 1,
     variant,
@@ -62,9 +68,11 @@ const isOpen = ref(false);
 const activeIndex = ref(-1);
 const selectionAnnouncement = ref("");
 const flatRows = computed<UnitRow[]>(() => searchResults.value.flatMap(buildUnitRows));
+const namedVariantOptions = computed(() => props.modelValue?.variant_options.filter((option) => option.option_name !== null) ?? []);
 const rootRef = useTemplateRef<HTMLElement>("root");
 const inputRef = useTemplateRef<HTMLInputElement>("input");
 const listRef = useTemplateRef<HTMLElement>("list");
+const selectionRef = useTemplateRef<HTMLElement>("selection");
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let currentRequestId = 0;
@@ -73,6 +81,10 @@ let suppressNextSearch = false;
 function rowLabel(row: CatalogProductUnitOption): string {
   const identity = row.variant_identity ? `, ${row.variant_identity}` : "";
   return `${row.product_name}${identity} (${row.unit_name})`;
+}
+
+function variantOptionLabel(option: CatalogVariantOption): string {
+  return option.option_name ? `${option.option_name}: ${option.value}` : option.value;
 }
 
 function isRowDisabled(row: UnitRow): boolean {
@@ -210,6 +222,20 @@ function selectRow(row: UnitRow) {
   query.value = rowLabel(row);
   searchResults.value = [];
   closePanel();
+  nextTick(() => selectionRef.value?.focus());
+}
+
+function clearSelection() {
+  if (props.disabled) return;
+
+  currentRequestId++;
+  suppressNextSearch = false;
+  query.value = "";
+  searchResults.value = [];
+  searchFailed.value = false;
+  emit("update:modelValue", null);
+  selectionAnnouncement.value = t("Product selection cleared");
+  closePanel();
   nextTick(() => inputRef.value?.focus());
 }
 
@@ -242,7 +268,56 @@ const searchAnnouncement = computed(() => {
     <span class="sr-only" role="status" aria-live="polite">{{ selectionAnnouncement }}</span>
     <span class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ searchAnnouncement }}</span>
 
-    <div class="catalog-picker-combobox">
+    <div
+      v-if="modelValue"
+      ref="selection"
+      class="catalog-picker-selection"
+      role="group"
+      tabindex="-1"
+      :aria-labelledby="labelledby"
+      :aria-describedby="invalid ? errorMessageId : undefined"
+    >
+      <div class="catalog-picker-selection-content">
+        <div class="catalog-picker-selection-heading">
+          <span class="catalog-picker-selection-name">{{ modelValue.product_name }}</span>
+          <div v-if="namedVariantOptions.length" class="catalog-picker-selection-options">
+            <Badge
+              v-for="option in namedVariantOptions"
+              :key="`${option.option_name}-${option.value}`"
+              :value="variantOptionLabel(option)"
+            />
+          </div>
+        </div>
+
+        <dl class="catalog-picker-selection-details">
+          <div class="catalog-picker-selection-detail">
+            <dt>{{ t("Brand") }}: </dt>
+            <dd>{{ modelValue.brand_name ?? t("No brand") }}</dd>
+          </div>
+          <div class="catalog-picker-selection-detail">
+            <dt>{{ t("Purchase Unit") }}: </dt>
+            <dd>{{ modelValue.unit_name }}</dd>
+          </div>
+          <div v-if="modelValue.unit_id !== null" class="catalog-picker-selection-detail">
+            <dt>{{ t("Conversion Factor") }}: </dt>
+            <dd>1 {{ modelValue.unit_name }} = {{ modelValue.conversion_factor }} {{ modelValue.base_unit_name ?? t("unit") }}</dd>
+          </div>
+        </dl>
+      </div>
+      <Button
+        v-if="!disabled"
+        type="button"
+        v-tooltip.top="t('Clear product selection')"
+        icon="fa fa-times"
+        text
+        rounded
+        severity="secondary"
+        :aria-label="t('Clear product selection')"
+        @click="clearSelection"
+      />
+    </div>
+
+    <div v-else class="catalog-picker-combobox">
       <i class="fa fa-search catalog-picker-search-icon" aria-hidden="true" />
       <input
         id="catalog-product-search"
@@ -255,9 +330,11 @@ const searchAnnouncement = computed(() => {
         :placeholder="t('Search product...')"
         :aria-expanded="isPanelVisible"
         :aria-busy="searchLoading"
+        :aria-invalid="invalid || undefined"
         aria-autocomplete="list"
         :aria-controls="isPanelVisible ? 'catalog-product-results' : undefined"
         :aria-activedescendant="isPanelVisible && activeIndex >= 0 ? `catalog-product-option-${activeIndex}` : undefined"
+        :aria-describedby="invalid ? errorMessageId : undefined"
         :class="['catalog-picker-input', { 'catalog-picker-input-invalid': invalid }]"
         @focus="onInputFocus"
         @input="onQueryInput"
@@ -295,7 +372,7 @@ const searchAnnouncement = computed(() => {
             <div class="catalog-picker-row catalog-picker-row-desktop">
               <div class="catalog-picker-product">
                 <span class="catalog-picker-product-name">{{ row.product_name }}</span>
-                <Badge v-if="row.variant_identity" :value="row.variant_identity" severity="primary" class="!font-semibold" />
+                <Badge v-if="row.variant_identity" :value="row.variant_identity" severity="primary" />
               </div>
               <span class="catalog-picker-brand">{{ row.brand_name ?? "—" }}</span>
               <div class="catalog-picker-unit">
@@ -312,7 +389,11 @@ const searchAnnouncement = computed(() => {
               <div class="catalog-picker-mobile-top">
                 <div class="catalog-picker-product">
                   <span class="catalog-picker-product-name">{{ row.product_name }}</span>
-                  <Badge v-if="row.variant_identity" :value="row.variant_identity" severity="primary" class="!font-semibold !text-[14px]" />
+                  <Badge
+                    v-if="row.variant_identity"
+                    :value="row.variant_identity"
+                    severity="primary"
+                  />
                 </div>
                 <span v-if="isRowDisabled(row)" class="catalog-picker-added">{{ t("Already added") }}</span>
               </div>
@@ -350,6 +431,68 @@ const searchAnnouncement = computed(() => {
 
 .catalog-picker-combobox {
   position: relative;
+}
+
+.catalog-picker-selection {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 6px;
+  background: var(--p-surface-50, #f8fafc);
+}
+
+.catalog-picker-selection-content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.catalog-picker-selection-heading,
+.catalog-picker-selection-options,
+.catalog-picker-selection-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.catalog-picker-selection-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catalog-picker-selection-details {
+  gap: 0.5rem 1rem;
+  margin: 0;
+}
+
+.catalog-picker-selection-detail {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.catalog-picker-selection-detail dt {
+  color: var(--p-surface-600, #475569);
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.catalog-picker-selection-detail dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--p-text-color, #1e293b);
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .catalog-picker-search-icon,
@@ -466,8 +609,9 @@ const searchAnnouncement = computed(() => {
 .catalog-picker-product {
   display: flex;
   min-width: 0;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
 }
 
 .catalog-picker-product-name,
@@ -567,6 +711,15 @@ const searchAnnouncement = computed(() => {
   color: var(--p-text-color, #f8fafc);
 }
 
+.app-dark .catalog-picker-selection {
+  border-color: var(--p-surface-700, #334155);
+  background: var(--p-surface-900, #1e293b);
+}
+
+.app-dark .catalog-picker-selection-detail dt {
+  color: var(--p-surface-400, #94a3b8);
+}
+
 .app-dark .catalog-picker-panel,
 .app-dark .catalog-picker-header {
   border-color: var(--p-surface-700, #334155);
@@ -597,6 +750,20 @@ const searchAnnouncement = computed(() => {
 }
 
 @media (max-width: 768px) {
+  .catalog-picker-selection {
+    gap: 0.625rem;
+  }
+
+  .catalog-picker-selection-name {
+    font-size: 1.125rem;
+  }
+
+  .catalog-picker-selection-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
   .catalog-picker-input {
     min-height: 48px;
     padding: 10px 44px;

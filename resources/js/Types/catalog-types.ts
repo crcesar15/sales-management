@@ -27,7 +27,7 @@ export interface Catalog {
       brand: { id: number; name: string } | null;
       measurement_unit: { id: number; name: string; abbreviation: string } | null;
     };
-    values: { option_name: string; value: string }[];
+    values: CatalogVariantOption[];
     purchase_units: { id: number; name: string }[];
   };
   purchase_unit?: { id: number; name: string; conversion_factor: number };
@@ -67,10 +67,16 @@ export interface CatalogPayload {
   lead_time_days?: number | null;
 }
 
+export interface CatalogVariantOption {
+  option_name: string | null;
+  value: string;
+}
+
 export interface CatalogVariantSearchResult {
   id: number;
   identifier: string | null;
   option_values: string | null;
+  variant_options: CatalogVariantOption[];
   product: {
     id: number;
     name: string;
@@ -92,6 +98,7 @@ export interface CatalogProductUnitOption {
   brand_name: string | null;
   base_unit_name: string | null;
   variant_identity: string | null;
+  variant_options: CatalogVariantOption[];
   unit_name: string;
   conversion_factor: number;
 }
@@ -132,7 +139,7 @@ export interface CatalogVariantResponse {
     brand: { id: number; name: string } | null;
     measurement_unit: { id: number; name: string; abbreviation: string } | null;
   } | null;
-  values: { option_name: string; value: string }[];
+  values: CatalogVariantOption[];
   purchase_units: { id: number; name: string }[];
   vendor_count: number;
   vendors: CatalogVariantVendor[];
