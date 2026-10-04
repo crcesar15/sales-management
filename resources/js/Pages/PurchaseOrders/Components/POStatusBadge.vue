@@ -7,13 +7,10 @@ import type { PurchaseOrderStatus } from "@/Types/purchase-order-types";
 const props = defineProps<{ status: PurchaseOrderStatus }>();
 const { t } = useI18n();
 
-const statusMap: Record<string, { label: string; severity: "success" | "info" | "warn" | "secondary" | "danger" }> = {
+const statusMap: Record<string, { label: string; severity: "success" | "info" | "primary" | "secondary" | "danger" }> = {
   draft: { label: "Draft", severity: "info" },
-  awaiting_approval: { label: "Awaiting Approval", severity: "warn" },
   approved: { label: "Approved", severity: "success" },
-  sent: { label: "Sent", severity: "info" },
-  partially_received: { label: "Partially Received", severity: "warn" },
-  received: { label: "Received", severity: "success" },
+  closed: { label: "Closed", severity: "primary" },
   cancelled: { label: "Cancelled", severity: "danger" },
 };
 

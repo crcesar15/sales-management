@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\PurchaseOrderStatus;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderProduct;
 use App\Models\User;
@@ -14,12 +15,10 @@ use InvalidArgumentException;
 final class PurchaseOrderService
 {
     private const TRANSITION_MAP = [
-        'draft' => ['awaiting_approval', 'cancelled'],
-        'awaiting_approval' => ['approved', 'cancelled'],
-        'approved' => ['sent', 'cancelled'],
-        'sent' => ['partially_received', 'received', 'cancelled'],
-        'partially_received' => ['received'],
-        'received' => [],
+        'draft' => ['approved', 'cancelled'],
+        'approved' => ['closed', 'cancelled'],
+        'closed' => [],
+        'cancelled' => [],
     ];
 
     /**
@@ -54,7 +53,7 @@ final class PurchaseOrderService
             $po = PurchaseOrder::create([
                 'user_id' => $actor->id,
                 'vendor_id' => $vendorId,
-                'status' => 'draft',
+                'status' => PurchaseOrderStatus::DRAFT,
                 'order_date' => $data['order_date'],
                 'expected_arrival_date' => $data['expected_arrival_date'] ?? null,
                 'discount' => $data['discount'] ?? 0,
@@ -95,11 +94,13 @@ final class PurchaseOrderService
      */
     public function update(PurchaseOrder $po, array $data, User $actor): PurchaseOrder
     {
-        if ($po->status !== 'draft') {
-            throw new InvalidArgumentException('Only draft purchase orders can be updated.');
-        }
-
         return DB::transaction(function () use ($po, $data, $actor): PurchaseOrder {
+            $po = PurchaseOrder::query()->lockForUpdate()->whereKey($po->id)->sole();
+
+            if ($po->status !== PurchaseOrderStatus::DRAFT) {
+                throw new InvalidArgumentException('Only draft purchase orders can be updated.');
+            }
+
             $items = $data['items'] ?? null;
             $vendorId = $data['vendor_id'] ?? $po->vendor_id;
 
@@ -142,48 +143,41 @@ final class PurchaseOrderService
         });
     }
 
-    /**
-     * @param  array{completion_notes?: string|null}  $data
-     */
-    public function transitionStatus(PurchaseOrder $po, string $newStatus, User $actor, array $data = []): void
+    public function approve(PurchaseOrder $po, User $actor): void
     {
-        $this->validateTransition($po->status, $newStatus);
+        $this->transitionStatus($po, PurchaseOrderStatus::APPROVED, $actor);
+    }
 
-        DB::transaction(function () use ($po, $newStatus, $actor, $data): void {
-            $oldStatus = $po->status;
-
-            $updateData = ['status' => $newStatus];
-
-            if ($newStatus === 'received' && isset($data['completion_notes'])) {
-                $updateData['completion_notes'] = $data['completion_notes'];
-            }
-
-            $po->update($updateData);
-
-            $activityProperties = ['from' => $oldStatus, 'to' => $newStatus];
-            if (isset($data['completion_notes']) && $data['completion_notes'] !== '') {
-                $activityProperties['completion_notes'] = $data['completion_notes'];
-            }
-
-            activity()
-                ->causedBy($actor)
-                ->performedOn($po)
-                ->withProperties($activityProperties)
-                ->log("Status changed to {$newStatus}");
-        });
+    public function close(PurchaseOrder $po, ?string $completionNotes, User $actor): void
+    {
+        $this->transitionStatus($po, PurchaseOrderStatus::CLOSED, $actor, $completionNotes);
     }
 
     public function cancel(PurchaseOrder $po, ?string $reason, User $actor): void
     {
-        $this->validateTransition($po->status, 'cancelled');
-
         DB::transaction(function () use ($po, $reason, $actor): void {
-            $po->update(['status' => 'cancelled']);
+            $po = PurchaseOrder::query()->lockForUpdate()->whereKey($po->id)->sole();
+
+            if ($po->is_paid) {
+                throw new InvalidArgumentException('Paid purchase orders cannot be cancelled without a payment reversal.');
+            }
+
+            if ($po->receptionOrders()->where('status', 'completed')->exists()) {
+                throw new InvalidArgumentException('Purchase orders with completed receptions cannot be cancelled.');
+            }
+
+            if ($po->receptionOrders()->where('status', 'pending')->exists()) {
+                throw new InvalidArgumentException('Cancel pending reception orders before cancelling this purchase order.');
+            }
+
+            $this->validateTransition($po->status, PurchaseOrderStatus::CANCELLED);
+            $oldStatus = $po->status;
+            $po->update(['status' => PurchaseOrderStatus::CANCELLED]);
 
             activity()
                 ->causedBy($actor)
                 ->performedOn($po)
-                ->withProperties(['reason' => $reason])
+                ->withProperties(['from' => $oldStatus->value, 'to' => PurchaseOrderStatus::CANCELLED->value, 'reason' => $reason])
                 ->log('cancelled');
         });
     }
@@ -193,17 +187,17 @@ final class PurchaseOrderService
      */
     public function markAsPaid(PurchaseOrder $po, array $data, User $actor): void
     {
-        if ($po->is_paid) {
-            throw new InvalidArgumentException('This purchase order is already marked as paid.');
-        }
-
-        $allowedStatuses = ['approved', 'sent', 'partially_received', 'received'];
-
-        if (! in_array($po->status, $allowedStatuses, true)) {
-            throw new InvalidArgumentException("Cannot mark purchase order with status {$po->status} as paid.");
-        }
-
         DB::transaction(function () use ($po, $data, $actor): void {
+            $po = PurchaseOrder::query()->lockForUpdate()->whereKey($po->id)->sole();
+
+            if ($po->is_paid) {
+                throw new InvalidArgumentException('This purchase order is already marked as paid.');
+            }
+
+            if (! in_array($po->status, [PurchaseOrderStatus::APPROVED, PurchaseOrderStatus::CLOSED], true)) {
+                throw new InvalidArgumentException("Cannot mark purchase order with status {$po->status->value} as paid.");
+            }
+
             $po->update([
                 'is_paid' => true,
                 'paid_at' => now(),
@@ -237,43 +231,65 @@ final class PurchaseOrderService
     }
 
     /**
-     * Update the purchase order's status based on reception progress.
-     * Called after a reception order is completed or cancelled.
+     * Close the purchase order when completed receptions fulfill every line item.
+     * Called from the reception-completion transaction.
      */
-    public function updateReceptionStatus(PurchaseOrder $po): void
+    public function updateReceptionStatus(PurchaseOrder $po, User $actor): void
     {
         $po->loadMissing('lineItems.receptionOrderItems.receptionOrder');
 
-        if ($po->is_fully_received) {
-            $newStatus = 'received';
-        } elseif ($po->is_partially_received) {
-            $newStatus = 'partially_received';
-        } else {
+        if (! $po->is_fully_received || $po->status === PurchaseOrderStatus::CLOSED) {
             return;
         }
 
-        if ($po->status === $newStatus) {
-            return;
-        }
-
-        $this->validateTransition($po->status, $newStatus);
-
-        $oldStatus = $po->status;
-        $po->update(['status' => $newStatus]);
-
-        activity()
-            ->causedBy(auth()->user())
-            ->performedOn($po)
-            ->withProperties(['from' => $oldStatus, 'to' => $newStatus])
-            ->log("Status changed to {$newStatus}");
+        $this->transitionStatus($po, PurchaseOrderStatus::CLOSED, $actor);
     }
 
-    private function validateTransition(string $from, string $to): void
+    private function transitionStatus(PurchaseOrder $po, PurchaseOrderStatus $newStatus, User $actor, ?string $completionNotes = null): void
     {
-        $allowed = self::TRANSITION_MAP[$from] ?? [];
+        DB::transaction(function () use ($po, $newStatus, $actor, $completionNotes): void {
+            $po = PurchaseOrder::query()->lockForUpdate()->whereKey($po->id)->sole();
+            $po->loadMissing('lineItems.receptionOrderItems.receptionOrder');
+            $this->validateTransition($po->status, $newStatus);
 
-        if (! in_array($to, $allowed, true)) {
-            throw new InvalidArgumentException("Invalid transition: {$from} → {$to}.");
+            if ($newStatus === PurchaseOrderStatus::CLOSED) {
+                if (! $po->is_fully_received && blank($completionNotes)) {
+                    throw new InvalidArgumentException('A reason is required when closing a purchase order before all items have been fully received.');
+                }
+
+                if ($po->receptionOrders()->where('status', 'pending')->exists()) {
+                    throw new InvalidArgumentException('Cancel pending reception orders before closing this purchase order.');
+                }
+            }
+
+            $oldStatus = $po->status;
+            $updateData = ['status' => $newStatus];
+
+            if ($newStatus === PurchaseOrderStatus::CLOSED && $completionNotes !== null) {
+                $updateData['completion_notes'] = $completionNotes;
+            }
+
+            $po->update($updateData);
+
+            $properties = ['from' => $oldStatus->value, 'to' => $newStatus->value];
+            if ($completionNotes !== null && $completionNotes !== '') {
+                $properties['completion_notes'] = $completionNotes;
+            }
+
+            activity()
+                ->causedBy($actor)
+                ->performedOn($po)
+                ->withProperties($properties)
+                ->log("Status changed to {$newStatus->value}");
+        });
+    }
+
+    private function validateTransition(PurchaseOrderStatus $from, PurchaseOrderStatus $to): void
+    {
+        $allowed = self::TRANSITION_MAP[$from->value];
+
+        if (! in_array($to->value, $allowed, true)) {
+            throw new InvalidArgumentException("Invalid transition: {$from->value} → {$to->value}.");
         }
     }
 }

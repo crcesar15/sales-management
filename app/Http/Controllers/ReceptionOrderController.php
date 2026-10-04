@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
+use App\Enums\PurchaseOrderStatus;
 use App\Http\Requests\ReceptionOrders\CancelReceptionOrderRequest;
 use App\Http\Requests\ReceptionOrders\CompleteReceptionOrderRequest;
 use App\Http\Requests\ReceptionOrders\StoreReceptionOrderRequest;
@@ -74,7 +75,7 @@ final class ReceptionOrderController extends Controller
         $this->authorize(PermissionsEnum::RECEPTION_ORDERS_CREATE);
 
         $purchaseOrders = PurchaseOrder::query()
-            ->whereIn('status', ['sent', 'partially_received'])
+            ->where('status', PurchaseOrderStatus::APPROVED->value)
             ->with(['vendor', 'lineItems.productVariant.product.brand', 'lineItems.productVariant.product.measurementUnit', 'lineItems.unit'])
             ->orderBy('created_at', 'desc')
             ->get()

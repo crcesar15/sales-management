@@ -8,11 +8,11 @@ use App\Enums\PermissionsEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-final class SubmitPurchaseOrderRequest extends FormRequest
+final class ApprovePurchaseOrderRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionsEnum::PURCHASE_ORDERS_EDIT->value) ?? false;
+        return $this->user()?->can(PermissionsEnum::PURCHASE_ORDERS_APPROVE->value) ?? false;
     }
 
     /**

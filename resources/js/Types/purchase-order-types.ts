@@ -3,7 +3,9 @@ import type { VendorResponse } from "./vendor-types";
 import type { ProductVariantResponse } from "./product-variant-types";
 import type { ReceptionOrder } from "./reception-order-types";
 
-export type PurchaseOrderStatus = "draft" | "awaiting_approval" | "approved" | "sent" | "partially_received" | "received" | "cancelled";
+export type PurchaseOrderStatus = "draft" | "approved" | "closed" | "cancelled";
+
+export type PurchaseOrderReceiptStatus = "not_received" | "partially_received" | "fully_received";
 
 export type PaymentMethod = "cash" | "credit_card" | "qr" | "transfer";
 
@@ -60,6 +62,7 @@ export interface PurchaseOrder {
   proof_of_payment_type: PaymentMethod | null;
   proof_of_payment_number: string | null;
   is_fully_received: boolean;
+  receipt_status: PurchaseOrderReceiptStatus;
   created_at: string | null;
   updated_at: string | null;
 }

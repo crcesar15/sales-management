@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\PurchaseOrderStatus;
 use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Models\Vendor;
@@ -29,7 +30,7 @@ final class PurchaseOrderFactory extends Factory
             'sub_total' => 0,
             'discount' => 0,
             'total' => 0,
-            'status' => 'draft',
+            'status' => PurchaseOrderStatus::DRAFT->value,
         ];
     }
 }

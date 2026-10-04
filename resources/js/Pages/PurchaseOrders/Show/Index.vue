@@ -4,10 +4,11 @@ import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
+import { useAuth } from "@composables/useAuth";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { ref, computed } from "vue";
-import type { PurchaseOrderResponse, ProofOfPaymentMedia } from "@/Types/purchase-order-types";
+import type { PurchaseOrderReceiptStatus, PurchaseOrderResponse, ProofOfPaymentMedia } from "@/Types/purchase-order-types";
 import type { ReceptionOrderStatus } from "@/Types/reception-order-types";
 import POStatusBadge from "../Components/POStatusBadge.vue";
 import POTotalsPanel from "../Components/POTotalsPanel.vue";
@@ -27,6 +28,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
 const { formatDateOnly, formatDatetime } = useDatetimeFormatter();
+const { can } = useAuth();
 
 const advanceModalVisible = ref(false);
 const markAsPaidModalVisible = ref(false);
@@ -65,42 +67,43 @@ function goToEdit() {
 
 const nextAction = computed<{ label: string; status: string } | null>(() => {
   const map: Record<string, { label: string; status: string }> = {
-    draft: { label: "Confirm", status: "awaiting_approval" },
-    awaiting_approval: { label: "Approve", status: "approved" },
-    approved: { label: "Sent", status: "sent" },
-    partially_received: { label: "Mark Received", status: "received" },
+    draft: { label: "Approve", status: "approved" },
+    approved: { label: "Close", status: "closed" },
   };
   return map[props.purchaseOrder.status] ?? null;
 });
 
 const advancePermission = computed(() => {
   const map: Record<string, string> = {
-    draft: "purchase_order.edit",
-    awaiting_approval: "purchase_order.approve",
+    draft: "purchase_order.approve",
     approved: "purchase_order.edit",
-    sent: "purchase_order.edit",
-    partially_received: "purchase_order.edit",
   };
   return map[props.purchaseOrder.status] ?? "";
 });
 
-const canCancel = computed(() => ["draft", "awaiting_approval", "approved"].includes(props.purchaseOrder.status));
+const canCancel = computed(() => ["draft", "approved"].includes(props.purchaseOrder.status));
 
-const canMarkAsPaid = computed(
-  () => !props.purchaseOrder.is_paid && ["approved", "sent", "partially_received", "received"].includes(props.purchaseOrder.status),
-);
+const canMarkAsPaid = computed(() => !props.purchaseOrder.is_paid && ["approved", "closed"].includes(props.purchaseOrder.status));
 
 const canEdit = computed(() => props.purchaseOrder.status === "draft");
+const canCreateReception = computed(() => props.purchaseOrder.status === "approved" && can("reception_order.create"));
 
 const isCancelled = computed(() => props.purchaseOrder.status === "cancelled");
 
+const receiptProgress = computed(() => {
+  const map: Record<PurchaseOrderReceiptStatus, { label: string; severity: "success" | "info" | "warn" }> = {
+    not_received: { label: "Not Received", severity: "danger" },
+    partially_received: { label: "Partially Received", severity: "warn" },
+    fully_received: { label: "Fully Received", severity: "contrast" },
+  };
+
+  return map[props.purchaseOrder.receipt_status];
+});
+
 const stepperSteps = [
   { key: "draft", value: "1", label: "Draft" },
-  { key: "awaiting_approval", value: "2", label: "Awaiting Approval" },
-  { key: "approved", value: "3", label: "Approved" },
-  { key: "sent", value: "4", label: "Sent" },
-  { key: "partially_received", value: "5", label: "Partially Received" },
-  { key: "received", value: "6", label: "Received" },
+  { key: "approved", value: "2", label: "Approved" },
+  { key: "closed", value: "3", label: "Closed" },
 ];
 
 const activeStepValue = computed(() => {
@@ -241,8 +244,9 @@ function formatFileSize(bytes: number): string {
             <div class="flex items-center gap-2">
               <span>{{ t("Order Details") }}</span>
               <div class="flex items-center gap-2">
-                <Tag v-if="purchaseOrder.is_paid" :value="t('Paid')" severity="success" rounded class="text-xs" />
                 <POStatusBadge :status="purchaseOrder.status" />
+                <Tag v-if="purchaseOrder.is_paid" :value="t('Paid')" severity="success" />
+                <Tag :value="t(receiptProgress.label)" :severity="receiptProgress.severity" />
               </div>
             </div>
           </template>
@@ -509,12 +513,12 @@ function formatFileSize(bytes: number): string {
           </template>
         </Card>
 
-        <Card v-if="purchaseOrder.reception_orders?.length" class="mb-4">
+        <Card v-if="purchaseOrder.reception_orders?.length || canCreateReception" class="mb-4">
           <template #title>
             <div class="flex items-center justify-between">
               <span>{{ t("Receptions") }}</span>
               <Button
-                v-can="'reception_order.create'"
+                v-if="canCreateReception"
                 :label="t('Create Reception Order')"
                 icon="fa fa-add"
                 size="small"

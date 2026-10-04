@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\PaymentMethod;
+use App\Enums\PurchaseOrderReceiptStatus;
+use App\Enums\PurchaseOrderStatus;
 use Database\Factories\PurchaseOrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,6 +42,8 @@ final class PurchaseOrder extends Model implements HasMedia
         'proof_of_payment_number',
     ];
 
+    protected $appends = ['receipt_status'];
+
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
@@ -69,6 +73,10 @@ final class PurchaseOrder extends Model implements HasMedia
     {
         $this->loadMissing('lineItems.receptionOrderItems.receptionOrder');
 
+        if ($this->lineItems->isEmpty()) {
+            return false;
+        }
+
         return $this->lineItems->every(function (PurchaseOrderProduct $item): bool {
             $receivedQuantity = (float) $item->received_quantity;
 
@@ -88,6 +96,19 @@ final class PurchaseOrder extends Model implements HasMedia
         return $this->lineItems->some(function (PurchaseOrderProduct $item): bool {
             return (float) $item->received_quantity > 0;
         });
+    }
+
+    public function getReceiptStatusAttribute(): PurchaseOrderReceiptStatus
+    {
+        if ($this->is_fully_received) {
+            return PurchaseOrderReceiptStatus::FULLY_RECEIVED;
+        }
+
+        if ($this->is_partially_received) {
+            return PurchaseOrderReceiptStatus::PARTIALLY_RECEIVED;
+        }
+
+        return PurchaseOrderReceiptStatus::NOT_RECEIVED;
     }
 
     public function registerMediaCollections(): void
@@ -110,6 +131,7 @@ final class PurchaseOrder extends Model implements HasMedia
     protected function casts(): array
     {
         return [
+            'status' => PurchaseOrderStatus::class,
             'order_date' => 'date',
             'expected_arrival_date' => 'date',
             'is_paid' => 'boolean',

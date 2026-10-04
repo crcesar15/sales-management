@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\ReceptionOrders;
 
 use App\Enums\PermissionsEnum;
+use App\Enums\PurchaseOrderStatus;
 use App\Models\PurchaseOrder;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -45,7 +46,7 @@ final class StoreReceptionOrderRequest extends FormRequest
             if ($purchaseOrder === null) {
                 return;
             }
-            if (! in_array($purchaseOrder->status, ['sent', 'partially_received'], true)) {
+            if ($purchaseOrder->status !== PurchaseOrderStatus::APPROVED) {
                 $validator->errors()->add('purchase_order_id', 'The purchase order is not available for reception.');
 
                 return;

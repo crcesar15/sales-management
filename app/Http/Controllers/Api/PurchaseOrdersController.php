@@ -11,12 +11,16 @@ use App\Http\Requests\Api\PurchaseOrders\UpdatePurchaseOrderRequest;
 use App\Http\Resources\ApiCollection;
 use App\Http\Resources\PurchaseOrder\PurchaseOrderResource;
 use App\Models\PurchaseOrder;
+use App\Services\PurchaseOrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use RuntimeException;
 
 final class PurchaseOrdersController extends Controller
 {
+    public function __construct(private readonly PurchaseOrderService $purchaseOrderService) {}
+
     // Get all purchase orders
     public function index(Request $request): ApiCollection
     {
@@ -64,7 +68,10 @@ final class PurchaseOrdersController extends Controller
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_CREATE->value, auth()->user());
 
-        $order = PurchaseOrder::query()->create($request->validated());
+        $order = $this->purchaseOrderService->create(
+            $request->validated(),
+            $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+        );
 
         return (new PurchaseOrderResource($order))->response()->setStatusCode(201);
     }
@@ -73,7 +80,11 @@ final class PurchaseOrdersController extends Controller
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_EDIT->value, auth()->user());
 
-        $order->update($request->validated());
+        $order = $this->purchaseOrderService->update(
+            $order,
+            $request->validated(),
+            $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+        );
 
         return (new PurchaseOrderResource($order))->response()->setStatusCode(200);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\PurchaseOrderStatus;
 use App\Models\Batch;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
@@ -136,7 +137,7 @@ final class ReceptionOrderService
             }
 
             $receptionOrder->update(['status' => 'completed']);
-            (new PurchaseOrderService)->updateReceptionStatus($purchaseOrder);
+            (new PurchaseOrderService)->updateReceptionStatus($purchaseOrder, $actor);
 
             activity()->causedBy($actor)->performedOn($receptionOrder)->withProperties(['stock_changes' => $stockChanges])->log('completed');
 
@@ -152,8 +153,6 @@ final class ReceptionOrderService
                 throw new InvalidArgumentException("Cannot cancel a reception order with status: {$receptionOrder->status}.");
             }
             $receptionOrder->update(['status' => 'cancelled']);
-            $purchaseOrder = PurchaseOrder::query()->whereKey($receptionOrder->purchase_order_id)->sole();
-            (new PurchaseOrderService)->updateReceptionStatus($purchaseOrder);
             activity()->causedBy($actor)->performedOn($receptionOrder)->withProperties(['reason' => $reason])->log('cancelled');
         }, attempts: 3);
     }
@@ -264,8 +263,8 @@ final class ReceptionOrderService
 
     private function guardPurchaseOrderStatus(PurchaseOrder $purchaseOrder): void
     {
-        if (! in_array($purchaseOrder->status, ['sent', 'partially_received'], true)) {
-            throw new InvalidArgumentException("Cannot create a reception order against a purchase order with status: {$purchaseOrder->status}.");
+        if ($purchaseOrder->status !== PurchaseOrderStatus::APPROVED) {
+            throw new InvalidArgumentException("Cannot create a reception order against a purchase order with status: {$purchaseOrder->status->value}.");
         }
     }
 

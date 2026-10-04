@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
+use App\Enums\PurchaseOrderStatus;
+use App\Http\Requests\PurchaseOrders\ApprovePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\CancelPurchaseOrderRequest;
+use App\Http\Requests\PurchaseOrders\ClosePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\MarkPurchaseOrderPaidRequest;
 use App\Http\Requests\PurchaseOrders\StorePurchaseOrderRequest;
-use App\Http\Requests\PurchaseOrders\SubmitPurchaseOrderRequest;
-use App\Http\Requests\PurchaseOrders\TransitionPurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\UpdatePurchaseOrderRequest;
 use App\Http\Resources\PurchaseOrder\PurchaseOrderCollection;
 use App\Models\Catalog;
@@ -137,7 +138,7 @@ final class PurchaseOrdersController extends Controller
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_EDIT);
 
-        if ($purchaseOrder->status !== 'draft') {
+        if ($purchaseOrder->status !== PurchaseOrderStatus::DRAFT) {
             return redirect()->route('purchase-orders.show', $purchaseOrder->id)
                 ->with('error', 'Only draft purchase orders can be edited.');
         }
@@ -177,52 +178,33 @@ final class PurchaseOrdersController extends Controller
             ->with('success', 'Purchase order updated successfully.');
     }
 
-    public function submit(SubmitPurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    public function approve(ApprovePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
     {
-        $this->authorize(PermissionsEnum::PURCHASE_ORDERS_EDIT);
-
         try {
-            $this->poService->transitionStatus(
+            $this->poService->approve(
                 $purchaseOrder,
-                'awaiting_approval',
                 $request->user() ?? throw new RuntimeException('Unauthenticated.'),
             );
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['status' => $e->getMessage()]);
         }
 
-        return redirect()->back()->with('success', 'Purchase order submitted for approval.');
+        return redirect()->back()->with('success', 'Purchase order approved successfully.');
     }
 
-    public function approve(TransitionPurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    public function close(ClosePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
     {
         try {
-            $this->poService->transitionStatus(
+            $this->poService->close(
                 $purchaseOrder,
-                $request->string('status')->toString(),
-                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
-                ['completion_notes' => $request->input('completion_notes')],
-            );
-        } catch (InvalidArgumentException $e) {
-            return redirect()->back()->withErrors(['status' => $e->getMessage()]);
-        }
-
-        return redirect()->back()->with('success', 'Purchase order status updated successfully.');
-    }
-
-    public function send(TransitionPurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
-    {
-        try {
-            $this->poService->transitionStatus(
-                $purchaseOrder,
-                'sent',
+                $request->string('completion_notes', '')->toString() ?: null,
                 $request->user() ?? throw new RuntimeException('Unauthenticated.'),
             );
         } catch (InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['status' => $e->getMessage()]);
         }
 
-        return redirect()->back()->with('success', 'Purchase order marked as sent.');
+        return redirect()->back()->with('success', 'Purchase order closed successfully.');
     }
 
     public function pay(MarkPurchaseOrderPaidRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse

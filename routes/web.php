@@ -255,9 +255,8 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrdersController::class, 'show'])->name('purchase-orders.show');
     Route::get('/purchase-orders/{purchaseOrder}/edit', [PurchaseOrdersController::class, 'edit'])->name('purchase-orders.edit');
     Route::put('/purchase-orders/{purchaseOrder}', [PurchaseOrdersController::class, 'update'])->name('purchase-orders.update');
-    Route::patch('/purchase-orders/{purchaseOrder}/submit', [PurchaseOrdersController::class, 'submit'])->name('purchase-orders.submit');
     Route::patch('/purchase-orders/{purchaseOrder}/approve', [PurchaseOrdersController::class, 'approve'])->name('purchase-orders.approve');
-    Route::patch('/purchase-orders/{purchaseOrder}/send', [PurchaseOrdersController::class, 'send'])->name('purchase-orders.send');
+    Route::patch('/purchase-orders/{purchaseOrder}/close', [PurchaseOrdersController::class, 'close'])->name('purchase-orders.close');
     Route::patch('/purchase-orders/{purchaseOrder}/pay', [PurchaseOrdersController::class, 'pay'])->name('purchase-orders.pay');
     Route::patch('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrdersController::class, 'cancel'])->name('purchase-orders.cancel');
 

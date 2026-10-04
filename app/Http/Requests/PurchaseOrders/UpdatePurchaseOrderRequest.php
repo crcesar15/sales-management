@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\PurchaseOrders;
 
 use App\Enums\PermissionsEnum;
+use App\Enums\PurchaseOrderStatus;
 use App\Http\Requests\PurchaseOrders\Concerns\ValidatesPurchaseOrderItems;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -47,7 +48,7 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             /** @var \App\Models\PurchaseOrder $po */
             $po = $this->route('purchaseOrder');
 
-            if ($po->status !== 'draft') {
+            if ($po->status !== PurchaseOrderStatus::DRAFT) {
                 $validator->errors()->add('status', 'Only draft purchase orders can be updated.');
 
                 return;

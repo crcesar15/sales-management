@@ -55,11 +55,8 @@ const filterPopover = ref();
 const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
   { label: t("Draft"), value: "draft" },
-  { label: t("Awaiting Approval"), value: "awaiting_approval" },
   { label: t("Approved"), value: "approved" },
-  { label: t("Sent"), value: "sent" },
-  { label: t("Partially Received"), value: "partially_received" },
-  { label: t("Received"), value: "received" },
+  { label: t("Closed"), value: "closed" },
   { label: t("Cancelled"), value: "cancelled" },
 ]);
 
@@ -264,7 +261,7 @@ const editOrder = (po: PurchaseOrderResponse) => {
           </Column>
           <Column field="is_paid" :header="t('Payment Status')" style="width: 140px">
             <template #body="{ data }">
-              <Tag :value="data.is_paid ? t('Paid') : t('Unpaid')" :severity="data.is_paid ? 'success' : 'secondary'" rounded />
+              <Tag :value="data.is_paid ? t('Paid') : t('Unpaid')" :severity="data.is_paid ? 'success' : 'secondary'" />
             </template>
           </Column>
           <Column field="total" :header="t('Total')" sortable>
