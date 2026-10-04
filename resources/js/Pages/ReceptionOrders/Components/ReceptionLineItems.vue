@@ -1,28 +1,35 @@
 <script setup lang="ts">
-import { Badge, Button, ConfirmDialog, DatePicker, InputNumber, InputText, useConfirm } from "primevue";
+import { Badge, Button, ConfirmDialog, DatePicker, InputNumber, InputText, Message, useConfirm } from "primevue";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
+
+export interface ReceptionBatchAllocationForm {
+  id: string;
+  purchase_unit_quantity: number;
+  loose_unit_quantity: number;
+  expiry_date: Date | null;
+  batch_identifier: string;
+}
 
 export interface ReceptionLineItem {
   id: string;
   purchase_order_item_id: number;
   product_variant_id: number;
   product_name: string;
+  brand_name: string | null;
   variant_label: string;
-  quantity: number;
-  max_quantity?: number;
-  expiry_date: Date | null;
-  batch_identifier: string;
-  has_expiration?: boolean;
+  available_quantity: number;
+  has_expiration: boolean;
   purchase_unit?: { id: number; name: string; conversion_factor: number } | null;
   base_unit?: { id: number; name: string; abbreviation: string } | null;
-  stock?: number | null;
-  minimum_stock_level?: number | null;
+  batches: ReceptionBatchAllocationForm[];
 }
 
 const props = defineProps<{
   modelValue: ReceptionLineItem[];
+  errors?: Record<string, string>;
+  showValidation?: boolean;
   disabled?: boolean;
 }>();
 
@@ -33,10 +40,11 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const confirm = useConfirm();
 const { datePickerFormat } = useDatetimeFormatter();
-const items = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
+const items = computed({ get: () => props.modelValue, set: (value) => emit("update:modelValue", value) });
+
+function conversionFactor(item: ReceptionLineItem): number {
+  return item.purchase_unit?.conversion_factor ?? 1;
+}
 
 function purchaseUnitLabel(item: ReceptionLineItem): string {
   return item.purchase_unit?.name ?? item.base_unit?.name ?? "—";
@@ -46,187 +54,122 @@ function hasVariantLabel(item: ReceptionLineItem): boolean {
   return Boolean(item.variant_label) && item.variant_label !== item.product_name;
 }
 
-function conversionLabel(item: ReceptionLineItem): string | null {
-  const baseUnit = item.base_unit?.abbreviation;
-  const conversionFactor = item.purchase_unit?.conversion_factor ?? 1;
-
-  if (!baseUnit || conversionFactor === 1) return null;
-
-  return `1 ${purchaseUnitLabel(item)} = ${String(conversionFactor)} ${baseUnit}`;
+function allocatedBaseQuantity(item: ReceptionLineItem): number {
+  return item.batches.reduce((total, batch) => total + batch.purchase_unit_quantity * conversionFactor(item) + batch.loose_unit_quantity, 0);
 }
 
-function getInputLabel(label: string, item: ReceptionLineItem): string {
-  return `${t(label)}: ${item.product_name}, ${item.variant_label}`;
+function allocatedPurchaseQuantity(item: ReceptionLineItem): number {
+  return allocatedBaseQuantity(item) / conversionFactor(item);
 }
 
-function getRemoveLabel(item: ReceptionLineItem): string {
-  return `${t("Delete")}: ${item.product_name}, ${item.variant_label}`;
+function unallocatedBaseQuantity(item: ReceptionLineItem): number {
+  return item.available_quantity * conversionFactor(item) - allocatedBaseQuantity(item);
 }
 
-function updateQuantity(index: number, quantity: number) {
+function updateBatch(itemIndex: number, batchIndex: number, updates: Partial<ReceptionBatchAllocationForm>) {
   const updated = [...items.value];
-  updated[index] = { ...updated[index], quantity };
+  const item = updated[itemIndex];
+  updated[itemIndex] = { ...item, batches: item.batches.map((batch, index) => (index === batchIndex ? { ...batch, ...updates } : batch)) };
   emit("update:modelValue", updated);
 }
 
-function updateExpiryDate(index: number, date: Date | null) {
+function duplicateBatch(itemIndex: number, batchIndex: number) {
   const updated = [...items.value];
-  updated[index] = { ...updated[index], expiry_date: date };
+  const item = updated[itemIndex];
+  const batch = item.batches[batchIndex];
+  updated[itemIndex] = { ...item, batches: [...item.batches, { ...batch, id: crypto.randomUUID() }] };
   emit("update:modelValue", updated);
 }
 
-function updateBatchIdentifier(index: number, value: string) {
+function removeBatch(itemIndex: number, batchIndex: number) {
   const updated = [...items.value];
-  updated[index] = { ...updated[index], batch_identifier: value };
+  const item = updated[itemIndex];
+  if (item.batches.length === 1) return;
+  updated[itemIndex] = { ...item, batches: item.batches.filter((_, index) => index !== batchIndex) };
   emit("update:modelValue", updated);
 }
 
-function removeItem(index: number) {
-  emit(
-    "update:modelValue",
-    items.value.filter((_, itemIndex) => itemIndex !== index),
-  );
-}
-
-function confirmRemoveItem(index: number) {
+function confirmRemoveBatch(itemIndex: number, batchIndex: number) {
   confirm.require({
-    message: t("Are you sure you want to remove this item?"),
+    message: t("Are you sure you want to remove this batch?"),
     header: t("Confirm"),
     icon: "fa fa-exclamation-triangle",
     rejectLabel: t("Cancel"),
     acceptLabel: t("Delete"),
     rejectClass: "p-button-secondary",
     acceptClass: "p-button-primary",
-    accept: () => {
-      removeItem(index);
-    },
+    accept: () => removeBatch(itemIndex, batchIndex),
   });
+}
+
+function fieldError(itemIndex: number, batchIndex: number, field: string): string | undefined {
+  return props.errors?.[`items.${itemIndex}.batches.${batchIndex}.${field}`];
+}
+
+function batchError(itemIndex: number): string | undefined {
+  return props.errors?.[`items.${itemIndex}.batches`];
 }
 </script>
 
 <template>
-  <div
-    v-if="items.length === 0"
-    class="mt-4 flex flex-col items-center justify-center border-y border-surface-200 py-10 text-surface-500 dark:border-surface-700 dark:text-surface-400"
-  >
-    <i class="fa fa-box-open mb-3 text-4xl" aria-hidden="true"></i>
-    <span class="mb-1 text-lg font-medium">{{ t("No items added yet") }}</span>
-    <small>{{ t("Select a purchase order to add items") }}</small>
-  </div>
-
-  <div v-else class="mt-4 2xl:border 2xl:border-surface-200 dark:2xl:border-surface-700">
-    <div
-      aria-hidden="true"
-      class="hidden 2xl:grid 2xl:grid-cols-[minmax(8rem,1.35fr)_minmax(9rem,1.1fr)_minmax(9rem,1fr)_minmax(6rem,0.65fr)_minmax(10rem,1.15fr)_minmax(10rem,1.15fr)_5rem] 2xl:items-center 2xl:gap-3 2xl:border-b 2xl:border-surface-200 2xl:bg-surface-100 2xl:px-3 2xl:py-2 2xl:text-sm 2xl:font-semibold dark:2xl:border-surface-700 dark:2xl:bg-surface-800"
-    >
-      <span>{{ t("Product") }}</span>
-      <span>{{ t("Purchase Unit") }}</span>
-      <span>{{ t("Quantity") }}</span>
-      <span>{{ t("Remaining") }}</span>
-      <span>{{ t("Expiry Date") }}</span>
-      <span>{{ t("Batch Identifier") }}</span>
-      <span></span>
-    </div>
-
-    <ul class="flex flex-col gap-3 2xl:block 2xl:divide-y 2xl:divide-surface-200 dark:2xl:divide-surface-700">
-      <li
-        v-for="(item, index) in items"
-        :key="item.id"
-        class="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/60 2xl:rounded-none 2xl:border-0 2xl:bg-transparent 2xl:px-3 2xl:py-3 dark:2xl:bg-transparent"
-      >
-        <div
-          class="grid grid-cols-2 gap-x-3 gap-y-4 2xl:grid-cols-[minmax(8rem,1.35fr)_minmax(9rem,1.1fr)_minmax(9rem,1fr)_minmax(6rem,0.65fr)_minmax(10rem,1.15fr)_minmax(10rem,1.15fr)_5rem] 2xl:items-start 2xl:gap-3"
-        >
-          <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
-            <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">{{ item.product_name }}</span>
-            <Badge v-if="hasVariantLabel(item)" :value="item.variant_label" severity="secondary" class="mt-1 w-fit max-w-full truncate" />
+  <div class="flex flex-col gap-4">
+    <div v-for="(item, itemIndex) in items" :key="item.id" class="border border-surface-200 dark:border-surface-700">
+      <div class="flex flex-col gap-3 border-b border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/60 lg:flex-row lg:items-start lg:justify-between">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-semibold text-surface-900 dark:text-surface-50">{{ item.product_name }}</span>
+            <Badge v-if="hasVariantLabel(item)" :value="item.variant_label" />
           </div>
-
-          <div class="col-span-2 flex min-w-0 flex-col gap-1 2xl:col-span-1 2xl:pt-1">
-            <span class="font-medium">{{ purchaseUnitLabel(item) }}</span>
-            <span v-if="conversionLabel(item)" class="text-sm text-surface-500 dark:text-surface-400">{{ conversionLabel(item) }}</span>
-          </div>
-
-          <div class="col-span-2 min-w-0 2xl:col-span-1">
-            <label :for="`reception-order-quantity-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Quantity") }}</label>
-            <InputNumber
-              :input-id="`reception-order-quantity-${item.id}`"
-              :model-value="item.quantity"
-              :aria-label="getInputLabel('Quantity', item)"
-              :min="0.01"
-              :max="item.max_quantity ?? 99999"
-              :step="1"
-              :min-fraction-digits="1"
-              :max-fraction-digits="2"
-              show-buttons
-              button-layout="horizontal"
-              decrement-button-icon="fa fa-minus"
-              increment-button-icon="fa fa-plus"
-              decrement-button-class="!min-h-[44px] !min-w-[44px]"
-              increment-button-class="!min-h-[44px] !min-w-[44px]"
-              fluid
-              input-class="min-h-[44px] min-w-0 w-full tabular-nums 2xl:!text-sm"
-              :disabled="disabled"
-              @update:model-value="(val: number | null) => updateQuantity(index, val ?? item.quantity)"
-            />
-          </div>
-
-          <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
-            <span class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Remaining") }}</span>
-            <span class="block font-semibold tabular-nums">{{ item.max_quantity ?? "—" }}</span>
-          </div>
-
-          <div class="col-span-2 min-w-0 2xl:col-span-1">
-            <label :for="`reception-order-expiry-date-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Expiry Date") }}</label>
-            <DatePicker
-              :input-id="`reception-order-expiry-date-${item.id}`"
-              :model-value="item.expiry_date"
-              :aria-label="getInputLabel('Expiry Date', item)"
-              :placeholder="t('Select date')"
-              :date-format="datePickerFormat"
-              show-icon
-              fluid
-              input-class="min-h-[44px] w-full 2xl:!text-sm"
-              :disabled="disabled"
-              :class="{ 'p-invalid': item.has_expiration && !item.expiry_date }"
-              @update:model-value="
-                (val: Date | Date[] | (Date | null)[] | null | undefined) => updateExpiryDate(index, Array.isArray(val) ? null : (val ?? null))
-              "
-            />
-            <small v-if="item.has_expiration && !item.expiry_date" class="mt-1 block text-red-400 dark:text-red-300">{{ t("Required") }}</small>
-          </div>
-
-          <div class="col-span-2 min-w-0 2xl:col-span-1">
-            <label :for="`reception-order-batch-identifier-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Batch Identifier") }}</label>
-            <InputText
-              :id="`reception-order-batch-identifier-${item.id}`"
-              :model-value="item.batch_identifier"
-              :aria-label="getInputLabel('Batch Identifier', item)"
-              :placeholder="t('Optional')"
-              fluid
-              class="min-h-[44px] w-full 2xl:!text-sm"
-              :disabled="disabled"
-              @update:model-value="(val: string | undefined) => updateBatchIdentifier(index, val ?? '')"
-            />
-          </div>
-
-          <div class="col-span-2 flex items-start justify-end 2xl:col-span-1">
-            <Button
-              v-if="!disabled"
-              v-tooltip.top="t('Delete')"
-              :aria-label="getRemoveLabel(item)"
-              icon="fa fa-trash-can"
-              text
-              rounded
-              size="large"
-              @click="confirmRemoveItem(index)"
-            />
+          <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-surface-500 dark:text-surface-400">
+            <span v-if="item.brand_name"> <b>{{ t("Brand") }} :</b> {{ item.brand_name }}</span>
+            <span> <b>{{ t("Available to receive") }}:</b> {{ item.available_quantity }} {{ purchaseUnitLabel(item) }}</span>
+            <span> <b>{{ t("Allocated") }}:</b> {{ allocatedPurchaseQuantity(item) }} {{ purchaseUnitLabel(item) }}</span>
+            <span v-if="conversionFactor(item) > 1"> (1 {{ purchaseUnitLabel(item) }} = {{ conversionFactor(item) }} {{ item.base_unit?.abbreviation }})</span>
           </div>
         </div>
+        <span :class="unallocatedBaseQuantity(item) < 0 ? 'text-red-500' : 'text-surface-600 dark:text-surface-300'" class="font-medium tabular-nums">
+          {{ t("Unallocated") }}: {{ unallocatedBaseQuantity(item) / conversionFactor(item) }} {{ purchaseUnitLabel(item) }}
+        </span>
+      </div>
 
-      </li>
-    </ul>
+      <Message v-if="unallocatedBaseQuantity(item) < 0" severity="error" class="m-4">
+        {{ t("Allocated quantity cannot exceed the available quantity") }}
+      </Message>
+      <Message v-if="batchError(itemIndex)" severity="error" class="m-4">{{ batchError(itemIndex) }}</Message>
+
+      <div class="flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
+        <div v-for="(batch, batchIndex) in item.batches" :key="batch.id" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-[minmax(7rem,.7fr)_minmax(7rem,.7fr)_minmax(10rem,1fr)_minmax(10rem,1fr)_5rem]">
+          <div class="flex flex-col gap-1">
+            <label :for="`purchase-units-${batch.id}`">{{ purchaseUnitLabel(item) }}</label>
+            <InputNumber :input-id="`purchase-units-${batch.id}`" :model-value="batch.purchase_unit_quantity" :min="0" :max-fraction-digits="0" fluid :disabled="disabled" :class="{ 'p-invalid': !!fieldError(itemIndex, batchIndex, 'purchase_unit_quantity') }" @update:model-value="(value) => updateBatch(itemIndex, batchIndex, { purchase_unit_quantity: value ?? 0 })" />
+            <small v-if="fieldError(itemIndex, batchIndex, 'purchase_unit_quantity')" class="text-red-400 dark:text-red-300">{{ fieldError(itemIndex, batchIndex, "purchase_unit_quantity") }}</small>
+          </div>
+          <div v-if="conversionFactor(item) > 1" class="flex flex-col gap-1">
+            <label :for="`loose-units-${batch.id}`">{{ t("Loose Units") }} ({{ item.base_unit?.abbreviation }})</label>
+            <InputNumber :input-id="`loose-units-${batch.id}`" :model-value="batch.loose_unit_quantity" :min="0" :max="conversionFactor(item) - 1" :max-fraction-digits="0" fluid :disabled="disabled" :class="{ 'p-invalid': !!fieldError(itemIndex, batchIndex, 'loose_unit_quantity') }" @update:model-value="(value) => updateBatch(itemIndex, batchIndex, { loose_unit_quantity: value ?? 0 })" />
+            <small v-if="fieldError(itemIndex, batchIndex, 'loose_unit_quantity')" class="text-red-400 dark:text-red-300">{{ fieldError(itemIndex, batchIndex, "loose_unit_quantity") }}</small>
+          </div>
+          <div v-else class="flex flex-col gap-1">
+            <label :for="`loose-units-${batch.id}`">{{ t("Loose Units") }} ({{ item.base_unit?.abbreviation }})</label>
+            <span class="mt-2 text-center text-lg font-bold text-surface-500 dark:text-surface-400">--</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label :for="`expiry-date-${batch.id}`">{{ t("Expiry Date") }}</label>
+            <DatePicker :input-id="`expiry-date-${batch.id}`" :model-value="batch.expiry_date" :date-format="datePickerFormat" :placeholder="t('Select date')" show-icon fluid :disabled="disabled" :class="{ 'p-invalid': !!fieldError(itemIndex, batchIndex, 'expiry_date') || (showValidation && item.has_expiration && !batch.expiry_date) }" @update:model-value="(value) => updateBatch(itemIndex, batchIndex, { expiry_date: Array.isArray(value) ? null : (value ?? null) })" />
+            <small v-if="fieldError(itemIndex, batchIndex, 'expiry_date') || (showValidation && item.has_expiration && !batch.expiry_date)" class="text-red-400 dark:text-red-300">{{ fieldError(itemIndex, batchIndex, "expiry_date") ?? t("Required") }}</small>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label :for="`batch-identifier-${batch.id}`">{{ t("Batch Identifier") }}</label>
+            <InputText :id="`batch-identifier-${batch.id}`" :model-value="batch.batch_identifier" :placeholder="t('Optional')" fluid :disabled="disabled" :class="{ 'p-invalid': !!fieldError(itemIndex, batchIndex, 'batch_identifier') }" @update:model-value="(value) => updateBatch(itemIndex, batchIndex, { batch_identifier: value ?? '' })" />
+            <small v-if="fieldError(itemIndex, batchIndex, 'batch_identifier')" class="text-red-400 dark:text-red-300">{{ fieldError(itemIndex, batchIndex, "batch_identifier") }}</small>
+          </div>
+          <div class="flex items-end justify-end gap-1">
+            <Button v-if="!disabled" v-tooltip.top="t('Duplicate')" icon="fa fa-copy" text rounded size="large" @click="duplicateBatch(itemIndex, batchIndex)" />
+            <Button v-if="!disabled && item.batches.length > 1" v-tooltip.top="t('Delete')" icon="fa fa-trash-can" text rounded size="large" @click="confirmRemoveBatch(itemIndex, batchIndex)" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <ConfirmDialog />
   </div>
-
-  <ConfirmDialog />
 </template>

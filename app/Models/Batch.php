@@ -24,6 +24,7 @@ final class Batch extends Model
     protected $fillable = [
         'product_variant_id',
         'reception_order_id',
+        'reception_order_batch_allocation_id',
         'store_id',
         'expiry_date',
         'batch_identifier',
@@ -47,6 +48,12 @@ final class Batch extends Model
     public function receptionOrder(): BelongsTo
     {
         return $this->belongsTo(ReceptionOrder::class);
+    }
+
+    /** @return BelongsTo<ReceptionOrderBatchAllocation, $this> */
+    public function receptionOrderBatchAllocation(): BelongsTo
+    {
+        return $this->belongsTo(ReceptionOrderBatchAllocation::class);
     }
 
     /** @return BelongsTo<Store, $this> */

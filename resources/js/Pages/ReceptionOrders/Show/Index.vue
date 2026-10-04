@@ -59,11 +59,6 @@ function purchaseUnitLabel(item: ReceptionOrderResponse["line_items"][number]): 
   return item.purchase_order_item?.unit?.name ?? item.purchase_unit?.name ?? item.product_variant?.product?.measurement_unit?.name ?? "—";
 }
 
-function formatQuantity(q: number | string | null | undefined): string {
-  if (q === null || q === undefined) return "0";
-  return String(parseFloat(String(q)));
-}
-
 function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): string | null {
   const baseUnit = item.product_variant?.product?.measurement_unit?.abbreviation;
   const conversionFactor = item.purchase_order_item?.unit?.conversion_factor ?? item.purchase_unit?.conversion_factor ?? 1;
@@ -219,12 +214,15 @@ function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): st
                   class="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/60 2xl:rounded-none 2xl:border-0 2xl:bg-transparent 2xl:px-3 2xl:py-3 dark:2xl:bg-transparent"
                 >
                   <div
+                    v-for="allocation in item.batch_allocations"
+                    :key="allocation.id"
                     class="grid grid-cols-2 gap-x-3 gap-y-4 2xl:grid-cols-[minmax(8rem,1.35fr)_minmax(9rem,1.1fr)_minmax(7rem,0.7fr)_minmax(10rem,1.1fr)_minmax(10rem,1.1fr)_minmax(6rem,0.7fr)] 2xl:items-start 2xl:gap-3"
                   >
-                    <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
-                      <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">{{ productName(item) }}</span>
-                      <Badge v-if="hasVariantLabel(item)" :value="variantLabel(item)" severity="secondary" class="mt-1 w-fit max-w-full truncate" />
-                    </div>
+                     <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+                       <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">{{ productName(item) }}</span>
+                       <Badge v-if="hasVariantLabel(item)" :value="variantLabel(item)" severity="secondary" class="mt-1 w-fit max-w-full truncate" />
+                       <span v-if="item.product_variant?.product?.brand?.name" class="mt-1 block text-sm text-surface-500 dark:text-surface-400">{{ item.product_variant.product.brand.name }}</span>
+                     </div>
 
                     <div class="col-span-2 flex min-w-0 flex-col gap-1 2xl:col-span-1 2xl:pt-1">
                       <span class="font-medium">{{ purchaseUnitLabel(item) }}</span>
@@ -233,17 +231,17 @@ function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): st
 
                     <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
                       <span class="block text-base font-medium 2xl:sr-only">{{ t("Quantity") }}</span>
-                      <span class="block tabular-nums">{{ formatQuantity(item.quantity) }}</span>
+                       <span class="block tabular-nums">{{ allocation.purchase_unit_quantity }} {{ purchaseUnitLabel(item) }}<template v-if="allocation.loose_unit_quantity"> + {{ allocation.loose_unit_quantity }} {{ item.product_variant?.product?.measurement_unit?.abbreviation }}</template></span>
                     </div>
 
                     <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
                       <span class="block text-base font-medium 2xl:sr-only">{{ t("Expiry Date") }}</span>
-                      <span class="block">{{ item.expiry_date ? formatDateOnly(item.expiry_date) : "—" }}</span>
+                       <span class="block">{{ allocation.expiry_date ? formatDateOnly(allocation.expiry_date) : "—" }}</span>
                     </div>
 
                     <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
                       <span class="block text-base font-medium 2xl:sr-only">{{ t("Batch Identifier") }}</span>
-                      <span class="block break-words">{{ item.batch_identifier || "—" }}</span>
+                       <span class="block break-words">{{ allocation.batch_identifier || "—" }}</span>
                     </div>
 
                     <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">

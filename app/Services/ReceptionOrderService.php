@@ -7,8 +7,8 @@ namespace App\Services;
 use App\Models\Batch;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
-use App\Models\PurchaseOrderProduct;
 use App\Models\ReceptionOrder;
+use App\Models\ReceptionOrderBatchAllocation;
 use App\Models\ReceptionOrderProduct;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -24,41 +24,26 @@ final class ReceptionOrderService
     public function list(array $filters, int $perPage): LengthAwarePaginator
     {
         return ReceptionOrder::query()
-            ->with([
-                'purchaseOrder',
-                'vendor',
-                'store',
-                'user',
-                'lineItems.productVariant.product.measurementUnit',
-                'lineItems.purchaseOrderItem.unit',
-            ])
+            ->with(['purchaseOrder', 'vendor', 'store', 'user', 'lineItems.productVariant.product.brand', 'lineItems.productVariant.product.measurementUnit', 'lineItems.purchaseOrderItem.unit', 'lineItems.batchAllocations'])
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
             ->when($filters['purchase_order_id'] ?? null, fn ($q, $poId) => $q->where('purchase_order_id', $poId))
             ->when($filters['vendor_id'] ?? null, fn ($q, $vendorId) => $q->where('vendor_id', $vendorId))
             ->when($filters['store_id'] ?? null, fn ($q, $storeId) => $q->where('store_id', $storeId))
             ->when($filters['from'] ?? null, fn ($q, $from) => $q->whereDate('reception_date', '>=', $from))
             ->when($filters['to'] ?? null, fn ($q, $to) => $q->whereDate('reception_date', '<=', $to))
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->paginate($perPage)
             ->withQueryString();
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
+    /** @param array<string, mixed> $data */
     public function create(array $data, User $actor): ReceptionOrder
     {
         return DB::transaction(function () use ($data, $actor): ReceptionOrder {
-            /** @var PurchaseOrder $purchaseOrder */
-            $purchaseOrder = PurchaseOrder::findOrFail($data['purchase_order_id']);
-
+            $purchaseOrder = PurchaseOrder::query()->with('lineItems.unit')->lockForUpdate()->whereKey($data['purchase_order_id'])->sole();
             $this->guardPurchaseOrderStatus($purchaseOrder);
-
-            $items = $data['items'];
-            $this->guardItemsBelongToPo($items, $purchaseOrder);
+            $items = $this->normalizeItems($data['items'], $purchaseOrder);
             $this->guardAgainstOverReceiving($items, $purchaseOrder);
-
-            $poLineItems = $purchaseOrder->lineItems->keyBy('id');
 
             $receptionOrder = ReceptionOrder::create([
                 'purchase_order_id' => $purchaseOrder->id,
@@ -70,274 +55,222 @@ final class ReceptionOrderService
                 'status' => 'pending',
             ]);
 
-            foreach ($items as $item) {
-                $poLineItem = $poLineItems->get($item['purchase_order_item_id']);
-                $price = (float) ($poLineItem->price ?? 0);
-                $quantity = (float) $item['quantity'];
-                $lineTotal = $price * $quantity;
+            $this->storeItems($receptionOrder, $items, $purchaseOrder);
 
-                ReceptionOrderProduct::create([
-                    'reception_order_id' => $receptionOrder->id,
-                    'purchase_order_item_id' => $item['purchase_order_item_id'],
-                    'product_variant_id' => $item['product_variant_id'],
-                    'quantity' => $quantity,
-                    'price' => $price,
-                    'total' => $lineTotal,
-                    'expiry_date' => $item['expiry_date'] ?? null,
-                    'batch_identifier' => $item['batch_identifier'] ?? null,
-                ]);
-            }
+            activity()->causedBy($actor)->performedOn($receptionOrder)->log('created');
 
-            activity()
-                ->causedBy($actor)
-                ->performedOn($receptionOrder)
-                ->log('created');
-
-            return $receptionOrder->load([
-                'purchaseOrder', 'vendor', 'store', 'user',
-                'lineItems.productVariant.product',
-            ]);
-        });
+            return $this->loadReceptionOrder($receptionOrder);
+        }, attempts: 3);
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
+    /** @param array<string, mixed> $data */
     public function update(ReceptionOrder $receptionOrder, array $data, User $actor): ReceptionOrder
     {
-        if ($receptionOrder->status !== 'pending') {
-            throw new InvalidArgumentException('Only pending reception orders can be updated.');
-        }
-
         return DB::transaction(function () use ($receptionOrder, $data, $actor): ReceptionOrder {
-            $items = $data['items'] ?? null;
-            /** @var PurchaseOrder $purchaseOrder */
-            $purchaseOrder = $receptionOrder->purchaseOrder;
+            $receptionOrder = ReceptionOrder::query()->lockForUpdate()->whereKey($receptionOrder->id)->sole();
 
-            if ($items !== null) {
-                $this->guardItemsBelongToPo($items, $purchaseOrder);
-                $this->guardAgainstOverReceiving($items, $purchaseOrder, $receptionOrder->id);
-
-                $poLineItems = $purchaseOrder->lineItems->keyBy('id');
-
-                $receptionOrder->lineItems()->delete();
-
-                foreach ($items as $item) {
-                    $poLineItem = $poLineItems->get($item['purchase_order_item_id']);
-                    $price = (float) ($poLineItem->price ?? 0);
-                    $quantity = (float) $item['quantity'];
-                    $lineTotal = $price * $quantity;
-
-                    ReceptionOrderProduct::create([
-                        'reception_order_id' => $receptionOrder->id,
-                        'purchase_order_item_id' => $item['purchase_order_item_id'],
-                        'product_variant_id' => $item['product_variant_id'],
-                        'quantity' => $quantity,
-                        'price' => $price,
-                        'total' => $lineTotal,
-                        'expiry_date' => $item['expiry_date'] ?? null,
-                        'batch_identifier' => $item['batch_identifier'] ?? null,
-                    ]);
-                }
+            if ($receptionOrder->status !== 'pending') {
+                throw new InvalidArgumentException('Only pending reception orders can be updated.');
             }
 
-            $updateData = [
+            $purchaseOrder = PurchaseOrder::query()->with('lineItems.unit')->lockForUpdate()->whereKey($receptionOrder->purchase_order_id)->sole();
+
+            if (array_key_exists('items', $data)) {
+                $items = $this->normalizeItems($data['items'], $purchaseOrder);
+                $this->guardAgainstOverReceiving($items, $purchaseOrder, $receptionOrder->id);
+                $receptionOrder->lineItems()->delete();
+                $this->storeItems($receptionOrder, $items, $purchaseOrder);
+            }
+
+            $receptionOrder->update([
                 'store_id' => $data['store_id'] ?? $receptionOrder->store_id,
                 'reception_date' => $data['reception_date'] ?? $receptionOrder->reception_date,
                 'notes' => array_key_exists('notes', $data) ? $data['notes'] : $receptionOrder->notes,
-            ];
-
-            $receptionOrder->update($updateData);
-
-            activity()
-                ->causedBy($actor)
-                ->performedOn($receptionOrder)
-                ->log('updated');
-
-            return $receptionOrder->load([
-                'purchaseOrder', 'vendor', 'store', 'user',
-                'lineItems.productVariant.product',
             ]);
-        });
+
+            activity()->causedBy($actor)->performedOn($receptionOrder)->log('updated');
+
+            return $this->loadReceptionOrder($receptionOrder);
+        }, attempts: 3);
     }
 
     public function complete(ReceptionOrder $receptionOrder, User $actor): ReceptionOrder
     {
-        if (in_array($receptionOrder->status, ['completed', 'cancelled'], true)) {
-            throw new InvalidArgumentException("Cannot complete a reception order with status: {$receptionOrder->status}.");
-        }
+        return DB::transaction(function () use ($receptionOrder, $actor): ReceptionOrder {
+            $receptionOrder = ReceptionOrder::query()
+                ->with('lineItems.batchAllocations')
+                ->lockForUpdate()
+                ->whereKey($receptionOrder->id)
+                ->sole();
 
-        /** @var PurchaseOrder $purchaseOrder */
-        $purchaseOrder = $receptionOrder->purchaseOrder;
-        $this->guardPurchaseOrderStatus($purchaseOrder);
+            if ($receptionOrder->status !== 'pending') {
+                throw new InvalidArgumentException("Cannot complete a reception order with status: {$receptionOrder->status}.");
+            }
 
-        return DB::transaction(function () use ($receptionOrder, $purchaseOrder, $actor): ReceptionOrder {
-            $receptionOrder->load('lineItems');
-
-            $poLineItemIds = $receptionOrder->lineItems->pluck('purchase_order_item_id')->filter()->unique()->toArray();
-            $poLineItems = PurchaseOrderProduct::with('unit')
-                ->whereIn('id', $poLineItemIds)
-                ->get()
-                ->keyBy('id');
-
+            $purchaseOrder = PurchaseOrder::query()->lockForUpdate()->whereKey($receptionOrder->purchase_order_id)->sole();
+            $this->guardPurchaseOrderStatus($purchaseOrder);
             $stockChanges = [];
 
             foreach ($receptionOrder->lineItems as $lineItem) {
-                $poLineItem = $poLineItems->get($lineItem->purchase_order_item_id);
-                $conversionFactor = $poLineItem?->unit?->conversion_factor ?? 1;
-
-                $baseQuantity = (int) round($lineItem->quantity * $conversionFactor);
-
-                Batch::create([
-                    'product_variant_id' => $lineItem->product_variant_id,
-                    'reception_order_id' => $receptionOrder->id,
-                    'store_id' => $receptionOrder->store_id,
-                    'expiry_date' => $lineItem->expiry_date,
-                    'batch_identifier' => $lineItem->batch_identifier,
-                    'initial_quantity' => $baseQuantity,
-                    'remaining_quantity' => $baseQuantity,
-                    'missing_quantity' => 0,
-                    'sold_quantity' => 0,
-                    'transferred_quantity' => 0,
-                    'status' => 'active',
-                ]);
-
-                $stockChanges[$lineItem->product_variant_id] = $baseQuantity;
+                foreach ($lineItem->batchAllocations as $allocation) {
+                    Batch::create([
+                        'product_variant_id' => $lineItem->product_variant_id,
+                        'reception_order_id' => $receptionOrder->id,
+                        'reception_order_batch_allocation_id' => $allocation->id,
+                        'store_id' => $receptionOrder->store_id,
+                        'expiry_date' => $allocation->expiry_date,
+                        'batch_identifier' => $allocation->batch_identifier,
+                        'initial_quantity' => $allocation->base_quantity,
+                        'remaining_quantity' => $allocation->base_quantity,
+                        'missing_quantity' => 0,
+                        'sold_quantity' => 0,
+                        'transferred_quantity' => 0,
+                        'status' => 'active',
+                    ]);
+                    $stockChanges[$lineItem->product_variant_id] = ($stockChanges[$lineItem->product_variant_id] ?? 0) + $allocation->base_quantity;
+                }
             }
 
-            $variantIds = $receptionOrder->lineItems->pluck('product_variant_id')->unique()->map(fn ($id) => (int) $id);
-            foreach ($variantIds as $variantId) {
-                $variant = ProductVariant::find($variantId);
-
-                if ($variant === null) {
-                    throw new InvalidArgumentException("Product variant ID {$variantId} not found.");
-                }
-
-                $variant->recalculateStock();
+            foreach (array_keys($stockChanges) as $variantId) {
+                ProductVariant::query()->whereKey($variantId)->sole()->recalculateStock();
             }
 
             $receptionOrder->update(['status' => 'completed']);
+            (new PurchaseOrderService)->updateReceptionStatus($purchaseOrder);
 
-            $purchaseOrderService = new PurchaseOrderService;
-            $purchaseOrderService->updateReceptionStatus($purchaseOrder);
+            activity()->causedBy($actor)->performedOn($receptionOrder)->withProperties(['stock_changes' => $stockChanges])->log('completed');
 
-            activity()
-                ->causedBy($actor)
-                ->performedOn($receptionOrder)
-                ->withProperties(['stock_changes' => $stockChanges])
-                ->log('completed');
-
-            return $receptionOrder->load([
-                'purchaseOrder', 'vendor', 'store', 'user',
-                'lineItems.productVariant.product',
-            ]);
-        });
+            return $this->loadReceptionOrder($receptionOrder);
+        }, attempts: 3);
     }
 
     public function cancel(ReceptionOrder $receptionOrder, ?string $reason, User $actor): void
     {
-        if (in_array($receptionOrder->status, ['completed', 'cancelled'], true)) {
-            throw new InvalidArgumentException("Cannot cancel a reception order with status: {$receptionOrder->status}.");
-        }
-
         DB::transaction(function () use ($receptionOrder, $reason, $actor): void {
+            $receptionOrder = ReceptionOrder::query()->lockForUpdate()->whereKey($receptionOrder->id)->sole();
+            if ($receptionOrder->status !== 'pending') {
+                throw new InvalidArgumentException("Cannot cancel a reception order with status: {$receptionOrder->status}.");
+            }
             $receptionOrder->update(['status' => 'cancelled']);
-
-            /** @var PurchaseOrder $purchaseOrder */
-            $purchaseOrder = $receptionOrder->purchaseOrder;
-            $purchaseOrderService = new PurchaseOrderService;
-            $purchaseOrderService->updateReceptionStatus($purchaseOrder);
-
-            activity()
-                ->causedBy($actor)
-                ->performedOn($receptionOrder)
-                ->withProperties(['reason' => $reason])
-                ->log('cancelled');
-        });
+            $purchaseOrder = PurchaseOrder::query()->whereKey($receptionOrder->purchase_order_id)->sole();
+            (new PurchaseOrderService)->updateReceptionStatus($purchaseOrder);
+            activity()->causedBy($actor)->performedOn($receptionOrder)->withProperties(['reason' => $reason])->log('cancelled');
+        }, attempts: 3);
     }
 
-    /**
-     * Get the total claimed quantities per PO line item for a PO, from all non-cancelled reception orders.
-     *
-     * Public so ReceptionOrderController can reuse it in create()/edit() instead of duplicating the quantity sum.
-     *
-     * @return array<int, string> keyed by purchase_order_item_id
-     */
+    /** @return array<int, string> */
     public function getClaimedQuantities(PurchaseOrder $po, ?int $excludeReceptionOrderId = null): array
     {
-        $receptionOrders = $po->receptionOrders()
+        return $po->receptionOrders()
             ->where('status', '!=', 'cancelled')
-            ->when($excludeReceptionOrderId, fn ($q) => $q->where('id', '!=', $excludeReceptionOrderId))
+            ->when($excludeReceptionOrderId, fn ($query) => $query->where('id', '!=', $excludeReceptionOrderId))
             ->with('lineItems')
-            ->get();
-
-        $quantities = [];
-
-        foreach ($receptionOrders as $receptionOrder) {
-            foreach ($receptionOrder->lineItems as $lineItem) {
-                $poItemId = (int) $lineItem->purchase_order_item_id;
-                $quantities[$poItemId] = number_format((float) ($quantities[$poItemId] ?? 0) + (float) $lineItem->quantity, 4, '.', '');
-            }
-        }
-
-        return $quantities;
-    }
-
-    private function guardPurchaseOrderStatus(PurchaseOrder $po): void
-    {
-        $blocked = ['draft', 'awaiting_approval', 'cancelled', 'received'];
-
-        if (in_array($po->status, $blocked, true)) {
-            throw new InvalidArgumentException("Cannot create a reception order against a purchase order with status: {$po->status}.");
-        }
+            ->get()
+            ->flatMap(fn (ReceptionOrder $receptionOrder) => $receptionOrder->lineItems)
+            ->groupBy('purchase_order_item_id')
+            ->map(fn ($items) => number_format((float) $items->sum('quantity'), 4, '.', ''))
+            ->all();
     }
 
     /**
-     * @param  array<int, array{purchase_order_item_id: int}>  $items
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, array<string, mixed>>
      */
-    private function guardItemsBelongToPo(array $items, PurchaseOrder $po): void
+    private function normalizeItems(array $items, PurchaseOrder $purchaseOrder): array
     {
-        $poItemIds = $po->lineItems->pluck('id')->toArray();
+        $poLineItems = $purchaseOrder->lineItems->keyBy('id');
+        $normalized = [];
 
+        foreach ($items as $index => $item) {
+            $poLineItem = $poLineItems->get($item['purchase_order_item_id'] ?? null);
+            if ($poLineItem === null) {
+                throw new InvalidArgumentException("Purchase order item at position {$index} does not belong to purchase order #{$purchaseOrder->id}.");
+            }
+            $unit = $poLineItem->unit;
+            $conversionFactor = $unit === null ? 1 : $unit->conversion_factor;
+            $baseQuantity = 0;
+            foreach ($item['batches'] ?? [] as $batch) {
+                $purchaseUnits = (int) ($batch['purchase_unit_quantity'] ?? 0);
+                $looseUnits = (int) ($batch['loose_unit_quantity'] ?? 0);
+                if ($purchaseUnits < 0 || $looseUnits < 0 || $looseUnits >= $conversionFactor) {
+                    throw new InvalidArgumentException('Each batch must contain valid purchase and loose unit quantities.');
+                }
+                $baseQuantity += ($purchaseUnits * $conversionFactor) + $looseUnits;
+            }
+            if ($baseQuantity === 0 || $baseQuantity % $conversionFactor !== 0) {
+                throw new InvalidArgumentException('Batch allocations must add up to a whole received purchase unit quantity.');
+            }
+            $normalized[] = [
+                'purchase_order_item_id' => $poLineItem->id,
+                'product_variant_id' => $poLineItem->product_variant_id,
+                'quantity' => $baseQuantity / $conversionFactor,
+                'conversion_factor' => $conversionFactor,
+                'batches' => $item['batches'],
+            ];
+        }
+
+        return $normalized;
+    }
+
+    /** @param array<int, array<string, mixed>> $items */
+    private function storeItems(ReceptionOrder $receptionOrder, array $items, PurchaseOrder $purchaseOrder): void
+    {
+        $poLineItems = $purchaseOrder->lineItems->keyBy('id');
         foreach ($items as $item) {
-            if (! in_array($item['purchase_order_item_id'], $poItemIds, true)) {
-                throw new InvalidArgumentException(
-                    "Purchase order item ID {$item['purchase_order_item_id']} is not in purchase order #{$po->id}'s line items."
-                );
+            $poLineItem = $poLineItems->get($item['purchase_order_item_id']);
+            if ($poLineItem === null) {
+                throw new InvalidArgumentException('The selected purchase order item could not be found.');
+            }
+            $lineItem = ReceptionOrderProduct::create([
+                'reception_order_id' => $receptionOrder->id,
+                'purchase_order_item_id' => $item['purchase_order_item_id'],
+                'product_variant_id' => $item['product_variant_id'],
+                'quantity' => $item['quantity'],
+                'conversion_factor' => $item['conversion_factor'],
+                'price' => $poLineItem->price,
+                'total' => round((float) $poLineItem->price * $item['quantity'], 2),
+            ]);
+            foreach ($item['batches'] as $batch) {
+                $purchaseUnits = (int) ($batch['purchase_unit_quantity'] ?? 0);
+                $looseUnits = (int) ($batch['loose_unit_quantity'] ?? 0);
+                ReceptionOrderBatchAllocation::create([
+                    'reception_order_product_id' => $lineItem->id,
+                    'purchase_unit_quantity' => $purchaseUnits,
+                    'loose_unit_quantity' => $looseUnits,
+                    'base_quantity' => ($purchaseUnits * $item['conversion_factor']) + $looseUnits,
+                    'expiry_date' => $batch['expiry_date'] ?? null,
+                    'batch_identifier' => $batch['batch_identifier'] ?? null,
+                ]);
             }
         }
     }
 
-    /**
-     * Validate that proposed reception quantities do not exceed remaining ordered quantities.
-     *
-     * @param  array<int, array{purchase_order_item_id: int, quantity: float|int|string}>  $items
-     * @param  int|null  $excludeReceptionOrderId  Exclude this RO's quantities (for updates)
-     */
+    /** @param array<int, array<string, mixed>> $items */
     private function guardAgainstOverReceiving(array $items, PurchaseOrder $po, ?int $excludeReceptionOrderId = null): void
     {
-        $poLineItems = $po->lineItems->keyBy('id');
-
-        $claimedQuantities = $this->getClaimedQuantities($po, $excludeReceptionOrderId);
-
+        $claimed = $this->getClaimedQuantities($po, $excludeReceptionOrderId);
         foreach ($items as $item) {
-            $poItemId = $item['purchase_order_item_id'];
-            $poLineItem = $poLineItems->get($poItemId);
-
+            $poLineItem = $po->lineItems->firstWhere('id', $item['purchase_order_item_id']);
             if ($poLineItem === null) {
-                continue;
+                throw new InvalidArgumentException('The selected purchase order item could not be found.');
             }
-
-            $orderedQuantity = (float) $poLineItem->quantity;
-            $alreadyClaimed = (float) ($claimedQuantities[$poItemId] ?? 0);
-            $proposedQuantity = (float) $item['quantity'];
-            $remaining = $orderedQuantity - $alreadyClaimed;
-
-            if ($proposedQuantity > $remaining) {
-                throw new InvalidArgumentException(
-                    "Cannot receive {$proposedQuantity} units of this product variant. Only {$remaining} remaining of {$orderedQuantity} ordered ({$alreadyClaimed} already claimed by other reception orders)."
-                );
+            $ordered = (float) $poLineItem->quantity;
+            $available = $ordered - (float) ($claimed[$item['purchase_order_item_id']] ?? 0);
+            if ($item['quantity'] > $available) {
+                throw new InvalidArgumentException("Cannot receive {$item['quantity']} units. Only {$available} are available to receive.");
             }
         }
+    }
+
+    private function guardPurchaseOrderStatus(PurchaseOrder $purchaseOrder): void
+    {
+        if (! in_array($purchaseOrder->status, ['sent', 'partially_received'], true)) {
+            throw new InvalidArgumentException("Cannot create a reception order against a purchase order with status: {$purchaseOrder->status}.");
+        }
+    }
+
+    private function loadReceptionOrder(ReceptionOrder $receptionOrder): ReceptionOrder
+    {
+        return $receptionOrder->load(['purchaseOrder', 'vendor', 'store', 'user', 'lineItems.productVariant.product.brand', 'lineItems.productVariant.product.measurementUnit', 'lineItems.purchaseOrderItem.unit', 'lineItems.batchAllocations']);
     }
 }

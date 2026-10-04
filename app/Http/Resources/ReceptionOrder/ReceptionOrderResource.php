@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\ReceptionOrder;
 
 use App\Models\ReceptionOrder;
+use App\Models\ReceptionOrderBatchAllocation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -82,10 +83,18 @@ final class ReceptionOrderResource extends JsonResource
                 'purchase_order_item_id' => $item->purchase_order_item_id,
                 'product_variant_id' => $item->product_variant_id,
                 'quantity' => (float) $item->quantity,
+                'conversion_factor' => $item->conversion_factor,
                 'price' => (float) $item->price,
                 'total' => (float) $item->total,
-                'expiry_date' => $item->getAttribute('expiry_date')?->toDateString(),
-                'batch_identifier' => $item->batch_identifier,
+                'batch_allocations' => $item->relationLoaded('batchAllocations') ? array_map(static fn (ReceptionOrderBatchAllocation $allocation): array => [
+                    'id' => $allocation->id,
+                    'reception_order_product_id' => $allocation->reception_order_product_id,
+                    'purchase_unit_quantity' => $allocation->purchase_unit_quantity,
+                    'loose_unit_quantity' => $allocation->loose_unit_quantity,
+                    'base_quantity' => $allocation->base_quantity,
+                    'expiry_date' => $allocation->expiry_date?->toDateString(),
+                    'batch_identifier' => $allocation->batch_identifier,
+                ], $item->batchAllocations->all()) : [],
                 'product_variant' => $item->productVariant ? [
                     'id' => $item->productVariant->id,
                     'name' => $item->productVariant->name,
@@ -96,6 +105,10 @@ final class ReceptionOrderResource extends JsonResource
                     'product' => $item->productVariant->product ? [
                         'id' => $item->productVariant->product->id,
                         'name' => $item->productVariant->product->name,
+                        'brand' => $item->productVariant->product->relationLoaded('brand') && $item->productVariant->product->brand !== null ? [
+                            'id' => $item->productVariant->product->brand->id,
+                            'name' => $item->productVariant->product->brand->name,
+                        ] : null,
                         'measurement_unit' => $item->productVariant->product->relationLoaded('measurementUnit') && $item->productVariant->product->measurementUnit !== null ? [
                             'id' => $item->productVariant->product->measurementUnit->id,
                             'name' => $item->productVariant->product->measurementUnit->name,

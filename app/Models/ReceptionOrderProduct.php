@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class ReceptionOrderProduct extends Model
 {
@@ -16,10 +17,9 @@ final class ReceptionOrderProduct extends Model
         'purchase_order_item_id',
         'product_variant_id',
         'quantity',
+        'conversion_factor',
         'price',
         'total',
-        'expiry_date',
-        'batch_identifier',
     ];
 
     /** @return BelongsTo<ReceptionOrder, $this> */
@@ -40,6 +40,12 @@ final class ReceptionOrderProduct extends Model
         return $this->belongsTo(ProductVariant::class);
     }
 
+    /** @return HasMany<ReceptionOrderBatchAllocation, $this> */
+    public function batchAllocations(): HasMany
+    {
+        return $this->hasMany(ReceptionOrderBatchAllocation::class);
+    }
+
     /**
      * @return array<string, string>
      */
@@ -49,7 +55,6 @@ final class ReceptionOrderProduct extends Model
             'quantity' => 'decimal:4',
             'price' => 'decimal:2',
             'total' => 'decimal:2',
-            'expiry_date' => 'date',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',
         ];

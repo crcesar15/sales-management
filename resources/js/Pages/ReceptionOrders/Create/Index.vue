@@ -54,6 +54,8 @@ const [notes, notesAttrs] = defineField("notes");
 
 const lineItems = ref<ReceptionLineItem[]>([]);
 const itemsError = ref("");
+const serverErrors = ref<Record<string, string>>({});
+const processing = ref(false);
 
 const selectedPurchaseOrder = computed(() => props.purchaseOrders.find((po) => po.id === values.purchase_order_id) ?? null);
 
@@ -69,17 +71,18 @@ watch(
     const po = selectedPurchaseOrder.value;
     if (po) {
       lineItems.value = po.line_items
-        .filter((item) => Number(item.remaining_quantity ?? item.quantity) > 0)
-        .map((item) => ({
+        .filter((item) => Number((item as typeof item & { available_quantity?: number }).available_quantity ?? item.remaining_quantity ?? item.quantity) > 0)
+        .map((item) => {
+          const availableQuantity = Number((item as typeof item & { available_quantity?: number }).available_quantity ?? item.remaining_quantity ?? item.quantity);
+
+          return {
           id: crypto.randomUUID(),
           purchase_order_item_id: item.id,
           product_variant_id: item.product_variant_id,
           product_name: item.product_variant?.product?.name ?? "—",
+          brand_name: item.product_variant?.product?.brand?.name ?? null,
           variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
-          quantity: Number(item.remaining_quantity ?? item.quantity),
-          max_quantity: Number(item.remaining_quantity ?? item.quantity),
-          expiry_date: null,
-          batch_identifier: "",
+          available_quantity: availableQuantity,
           has_expiration: item.product_variant?.has_expiration ?? false,
           purchase_unit: item.unit ?? null,
           base_unit: item.product_variant?.product?.measurement_unit
@@ -89,13 +92,14 @@ watch(
                 abbreviation: item.product_variant.product.measurement_unit.abbreviation,
               }
             : null,
-          stock: item.product_variant?.stock ?? null,
-          minimum_stock_level: item.product_variant?.minimum_stock_level ?? null,
-        }));
+          batches: [{ id: crypto.randomUUID(), purchase_unit_quantity: availableQuantity, loose_unit_quantity: 0, expiry_date: null, batch_identifier: "" }],
+          };
+        });
     } else {
       lineItems.value = [];
     }
     itemsError.value = "";
+    serverErrors.value = {};
   },
 );
 
@@ -106,31 +110,40 @@ const submit = handleSubmit((formValues) => {
     return;
   }
 
-  const payload = {
+    const payload = {
     purchase_order_id: formValues.purchase_order_id,
     store_id: formValues.store_id,
     reception_date: toDateOnly(formValues.reception_date),
     notes: formValues.notes || null,
-    items: lineItems.value.map((item) => ({
-      purchase_order_item_id: item.purchase_order_item_id,
-      product_variant_id: item.product_variant_id,
-      quantity: Number(item.quantity),
-      expiry_date: toDateOnly(item.expiry_date),
-      batch_identifier: item.batch_identifier || null,
-    })),
-  };
+      items: lineItems.value.map((item) => ({
+        purchase_order_item_id: item.purchase_order_item_id,
+        batches: item.batches.map((batch) => ({
+          purchase_unit_quantity: Number(batch.purchase_unit_quantity),
+          loose_unit_quantity: Number(batch.loose_unit_quantity),
+          expiry_date: toDateOnly(batch.expiry_date),
+          batch_identifier: batch.batch_identifier || null,
+        })),
+      })),
+    };
 
-  router.post(route("reception-orders.store"), payload, {
+    router.post(route("reception-orders.store"), payload, {
     onSuccess: () => {
       toast.add({ severity: "success", summary: t("Success"), detail: t("Reception order created successfully"), life: 3000 });
-    },
-    onError: (errs: Record<string, string>) => {
-      setErrors(errs);
+      },
+      onError: (errs: Record<string, string>) => {
+        serverErrors.value = errs;
+        setErrors(errs);
       toast.add({ severity: "error", summary: t("Error"), detail: t("Please review the errors in the form"), life: 3000 });
       nextTick(() => {
-        document.querySelector<HTMLInputElement>(".p-invalid")?.focus();
-      });
-    },
+          document.querySelector<HTMLInputElement>(".p-invalid")?.focus();
+        });
+      },
+      onStart: () => {
+        processing.value = true;
+      },
+      onFinish: () => {
+        processing.value = false;
+      },
   });
 });
 
@@ -146,7 +159,7 @@ function goBack() {
         <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Create Reception Order") }}</h2>
       </div>
-      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="false" @click="submit" />
+      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="processing" :disabled="processing" @click="submit" />
     </div>
 
     <div class="grid grid-cols-12 gap-4">
@@ -293,7 +306,7 @@ function goBack() {
               <span class="font-medium text-lg mb-1">{{ t("Select a purchase order first") }}</span>
               <small>{{ t("Line items from purchase order") }}</small>
             </div>
-            <ReceptionLineItemsTable v-else v-model="lineItems" />
+            <ReceptionLineItemsTable v-else v-model="lineItems" :errors="serverErrors" :show-validation="submitCount > 0" :disabled="processing" />
             <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
           </template>
         </Card>

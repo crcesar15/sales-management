@@ -1165,5 +1165,11 @@
   "Variant-specific identifiers used at sale and receiving.": "Variant-specific identifiers used at sale and receiving.",
   "Yes": "Yes",
   "Unknown product": "Unknown product",
-  "You have unsaved changes. Leave this page without saving?": "You have unsaved changes. Leave this page without saving?"
+  "You have unsaved changes. Leave this page without saving?": "You have unsaved changes. Leave this page without saving?",
+  "Allocated": "Allocated",
+  "Allocated quantity cannot exceed the available quantity": "Allocated quantity cannot exceed the available quantity",
+  "Available to receive": "Available to receive",
+  "Loose Units": "Loose Units",
+  "Unallocated": "Unallocated",
+  "Are you sure you want to remove this batch?": "Are you sure you want to remove this batch?"
 }

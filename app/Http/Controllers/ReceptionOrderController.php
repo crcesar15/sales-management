@@ -75,7 +75,7 @@ final class ReceptionOrderController extends Controller
 
         $purchaseOrders = PurchaseOrder::query()
             ->whereIn('status', ['sent', 'partially_received'])
-            ->with(['vendor', 'lineItems.productVariant.product.measurementUnit', 'lineItems.unit'])
+            ->with(['vendor', 'lineItems.productVariant.product.brand', 'lineItems.productVariant.product.measurementUnit', 'lineItems.unit'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function (PurchaseOrder $po) {
@@ -84,7 +84,7 @@ final class ReceptionOrderController extends Controller
                 $po->lineItems->each(function (PurchaseOrderProduct $item) use ($claimedQuantities) {
                     $ordered = (float) $item->quantity;
                     $claimed = (float) ($claimedQuantities[$item->id] ?? 0);
-                    $item->setAttribute('remaining_quantity', (string) ($ordered - $claimed));
+                    $item->setAttribute('available_quantity', (string) ($ordered - $claimed));
                 });
 
                 return $po;
@@ -124,7 +124,9 @@ final class ReceptionOrderController extends Controller
             'store',
             'user',
             'lineItems.productVariant.product.measurementUnit',
+            'lineItems.productVariant.product.brand',
             'lineItems.purchaseOrderItem.unit',
+            'lineItems.batchAllocations',
         ]);
 
         return Inertia::render('ReceptionOrders/Show/Index', [
@@ -142,9 +144,10 @@ final class ReceptionOrderController extends Controller
         }
 
         $receptionOrder->load([
-            'purchaseOrder.lineItems.productVariant.product',
+            'purchaseOrder.lineItems.productVariant.product.brand',
             'purchaseOrder.lineItems.unit',
             'lineItems.productVariant.product.measurementUnit',
+            'lineItems.productVariant.product.brand',
             'lineItems.purchaseOrderItem.unit',
         ]);
 
@@ -156,7 +159,7 @@ final class ReceptionOrderController extends Controller
         $purchaseOrder->lineItems->each(function (PurchaseOrderProduct $item) use ($claimedQuantities) {
             $ordered = (float) $item->quantity;
             $claimed = (float) ($claimedQuantities[$item->id] ?? 0);
-            $item->setAttribute('remaining_quantity', (string) ($ordered - $claimed));
+            $item->setAttribute('available_quantity', (string) ($ordered - $claimed));
         });
 
         return Inertia::render('ReceptionOrders/Edit/Index', [

@@ -17,6 +17,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
             $table->foreignId('reception_order_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('reception_order_batch_allocation_id')->nullable()->unique();
+            $table->foreign('reception_order_batch_allocation_id', 'batch_allocation_fk')
+                ->references('id')
+                ->on('reception_order_batch_allocations')
+                ->cascadeOnDelete();
             $table->foreignId('store_id')->constrained()->onDelete('cascade');
             $table->date('expiry_date')->nullable();
             $table->string('batch_identifier')->nullable();

@@ -52,7 +52,7 @@ const [notes, notesAttrs] = defineField("notes");
 const poRemainingByItem = new Map<number, number>();
 if (props.receptionOrder.purchase_order?.line_items) {
   for (const poItem of props.receptionOrder.purchase_order.line_items) {
-    poRemainingByItem.set(poItem.id, Number(poItem.remaining_quantity ?? poItem.quantity));
+    poRemainingByItem.set(poItem.id, Number((poItem as typeof poItem & { available_quantity?: number }).available_quantity ?? poItem.remaining_quantity ?? poItem.quantity));
   }
 }
 
@@ -62,29 +62,31 @@ const lineItems = ref<ReceptionLineItem[]>(
     purchase_order_item_id: item.purchase_order_item_id,
     product_variant_id: item.product_variant_id,
     product_name: item.product_variant?.product?.name ?? "—",
+    brand_name: item.product_variant?.product?.brand?.name ?? null,
     variant_label: item.product_variant?.name ?? item.product_variant?.identifier ?? "—",
-    quantity: Number(item.quantity),
-    max_quantity: poRemainingByItem.get(item.purchase_order_item_id) ?? undefined,
-    expiry_date: parseDateOnly(item.expiry_date),
-    batch_identifier: item.batch_identifier ?? "",
+    available_quantity: poRemainingByItem.get(item.purchase_order_item_id) ?? Number(item.quantity),
     purchase_unit: item.purchase_order_item?.unit ?? item.purchase_unit ?? null,
     base_unit: item.product_variant?.product?.measurement_unit
-      ? {
-          id: item.product_variant.product.measurement_unit.id,
-          name: item.product_variant.product.measurement_unit.name,
-          abbreviation: item.product_variant.product.measurement_unit.abbreviation,
-        }
+      ? { id: item.product_variant.product.measurement_unit.id, name: item.product_variant.product.measurement_unit.name, abbreviation: item.product_variant.product.measurement_unit.abbreviation }
       : null,
-    stock: item.product_variant?.stock ?? null,
-    minimum_stock_level: item.product_variant?.minimum_stock_level ?? null,
     has_expiration: item.product_variant?.has_expiration ?? false,
+    batches: item.batch_allocations.map((batch) => ({
+      id: crypto.randomUUID(),
+      purchase_unit_quantity: batch.purchase_unit_quantity,
+      loose_unit_quantity: batch.loose_unit_quantity,
+      expiry_date: parseDateOnly(batch.expiry_date),
+      batch_identifier: batch.batch_identifier ?? "",
+    })),
   })),
 );
 
 const itemsError = ref("");
+const serverErrors = ref<Record<string, string>>({});
+const processing = ref(false);
 
 const submit = handleSubmit((formValues) => {
-  itemsError.value = "";
+    itemsError.value = "";
+    serverErrors.value = {};
   if (lineItems.value.length === 0) {
     itemsError.value = t("At least one item is required");
     return;
@@ -94,12 +96,14 @@ const submit = handleSubmit((formValues) => {
     store_id: formValues.store_id,
     reception_date: toDateOnly(formValues.reception_date),
     notes: formValues.notes || null,
-    items: lineItems.value.map((item) => ({
-      purchase_order_item_id: item.purchase_order_item_id,
-      product_variant_id: item.product_variant_id,
-      quantity: Number(item.quantity),
-      expiry_date: toDateOnly(item.expiry_date),
-      batch_identifier: item.batch_identifier || null,
+      items: lineItems.value.map((item) => ({
+        purchase_order_item_id: item.purchase_order_item_id,
+        batches: item.batches.map((batch) => ({
+          purchase_unit_quantity: Number(batch.purchase_unit_quantity),
+          loose_unit_quantity: Number(batch.loose_unit_quantity),
+          expiry_date: toDateOnly(batch.expiry_date),
+          batch_identifier: batch.batch_identifier || null,
+        })),
     })),
   };
 
@@ -107,13 +111,20 @@ const submit = handleSubmit((formValues) => {
     onSuccess: () => {
       toast.add({ severity: "success", summary: t("Success"), detail: t("Reception order updated successfully"), life: 3000 });
     },
-    onError: (errs: Record<string, string>) => {
+      onError: (errs: Record<string, string>) => {
+        serverErrors.value = errs;
       setErrors(errs);
       toast.add({ severity: "error", summary: t("Error"), detail: t("Please review the errors in the form"), life: 3000 });
       nextTick(() => {
-        document.querySelector<HTMLInputElement>(".p-invalid")?.focus();
-      });
-    },
+          document.querySelector<HTMLInputElement>(".p-invalid")?.focus();
+        });
+      },
+      onStart: () => {
+        processing.value = true;
+      },
+      onFinish: () => {
+        processing.value = false;
+      },
   });
 });
 
@@ -129,7 +140,7 @@ function goBack() {
         <Button icon="fa fa-arrow-left" text severity="secondary" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Edit Reception Order") }} #{{ receptionOrder.id }}</h2>
       </div>
-      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="false" @click="submit" />
+      <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="processing" :disabled="processing" @click="submit" />
     </div>
 
     <div class="grid grid-cols-12 gap-4">
@@ -197,7 +208,7 @@ function goBack() {
         <Card class="mb-4">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <ReceptionLineItemsTable v-model="lineItems" />
+            <ReceptionLineItemsTable v-model="lineItems" :errors="serverErrors" :show-validation="submitCount > 0" :disabled="processing" />
             <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
           </template>
         </Card>

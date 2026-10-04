@@ -12,13 +12,14 @@ export interface ReceptionOrderLineItem {
   purchase_order_item_id: number;
   product_variant_id: number;
   quantity: number;
+  conversion_factor: number;
   price: number;
   total: number;
-  expiry_date: string | null;
-  batch_identifier: string | null;
+  batch_allocations: ReceptionOrderBatchAllocation[];
   purchase_unit?: PurchaseUnitResponse | null;
   product_variant: Pick<ProductVariantResponse, "id" | "name" | "identifier" | "stock" | "minimum_stock_level" | "has_expiration"> & {
     product: Pick<ProductVariantResponse["product"], "id" | "name"> & {
+      brand?: { id: number; name: string } | null;
       measurement_unit?: { id: number; name: string; abbreviation: string } | null;
     };
   };
@@ -35,6 +36,16 @@ export interface ReceptionOrderLineItem {
     lead_time_days: number | null;
     details: string | null;
   } | null;
+}
+
+export interface ReceptionOrderBatchAllocation {
+  id: number;
+  reception_order_product_id: number;
+  purchase_unit_quantity: number;
+  loose_unit_quantity: number;
+  base_quantity: number;
+  expiry_date: string | null;
+  batch_identifier: string | null;
 }
 
 export interface ReceptionOrder {
@@ -94,10 +105,12 @@ export interface ReceptionOrderPayload {
   reception_date?: string | null;
   notes?: string | null;
   items: Array<{
-    product_variant_id: number;
     purchase_order_item_id: number;
-    quantity: number;
-    expiry_date?: string | null;
-    batch_identifier?: string | null;
+    batches: Array<{
+      purchase_unit_quantity: number;
+      loose_unit_quantity: number;
+      expiry_date?: string | null;
+      batch_identifier?: string | null;
+    }>;
   }>;
 }

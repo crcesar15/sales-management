@@ -1167,5 +1167,11 @@
   "Variant-specific identifiers used at sale and receiving.": "Identificadores específicos de la variante utilizados en ventas y recepción.",
   "Yes": "Sí",
   "Unknown product": "Producto desconocido",
-  "You have unsaved changes. Leave this page without saving?": "Tienes cambios sin guardar. ¿Salir de esta página sin guardarlos?"
+  "You have unsaved changes. Leave this page without saving?": "Tienes cambios sin guardar. ¿Salir de esta página sin guardarlos?",
+  "Allocated": "Asignado",
+  "Allocated quantity cannot exceed the available quantity": "La cantidad asignada no puede exceder la cantidad disponible",
+  "Available to receive": "Disponible para recibir",
+  "Loose Units": "Unidades sueltas",
+  "Unallocated": "Sin asignar",
+  "Are you sure you want to remove this batch?": "¿Seguro que deseas eliminar este lote?"
 }
