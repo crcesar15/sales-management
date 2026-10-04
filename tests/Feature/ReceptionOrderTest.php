@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PurchaseOrderStatus;
 use App\Enums\RolesEnum;
 use App\Models\Catalog;
 use App\Models\Product;
@@ -42,7 +43,7 @@ it('lists the purchase unit stored on the reception order purchase order item', 
     $purchaseOrder = PurchaseOrder::factory()->create([
         'user_id' => $admin->id,
         'vendor_id' => $vendor->id,
-        'status' => 'sent',
+        'status' => PurchaseOrderStatus::APPROVED,
     ]);
     $purchaseOrderItem = PurchaseOrderProduct::query()->create([
         'purchase_order_id' => $purchaseOrder->id,
@@ -120,7 +121,7 @@ it('creates separate inventory batches for mixed lots within received purchase u
         'sort_order' => 1,
     ]);
     $catalog = Catalog::factory()->create(['vendor_id' => $vendor->id, 'product_variant_id' => $variant->id, 'unit_id' => $unit->id]);
-    $purchaseOrder = PurchaseOrder::factory()->create(['user_id' => $admin->id, 'vendor_id' => $vendor->id, 'status' => 'sent']);
+    $purchaseOrder = PurchaseOrder::factory()->create(['user_id' => $admin->id, 'vendor_id' => $vendor->id, 'status' => PurchaseOrderStatus::APPROVED]);
     $purchaseOrderItem = PurchaseOrderProduct::query()->create([
         'purchase_order_id' => $purchaseOrder->id,
         'product_variant_id' => $variant->id,
@@ -167,4 +168,5 @@ it('creates separate inventory batches for mixed lots within received purchase u
     $this->assertDatabaseHas('batches', ['reception_order_id' => $receptionOrder->id, 'batch_identifier' => 'LOT-B', 'initial_quantity' => 2]);
 
     expect($variant->fresh()->stock)->toBe(10);
+    expect($purchaseOrder->fresh()?->status)->toBe(PurchaseOrderStatus::CLOSED);
 });
