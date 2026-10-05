@@ -4,17 +4,23 @@ import type { PurchasePriceHistory } from "@/Types/inventory-variant-types";
 import { useApi } from "@composables/useApi";
 import { route } from "ziggy-js";
 
+interface VariantSearchOptions {
+  includes?: string[];
+  storeId?: number | null;
+}
+
 export function useVariantClient() {
   const { apiClient, loading } = useApi();
 
-  const searchVariantsApi = async (
+  const searchVariantsApi = async <T = CatalogVariantSearchResult>(
     filter: string,
-    includes: string[] = [],
-  ): Promise<AxiosResponse<{ data: CatalogVariantSearchResult[] }>> => {
-    return await apiClient.get(route("api.v1.variants.search"), {
+    { includes = [], storeId = null }: VariantSearchOptions = {},
+  ): Promise<AxiosResponse<{ data: T[] }>> => {
+    return await apiClient.get<{ data: T[] }>(route("api.v1.variants.search"), {
       params: {
         filter,
         ...(includes.length > 0 ? { includes: includes.join(",") } : {}),
+        ...(storeId !== null ? { store_id: storeId } : {}),
       },
     });
   };

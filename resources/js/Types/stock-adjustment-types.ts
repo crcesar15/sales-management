@@ -9,6 +9,27 @@ export interface AvailableBatch {
   status: string;
 }
 
+export interface StockAdjustmentVariantOption {
+  option_name: string | null;
+  value: string;
+}
+
+export interface StockAdjustmentVariantSearchResult {
+  id: number;
+  identifier: string | null;
+  option_values: string | null;
+  variant_options: StockAdjustmentVariantOption[];
+  stock: number;
+  minimum_stock_level: number | null;
+  has_expiration: boolean;
+  product: {
+    id: number;
+    name: string;
+    brand: { id: number; name: string } | null;
+    measurement_unit: { id: number; name: string } | null;
+  } | null;
+}
+
 export interface StockAdjustment {
   id: number;
   product_variant_id: number;

@@ -41,6 +41,7 @@ beforeEach(function () {
         'product_id' => $product->id,
         'price' => 100,
         'stock' => 55, // aggregate across both stores (would be wrong to use)
+        'has_expiration' => true,
     ]);
 
     Batch::factory()->create([
@@ -113,6 +114,7 @@ it('returns canonical variant fields without derived display aliases', function 
         ->toHaveKey('id')
         ->toHaveKey('identifier', 'TEST-IDENTIFIER')
         ->toHaveKey('option_values')
+        ->toHaveKey('has_expiration', true)
         ->toHaveKey('product')
         ->not->toHaveKey('name')
         ->not->toHaveKey('variant_label')

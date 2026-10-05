@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import { Button, Card, Select, InputNumber, InputText, Textarea, AutoComplete, DatePicker, Tag, useToast } from "primevue";
+import { Button, Card, Select, InputNumber, InputText, Textarea, DatePicker, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -8,12 +8,11 @@ import { toTypedSchema } from "@vee-validate/yup";
 import { object, number, string } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, watch } from "vue";
-import axios from "axios";
 import AppLayout from "@layouts/admin.vue";
 import { useBatchClient } from "@/Composables/useBatchClient";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
-import type { ProductResponse } from "@app-types/product-types";
-import type { AvailableBatch } from "@/Types/stock-adjustment-types";
+import StockAdjustmentProductPicker from "./Components/StockAdjustmentProductPicker.vue";
+import type { AvailableBatch, StockAdjustmentVariantSearchResult } from "@/Types/stock-adjustment-types";
 
 defineOptions({ layout: AppLayout });
 
@@ -66,23 +65,12 @@ const { handleSubmit, errors, setFieldValue, setErrors, values, submitCount } = 
   },
 });
 
-interface VariantOption {
-  id: number;
-  name: string;
-  product: ProductResponse;
-  identifier: string;
-  stock: number;
-  has_expiration: boolean;
-  label: string;
-}
-
-const variantSearchResults = ref<VariantOption[]>([]);
-const variantSearchLoading = ref(false);
-const selectedVariant = ref<VariantOption | null>(null);
+const selectedVariant = ref<StockAdjustmentVariantSearchResult | null>(null);
 
 const availableBatches = ref<AvailableBatch[]>([]);
 const batchesLoading = ref(false);
 const selectedBatchId = ref<number | null>(null);
+let currentBatchRequestId = 0;
 
 const isInitialStock = computed(() => values.reason === "initial_stock");
 const isNewBatch = computed(() => isInitialStock.value || selectedBatchId.value === NEW_BATCH_VALUE);
@@ -90,51 +78,32 @@ const showBatchSelector = computed(() => !isInitialStock.value && !!values.store
 const showNewBatchFields = computed(() => isNewBatch.value);
 const requiresExpiration = computed(() => selectedVariant.value?.has_expiration === true);
 
-async function searchVariants(event: { query: string }) {
-  if (!event.query || event.query.length < 2) {
-    variantSearchResults.value = [];
-    return;
-  }
-  variantSearchLoading.value = true;
-  try {
-    const response = await axios.get(route("api.v1.variants"), {
-      params: { filter: event.query, per_page: 15 },
-    });
-    variantSearchResults.value = (response.data.data || []).map((v: Record<string, unknown>) => {
-      const id = v.id as number;
-      const name = v.name as string;
-      const product = v.product as ProductResponse;
-      const identifier = v.identifier as string;
-      const stock = (v.stock as number) ?? 0;
-      const has_expiration = (v.has_expiration as boolean) ?? false;
-      const label = name ? `${product?.name ?? ""} - ${name}` : `${product?.name ?? ""}`;
-      return { id, name, product, identifier, stock, has_expiration, label };
-    });
-  } catch {
-    variantSearchResults.value = [];
-  } finally {
-    variantSearchLoading.value = false;
-  }
-}
-
-function selectVariant() {
-  if (!selectedVariant.value) return;
-  setFieldValue("product_variant_id", selectedVariant.value.id);
+function handleVariantSelection(variant: StockAdjustmentVariantSearchResult | null) {
+  selectedVariant.value = variant;
+  setFieldValue("product_variant_id", variant?.id ?? (undefined as unknown as number));
 }
 
 async function fetchAvailableBatches() {
-  if (!values.store_id || !values.product_variant_id) {
+  const storeId = values.store_id;
+  const variantId = values.product_variant_id;
+  if (!storeId || !variantId) {
     availableBatches.value = [];
     return;
   }
+
   batchesLoading.value = true;
+  const requestId = ++currentBatchRequestId;
   try {
-    const response = await fetchAvailableBatchesApi(values.product_variant_id, values.store_id);
+    const response = await fetchAvailableBatchesApi(variantId, storeId);
+    if (requestId !== currentBatchRequestId || values.store_id !== storeId || values.product_variant_id !== variantId) return;
+
     availableBatches.value = response.data?.data || [];
   } catch {
+    if (requestId !== currentBatchRequestId) return;
+
     availableBatches.value = [];
   } finally {
-    batchesLoading.value = false;
+    if (requestId === currentBatchRequestId) batchesLoading.value = false;
   }
 }
 
@@ -150,6 +119,8 @@ function handleBatchSelect(id: number | null) {
 }
 
 function resetBatchSelection() {
+  currentBatchRequestId++;
+  batchesLoading.value = false;
   selectedBatchId.value = null;
   setFieldValue("batch_id", null);
   setFieldValue("expiry_date", null);
@@ -165,6 +136,15 @@ watch(
     } else {
       availableBatches.value = [];
     }
+  },
+);
+
+watch(
+  () => values.store_id,
+  (storeId, previousStoreId) => {
+    if (storeId === previousStoreId) return;
+
+    handleVariantSelection(null);
   },
 );
 
@@ -292,81 +272,18 @@ const submit = handleSubmit((formValues) => {
 
               <div class="col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
-                  <label>{{ t("Product") }}</label>
-                  <AutoComplete
-                    v-model="selectedVariant"
-                    :suggestions="variantSearchResults"
-                    :loading="variantSearchLoading"
-                    option-label="label"
-                    :placeholder="t('Type to search products...')"
-                    :empty-search-message="t('No results found')"
-                    dropdown
-                    force-selection
-                    class="w-full"
-                    input-class="w-full"
-                    @complete="searchVariants"
-                    @item-select="selectVariant"
-                  >
-                    <template #header>
-                      <div
-                        class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 text-sm font-semibold text-surface-500 uppercase tracking-wide border-b border-surface-200 dark:border-surface-700"
-                      >
-                        <span class="col-span-4">{{ t("Product") }}</span>
-                        <span class="col-span-2">{{ t("Brand") }}</span>
-                        <span class="col-span-2">{{ t("Unit") }}</span>
-                        <span class="col-span-2">{{ t("Stock") }}</span>
-                        <span class="col-span-2">{{ t("Identifier") }}</span>
-                      </div>
-                    </template>
-                    <template #option="{ option }">
-                      <!-- Desktop: grid row -->
-                      <div class="hidden lg:grid grid-cols-12 gap-2 items-center w-full py-1">
-                        <div class="col-span-4 flex flex-col gap-0.5 min-w-0">
-                          <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
-                          <span v-if="option.name" class="text-sm text-surface-500 truncate">{{ option.name }}</span>
-                        </div>
-                        <div class="col-span-2 text-sm text-surface-500 truncate">
-                          {{ option.product?.brand?.name ?? "—" }}
-                        </div>
-                        <div class="col-span-2">
-                          <span v-if="option.product?.measurement_unit" class="text-sm">
-                            {{ option.product.measurement_unit.name }}
-                          </span>
-                        </div>
-                        <div class="col-span-2">
-                          <Tag
-                            :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
-                            :severity="option.stock === 0 ? 'danger' : 'success'"
-                            class="text-sm"
-                            rounded
-                          />
-                        </div>
-                        <div class="col-span-2 text-sm text-surface-500 truncate">
-                          {{ option.identifier }}
-                        </div>
-                      </div>
-                      <!-- Mobile: card layout -->
-                      <div class="lg:hidden flex flex-col gap-1.5 py-2 w-full">
-                        <div class="flex items-center justify-between">
-                          <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                            <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
-                            <span class="text-xs text-surface-500 truncate">
-                              <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} ·</span>
-                              <span v-if="option.name">{{ option.name }}</span>
-                              <span v-if="option.product?.measurement_unit" class="ml-1">({{ option.product.measurement_unit.name }})</span>
-                            </span>
-                          </div>
-                          <Tag
-                            :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
-                            :severity="option.stock === 0 ? 'danger' : 'success'"
-                            class="text-xs"
-                            rounded
-                          />
-                        </div>
-                      </div>
-                    </template>
-                  </AutoComplete>
-                  <small v-if="submitCount > 0 && errors.product_variant_id" class="text-red-400 dark:text-red-300">
+                  <label id="stock-adjustment-product-label" :for="selectedVariant ? undefined : 'stock-adjustment-product-search'">
+                    {{ t("Product") }}
+                  </label>
+                  <StockAdjustmentProductPicker
+                    :model-value="selectedVariant"
+                    :store-id="values.store_id ?? null"
+                    :invalid="submitCount > 0 && !!errors.product_variant_id"
+                    labelledby="stock-adjustment-product-label"
+                    error-message-id="stock-adjustment-product-error"
+                    @update:model-value="handleVariantSelection"
+                  />
+                  <small id="stock-adjustment-product-error" v-if="submitCount > 0 && errors.product_variant_id" class="text-red-400 dark:text-red-300">
                     {{ errors.product_variant_id }}
                   </small>
                 </div>
@@ -489,18 +406,6 @@ const submit = handleSubmit((formValues) => {
               <div>
                 <span class="text-sm text-surface-500 block">{{ t("Store") }}</span>
                 <span class="font-medium">{{ selectedStoreName ?? "---" }}</span>
-              </div>
-
-              <div>
-                <span class="text-sm text-surface-500 block">{{ t("Product") }}</span>
-                <span v-if="selectedVariant" class="font-medium">
-                  {{ selectedVariant.product?.name }}
-                  <span class="text-surface-500 ml-1">{{ selectedVariant.name || selectedVariant.identifier }}</span>
-                  <span v-if="selectedVariant.product?.brand?.name" class="block text-sm text-surface-500">
-                    {{ selectedVariant.product.brand.name }}
-                  </span>
-                </span>
-                <span v-else class="text-surface-400">---</span>
               </div>
 
               <div>

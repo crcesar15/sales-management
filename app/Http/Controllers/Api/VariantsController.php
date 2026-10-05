@@ -156,6 +156,7 @@ final class VariantsController extends Controller
                     'price' => (float) $variant->price,
                     'stock' => $stock,
                     'minimum_stock_level' => $variant->minimum_stock_level,
+                    'has_expiration' => $variant->has_expiration,
                     'product' => $variant->product ? [
                         'id' => $variant->product->id,
                         'name' => $variant->product->name,

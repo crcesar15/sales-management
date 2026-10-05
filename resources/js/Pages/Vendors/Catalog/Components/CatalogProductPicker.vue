@@ -130,7 +130,7 @@ async function performSearch() {
   const requestId = ++currentRequestId;
 
   try {
-    const response = await searchVariantsApi(filter, ["purchaseUnits"]);
+    const response = await searchVariantsApi<CatalogVariantSearchResult>(filter, { includes: ["purchaseUnits"] });
     if (requestId !== currentRequestId) return;
 
     searchResults.value = Array.isArray(response.data.data) ? response.data.data : [];
