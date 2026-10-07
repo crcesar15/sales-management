@@ -27,11 +27,22 @@ final class CreateAdjustmentRequest extends FormRequest
         return [
             'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'store_id' => ['required', 'integer', 'exists:stores,id'],
-            'batch_id' => ['nullable', 'integer', 'exists:batches,id'],
+            'batch_id' => [
+                'nullable',
+                'integer',
+                'exists:batches,id',
+                Rule::prohibitedIf(fn (): bool => $this->input('reason') === AdjustmentReason::INITIAL_STOCK->value),
+                Rule::requiredIf(fn (): bool => $this->input('reason') !== AdjustmentReason::INITIAL_STOCK->value),
+            ],
             'expiry_date' => [
                 'nullable',
                 'date',
+                Rule::prohibitedIf(fn (): bool => $this->input('reason') !== AdjustmentReason::INITIAL_STOCK->value),
                 function (string $attribute, mixed $value, Closure $fail): void {
+                    if ($this->input('reason') !== AdjustmentReason::INITIAL_STOCK->value) {
+                        return;
+                    }
+
                     $variantId = $this->input('product_variant_id');
                     if ($variantId) {
                         $variant = ProductVariant::find($variantId);
@@ -41,8 +52,29 @@ final class CreateAdjustmentRequest extends FormRequest
                     }
                 },
             ],
-            'batch_identifier' => ['nullable', 'string', 'max:255'],
-            'quantity_change' => ['required', 'integer', 'not_in:0'],
+            'batch_identifier' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::prohibitedIf(fn (): bool => $this->input('reason') !== AdjustmentReason::INITIAL_STOCK->value),
+            ],
+            'quantity_change' => [
+                'required',
+                'integer',
+                'not_in:0',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    $quantity = (int) $value;
+                    $reason = $this->input('reason');
+
+                    if ($reason === AdjustmentReason::INITIAL_STOCK->value && $quantity <= 0) {
+                        $fail('The initial stock quantity must be greater than zero.');
+                    }
+
+                    if (in_array($reason, [AdjustmentReason::ROBBERY->value, AdjustmentReason::EXPIRY->value, AdjustmentReason::DAMAGE->value], true) && $quantity >= 0) {
+                        $fail('The quantity must be negative for this adjustment reason.');
+                    }
+                },
+            ],
             'reason' => ['required', Rule::enum(AdjustmentReason::class)],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];

@@ -9,6 +9,7 @@ use App\Enums\RolesEnum;
 use App\Models\Batch;
 use App\Models\ProductVariant;
 use App\Models\StockAdjustment;
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -48,13 +49,24 @@ final class StockAdjustmentService
             $variantId = (int) $data['product_variant_id'];
             $storeId = $data['store_id'];
             $delta = $data['quantity_change'];
+            $reason = $data['reason'];
+
+            $this->validateQuantityDirection($reason, $delta);
+
+            if ($reason === AdjustmentReason::INITIAL_STOCK->value) {
+                $store = Store::query()->whereKey($storeId)->lockForUpdate()->firstOrFail();
+
+                if ($store->opening_inventory_finalized_at !== null) {
+                    throw new InvalidArgumentException('Opening inventory has already been finalized for this store.');
+                }
+            }
 
             $batch = $this->resolveBatch(
                 batchId: $data['batch_id'] ?? null,
                 variantId: $variantId,
                 storeId: $storeId,
                 delta: $delta,
-                reason: $data['reason'],
+                reason: $reason,
                 expiryDate: $data['expiry_date'] ?? null,
                 batchIdentifier: $data['batch_identifier'] ?? null,
             );
@@ -106,6 +118,28 @@ final class StockAdjustmentService
         });
     }
 
+    public function finalizeOpeningInventory(Store $store, User $actor): Store
+    {
+        return DB::transaction(function () use ($store, $actor): Store {
+            $store = Store::query()->whereKey($store->id)->lockForUpdate()->firstOrFail();
+
+            if ($store->opening_inventory_finalized_at !== null) {
+                throw new InvalidArgumentException('Opening inventory has already been finalized for this store.');
+            }
+
+            $finalizedAt = now();
+            $store->forceFill(['opening_inventory_finalized_at' => $finalizedAt])->save();
+
+            activity('store')
+                ->performedOn($store)
+                ->causedBy($actor)
+                ->withProperties(['opening_inventory_finalized_at' => $finalizedAt->toISOString()])
+                ->log('opening_inventory_finalized');
+
+            return $store;
+        });
+    }
+
     public function getDetail(StockAdjustment $adjustment): StockAdjustment
     {
         return $adjustment->load([
@@ -126,17 +160,11 @@ final class StockAdjustmentService
         ?string $expiryDate = null,
         ?string $batchIdentifier = null,
     ): Batch {
-        if ($batchId !== null) {
-            return Batch::query()
-                ->where('id', $batchId)
-                ->where('product_variant_id', $variantId)
-                ->where('store_id', $storeId)
-                ->active()
-                ->lockForUpdate()
-                ->firstOrFail();
-        }
-
         if ($reason === AdjustmentReason::INITIAL_STOCK->value) {
+            if ($batchId !== null) {
+                throw new InvalidArgumentException('Initial stock must create a new batch.');
+            }
+
             return Batch::create([
                 'product_variant_id' => $variantId,
                 'reception_order_id' => null,
@@ -152,6 +180,33 @@ final class StockAdjustmentService
             ]);
         }
 
-        throw new InvalidArgumentException('A batch must be explicitly selected.');
+        if ($batchId === null) {
+            throw new InvalidArgumentException('A batch must be explicitly selected.');
+        }
+
+        $batch = Batch::query()
+            ->where('id', $batchId)
+            ->where('product_variant_id', $variantId)
+            ->where('store_id', $storeId)
+            ->active()
+            ->lockForUpdate()
+            ->first();
+
+        if ($batch === null) {
+            throw new InvalidArgumentException('The selected batch is unavailable for this product and store.');
+        }
+
+        return $batch;
+    }
+
+    private function validateQuantityDirection(string $reason, int $delta): void
+    {
+        if ($reason === AdjustmentReason::INITIAL_STOCK->value && $delta <= 0) {
+            throw new InvalidArgumentException('Initial stock quantity must be greater than zero.');
+        }
+
+        if (in_array($reason, [AdjustmentReason::ROBBERY->value, AdjustmentReason::EXPIRY->value, AdjustmentReason::DAMAGE->value], true) && $delta >= 0) {
+            throw new InvalidArgumentException('Quantity must be negative for this adjustment reason.');
+        }
     }
 }

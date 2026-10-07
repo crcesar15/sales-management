@@ -177,6 +177,8 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock-adjustments');
     Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock-adjustments.create');
     Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock-adjustments.store');
+    Route::patch('/stock-adjustments/stores/{store}/finalize-opening-inventory', [StockAdjustmentController::class, 'finalizeOpeningInventory'])
+        ->name('stock-adjustments.finalize-opening-inventory');
     Route::get('/stock-adjustments/{stockAdjustment}', [StockAdjustmentController::class, 'show'])->name('stock-adjustments.show');
 
     // Category Routes

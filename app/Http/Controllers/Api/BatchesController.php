@@ -14,7 +14,7 @@ final class BatchesController extends Controller
 {
     public function available(Request $request): JsonResponse
     {
-        $this->authorize(PermissionsEnum::BATCHES_VIEW->value, auth()->user());
+        $this->authorize(PermissionsEnum::STOCK_ADJUST->value, auth()->user());
 
         $request->validate([
             'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
@@ -22,10 +22,11 @@ final class BatchesController extends Controller
         ]);
 
         $batches = Batch::query()
-            ->available(
-                $request->integer('product_variant_id'),
-                $request->integer('store_id'),
-            )
+            ->where('product_variant_id', $request->integer('product_variant_id'))
+            ->where('store_id', $request->integer('store_id'))
+            ->active()
+            ->where('remaining_quantity', '>', 0)
+            ->fefo()
             ->get()
             ->map(fn (Batch $batch) => [
                 'id' => $batch->id,

@@ -17,7 +17,7 @@ import type { AvailableBatch, StockAdjustmentVariantSearchResult } from "@/Types
 defineOptions({ layout: AppLayout });
 
 const props = defineProps<{
-  stores: Array<{ id: number; name: string; code: string }>;
+  stores: Array<{ id: number; name: string; code: string; opening_inventory_finalized_at: string | null }>;
   reasons: Array<{ value: string; label: string }>;
 }>();
 
@@ -27,9 +27,6 @@ const { fetchAvailableBatchesApi } = useBatchClient();
 const { parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
-const reasonOptions = computed(() => props.reasons.map((r) => ({ name: t(r.label), value: r.value })));
-
-const NEW_BATCH_VALUE = 0;
 
 const schema = toTypedSchema(
   object({
@@ -44,7 +41,18 @@ const schema = toTypedSchema(
       }),
     expiry_date: string().nullable().optional(),
     batch_identifier: string().nullable().optional().max(255),
-    quantity_change: number().required().typeError(t("Quantity Change is required")).notOneOf([0], t("Quantity change cannot be zero")),
+    quantity_change: number()
+      .required()
+      .typeError(t("Quantity Change is required"))
+      .notOneOf([0], t("Quantity change cannot be zero"))
+      .when("reason", {
+        is: "initial_stock",
+        then: (schema) => schema.moreThan(0, t("Initial stock quantity must be greater than zero")),
+      })
+      .when("reason", {
+        is: (reason: string) => ["robbery", "expiry", "damage"].includes(reason),
+        then: (schema) => schema.lessThan(0, t("Quantity must be negative for this adjustment reason")),
+      }),
     reason: string().required(t("Reason is required")),
     notes: string().nullable().optional().max(1000),
   }),
@@ -65,6 +73,16 @@ const { handleSubmit, errors, setFieldValue, setErrors, values, submitCount } = 
   },
 });
 
+const selectedStore = computed(() => props.stores.find((s) => s.id === values.store_id) ?? null);
+const openingInventoryFinalized = computed(() => selectedStore.value?.opening_inventory_finalized_at !== null);
+const reasonOptions = computed(() =>
+  props.reasons.map((reason) => ({
+    name: t(reason.label),
+    value: reason.value,
+    disabled: reason.value === "initial_stock" && openingInventoryFinalized.value,
+  })),
+);
+
 const selectedVariant = ref<StockAdjustmentVariantSearchResult | null>(null);
 
 const availableBatches = ref<AvailableBatch[]>([]);
@@ -73,9 +91,8 @@ const selectedBatchId = ref<number | null>(null);
 let currentBatchRequestId = 0;
 
 const isInitialStock = computed(() => values.reason === "initial_stock");
-const isNewBatch = computed(() => isInitialStock.value || selectedBatchId.value === NEW_BATCH_VALUE);
 const showBatchSelector = computed(() => !isInitialStock.value && !!values.store_id && !!values.product_variant_id);
-const showNewBatchFields = computed(() => isNewBatch.value);
+const showNewBatchFields = computed(() => isInitialStock.value);
 const requiresExpiration = computed(() => selectedVariant.value?.has_expiration === true);
 
 function handleVariantSelection(variant: StockAdjustmentVariantSearchResult | null) {
@@ -109,13 +126,9 @@ async function fetchAvailableBatches() {
 
 function handleBatchSelect(id: number | null) {
   selectedBatchId.value = id;
-  if (id === NEW_BATCH_VALUE) {
-    setFieldValue("batch_id", null);
-  } else {
-    setFieldValue("batch_id", id);
-    setFieldValue("expiry_date", null);
-    setFieldValue("batch_identifier", null);
-  }
+  setFieldValue("batch_id", id);
+  setFieldValue("expiry_date", null);
+  setFieldValue("batch_identifier", null);
 }
 
 function resetBatchSelection() {
@@ -145,6 +158,9 @@ watch(
     if (storeId === previousStoreId) return;
 
     handleVariantSelection(null);
+    if (openingInventoryFinalized.value && isInitialStock.value) {
+      setFieldValue("reason", "");
+    }
   },
 );
 
@@ -170,16 +186,13 @@ const batchSelectOptions = computed(() => {
     const label = parts.join(" — ");
     return { name: label, value: b.id };
   });
-  if (values.quantity_change && values.quantity_change > 0) {
-    options.push({ name: t("Create new batch"), value: NEW_BATCH_VALUE });
-  }
   return options;
 });
 
-const selectedStoreName = computed(() => props.stores.find((s) => s.id === values.store_id)?.name ?? null);
+const selectedStoreName = computed(() => selectedStore.value?.name ?? null);
 
 const selectedBatchLabel = computed(() => {
-  if (isNewBatch.value) return t("New batch");
+  if (isInitialStock.value) return t("New batch");
   const batch = availableBatches.value.find((b) => b.id === values.batch_id);
   if (!batch) return null;
   return batch.batch_identifier ? `${batch.batch_identifier}` : `#${batch.id}`;
@@ -199,8 +212,6 @@ const submit = handleSubmit((formValues) => {
 
   const payload = { ...formValues };
   if (isInitialStock.value) {
-    payload.batch_id = null;
-  } else if (selectedBatchId.value === NEW_BATCH_VALUE) {
     payload.batch_id = null;
   }
   router.post(route("stock-adjustments.store"), payload, {
@@ -262,10 +273,14 @@ const submit = handleSubmit((formValues) => {
                     :options="reasonOptions"
                     option-label="name"
                     option-value="value"
+                    option-disabled="disabled"
                     :placeholder="t('Select reason')"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.reason }"
                     @update:model-value="setFieldValue('reason', $event)"
                   />
+                  <small v-if="openingInventoryFinalized" class="text-surface-500 dark:text-surface-400">
+                    {{ t("Initial stock is unavailable because opening inventory is finalized for this store.") }}
+                  </small>
                   <small v-if="submitCount > 0 && errors.reason" class="text-red-400 dark:text-red-300">{{ errors.reason }}</small>
                 </div>
               </div>
@@ -406,6 +421,24 @@ const submit = handleSubmit((formValues) => {
               <div>
                 <span class="text-sm text-surface-500 block">{{ t("Store") }}</span>
                 <span class="font-medium">{{ selectedStoreName ?? "---" }}</span>
+              </div>
+
+              <div
+                v-if="selectedStore"
+                class="border border-surface-200 dark:border-surface-700 rounded-lg p-3 flex flex-col gap-3"
+              >
+                <div class="flex flex-col gap-1">
+                  <span class="text-sm font-medium">{{ t("Opening Inventory") }}</span>
+                  <span v-if="openingInventoryFinalized" class="text-sm text-surface-500 dark:text-surface-400">
+                    {{ t("Opening inventory is finalized for this store.") }}
+                  </span>
+                  <span v-else class="text-sm text-surface-500 dark:text-surface-400">
+                    {{ t("Initial stock can be recorded in multiple batches until it is finalized.") }}
+                  </span>
+                </div>
+                <span v-if="!openingInventoryFinalized" class="text-sm text-surface-500 dark:text-surface-400">
+                  {{ t("Finalize opening inventory from the store settings.") }}
+                </span>
               </div>
 
               <div>

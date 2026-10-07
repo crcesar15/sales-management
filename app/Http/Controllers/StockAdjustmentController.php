@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\AdjustmentReason;
 use App\Enums\PermissionsEnum;
 use App\Http\Requests\Inventory\CreateAdjustmentRequest;
+use App\Http\Requests\Inventory\FinalizeOpeningInventoryRequest;
 use App\Http\Resources\StockAdjustment\StockAdjustmentCollection;
 use App\Http\Resources\StockAdjustment\StockAdjustmentResource;
 use App\Models\StockAdjustment;
@@ -62,7 +63,7 @@ final class StockAdjustmentController extends Controller
         $this->authorize(PermissionsEnum::STOCK_ADJUST);
 
         return Inertia::render('StockAdjustments/Create/Index', [
-            'stores' => Store::query()->where('status', 'active')->get(['id', 'name', 'code']),
+            'stores' => Store::query()->where('status', 'active')->get(['id', 'name', 'code', 'opening_inventory_finalized_at']),
             'reasons' => collect(AdjustmentReason::cases())->map(fn ($case) => [
                 'value' => $case->value,
                 'label' => $case->value,
@@ -78,11 +79,33 @@ final class StockAdjustmentController extends Controller
                 $request->user() ?? throw new RuntimeException('Unauthenticated.'),
             );
         } catch (InvalidArgumentException $e) {
-            return redirect()->back()->withErrors(['quantity_change' => $e->getMessage()]);
+            $errorField = match (true) {
+                str_starts_with($e->getMessage(), 'Insufficient stock') => 'quantity_change',
+                str_starts_with($e->getMessage(), 'Opening inventory') => 'reason',
+                default => 'batch_id',
+            };
+
+            return redirect()->back()->withErrors([$errorField => $e->getMessage()]);
         }
 
         return redirect()->route('stock-adjustments.show', $adjustment->id)
             ->with('success', 'Stock adjustment applied successfully.');
+    }
+
+    public function finalizeOpeningInventory(FinalizeOpeningInventoryRequest $request, Store $store): RedirectResponse
+    {
+        $this->authorize(PermissionsEnum::STOCK_ADJUST);
+
+        try {
+            $this->adjustmentService->finalizeOpeningInventory(
+                $store,
+                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+            );
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['store_id' => $e->getMessage()]);
+        }
+
+        return redirect()->back()->with('success', 'Opening inventory finalized successfully.');
     }
 
     public function show(StockAdjustment $stockAdjustment): InertiaResponse

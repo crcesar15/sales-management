@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Resources\Store;
 
 use App\Http\Resources\User\UserResource;
+use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Store */
 final class StoreResource extends JsonResource
 {
     /**
@@ -28,6 +30,7 @@ final class StoreResource extends JsonResource
             'phone' => $this->phone ?? null,
             'email' => $this->email ?? null,
             'status' => $this->status ?? null,
+            'opening_inventory_finalized_at' => $this->opening_inventory_finalized_at?->toISOString(),
             'users_count' => $this->whenCounted('users'),
             'users' => UserResource::collection($this->whenLoaded('users')),
             'deleted_at' => ! empty($this->deleted_at) ? $this->deleted_at->toISOString() : null,

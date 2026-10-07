@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, InputText, Select, AutoComplete, Avatar, Badge, useToast } from "primevue";
+import { Button, Card, InputText, Select, AutoComplete, Avatar, Badge, useConfirm, useToast } from "primevue";
 
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
@@ -7,7 +7,7 @@ import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string } from "yup";
 import { route } from "ziggy-js";
-import { ref, nextTick } from "vue";
+import { computed, nextTick, ref } from "vue";
 import AppLayout from "@layouts/admin.vue";
 
 interface SimpleUser {
@@ -31,6 +31,7 @@ const props = defineProps<{
     phone: string | null;
     email: string | null;
     status: string;
+    opening_inventory_finalized_at: string | null;
     deleted_at: string | null;
     users?: SimpleUser[];
   };
@@ -38,7 +39,10 @@ const props = defineProps<{
 }>();
 // Set composables
 const toast = useToast();
+const confirm = useConfirm();
 const { t } = useI18n();
+const openingInventoryFinalized = computed(() => props.store.opening_inventory_finalized_at !== null);
+const finalizingOpeningInventory = ref(false);
 
 // Schema
 const schema = toTypedSchema(
@@ -104,6 +108,31 @@ const onAddUser = async (event: { value: SimpleUser }) => {
 const removeUser = (id: number) => {
   assignedUsers.value = assignedUsers.value.filter((u) => u.id !== id);
 };
+
+function finalizeOpeningInventory() {
+  if (openingInventoryFinalized.value) return;
+
+  confirm.require({
+    message: t("Once finalized, initial stock can no longer be recorded for this store."),
+    header: t("Finalize Opening Inventory"),
+    icon: "fa fa-triangle-exclamation",
+    accept: () => {
+      finalizingOpeningInventory.value = true;
+      router.patch(route("stock-adjustments.finalize-opening-inventory", props.store.id), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+          toast.add({ severity: "success", summary: t("Success"), detail: t("Opening inventory finalized successfully."), life: 3000 });
+        },
+        onError: (errs) => {
+          toast.add({ severity: "error", summary: t("Error"), detail: t(Object.values(errs)[0] ?? "An error occurred"), life: 3000 });
+        },
+        onFinish: () => {
+          finalizingOpeningInventory.value = false;
+        },
+      });
+    },
+  });
+}
 
 // Submit — sends user IDs along with store data (same as Roles Edit)
 const submit = handleSubmit((values) => {
@@ -259,6 +288,28 @@ const submit = handleSubmit((values) => {
                 ]"
                 option-label="name"
                 option-value="value"
+              />
+            </div>
+          </template>
+        </Card>
+        <Card class="mb-4">
+          <template #title>{{ t("Opening Inventory") }}</template>
+          <template #content>
+            <div class="flex flex-col gap-3">
+              <span v-if="openingInventoryFinalized" class="text-sm text-surface-500 dark:text-surface-400">
+                {{ t("Opening inventory is finalized for this store.") }}
+              </span>
+              <span v-else class="text-sm text-surface-500 dark:text-surface-400">
+                {{ t("Initial stock can be recorded in multiple batches until it is finalized.") }}
+              </span>
+              <Button
+                v-if="!openingInventoryFinalized"
+                :label="t('Finalize Opening Inventory')"
+                icon="fa fa-lock"
+                severity="warn"
+                outlined
+                :loading="finalizingOpeningInventory"
+                @click="finalizeOpeningInventory"
               />
             </div>
           </template>

@@ -10,6 +10,7 @@ interface Store {
   phone: string | null;
   email: string | null;
   status: string;
+  opening_inventory_finalized_at: string | null;
 }
 
 interface StoreResponse extends Store {

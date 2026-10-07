@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/** @property \Illuminate\Support\Carbon|null $opening_inventory_finalized_at */
 final class Store extends Model
 {
     /** @use HasFactory<StoreFactory> */
@@ -99,6 +100,7 @@ final class Store extends Model
     protected function casts(): array
     {
         return [
+            'opening_inventory_finalized_at' => 'datetime',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',
         ];

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('phone', 30)->nullable();
             $table->string('email', 150)->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->timestamp('opening_inventory_finalized_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
