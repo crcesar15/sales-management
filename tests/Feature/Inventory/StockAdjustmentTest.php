@@ -83,6 +83,7 @@ it('admin can view create adjustment form', function () {
         ->assertInertia(fn ($page) => $page
             ->component('StockAdjustments/Create/Index')
             ->has('stores')
+            ->has('stores.0.opening_inventory_finalized_at')
             ->has('reasons')
         );
 });
@@ -275,8 +276,8 @@ it('creates adjustment record with correct attributes', function () {
         ->post(route('stock-adjustments.store'), adjustmentPayload($this->variant, $this->store, [
             'quantity_change' => 10,
             'batch_id' => $batch->id,
-            'reason' => AdjustmentReason::DAMAGE->value,
-            'notes' => 'Damaged goods found',
+            'reason' => AdjustmentReason::CORRECTION->value,
+            'notes' => 'Inventory correction',
         ]));
 
     $adjustment = StockAdjustment::first();
@@ -286,8 +287,8 @@ it('creates adjustment record with correct attributes', function () {
     expect($adjustment?->user_id)->toBe($this->admin->id);
     expect($adjustment?->batch_id)->toBe($batch->id);
     expect($adjustment?->quantity_change)->toBe(10);
-    expect($adjustment?->reason?->value)->toBe(AdjustmentReason::DAMAGE->value);
-    expect($adjustment?->notes)->toBe('Damaged goods found');
+    expect($adjustment?->reason?->value)->toBe(AdjustmentReason::CORRECTION->value);
+    expect($adjustment?->notes)->toBe('Inventory correction');
 });
 
 it('logs activity when creating adjustment', function () {
@@ -361,37 +362,43 @@ it('returns error when negative adjustment exceeds available stock', function ()
 
 /*
 |--------------------------------------------------------------------------
-| Batch Auto-Selection
+| Batch Selection and Opening Inventory
 |--------------------------------------------------------------------------
 */
 
-it('auto-selects oldest active batch when batch_id is omitted', function () {
+it('requires an explicit batch for non-initial adjustments', function () {
     $olderBatch = createActiveBatch($this->variant, $this->store, 30, ['created_at' => now()->subDays(2)]);
     $newerBatch = createActiveBatch($this->variant, $this->store, 50, ['created_at' => now()->subDay()]);
 
     actingAs($this->admin)
         ->post(route('stock-adjustments.store'), adjustmentPayload($this->variant, $this->store, [
             'quantity_change' => 5,
-        ]));
+        ]))
+        ->assertSessionHasErrors(['batch_id']);
 
-    $adjustment = StockAdjustment::first();
-    expect($adjustment?->batch_id)->toBe($olderBatch->id);
-    expect($olderBatch->fresh()?->remaining_quantity)->toBe(35);
+    expect(StockAdjustment::count())->toBe(0);
+    expect($olderBatch->fresh()?->remaining_quantity)->toBe(30);
     expect($newerBatch->fresh()?->remaining_quantity)->toBe(50);
 });
 
-it('returns error when no active batch exists and delta is negative', function () {
+it('rejects an unavailable selected batch', function () {
+    $batch = createActiveBatch($this->variant, $this->store, 10);
+    $batch->update(['status' => 'closed']);
+
     actingAs($this->admin)
         ->post(route('stock-adjustments.store'), adjustmentPayload($this->variant, $this->store, [
             'quantity_change' => -5,
+            'batch_id' => $batch->id,
         ]))
-        ->assertSessionHasErrors(['quantity_change']);
+        ->assertSessionHasErrors(['batch_id']);
 });
 
-it('creates new batch when no active batch exists and delta is positive', function () {
+it('creates an opening batch for initial stock', function () {
     actingAs($this->admin)
         ->post(route('stock-adjustments.store'), adjustmentPayload($this->variant, $this->store, [
             'quantity_change' => 15,
+            'reason' => AdjustmentReason::INITIAL_STOCK->value,
+            'batch_id' => null,
         ]))
         ->assertRedirect();
 
@@ -405,6 +412,80 @@ it('creates new batch when no active batch exists and delta is positive', functi
     expect($batch?->reception_order_id)->toBeNull();
     expect($batch?->status)->toBe('active');
     expect(StockAdjustment::first()?->batch_id)->toBe($batch?->id);
+});
+
+it('allows multiple opening batches before opening inventory is finalized', function () {
+    $firstPayload = adjustmentPayload($this->variant, $this->store, [
+        'quantity_change' => 15,
+        'reason' => AdjustmentReason::INITIAL_STOCK->value,
+        'batch_id' => null,
+        'batch_identifier' => 'OPENING-A',
+    ]);
+    $secondPayload = adjustmentPayload($this->variant, $this->store, [
+        'quantity_change' => 25,
+        'reason' => AdjustmentReason::INITIAL_STOCK->value,
+        'batch_id' => null,
+        'batch_identifier' => 'OPENING-B',
+    ]);
+
+    actingAs($this->admin)->post(route('stock-adjustments.store'), $firstPayload)->assertRedirect();
+    actingAs($this->admin)->post(route('stock-adjustments.store'), $secondPayload)->assertRedirect();
+
+    expect(Batch::query()->where('product_variant_id', $this->variant->id)->where('store_id', $this->store->id)->count())->toBe(2);
+    expect(StockAdjustment::query()->where('reason', AdjustmentReason::INITIAL_STOCK->value)->count())->toBe(2);
+});
+
+it('rejects a non-positive initial stock quantity', function () {
+    actingAs($this->admin)
+        ->post(route('stock-adjustments.store'), adjustmentPayload($this->variant, $this->store, [
+            'quantity_change' => -1,
+            'reason' => AdjustmentReason::INITIAL_STOCK->value,
+            'batch_id' => null,
+        ]))
+        ->assertSessionHasErrors(['quantity_change']);
+});
+
+it('rejects a positive loss adjustment', function () {
+    $batch = createActiveBatch($this->variant, $this->store, 10);
+
+    actingAs($this->admin)
+        ->post(route('stock-adjustments.store'), adjustmentPayload($this->variant, $this->store, [
+            'quantity_change' => 1,
+            'reason' => AdjustmentReason::DAMAGE->value,
+            'batch_id' => $batch->id,
+        ]))
+        ->assertSessionHasErrors(['quantity_change']);
+});
+
+it('finalizes opening inventory and prevents further initial stock adjustments', function () {
+    actingAs($this->admin)
+        ->from(route('stock-adjustments.create'))
+        ->patch(route('stock-adjustments.finalize-opening-inventory', $this->store))
+        ->assertRedirect(route('stock-adjustments.create'));
+
+    expect($this->store->fresh()?->opening_inventory_finalized_at)->not->toBeNull();
+
+    actingAs($this->admin)
+        ->post(route('stock-adjustments.store'), adjustmentPayload($this->variant, $this->store, [
+            'quantity_change' => 15,
+            'reason' => AdjustmentReason::INITIAL_STOCK->value,
+            'batch_id' => null,
+        ]))
+        ->assertSessionHasErrors(['reason']);
+
+    expect(Batch::count())->toBe(0);
+});
+
+it('returns expired active batches for stock adjustment selection', function () {
+    $batch = createActiveBatch($this->variant, $this->store, 10, ['expiry_date' => now()->subDay()]);
+
+    actingAs($this->admin)
+        ->getJson(route('api.v1.batches.available', [
+            'product_variant_id' => $this->variant->id,
+            'store_id' => $this->store->id,
+        ]))
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $batch->id);
 });
 
 it('keeps batch active when adjustment is applied', function () {
@@ -453,6 +534,7 @@ it('filters adjustments by reason', function () {
     $service->apply(adjustmentPayload($this->variant, $this->store, [
         'batch_id' => $batch1->id,
         'reason' => AdjustmentReason::DAMAGE->value,
+        'quantity_change' => -10,
     ]), $this->admin);
     $service->apply(adjustmentPayload($this->variant, $this->store, [
         'batch_id' => $batch2->id,

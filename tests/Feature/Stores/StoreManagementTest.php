@@ -45,7 +45,11 @@ it('admin can view edit store page', function () {
 
     actingAs($admin)
         ->get(route('stores.edit', $store))
-        ->assertStatus(200);
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Stores/Edit/Index')
+            ->has('store.opening_inventory_finalized_at')
+        );
 });
 
 it('salesman is denied store listing', function () {
