@@ -74,6 +74,8 @@ final class HandleInertiaRequests extends Middleware
                         'email' => $user->email,
                         'roles' => $user->getRoleNames(),
                         'permissions' => $user->getAllPermissions()->pluck('name'),
+                        'locale' => $user->locale?->value,
+                        'theme' => $user->theme?->value,
                     ] : null,
                     'settings' => $formattedSettings,
                 ],

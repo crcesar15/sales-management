@@ -1,14 +1,13 @@
-import type { SettingGrouped } from "./setting-types";
-import type { User } from "./user-types";
+import type { AuthState } from "./auth-types";
 import type { DefineComponent } from "vue";
 
 // Extend the Inertia PageProps interface
 declare module "@inertiajs/core" {
   interface PageProps {
     auth: {
-      user: User & { permissions: string[] };
+      user: AuthState["user"];
+      settings: AuthState["settings"];
     };
-    settings: SettingGrouped;
     appConfig?: {
       name?: string;
     };

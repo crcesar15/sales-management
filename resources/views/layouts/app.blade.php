@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['app-dark' => auth()->user()?->theme === \App\Enums\UserTheme::DARK])>
 
 <head>
     <meta charset="utf-8">

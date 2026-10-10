@@ -3,31 +3,26 @@ import { ref, computed, reactive, readonly, watch } from "vue";
 // ========================================
 // Dark Mode Management
 // ========================================
-const DARK_MODE_KEY = "app-dark-mode";
+const isDarkMode = ref<boolean>(document.documentElement.classList.contains("app-dark"));
 
-const isDarkMode = ref<boolean>(localStorage.getItem(DARK_MODE_KEY) === "true");
+const setDarkMode = (enabled: boolean): void => {
+  if (enabled === isDarkMode.value) return;
 
-// Apply initial state
-if (isDarkMode.value) {
-  document.documentElement.classList.add("app-dark");
-}
-
-// Persist changes
-watch(isDarkMode, (newValue) => {
-  localStorage.setItem(DARK_MODE_KEY, String(newValue));
-});
-
-const toggleDarkMode = (): void => {
   if (!document.startViewTransition) {
-    executeDarkModeToggle();
+    applyDarkMode(enabled);
     return;
   }
-  document.startViewTransition(() => executeDarkModeToggle());
+
+  document.startViewTransition(() => applyDarkMode(enabled));
 };
 
-const executeDarkModeToggle = (): void => {
-  isDarkMode.value = !isDarkMode.value;
-  document.documentElement.classList.toggle("app-dark");
+const applyDarkMode = (enabled: boolean): void => {
+  isDarkMode.value = enabled;
+  document.documentElement.classList.toggle("app-dark", enabled);
+};
+
+const toggleDarkMode = (): void => {
+  setDarkMode(!isDarkMode.value);
 };
 
 // ========================================
@@ -98,6 +93,7 @@ export function useLayout() {
     // Dark mode
     isDarkMode,
     toggleDarkMode,
+    setDarkMode,
     // Sidebar collapse
     isSidebarCollapsed,
     toggleSidebar,

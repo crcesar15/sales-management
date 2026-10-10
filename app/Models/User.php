@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\UserLocale;
+use App\Enums\UserTheme;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -39,6 +41,8 @@ final class User extends Authenticatable
         'status',
         'date_of_birth',
         'additional_properties',
+        'locale',
+        'theme',
         'password',
     ];
 
@@ -101,6 +105,8 @@ final class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'locale' => UserLocale::class,
+            'theme' => UserTheme::class,
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',
         ];

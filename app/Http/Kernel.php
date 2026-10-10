@@ -10,6 +10,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PreventRequestForgery;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\SetUserLocale;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\ValidateSignature;
@@ -63,6 +64,7 @@ final class Kernel extends HttpKernel
             ShareErrorsFromSession::class,
             PreventRequestForgery::class,
             SubstituteBindings::class,
+            SetUserLocale::class,
             HandleInertiaRequests::class,
         ],
 

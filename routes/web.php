@@ -33,6 +33,7 @@ use App\Http\Controllers\StockAlertController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\VendorsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -89,6 +90,7 @@ Route::group(['middleware' => ['guest']], function (): void {
 Route::group(['middleware' => ['auth']], function (): void {
     // Logout Route
     Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+    Route::patch('/user/preferences', [UserPreferenceController::class, 'update'])->name('user-preferences.update');
 
     // Home Routes
     Route::get('/home', [HomeController::class, 'index'])->name('home');

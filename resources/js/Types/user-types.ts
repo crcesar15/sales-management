@@ -1,6 +1,9 @@
 import type { PurchaseOrder } from "./purchase-order-types";
 import type { RoleResponse } from "./role-types";
 
+type UserLocale = "en" | "es";
+type UserTheme = "light" | "dark";
+
 interface User {
   // columns
   first_name: string;
@@ -11,6 +14,8 @@ interface User {
   status: string;
   date_of_birth: string | null;
   additional_properties?: Record<string, unknown> | null;
+  locale?: UserLocale | null;
+  theme?: UserTheme | null;
   password?: string;
   password_confirmation?: string;
 }
@@ -21,7 +26,7 @@ interface UserPayload extends User {
 
 interface UserAuth extends User {
   id: number;
-  permissions: [];
+  permissions: string[];
 }
 
 interface UserResponse extends User {
@@ -50,4 +55,4 @@ interface UserResponse extends User {
   purchase_orders?: PurchaseOrder[];
 }
 
-export type { User, UserPayload, UserResponse, UserAuth };
+export type { User, UserPayload, UserResponse, UserAuth, UserLocale, UserTheme };

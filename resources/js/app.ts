@@ -29,6 +29,8 @@ const messages = {
   es,
 };
 
+const locale = document.documentElement.lang === "en" || document.documentElement.lang === "es" ? document.documentElement.lang : import.meta.env.VITE_APP_LOCALE ?? "es";
+
 const AuraPreset = definePreset(Aura, {
   semantic: {
     primary: {
@@ -78,8 +80,8 @@ const AuraPreset = definePreset(Aura, {
 });
 
 const i18n = createI18n({
-  locale: "es", // default locale
-  fallbackLocale: "es",
+  locale,
+  fallbackLocale: import.meta.env.VITE_APP_FALLBACK_LOCALE ?? "en",
   messages,
   legacy: false,
 });

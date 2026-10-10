@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Resources\User;
 
 use App\Http\Resources\Store\StoreResource;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin User */
 final class UserResource extends JsonResource
 {
     /**
@@ -17,6 +19,9 @@ final class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        /** @var User $user */
+        $user = $this->resource;
+
         return [
             'id' => $this->id ?? null,
             'first_name' => $this->first_name ?? null,
@@ -26,6 +31,8 @@ final class UserResource extends JsonResource
             'username' => $this->username ?? null,
             'phone' => $this->phone ?? null,
             'status' => $this->status ?? null,
+            'locale' => $user->locale?->value,
+            'theme' => $user->theme?->value,
             'roles' => $this->getRoleNames() ?? null,
             'stores' => StoreResource::collection($this->whenLoaded('stores')),
             'created_at' => ! empty($this->created_at) ? $this->created_at->toISOString() : null,

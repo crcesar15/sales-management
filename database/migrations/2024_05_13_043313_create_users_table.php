@@ -23,6 +23,8 @@ return new class() extends Migration
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active')->index();
             $table->date('date_of_birth')->nullable();
             $table->json('additional_properties')->nullable();
+            $table->string('locale', 5)->nullable();
+            $table->string('theme', 20)->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

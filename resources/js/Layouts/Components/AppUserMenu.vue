@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
+import { computed, onMounted, useTemplateRef } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
 import Menu from "primevue/menu";
 import type { MenuItem } from "primevue/menuitem";
 import { useLayout } from "./Composables/useLayout";
+import { useUserPreferences } from "@composables/useUserPreferences";
 
 defineProps<{ compact?: boolean }>();
 
 const page = usePage();
 const { t } = useI18n();
-const { isDarkMode, toggleDarkMode } = useLayout();
+const { isDarkMode } = useLayout();
+const { locale, migrateLegacyThemePreference, updateLocale, updateTheme } = useUserPreferences();
 const userMenu = useTemplateRef<{ toggle: (event: Event) => void }>("userMenu");
 
 const userName = computed(() => {
@@ -31,7 +33,23 @@ const userMenuItems = computed<MenuItem[]>(() => [
   {
     label: isDarkMode.value ? t("Light Mode") : t("Dark Mode"),
     icon: isDarkMode.value ? "fa fa-sun" : "fa fa-moon",
-    command: () => toggleDarkMode(),
+    command: () => updateTheme(isDarkMode.value ? "light" : "dark"),
+  },
+  {
+    label: t("Language"),
+    icon: "fa fa-language",
+    items: [
+      {
+        label: "English",
+        icon: locale.value === "en" ? "fa fa-check" : undefined,
+        command: () => updateLocale("en"),
+      },
+      {
+        label: "Español",
+        icon: locale.value === "es" ? "fa fa-check" : undefined,
+        command: () => updateLocale("es"),
+      },
+    ],
   },
   { separator: true },
   {
@@ -44,6 +62,8 @@ const userMenuItems = computed<MenuItem[]>(() => [
 function toggleUserMenu(event: Event): void {
   userMenu.value?.toggle(event);
 }
+
+onMounted(migrateLegacyThemePreference);
 </script>
 
 <template>

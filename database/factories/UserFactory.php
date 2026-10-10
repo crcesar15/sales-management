@@ -35,6 +35,8 @@ final class UserFactory extends Factory
             'status' => 'active',
             'date_of_birth' => fake()->optional()->date(),
             'additional_properties' => '{}',
+            'locale' => null,
+            'theme' => null,
             'email_verified_at' => now(),
             'password' => self::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),

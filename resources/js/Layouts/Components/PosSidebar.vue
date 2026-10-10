@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import { Menu } from "primevue";
 import type { MenuItem } from "primevue/menuitem";
@@ -9,6 +9,7 @@ import { usePosLayout } from "@composables/usePosLayout";
 import { useLayout } from "@layouts/Components/Composables/useLayout";
 import { usePosStore } from "@/Composables/usePosStore";
 import { useAuth } from "@/Composables/useAuth";
+import { useUserPreferences } from "@composables/useUserPreferences";
 
 interface PosNavigationItem {
   key: string;
@@ -20,7 +21,8 @@ interface PosNavigationItem {
 const { t } = useI18n();
 const page = usePage();
 const { isSidebarCollapsed, openCashMovementDialog } = usePosLayout();
-const { isDarkMode, toggleDarkMode } = useLayout();
+const { isDarkMode } = useLayout();
+const { locale, migrateLegacyThemePreference, updateLocale, updateTheme } = useUserPreferences();
 const posStore = usePosStore();
 const { can } = useAuth();
 const userMenu = ref();
@@ -52,7 +54,23 @@ const userMenuItems = computed<MenuItem[]>(() => [
   {
     label: isDarkMode.value ? t("Light Mode") : t("Dark Mode"),
     icon: isDarkMode.value ? "fa fa-sun" : "fa fa-moon",
-    command: () => toggleDarkMode(),
+    command: () => updateTheme(isDarkMode.value ? "light" : "dark"),
+  },
+  {
+    label: t("Language"),
+    icon: "fa fa-language",
+    items: [
+      {
+        label: "English",
+        icon: locale.value === "en" ? "fa fa-check" : undefined,
+        command: () => updateLocale("en"),
+      },
+      {
+        label: "Español",
+        icon: locale.value === "es" ? "fa fa-check" : undefined,
+        command: () => updateLocale("es"),
+      },
+    ],
   },
   { separator: true },
   {
@@ -65,6 +83,8 @@ const userMenuItems = computed<MenuItem[]>(() => [
 function toggleUserMenu(event: Event): void {
   userMenu.value.toggle(event);
 }
+
+onMounted(migrateLegacyThemePreference);
 </script>
 
 <template>

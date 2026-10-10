@@ -377,6 +377,7 @@
   "A discrepancy reason is required": "Debe indicar el motivo de la diferencia",
   "Unable to close shift": "No se pudo cerrar el turno",
   "Unable to save movement": "No se pudo guardar el movimiento",
+  "Unable to save preferences": "No se pudieron guardar las preferencias",
   "Expired": "Vencido",
   "Expires": "Vence",
   "Expiring Soon": "Por Vencer",
