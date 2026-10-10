@@ -19,7 +19,12 @@ const { t } = useI18n();
 const { formatDatetime } = useDatetimeFormatter();
 
 const isLowStock = computed(() => {
-  if (props.variant.minimum_stock_level !== null) {
+  // Do not display low stock alert if the variant does not have a minimum stock level
+  if (props.variant.minimum_stock_level === null) {
+    return false;
+  }
+
+  if (props.variant.minimum_stock_level > 0) {
     return props.variant.stock < props.variant.minimum_stock_level;
   }
 
