@@ -457,12 +457,19 @@ const searchAnnouncement = computed(() => {
 .stock-adjustment-picker-search-icon,
 .stock-adjustment-picker-spinner {
   position: absolute;
-  top: 50%;
   z-index: 1;
   color: var(--p-surface-600, #475569);
   font-size: 0.875rem;
   pointer-events: none;
   transform: translateY(-50%);
+}
+
+.stock-adjustment-picker-spinner {
+  top: 35%;
+}
+
+.stock-adjustment-picker-search-icon{
+  top: 50%;
 }
 
 .stock-adjustment-picker-search-icon {

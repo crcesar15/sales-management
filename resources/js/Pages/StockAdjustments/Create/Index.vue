@@ -350,6 +350,7 @@ const submit = handleSubmit((formValues) => {
                     id="batch_identifier"
                     :model-value="values.batch_identifier"
                     :placeholder="t('Enter batch identifier (optional)')"
+                    autocomplete="off"
                     @update:model-value="setFieldValue('batch_identifier', $event)"
                   />
                 </div>
@@ -388,6 +389,7 @@ const submit = handleSubmit((formValues) => {
                     placeholder="0"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.quantity_change }"
                     @update:model-value="setFieldValue('quantity_change', $event)"
+                    autocomplete="off"
                   />
                   <small class="text-surface-500">{{ t("Use negative for deductions, positive for additions") }}</small>
                   <small v-if="submitCount > 0 && errors.quantity_change" class="text-red-400 dark:text-red-300">

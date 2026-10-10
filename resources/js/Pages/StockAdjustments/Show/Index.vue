@@ -16,7 +16,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const { formatDatetime } = useDatetimeFormatter();
+const { formatDatetime, formatDate } = useDatetimeFormatter();
 
 const quantityClass = computed(() => (props.adjustment.quantity_change < 0 ? "text-red-500 font-bold" : "text-green-600 font-bold"));
 
@@ -101,7 +101,7 @@ const formattedQuantity = computed(() => {
               </div>
               <div v-if="adjustment.batch.expiry_date" class="flex justify-between">
                 <span class="text-surface-500">{{ t("Expiry Date") }}</span>
-                <span class="font-bold">{{ adjustment.batch.expiry_date }}</span>
+                <span class="font-bold">{{ formatDate(adjustment.batch.expiry_date) }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Initial Quantity") }}</span>
