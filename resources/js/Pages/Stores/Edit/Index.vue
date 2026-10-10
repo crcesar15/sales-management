@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, InputText, Select, AutoComplete, Avatar, Badge, useConfirm, useToast } from "primevue";
+import { Button, Card, InputText, Select, AutoComplete, Avatar, Badge, useConfirm, useToast, ConfirmDialog } from "primevue";
 
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
@@ -116,6 +116,14 @@ function finalizeOpeningInventory() {
     message: t("Once finalized, initial stock can no longer be recorded for this store."),
     header: t("Finalize Opening Inventory"),
     icon: "fa fa-triangle-exclamation",
+    rejectProps: {
+        label: t('Cancel'),
+        severity: 'secondary'
+    },
+    acceptProps: {
+        label: t('Finalize'),
+        severity: 'danger'
+    },
     accept: () => {
       finalizingOpeningInventory.value = true;
       router.patch(route("stock-adjustments.finalize-opening-inventory", props.store.id), {}, {
@@ -360,5 +368,6 @@ const submit = handleSubmit((values) => {
         </Card>
       </div>
     </div>
+    <ConfirmDialog></ConfirmDialog>
   </div>
 </template>
