@@ -215,9 +215,6 @@ const submit = handleSubmit((formValues) => {
     payload.batch_id = null;
   }
   router.post(route("stock-adjustments.store"), payload, {
-    onSuccess: () => {
-      router.visit(route("stock-adjustments"));
-    },
     onError: (errs) => {
       setErrors(errs);
       toast.add({
