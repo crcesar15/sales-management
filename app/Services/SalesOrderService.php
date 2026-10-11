@@ -926,6 +926,10 @@ final class SalesOrderService
                 $unitPrice = (float) $saleUnit->price;
             }
 
+            if (isset($item['unit_price'])) {
+                $unitPrice = (float) $item['unit_price'];
+            }
+
             return [
                 'product_variant_id' => $variantId,
                 'sale_unit_id' => $saleUnitId,

@@ -13,6 +13,7 @@ export interface SalesOrderItem {
   sale_unit_id: number | null;
   quantity: number;
   unit_price: number;
+  original_unit_price?: number;
   conversion_factor: number;
   line_total: number;
   product_variant?: {

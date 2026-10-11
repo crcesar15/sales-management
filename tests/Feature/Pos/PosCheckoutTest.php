@@ -59,7 +59,6 @@ beforeEach(function (): void {
             'product_variant_id' => $this->variant->id,
             'sale_unit_id' => null,
             'quantity' => 2,
-            'unit_price' => 1,
         ]],
     ];
     $this->handoverToken = fn (SalesOrder $order): string => app(SalesOrderService::class)
@@ -81,6 +80,25 @@ it('creates a durable POS draft from the active shift and server prices', functi
         ->and((float) $order->tax_amount)->toBe(20.0)
         ->and((float) $order->total)->toBe(220.0)
         ->and((float) $order->items()->firstOrFail()->unit_price)->toBe(100.0);
+});
+
+it('uses a manually overridden unit price for POS drafts', function (): void {
+    $payload = ($this->draftPayload)();
+    $payload['items'][0]['unit_price'] = 90;
+
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), $payload);
+
+    $order = SalesOrder::query()->sole();
+    expect((float) $order->sub_total)->toBe(180.0)
+        ->and((float) $order->total)->toBe(180.0)
+        ->and((float) $order->items()->sole()->unit_price)->toBe(90.0);
+});
+
+it('rejects a negative manual unit price', function (): void {
+    $payload = ($this->draftPayload)();
+    $payload['items'][0]['unit_price'] = -1;
+
+    $this->actingAs($this->cashier)->postJson(route('pos.sales.store'), $payload)->assertInvalid('items.0.unit_price');
 });
 
 it('renders the payment page and rehydrates an editable draft', function (): void {

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\SalesOrderItem;
 
+use App\Models\ProductVariant;
+use App\Models\ProductVariantUnit;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -63,6 +65,14 @@ final class SalesOrderItemResource extends JsonResource
             ),
             'quantity' => $this->quantity,
             'unit_price' => (float) $this->unit_price,
+            'original_unit_price' => $this->when(
+                $this->relationLoaded('productVariant'),
+                fn (): float => match (true) {
+                    $this->relationLoaded('saleUnit') && $this->saleUnit instanceof ProductVariantUnit => (float) $this->saleUnit->price,
+                    $this->productVariant instanceof ProductVariant => (float) $this->productVariant->price,
+                    default => (float) $this->unit_price,
+                },
+            ),
             'conversion_factor' => $this->conversion_factor,
             'line_total' => (float) $this->line_total,
             'stock_allocations' => $this->whenLoaded('stockAllocations', fn () => $this->stockAllocations->map(fn ($allocation): array => [

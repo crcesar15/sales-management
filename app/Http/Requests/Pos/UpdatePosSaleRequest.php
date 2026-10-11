@@ -31,6 +31,7 @@ final class UpdatePosSaleRequest extends FormRequest
             'items.*.product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'items.*.sale_unit_id' => ['nullable', 'integer', 'exists:product_variant_units,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 
