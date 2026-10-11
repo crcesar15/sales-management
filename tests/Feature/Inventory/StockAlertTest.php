@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -53,7 +54,7 @@ function createVariantWithoutMinimumStock(array $overrides = []): ProductVariant
  */
 function createActiveBatch(ProductVariant $variant, Store $store, int $remaining = 50, array $overrides = []): Batch
 {
-    return Batch::factory()->create([
+    $batch = Batch::factory()->create([
         'product_variant_id' => $variant->id,
         'store_id' => $store->id,
         'remaining_quantity' => $remaining,
@@ -61,6 +62,10 @@ function createActiveBatch(ProductVariant $variant, Store $store, int $remaining
         'status' => 'active',
         ...$overrides,
     ]);
+
+    $variant->recalculateStock();
+
+    return $batch;
 }
 
 function setExpiryAlertDays(int $days): void
@@ -94,13 +99,8 @@ it('admin can access inventory alerts index', function () {
         );
 });
 
-it('admin can access inventory alerts summary', function () {
-    actingAs($this->admin)
-        ->get(route('inventory.alerts.summary'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->has('summary')
-        );
+it('does not register a separate inventory alerts summary route', function () {
+    expect(Route::has('inventory.alerts.summary'))->toBeFalse();
 });
 
 it('salesman without permission is denied from alerts index', function () {
@@ -112,22 +112,8 @@ it('salesman without permission is denied from alerts index', function () {
         ->assertForbidden();
 });
 
-it('salesman without permission is denied from alerts summary', function () {
-    $salesman = User::factory()->create();
-    $salesman->assignRole(RolesEnum::SALESMAN);
-
-    actingAs($salesman)
-        ->getJson(route('inventory.alerts.summary'))
-        ->assertForbidden();
-});
-
 it('guest is redirected from alerts index', function () {
     get(route('inventory.alerts'))
-        ->assertRedirect(route('login'));
-});
-
-it('guest is redirected from alerts summary', function () {
-    get(route('inventory.alerts.summary'))
         ->assertRedirect(route('login'));
 });
 
@@ -145,7 +131,7 @@ it('excludes variants with null minimum_stock_level from low-stock alerts', func
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('lowStockAlerts', [])
+            ->where('lowStockAlerts.data', [])
         );
 });
 
@@ -157,7 +143,7 @@ it('includes variant where stock is below minimum_stock_level', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('lowStockAlerts', fn ($alerts) => count($alerts) === 1 && $alerts[0]['id'] === $variant->id)
+            ->where('lowStockAlerts.data', fn ($alerts) => count($alerts) === 1 && $alerts[0]['id'] === $variant->id)
         );
 });
 
@@ -169,7 +155,7 @@ it('excludes variant where stock meets or exceeds minimum_stock_level', function
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('lowStockAlerts', [])
+            ->where('lowStockAlerts.data', [])
         );
 });
 
@@ -182,7 +168,23 @@ it('aggregates stock across active batches for low-stock check', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('lowStockAlerts', fn ($alerts) => count($alerts) === 1 && $alerts[0]['total_stock'] === 13)
+            ->where('lowStockAlerts.data', fn ($alerts) => count($alerts) === 1
+                && $alerts[0]['total_stock'] === 13
+                && $alerts[0]['shortage_quantity'] === 7
+                && array_key_exists('product_name', $alerts[0])
+                && array_key_exists('brand_name', $alerts[0]))
+        );
+});
+
+it('includes an out-of-stock variant with only closed batches when filtered by store', function () {
+    $variant = createVariantWithMinimumStock(5);
+    createActiveBatch($variant, $this->store, 0, ['status' => 'closed']);
+
+    actingAs($this->admin)
+        ->get(route('inventory.alerts', ['store_id' => $this->store->id]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('lowStockAlerts.data', fn ($alerts) => count($alerts) === 1 && $alerts[0]['total_stock'] === 0)
         );
 });
 
@@ -195,7 +197,50 @@ it('excludes closed batches from low-stock aggregation', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('lowStockAlerts', fn ($alerts) => count($alerts) === 1 && $alerts[0]['total_stock'] === 3)
+            ->where('lowStockAlerts.data', fn ($alerts) => count($alerts) === 1 && $alerts[0]['total_stock'] === 3)
+        );
+});
+
+it('derives the summary from all matching alerts', function () {
+    setExpiryAlertDays(30);
+
+    $lowStockVariant = createVariantWithMinimumStock(20);
+    createActiveBatch($lowStockVariant, $this->store, 5);
+
+    $expiringVariant = createVariantWithMinimumStock(10);
+    createActiveBatch($expiringVariant, $this->store, 10, [
+        'expiry_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    actingAs($this->admin)
+        ->get(route('inventory.alerts'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('summary.low_stock_count', 1)
+            ->where('summary.expiry_count', 1)
+            ->where('summary.total', 2)
+        );
+});
+
+it('orders low-stock alerts by out-of-stock then greatest shortage', function () {
+    $outOfStock = createVariantWithMinimumStock(5);
+    createActiveBatch($outOfStock, $this->store, 0, ['status' => 'closed']);
+
+    $largestShortage = createVariantWithMinimumStock(20);
+    createActiveBatch($largestShortage, $this->store, 5);
+
+    $smallestShortage = createVariantWithMinimumStock(10);
+    createActiveBatch($smallestShortage, $this->store, 5);
+
+    actingAs($this->admin)
+        ->get(route('inventory.alerts'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('lowStockAlerts.data', fn ($alerts) => $alerts->pluck('id')->all() === [
+                $outOfStock->id,
+                $largestShortage->id,
+                $smallestShortage->id,
+            ])
         );
 });
 
@@ -215,7 +260,7 @@ it('excludes batches with null expiry_date from expiry alerts', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('expiryAlerts', [])
+            ->where('expiryAlerts.data', [])
         );
 });
 
@@ -231,7 +276,25 @@ it('includes batch expiring within threshold', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('expiryAlerts', fn ($alerts) => count($alerts) === 1)
+            ->where('expiryAlerts.data', fn ($alerts) => count($alerts) === 1)
+        );
+});
+
+it('serializes batch identity for expiry alerts', function () {
+    setExpiryAlertDays(30);
+
+    $variant = createVariantWithMinimumStock(10);
+    createActiveBatch($variant, $this->store, 10, [
+        'batch_identifier' => 'LOT-2026-001',
+        'expiry_date' => now()->addDays(15)->toDateString(),
+    ]);
+
+    actingAs($this->admin)
+        ->get(route('inventory.alerts'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('expiryAlerts.data.0.batch_identifier', 'LOT-2026-001')
+            ->where('expiryAlerts.data.0.store.id', $this->store->id)
         );
 });
 
@@ -247,7 +310,7 @@ it('excludes batch expiring beyond threshold', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('expiryAlerts', [])
+            ->where('expiryAlerts.data', [])
         );
 });
 
@@ -263,7 +326,7 @@ it('includes batch at exact threshold boundary', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('expiryAlerts', fn ($alerts) => count($alerts) === 1)
+            ->where('expiryAlerts.data', fn ($alerts) => count($alerts) === 1)
         );
 });
 
@@ -280,7 +343,7 @@ it('excludes closed batch even if expiring', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('expiryAlerts', [])
+            ->where('expiryAlerts.data', [])
         );
 });
 
@@ -296,7 +359,7 @@ it('excludes batch with zero remaining_quantity from expiry alerts', function ()
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('expiryAlerts', [])
+            ->where('expiryAlerts.data', [])
         );
 });
 
@@ -312,73 +375,7 @@ it('returns empty expiry list when expiry_alert_days is zero', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('expiryAlerts', [])
-        );
-});
-
-/*
-|--------------------------------------------------------------------------
-| Summary Endpoint
-|--------------------------------------------------------------------------
-*/
-
-it('returns correct summary counts', function () {
-    setExpiryAlertDays(30);
-
-    $variant1 = createVariantWithMinimumStock(20);
-    $variant2 = createVariantWithMinimumStock(15);
-    createActiveBatch($variant1, $this->store, 5);
-    createActiveBatch($variant2, $this->store, 3);
-
-    $variant3 = createVariantWithMinimumStock(10);
-    createActiveBatch($variant3, $this->store, 10, [
-        'expiry_date' => now()->addDays(5)->toDateString(),
-    ]);
-
-    actingAs($this->admin)
-        ->get(route('inventory.alerts.summary'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->where('summary.low_stock_count', 2)
-            ->where('summary.expiry_count', 1)
-            ->where('summary.total', 3)
-        );
-});
-
-it('returns all zeros when no alerts exist', function () {
-    actingAs($this->admin)
-        ->get(route('inventory.alerts.summary'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->where('summary.low_stock_count', 0)
-            ->where('summary.expiry_count', 0)
-            ->where('summary.total', 0)
-        );
-});
-
-it('summary respects store_id filter', function () {
-    setExpiryAlertDays(30);
-
-    $store2 = Store::factory()->create(['status' => 'active']);
-
-    $variant1 = createVariantWithMinimumStock(20);
-    createActiveBatch($variant1, $this->store, 5);
-
-    $variant2 = createVariantWithMinimumStock(15);
-    createActiveBatch($variant2, $store2, 3);
-
-    $variant3 = createVariantWithMinimumStock(10);
-    createActiveBatch($variant3, $store2, 10, [
-        'expiry_date' => now()->addDays(5)->toDateString(),
-    ]);
-
-    actingAs($this->admin)
-        ->get(route('inventory.alerts.summary', ['store_id' => $store2->id]))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->where('summary.low_stock_count', 1)
-            ->where('summary.expiry_count', 1)
-            ->where('summary.total', 2)
+            ->where('expiryAlerts.data', [])
         );
 });
 
@@ -406,8 +403,8 @@ it('admin with store_id param sees only that store alerts', function () {
         ->get(route('inventory.alerts', ['store_id' => $this->store->id]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('lowStockAlerts', fn ($alerts) => count($alerts) === 1)
-            ->where('expiryAlerts', fn ($alerts) => count($alerts) === 1)
+            ->where('lowStockAlerts.data', fn ($alerts) => count($alerts) === 1)
+            ->where('expiryAlerts.data', fn ($alerts) => count($alerts) === 1)
         );
 });
 
@@ -428,19 +425,47 @@ it('admin without store_id sees alerts from all stores', function () {
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('lowStockAlerts', fn ($alerts) => count($alerts) === 1)
-            ->where('expiryAlerts', fn ($alerts) => count($alerts) === 1)
+            ->where('lowStockAlerts.data', fn ($alerts) => count($alerts) === 1)
+            ->where('expiryAlerts.data', fn ($alerts) => count($alerts) === 1)
+        );
+});
+
+it('admin without store_id sees alerts only from active stores', function () {
+    setExpiryAlertDays(30);
+
+    $activeVariant = createVariantWithMinimumStock(20);
+    createActiveBatch($activeVariant, $this->store, 5, [
+        'expiry_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $inactiveStore = Store::factory()->create(['status' => 'inactive']);
+    $inactiveVariant = createVariantWithMinimumStock(20);
+    createActiveBatch($inactiveVariant, $inactiveStore, 5, [
+        'expiry_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $deletedStore = Store::factory()->create(['status' => 'active']);
+    $deletedVariant = createVariantWithMinimumStock(20);
+    createActiveBatch($deletedVariant, $deletedStore, 5, [
+        'expiry_date' => now()->addDays(5)->toDateString(),
+    ]);
+    $deletedStore->delete();
+
+    actingAs($this->admin)
+        ->get(route('inventory.alerts'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('lowStockAlerts.data', fn ($alerts) => $alerts->pluck('id')->all() === [$activeVariant->id])
+            ->where('expiryAlerts.data', fn ($alerts) => count($alerts) === 1 && $alerts[0]['store_id'] === $this->store->id)
+            ->where('summary.low_stock_count', 1)
+            ->where('summary.expiry_count', 1)
         );
 });
 
 /*
 |--------------------------------------------------------------------------
-| Salesman with Permission — Current Behavior
+| Salesman Store Scope
 |--------------------------------------------------------------------------
-| NOTE: The StockAlertController does NOT scope by the user's assigned store.
-| It passes request()->integer('store_id') directly to the service. These
-| tests document the ACTUAL behavior. When store scoping is implemented,
-| update these tests accordingly.
 */
 
 it('salesman with permission can access alerts index', function () {
@@ -456,7 +481,7 @@ it('salesman with permission can access alerts index', function () {
         );
 });
 
-it('salesman with permission sees alerts from all stores', function () {
+it('salesman with permission sees alerts only from assigned stores', function () {
     $store2 = Store::factory()->create(['status' => 'active']);
 
     $salesman = User::factory()->create();
@@ -472,13 +497,25 @@ it('salesman with permission sees alerts from all stores', function () {
     $variant2 = createVariantWithMinimumStock(10);
     createActiveBatch($variant2, $store2, 3);
 
-    // Controller does not scope to salesman's store — sees all stores
     actingAs($salesman)
         ->get(route('inventory.alerts'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('lowStockAlerts', fn ($alerts) => count($alerts) === 2)
+            ->where('lowStockAlerts.data', fn ($alerts) => count($alerts) === 1 && $alerts[0]['id'] === $variant1->id)
+            ->where('stores', fn ($stores) => count($stores) === 1 && $stores[0]['id'] === $this->store->id)
         );
+});
+
+it('denies a salesman access to an unassigned store filter', function () {
+    $store2 = Store::factory()->create(['status' => 'active']);
+    $salesman = User::factory()->create();
+    $salesman->assignRole(RolesEnum::SALESMAN);
+    $salesman->givePermissionTo(PermissionsEnum::STOCK_ALERTS_VIEW->value);
+    $salesman->stores()->attach($this->store);
+
+    actingAs($salesman)
+        ->getJson(route('inventory.alerts', ['store_id' => $store2->id]))
+        ->assertForbidden();
 });
 
 /*
@@ -513,5 +550,54 @@ it('passes null store_id in filters when not provided', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('filters.store_id', null)
+        );
+});
+
+it('paginates both alert lists independently', function () {
+    setExpiryAlertDays(30);
+
+    for ($index = 1; $index <= 3; $index++) {
+        $lowStockVariant = createVariantWithMinimumStock(10);
+        createActiveBatch($lowStockVariant, $this->store, $index);
+
+        $expiryVariant = createVariantWithMinimumStock(1);
+        createActiveBatch($expiryVariant, $this->store, 10, [
+            'batch_identifier' => "LOT-{$index}",
+            'expiry_date' => now()->addDays($index)->toDateString(),
+        ]);
+    }
+
+    actingAs($this->admin)
+        ->get(route('inventory.alerts', [
+            'tab' => 'expiry',
+            'low_stock_page' => 2,
+            'low_stock_per_page' => 1,
+            'expiry_page' => 2,
+            'expiry_per_page' => 1,
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.tab', 'expiry')
+            ->where('lowStockAlerts.meta.current_page', 2)
+            ->where('lowStockAlerts.meta.per_page', 1)
+            ->where('lowStockAlerts.meta.total', 3)
+            ->has('lowStockAlerts.data', 1)
+            ->where('expiryAlerts.meta.current_page', 2)
+            ->where('expiryAlerts.meta.per_page', 1)
+            ->where('expiryAlerts.meta.total', 3)
+            ->has('expiryAlerts.data', 1)
+        );
+});
+
+it('bounds alert page sizes', function () {
+    actingAs($this->admin)
+        ->get(route('inventory.alerts', [
+            'low_stock_per_page' => 0,
+            'expiry_per_page' => 101,
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('lowStockAlerts.meta.per_page', 1)
+            ->where('expiryAlerts.meta.per_page', 100)
         );
 });

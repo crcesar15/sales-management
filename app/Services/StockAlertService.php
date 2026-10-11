@@ -7,7 +7,7 @@ namespace App\Services;
 use App\Models\Batch;
 use App\Models\ProductVariant;
 use App\Models\Setting;
-use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 final class StockAlertService
@@ -15,58 +15,58 @@ final class StockAlertService
     /**
      * Get variants where aggregated batch stock < minimum_stock_level.
      *
-     * @return Collection<int, ProductVariant>
+     * @param  int|array<int, int>|null  $storeIds
+     * @return LengthAwarePaginator<int, ProductVariant>
      */
-    public function getLowStockAlerts(?int $storeId = null): Collection
-    {
-        if ($storeId !== null) {
-            return $this->getLowStockAlertsByStore($storeId);
+    public function getLowStockAlerts(
+        int|array|null $storeIds = null,
+        int $perPage = 20,
+        string $pageName = 'low_stock_page',
+    ): LengthAwarePaginator {
+        $storeIds = $this->normalizeStoreIds($storeIds);
+
+        if ($storeIds !== null) {
+            return $this->getLowStockAlertsByStores($storeIds, $perPage, $pageName);
         }
 
         return ProductVariant::query()
+            ->select('product_variants.*')
+            ->selectRaw('(product_variants.minimum_stock_level - product_variants.stock) as shortage_quantity')
             ->whereNotNull('minimum_stock_level')
             ->whereColumn('stock', '<', 'minimum_stock_level')
             ->with(['product.brand', 'values.option'])
-            ->get();
+            ->orderByRaw('CASE WHEN product_variants.stock = 0 THEN 0 ELSE 1 END')
+            ->orderByDesc('shortage_quantity')
+            ->orderBy('product_variants.id')
+            ->paginate($perPage, ['*'], $pageName)
+            ->withQueryString();
     }
 
     /**
      * Get batches expiring within the configured threshold.
      *
-     * @return Collection<int, Batch>
+     * @param  int|array<int, int>|null  $storeIds
+     * @return LengthAwarePaginator<int, Batch>
      */
-    public function getExpiryAlerts(?int $storeId = null): Collection
-    {
+    public function getExpiryAlerts(
+        int|array|null $storeIds = null,
+        int $perPage = 20,
+        string $pageName = 'expiry_page',
+    ): LengthAwarePaginator {
         $days = $this->getExpiryThresholdDays();
-
-        if ($days === 0) {
-            return new Collection;
-        }
+        $storeIds = $this->normalizeStoreIds($storeIds);
 
         return Batch::query()
             ->expiringSoon($days)
             ->where('remaining_quantity', '>', 0)
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->with(['productVariant.product', 'store'])
+            ->when($days === 0 || $storeIds === [], fn ($q) => $q->whereRaw('1 = 0'))
+            ->when($storeIds !== null, fn ($q) => $q->whereIn('store_id', $storeIds))
+            ->with(['productVariant.product.brand', 'productVariant.values.option', 'store'])
             ->orderBy('expiry_date', 'asc')
-            ->get();
-    }
-
-    /**
-     * Get summary counts for both alert types.
-     *
-     * @return array{low_stock_count: int, expiry_count: int, total: int}
-     */
-    public function getSummary(?int $storeId = null): array
-    {
-        $lowStockCount = $this->countLowStock($storeId);
-        $expiryCount = $this->countExpiry($storeId);
-
-        return [
-            'low_stock_count' => $lowStockCount,
-            'expiry_count' => $expiryCount,
-            'total' => $lowStockCount + $expiryCount,
-        ];
+            ->orderBy('batch_identifier')
+            ->orderBy('id')
+            ->paginate($perPage, ['*'], $pageName)
+            ->withQueryString();
     }
 
     private function getExpiryThresholdDays(): int
@@ -75,63 +75,44 @@ final class StockAlertService
     }
 
     /**
-     * @return Collection<int, ProductVariant>
+     * @param  array<int, int>  $storeIds
+     * @return LengthAwarePaginator<int, ProductVariant>
      */
-    private function getLowStockAlertsByStore(int $storeId): Collection
+    private function getLowStockAlertsByStores(array $storeIds, int $perPage, string $pageName): LengthAwarePaginator
     {
         $stockSubquery = Batch::query()
             ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as store_stock'))
             ->active()
-            ->where('store_id', $storeId)
+            ->whereIn('store_id', $storeIds)
             ->groupBy('product_variant_id');
 
         return ProductVariant::query()
             ->select('product_variants.*', DB::raw('CAST(COALESCE(stock_agg.store_stock, 0) AS UNSIGNED) as stock'))
-            ->joinSub($stockSubquery, 'stock_agg', fn ($join) => $join
+            ->selectRaw('(product_variants.minimum_stock_level - COALESCE(stock_agg.store_stock, 0)) as shortage_quantity')
+            ->leftJoinSub($stockSubquery, 'stock_agg', fn ($join) => $join
                 ->on('product_variants.id', '=', 'stock_agg.product_variant_id')
             )
             ->whereNotNull('product_variants.minimum_stock_level')
-            ->whereColumn('stock_agg.store_stock', '<', 'product_variants.minimum_stock_level')
+            ->whereHas('batches', fn ($query) => $query->whereIn('store_id', $storeIds))
+            ->whereRaw('COALESCE(stock_agg.store_stock, 0) < product_variants.minimum_stock_level')
             ->with(['product.brand', 'values.option'])
-            ->get();
+            ->orderByRaw('CASE WHEN COALESCE(stock_agg.store_stock, 0) = 0 THEN 0 ELSE 1 END')
+            ->orderByDesc('shortage_quantity')
+            ->orderBy('product_variants.id')
+            ->paginate($perPage, ['*'], $pageName)
+            ->withQueryString();
     }
 
-    private function countLowStock(?int $storeId): int
+    /**
+     * @param  int|array<int, int>|null  $storeIds
+     * @return array<int, int>|null
+     */
+    private function normalizeStoreIds(int|array|null $storeIds): ?array
     {
-        if ($storeId !== null) {
-            $stockSubquery = Batch::query()
-                ->select('product_variant_id', DB::raw('SUM(remaining_quantity) as store_stock'))
-                ->active()
-                ->where('store_id', $storeId)
-                ->groupBy('product_variant_id');
-
-            return ProductVariant::query()
-                ->joinSub($stockSubquery, 'stock_agg', fn ($join) => $join
-                    ->on('product_variants.id', '=', 'stock_agg.product_variant_id')
-                )
-                ->whereNotNull('product_variants.minimum_stock_level')
-                ->whereColumn('stock_agg.store_stock', '<', 'product_variants.minimum_stock_level')
-                ->count();
+        if ($storeIds === null || is_array($storeIds)) {
+            return $storeIds;
         }
 
-        return ProductVariant::query()
-            ->whereNotNull('minimum_stock_level')
-            ->whereColumn('stock', '<', 'minimum_stock_level')
-            ->count();
-    }
-
-    private function countExpiry(?int $storeId): int
-    {
-        $days = $this->getExpiryThresholdDays();
-
-        if ($days === 0) {
-            return 0;
-        }
-
-        return Batch::query()
-            ->expiringSoon($days)
-            ->where('remaining_quantity', '>', 0)
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->count();
+        return [$storeIds];
     }
 }

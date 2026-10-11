@@ -121,6 +121,16 @@ it('applies store filter correctly', function () {
     expect($results->first()->stock)->toBe(2);
 });
 
+it('includes variants with only closed batches as out of stock when filtering stores', function () {
+    $variant = createVariantWithMinimumStock(5);
+    createActiveBatch($variant, $this->store, 0, ['status' => 'closed']);
+
+    $results = $this->service->getLowStockAlerts($this->store->id);
+
+    expect($results)->toHaveCount(1);
+    expect($results->first()->stock)->toBe(0);
+});
+
 it('aggregates stock across multiple batches for the same variant', function () {
     $variant = createVariantWithMinimumStock(15);
     createActiveBatch($variant, $this->store, 5);
@@ -131,6 +141,41 @@ it('aggregates stock across multiple batches for the same variant', function () 
 
     expect($results)->toHaveCount(1);
     expect($results->first()->stock)->toBe(10);
+});
+
+it('orders low-stock alerts by out-of-stock then shortage quantity', function () {
+    $outOfStock = createVariantWithMinimumStock(5);
+    createActiveBatch($outOfStock, $this->store, 0, ['status' => 'closed']);
+
+    $largestShortage = createVariantWithMinimumStock(20);
+    createActiveBatch($largestShortage, $this->store, 5);
+
+    $smallestShortage = createVariantWithMinimumStock(10);
+    createActiveBatch($smallestShortage, $this->store, 5);
+
+    $results = $this->service->getLowStockAlerts($this->store->id);
+
+    expect($results->getCollection()->pluck('id')->all())->toBe([
+        $outOfStock->id,
+        $largestShortage->id,
+        $smallestShortage->id,
+    ]);
+    expect((int) $results->getCollection()->get(1)?->getAttribute('shortage_quantity'))->toBe(15);
+});
+
+it('paginates low-stock alerts with a custom page name', function () {
+    foreach ([8, 7, 6] as $stock) {
+        $variant = createVariantWithMinimumStock(10);
+        createActiveBatch($variant, $this->store, $stock);
+    }
+
+    request()->query->set('alerts_page', 2);
+    $results = $this->service->getLowStockAlerts($this->store->id, 1, 'alerts_page');
+
+    expect($results->total())->toBe(3)
+        ->and($results->perPage())->toBe(1)
+        ->and($results->currentPage())->toBe(2)
+        ->and($results->items())->toHaveCount(1);
 });
 
 it('returns empty collection when no variants meet criteria', function () {
@@ -259,8 +304,8 @@ it('orders results by expiry_date ascending', function () {
     $results = $this->service->getExpiryAlerts();
 
     expect($results)->toHaveCount(3);
-    expect($results->get(0)->expiry_date->lessThan($results->get(1)->expiry_date))->toBeTrue();
-    expect($results->get(1)->expiry_date->lessThan($results->get(2)->expiry_date))->toBeTrue();
+    expect($results->getCollection()->get(0)?->expiry_date->lessThan($results->getCollection()->get(1)?->expiry_date))->toBeTrue();
+    expect($results->getCollection()->get(1)?->expiry_date->lessThan($results->getCollection()->get(2)?->expiry_date))->toBeTrue();
 });
 
 it('eager loads productVariant.product and store relationships', function () {
@@ -278,69 +323,6 @@ it('eager loads productVariant.product and store relationships', function () {
     expect($batch->relationLoaded('productVariant'))->toBeTrue();
     expect($batch->productVariant->relationLoaded('product'))->toBeTrue();
     expect($batch->relationLoaded('store'))->toBeTrue();
-});
-
-/*
-|--------------------------------------------------------------------------
-| getSummary()
-|--------------------------------------------------------------------------
-*/
-
-it('returns correct counts matching individual query results', function () {
-    setExpiryAlertDays(30);
-
-    $variant1 = createVariantWithMinimumStock(20);
-    $variant2 = createVariantWithMinimumStock(15);
-    $variant3 = createVariantWithMinimumStock(10);
-    createActiveBatch($variant1, $this->store, 5);
-    createActiveBatch($variant2, $this->store, 3);
-    createActiveBatch($variant3, $this->store, 10, [
-        'expiry_date' => now()->addDays(5)->toDateString(),
-    ]);
-    createActiveBatch($variant3, $this->store, 10, [
-        'expiry_date' => now()->addDays(10)->toDateString(),
-    ]);
-
-    $summary = $this->service->getSummary();
-
-    expect($summary)->toBe([
-        'low_stock_count' => 2,
-        'expiry_count' => 2,
-        'total' => 4,
-    ]);
-});
-
-it('returns all zeros when no alerts exist', function () {
-    $summary = $this->service->getSummary();
-
-    expect($summary)->toBe([
-        'low_stock_count' => 0,
-        'expiry_count' => 0,
-        'total' => 0,
-    ]);
-});
-
-it('applies store filter to both counts', function () {
-    setExpiryAlertDays(30);
-
-    $store2 = Store::factory()->create(['status' => 'active']);
-
-    $variant1 = createVariantWithMinimumStock(20);
-    createActiveBatch($variant1, $this->store, 5);
-
-    $variant2 = createVariantWithMinimumStock(15);
-    createActiveBatch($variant2, $store2, 3);
-
-    $variant3 = createVariantWithMinimumStock(10);
-    createActiveBatch($variant3, $store2, 10, [
-        'expiry_date' => now()->addDays(5)->toDateString(),
-    ]);
-
-    $summary = $this->service->getSummary($store2->id);
-
-    expect($summary['low_stock_count'])->toBe(1);
-    expect($summary['expiry_count'])->toBe(1);
-    expect($summary['total'])->toBe(2);
 });
 
 /*
