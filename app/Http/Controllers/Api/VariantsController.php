@@ -117,7 +117,8 @@ final class VariantsController extends Controller
                 $q->whereHas('product', function ($sq) use ($filter): void {
                     $sq->where('name', 'like', "%{$filter}%");
                 })
-                    ->orWhere('identifier', 'like', "%{$filter}%");
+                    ->orWhere('identifier', 'like', "%{$filter}%")
+                    ->orWhere('barcode', 'like', "%{$filter}%");
             });
 
         if ($storeId > 0) {
@@ -126,7 +127,9 @@ final class VariantsController extends Controller
             ], 'remaining_quantity');
         }
 
-        $variants = $query->orderBy('identifier')
+        $variants = $query
+            ->orderByRaw('case when product_variants.barcode = ? then 0 when product_variants.identifier = ? then 1 else 2 end', [$filter, $filter])
+            ->orderBy('identifier')
             ->limit(20)
             ->get()
             ->map(function ($variant) use ($storeId) {
