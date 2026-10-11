@@ -108,6 +108,15 @@ export interface PosFilters {
 
 export type PosCartItem = SalesOrderLineItemForm;
 
+export interface PosProductInfo {
+  product_name: string;
+  brand_name: string | null;
+  unit_price: number;
+  base_unit_name: string | null;
+  sale_unit_name: string | null;
+  conversion_factor: number;
+}
+
 export type PosCustomer = CustomerOption;
 
 export type PosDiscountType = "flat" | "percentage";

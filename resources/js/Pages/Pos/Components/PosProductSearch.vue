@@ -4,7 +4,8 @@ import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
 import { useSalesOrderClient } from "@composables/useSalesOrderClient";
-import type { PosCartItem } from "@/Types/pos";
+import ProductInfoPopover from "./ProductInfoPopover.vue";
+import type { PosCartItem, PosProductInfo } from "@/Types/pos";
 import type { VariantSearchResult } from "@/Types/sales-order-types";
 
 interface SellableUnit {
@@ -68,6 +69,27 @@ const units = computed<SellableUnit[]>(() =>
 const shouldSearch = computed(() => query.value.trim().length >= 2 && props.storeId !== null);
 const showPrompt = computed(() => !searched.value && !loading.value && !failed.value);
 const showEmpty = computed(() => searched.value && !loading.value && !failed.value && units.value.length === 0);
+
+const infoPopover = ref();
+const infoUnitKey = ref<string | null>(null);
+const infoData = computed<PosProductInfo | null>(() => {
+  const unit = units.value.find((entry) => entry.key === infoUnitKey.value);
+  if (unit === undefined) return null;
+
+  return {
+    product_name: unit.variant.product?.name ?? "—",
+    brand_name: unit.variant.product?.brand?.name ?? null,
+    unit_price: unit.unitPrice,
+    base_unit_name: unit.variant.product?.measurement_unit?.name ?? null,
+    sale_unit_name: unit.saleUnitId !== null ? unit.saleUnitName : null,
+    conversion_factor: unit.conversionFactor,
+  };
+});
+
+function toggleInfo(event: Event, unit: SellableUnit): void {
+  infoUnitKey.value = unit.key;
+  infoPopover.value?.toggle(event);
+}
 
 function remainingInUnit(unit: SellableUnit): number | null {
   const remainingBase = props.getRemainingBase(unit.variant.id) ?? unit.variant.stock ?? null;
@@ -324,14 +346,25 @@ watch(query, () => {
           <div class="flex items-start gap-3">
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-2">
-                <span class="truncate font-semibold">{{ unit.variant.product?.name ?? "—" }}</span>
-                <Badge v-if="unit.variant.option_values" :value="unit.variant.option_values" severity="secondary" />
+                <span class="font-bold text-lg">{{ unit.variant.product?.name ?? "—" }}</span>
+                <Badge v-if="unit.variant.option_values" :value="unit.variant.option_values" severity="primary" />
+                <i
+                  class="fa fa-circle-info shrink-0 cursor-pointer text-surface-400 hover:text-primary dark:text-surface-500 dark:hover:text-primary"
+                  role="button"
+                  tabindex="0"
+                  :aria-label="`${t('Product Details')}: ${unit.variant.product?.name ?? t('Product')}`"
+                  @click="toggleInfo($event, unit)"
+                  @keydown.enter.prevent="toggleInfo($event, unit)"
+                />
               </div>
-              <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-surface-500 dark:text-surface-400">
+              <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-surface-600 dark:text-surface-200">
                 <span v-if="unit.variant.product?.brand?.name">{{ unit.variant.product.brand.name }}</span>
+                <span>|</span>
                 <span>
                   {{ unit.saleUnitName }}
-                  <template v-if="unit.conversionFactor !== 1">· ×{{ unit.conversionFactor }}</template>
+                  <template v-if="unit.conversionFactor !== 1">
+                    = {{ unit.conversionFactor }} {{ unit.variant.product?.measurement_unit?.name ?? t("Unit") }}
+                  </template>
                 </span>
               </div>
               <div class="mt-3 flex flex-wrap items-center gap-2">
@@ -351,5 +384,7 @@ watch(query, () => {
         </li>
       </ul>
     </div>
+
+    <ProductInfoPopover ref="infoPopover" :info="infoData" />
   </section>
 </template>
