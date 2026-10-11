@@ -159,7 +159,6 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // Stock Alert Routes
     Route::get('/inventory/alerts', [StockAlertController::class, 'index'])->name('inventory.alerts');
-    Route::get('/inventory/alerts/summary', [StockAlertController::class, 'summary'])->name('inventory.alerts.summary');
 
     // Batch Routes
     Route::get('/batches', [BatchController::class, 'index'])->name('batches');
