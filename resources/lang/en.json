@@ -1198,5 +1198,15 @@
   "Are you sure you want to remove this batch?": "Are you sure you want to remove this batch?",
   "Finalize": "Finalize",
   "Overview": "Overview",
-  "Item": "Item"
+  "Item": "Item",
+  "Active stock alerts: {count}": "Active stock alerts: {count}",
+  "Batch not identified": "Batch not identified",
+  "Batch: {identifier}": "Batch: {identifier}",
+  "Manage {product}": "Manage {product}",
+  "Minimum {count}": "Minimum {count}",
+  "No active stock alerts": "No active stock alerts",
+  "Not identified": "Not identified",
+  "Stock Position": "Stock Position",
+  "{count} in stock": "{count} in stock",
+  "{count} needed": "{count} needed"
 }

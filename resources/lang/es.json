@@ -1200,5 +1200,15 @@
   "Are you sure you want to remove this batch?": "¿Seguro que deseas eliminar este lote?",
   "Finalize": "Finalizar",
   "Overview": "General",
-  "Item": "Artículo"
+  "Item": "Artículo",
+  "Active stock alerts: {count}": "Alertas de stock activas: {count}",
+  "Batch not identified": "Lote sin identificar",
+  "Batch: {identifier}": "Lote: {identifier}",
+  "Manage {product}": "Gestionar {product}",
+  "Minimum {count}": "Mínimo {count}",
+  "No active stock alerts": "No hay alertas de stock activas",
+  "Not identified": "Sin identificar",
+  "Stock Position": "Posición de stock",
+  "{count} in stock": "{count} en stock",
+  "{count} needed": "Faltan {count}"
 }

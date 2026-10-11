@@ -9,35 +9,53 @@ export interface LowStockAlertItem {
   price: number;
   total_stock: number;
   minimum_stock_level: number | null;
+  shortage_quantity: number;
   status: string;
-  values: Array<{ id: number; option_name: string; value: string }>;
+  values: Array<{ id: number; option_name: string | null; value: string }>;
+}
+
+export interface PaginationMeta {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export interface LowStockAlertCollection {
+  data: LowStockAlertItem[];
+  meta: PaginationMeta;
 }
 
 export interface ExpiryAlertItem {
   id: number;
-  batch_number: string;
+  batch_identifier: string | null;
   product_variant_id: number;
   store_id: number;
-  expiry_date: string;
+  expiry_date: string | null;
   initial_quantity: number;
   remaining_quantity: number;
   status: string;
   expiry_status: string | null;
   product_variant: {
-    id: number;
-    name: string;
+    id: number | null;
+    name: string | null;
     identifier: string | null;
     product: {
-      id: number;
-      name: string;
+      id: number | null;
+      name: string | null;
       brand: { id: number; name: string } | null;
     };
   };
   store: {
-    id: number;
-    name: string;
-    code: string;
-  };
+    id: number | null;
+    name: string | null;
+    code: string | null;
+  } | null;
+}
+
+export interface ExpiryAlertCollection {
+  data: ExpiryAlertItem[];
+  meta: PaginationMeta;
 }
 
 export interface AlertsSummary {
@@ -48,4 +66,5 @@ export interface AlertsSummary {
 
 export interface AlertsFilters {
   store_id: number | null;
+  tab: "low-stock" | "expiry";
 }
