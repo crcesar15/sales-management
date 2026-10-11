@@ -46,7 +46,13 @@ function addCartItem(item: PosCartItem): void {
     return;
   }
 
-  toast.add({ severity: "warn", summary: t("Stock limit reached"), detail: t("No more stock is available for this product"), life: 3000, group: "pos" });
+  toast.add({
+    severity: "warn",
+    summary: t("Stock limit reached"),
+    detail: t("No more stock is available for this product"),
+    life: 3000,
+    group: "pos",
+  });
 }
 
 async function loadSession(): Promise<void> {
@@ -150,11 +156,20 @@ onMounted(async () => {
     </div>
 
     <div v-else-if="posStore.isShiftOpen" class="grid h-full min-h-0 grid-cols-12 gap-4">
-      <aside class="col-span-5 flex min-h-0 overflow-hidden rounded-lg border border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900">
-        <PosProductSearch :store-id="posStore.store?.id ?? null" :get-remaining-base="getRemainingBase" @add="addCartItem" />
+      <aside
+        class="col-span-5 flex min-h-0 overflow-hidden rounded-lg border border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900"
+      >
+        <PosProductSearch
+          :store-id="posStore.store?.id ?? null"
+          :cart-items="cartItems"
+          :get-remaining-base="getRemainingBase"
+          @add="addCartItem"
+        />
       </aside>
 
-      <div class="col-span-7 flex min-h-0 flex-col overflow-hidden rounded-lg border border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900">
+      <div
+        class="col-span-7 flex min-h-0 flex-col overflow-hidden rounded-lg border border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900"
+      >
         <div class="border-b border-surface-200 p-4 dark:border-surface-700">
           <h2 class="m-0 text-lg font-semibold">{{ t("Current sale") }}</h2>
           <div class="mt-3">

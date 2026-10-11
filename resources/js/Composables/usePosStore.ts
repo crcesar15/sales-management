@@ -143,6 +143,8 @@ export const usePosStore = defineStore("pos", () => {
       base_unit_name: item.product_variant?.product?.measurement_unit?.name ?? null,
       variant_identity: item.product_variant?.option_values || item.product_variant?.identifier || null,
       variant_label: item.product_variant?.name ?? null,
+      identifier: item.product_variant?.identifier ?? null,
+      barcode: item.product_variant?.barcode ?? null,
       sale_unit_id: item.sale_unit_id,
       quantity: item.quantity,
       unit_price: item.unit_price,

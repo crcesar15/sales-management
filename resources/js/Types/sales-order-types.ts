@@ -20,6 +20,7 @@ export interface SalesOrderItem {
     name: string;
     identifier: string;
     sku?: string;
+    barcode?: string | null;
     option_values?: string | null;
     minimum_stock_level?: number | null;
     sale_units?: Array<{
@@ -191,6 +192,8 @@ export interface SalesOrderLineItemForm {
   base_unit_name?: string | null;
   variant_identity?: string | null;
   variant_label: string | null;
+  identifier?: string | null;
+  barcode?: string | null;
   sale_unit_id: number | null;
   quantity: number;
   unit_price: number;
@@ -224,6 +227,7 @@ export interface SalesOrderPaymentForm {
 export interface VariantSearchResult {
   id: number;
   identifier: string | null;
+  barcode: string | null;
   option_values: string | null;
   price: number;
   stock: number | null;
