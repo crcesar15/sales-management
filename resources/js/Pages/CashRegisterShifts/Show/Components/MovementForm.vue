@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Dialog, Select, InputNumber, InputText, Button, useToast } from "primevue";
+import { Dialog, Select, InputNumber, Button, useToast, Textarea } from "primevue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { object, string, number } from "yup";
@@ -41,7 +41,7 @@ const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm, s
   validateOnMount: false,
   initialValues: {
     type: "cash_in",
-    amount: undefined as number | undefined,
+    amount: 0,
     reason: "",
   },
 });
@@ -137,7 +137,7 @@ const submit = handleSubmit((values) => {
           {{ t("Reason") }}
           <span class="text-red-500">*</span>
         </label>
-        <InputText
+        <Textarea
           id="movement_reason"
           v-model="reason"
           v-bind="reasonAttrs"
@@ -151,7 +151,7 @@ const submit = handleSubmit((values) => {
     </div>
     <template #footer>
       <Button severity="secondary" :label="t('Cancel')" :disabled="isSubmitting" @click="emit('update:visible', false)" />
-      <Button severity="primary" :label="t('Save')" :loading="isSubmitting" icon="fa fa-check" @click="submit" />
+      <Button severity="primary" :label="t('Save')" :loading="isSubmitting" @click="submit" />
     </template>
   </Dialog>
 </template>

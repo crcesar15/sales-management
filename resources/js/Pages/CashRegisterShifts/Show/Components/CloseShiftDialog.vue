@@ -31,7 +31,7 @@ const schema = toTypedSchema(
 );
 const { handleSubmit, errors, defineField, isSubmitting, setErrors, resetForm, values } = useForm({
   validationSchema: schema,
-  initialValues: { closing_balance: undefined as number | undefined, closing_notes: null, discrepancy_reason: null },
+  initialValues: { closing_balance: 0, closing_notes: null, discrepancy_reason: null },
 });
 const [closingBalance, closingBalanceAttrs] = defineField("closing_balance");
 const [closingNotes, closingNotesAttrs] = defineField("closing_notes");

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Card, Button, Tag, DataTable, Column, Toast } from "primevue";
 import AppLayout from "@layouts/admin.vue";
-import MovementForm from "@pages/CashRegisterShifts/Components/MovementForm.vue";
-import CloseShiftDialog from "@pages/CashRegisterShifts/Components/CloseShiftDialog.vue";
+import MovementForm from "@/Pages/CashRegisterShifts/Show/Components/MovementForm.vue";
+import CloseShiftDialog from "@/Pages/CashRegisterShifts/Show/Components/CloseShiftDialog.vue";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { computed, ref } from "vue";
@@ -245,7 +245,7 @@ const openCloseDialog = (force: boolean) => {
             v-can="'shift.manage'"
             :label="t('Force Close Shift')"
             icon="fa fa-exclamation-triangle"
-            severity="secondary"
+            severity="danger"
             class="w-full"
             @click="openCloseDialog(true)"
           />
