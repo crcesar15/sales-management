@@ -61,7 +61,7 @@ function confirmRemove(index: number): void {
     </div>
 
     <div v-else class="min-h-0 flex-1 overflow-y-auto">
-      <div class="hidden grid-cols-[minmax(0,1fr)_7.5rem_7.5rem_6.75rem_2.75rem] gap-3 border-b border-surface-200 bg-surface-50 px-4 py-3 text-sm font-medium dark:border-surface-700 dark:bg-surface-950 xl:grid">
+      <div class="hidden grid-cols-[minmax(0,1fr)_10rem_8rem_9rem_2.75rem] gap-3 border-b border-surface-200 bg-surface-50 px-4 py-3 text-sm font-medium dark:border-surface-700 dark:bg-surface-950 xl:grid">
         <span>{{ t("Product") }}</span>
         <span>{{ t("Quantity") }}</span>
         <span>{{ t("Unit Price") }}</span>
@@ -71,7 +71,7 @@ function confirmRemove(index: number): void {
 
       <ul class="divide-y divide-surface-200 dark:divide-surface-700">
         <li v-for="(item, index) in items" :key="item.id" class="p-4">
-          <div class="grid grid-cols-2 gap-3 xl:grid-cols-[minmax(0,1fr)_7.5rem_7.5rem_6.75rem_2.75rem] xl:items-start">
+          <div class="grid grid-cols-2 gap-3 xl:grid-cols-[minmax(0,1fr)_10rem_8rem_9rem_2.75rem] xl:items-start">
             <div class="col-span-2 min-w-0 xl:col-span-1">
               <div class="truncate font-semibold">{{ item.product_name }}</div>
               <div class="mt-1 flex flex-wrap gap-x-2 text-sm text-surface-500 dark:text-surface-400">
