@@ -8,7 +8,7 @@ import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import type { CashRegisterShiftResponse, ShiftListResponse, ShiftFilters } from "@/Types/cash-register-types";
+import type { CashRegisterShiftResponse, RegisterOption, ShiftListResponse, ShiftFilters } from "@/Types/cash-register-types";
 import { useI18n } from "vue-i18n";
 
 defineOptions({ layout: AppLayout });
@@ -16,7 +16,7 @@ defineOptions({ layout: AppLayout });
 const props = defineProps<{
   shifts: ShiftListResponse;
   filters: ShiftFilters;
-  registers: Array<{ id: number; name: string; code: string }>;
+  registers: RegisterOption[];
   cashiers: Array<{ id: number; full_name: string }>;
 }>();
 

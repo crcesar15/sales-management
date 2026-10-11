@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * @property Store $store
+ * @property-read bool $has_open_shift
+ */
 final class CashRegister extends Model
 {
     /** @use HasFactory<\Database\Factories\CashRegisterFactory> */

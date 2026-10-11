@@ -8,10 +8,16 @@ import { route } from "ziggy-js";
 import { watch, nextTick, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
+import type { RegisterOption } from "@/Types/cash-register-types";
+
+interface RegisterGroupOption {
+  label: string;
+  registers: Array<{ label: string; value: number; disabled: boolean }>;
+}
 
 const props = defineProps<{
   visible: boolean;
-  registers: Array<{ id: number; name: string; code: string }>;
+  registers: RegisterOption[];
 }>();
 
 const emit = defineEmits<{
@@ -23,7 +29,18 @@ const toast = useToast();
 const { t } = useI18n();
 const { currencyCode } = useCurrencyFormatter();
 
-const registerOptions = computed(() => props.registers.map((r) => ({ label: r.name, value: r.id })));
+const registerOptions = computed<RegisterGroupOption[]>(() => {
+  const groups = new Map<string, RegisterGroupOption>();
+
+  for (const register of props.registers) {
+    const storeName = register.store.name;
+    const group = groups.get(storeName) ?? { label: storeName, registers: [] };
+    group.registers.push({ label: register.name, value: register.id, disabled: register.has_open_shift });
+    groups.set(storeName, group);
+  }
+
+  return [...groups.values()];
+});
 
 const schema = toTypedSchema(
   object({
@@ -101,6 +118,9 @@ const submit = handleSubmit((values) => {
           :options="registerOptions"
           option-label="label"
           option-value="value"
+          option-group-label="label"
+          option-group-children="registers"
+          option-disabled="disabled"
           :placeholder="t('Select register')"
           :empty-message="t('No available options')"
           :class="{ 'p-invalid': submitCount > 0 && !!errors.cash_register_id }"
@@ -137,7 +157,7 @@ const submit = handleSubmit((values) => {
     </div>
     <template #footer>
       <Button severity="secondary" :label="t('Cancel')" :disabled="isSubmitting" @click="emit('update:visible', false)" />
-      <Button severity="primary" :label="t('Open Shift')" :loading="isSubmitting" icon="fa fa-lock-open" @click="submit" />
+      <Button severity="primary" :label="t('Open Shift')" :loading="isSubmitting" @click="submit" />
     </template>
   </Dialog>
 </template>

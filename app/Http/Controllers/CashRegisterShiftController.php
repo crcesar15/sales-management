@@ -46,9 +46,23 @@ final class CashRegisterShiftController extends Controller
             perPage: request()->integer('per_page', 20),
         );
 
+        $registers = CashRegister::query()
+            ->with('store')
+            ->where('status', 'active')
+            ->withExists('currentShift as has_open_shift')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (CashRegister $register) => [
+                'id' => $register->id,
+                'name' => $register->name,
+                'code' => $register->code,
+                'store' => ['id' => $register->store->id, 'name' => $register->store->name],
+                'has_open_shift' => (bool) $register->has_open_shift,
+            ]);
+
         return Inertia::render('CashRegisterShifts/Index', [
             'shifts' => new CashRegisterShiftCollection($shifts),
-            'registers' => CashRegister::where('status', 'active')->orderBy('name')->get(['id', 'name', 'code']),
+            'registers' => $registers,
             'cashiers' => User::orderBy('first_name')->get(['id', 'first_name', 'last_name'])->map(fn (User $u) => ['id' => $u->id, 'full_name' => $u->first_name . ' ' . $u->last_name]),
             'filters' => array_merge($filters, ['per_page' => request()->integer('per_page', 20)]),
         ]);

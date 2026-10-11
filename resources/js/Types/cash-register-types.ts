@@ -42,6 +42,14 @@ interface CashRegisterFilters {
   page?: number;
 }
 
+interface RegisterOption {
+  id: number;
+  name: string;
+  code: string;
+  store: { id: number; name: string };
+  has_open_shift: boolean;
+}
+
 // ── Cash Register Shift ──
 
 interface CashRegisterShift {
@@ -139,6 +147,7 @@ export {
   type CashRegisterResponse,
   type CashRegisterListResponse,
   type CashRegisterFilters,
+  type RegisterOption,
   type CashRegisterShift,
   type CashRegisterShiftResponse,
   type ShiftListResponse,
