@@ -24,6 +24,7 @@ final class SalesOrderItemResource extends JsonResource
                 'id' => $this->productVariant?->id,
                 'identifier' => $this->productVariant?->identifier,
                 'sku' => $this->productVariant?->identifier,
+                'barcode' => $this->productVariant?->barcode,
                 'name' => $this->productVariant?->name,
                 'option_values' => $this->productVariant?->relationLoaded('values')
                     ? $this->productVariant->values->pluck('value')->implode(' / ')

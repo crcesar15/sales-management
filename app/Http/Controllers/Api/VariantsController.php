@@ -154,6 +154,7 @@ final class VariantsController extends Controller
                 $data = [
                     'id' => $variant->id,
                     'identifier' => $variant->identifier,
+                    'barcode' => $variant->barcode,
                     'option_values' => $optionValues,
                     'variant_options' => $variantOptions,
                     'price' => (float) $variant->price,

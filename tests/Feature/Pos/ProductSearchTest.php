@@ -23,7 +23,9 @@ it('finds a variant by its exact barcode', function () {
     actingAs($this->actor, 'sanctum')
         ->getJson(route('api.v1.variants.search', ['filter' => '7501234567890']))
         ->assertSuccessful()
-        ->assertJsonPath('data.0.id', $this->variant->id);
+        ->assertJsonPath('data.0.id', $this->variant->id)
+        ->assertJsonPath('data.0.barcode', '7501234567890')
+        ->assertJsonPath('data.0.identifier', 'SKU-0001');
 });
 
 it('finds a variant by a partial barcode match', function () {
