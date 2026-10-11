@@ -149,7 +149,7 @@ export const usePosStore = defineStore("pos", () => {
       sale_unit_id: item.sale_unit_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
-      original_unit_price: item.unit_price,
+      original_unit_price: item.original_unit_price ?? item.unit_price,
       conversion_factor: item.conversion_factor,
       line_total: item.line_total,
       stock: item.stock ?? null,

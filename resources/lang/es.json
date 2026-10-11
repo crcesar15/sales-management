@@ -583,6 +583,7 @@
   "Order Summary": "Resumen de Orden",
   "Order Total": "Total de Orden",
   "On hand": "En existencia",
+  "Orig.": "Orig.",
   "Original price": "Precio original",
   "Order date is required": "La fecha de orden es requerida",
   "Orders": "Órdenes",
@@ -1212,5 +1213,7 @@
   "Not identified": "Sin identificar",
   "Stock Position": "Posición de stock",
   "{count} in stock": "{count} en stock",
-  "{count} needed": "Faltan {count}"
+  "{count} needed": "Faltan {count}",
+  "Subtotal": "Subtotal",
+  "Remove": "Remover"
 }

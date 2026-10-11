@@ -583,6 +583,7 @@
   "Order Summary": "Order Summary",
   "Order Total": "Order Total",
   "On hand": "On hand",
+  "Orig.": "Orig.",
   "Original price": "Original price",
   "Order date is required": "Order date is required",
   "Orders": "Orders",
@@ -1210,5 +1211,7 @@
   "Not identified": "Not identified",
   "Stock Position": "Stock Position",
   "{count} in stock": "{count} in stock",
-  "{count} needed": "{count} needed"
+  "{count} needed": "{count} needed",
+  "Subtotal": "Subtotal",
+  "Remove": "Remove"
 }

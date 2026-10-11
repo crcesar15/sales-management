@@ -93,6 +93,7 @@ function checkoutPayload() {
       product_variant_id: item.product_variant_id,
       sale_unit_id: item.sale_unit_id,
       quantity: item.quantity,
+      unit_price: item.unit_price,
     })),
   };
 }
