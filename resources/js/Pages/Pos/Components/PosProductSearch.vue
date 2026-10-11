@@ -184,7 +184,7 @@ onBeforeUnmount(() => {
         <InputText
           id="pos-product-search"
           v-model="query"
-          :placeholder="t('Search by product or identifier')"
+          :placeholder="t('Search by product, identifier or barcode')"
           :disabled="storeId === null"
           autocomplete="off"
           size="large"
@@ -216,7 +216,7 @@ onBeforeUnmount(() => {
       <div v-else-if="showEmpty" class="flex min-h-64 flex-col items-center justify-center px-6 text-center text-surface-500 dark:text-surface-400">
         <i class="fa fa-box-open mb-3 text-3xl" aria-hidden="true" />
         <p class="m-0 font-medium">{{ t("No products found") }}</p>
-        <small>{{ t("Try another product name or identifier") }}</small>
+        <small>{{ t("Try another product name, identifier or barcode") }}</small>
       </div>
 
       <ul v-else class="divide-y divide-surface-200 dark:divide-surface-700">
