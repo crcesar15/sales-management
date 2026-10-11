@@ -194,6 +194,7 @@ export interface SalesOrderLineItemForm {
   variant_label: string | null;
   identifier?: string | null;
   barcode?: string | null;
+  has_multiple_sale_units?: boolean;
   sale_unit_id: number | null;
   quantity: number;
   unit_price: number;

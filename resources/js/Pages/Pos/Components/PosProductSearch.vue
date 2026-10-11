@@ -163,7 +163,7 @@ function onSearchKeydown(event: KeyboardEvent): void {
 }
 
 function findCartMatch(code: string): PosCartItem | null {
-  const matches = props.cartItems.filter((item) => item.barcode === code || item.identifier === code);
+  const matches = props.cartItems.filter((item) => !item.has_multiple_sale_units && (item.barcode === code || item.identifier === code));
 
   return matches.length === 1 ? (matches[0] ?? null) : null;
 }
@@ -236,6 +236,7 @@ function addUnit(unit: SellableUnit): void {
     variant_label: variant.option_values ?? unit.saleUnitName,
     identifier: variant.identifier ?? null,
     barcode: variant.barcode ?? null,
+    has_multiple_sale_units: (variant.sale_units?.length ?? 0) > 0,
     sale_unit_id: unit.saleUnitId,
     quantity: 1,
     unit_price: unit.unitPrice,
