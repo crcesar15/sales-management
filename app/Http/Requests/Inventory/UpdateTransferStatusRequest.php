@@ -22,10 +22,10 @@ final class UpdateTransferStatusRequest extends FormRequest
     {
         return [
             'status' => ['required', 'string', 'in:picked,in_transit,received,completed'],
-            'items' => ['nullable', 'array'],
-            'items.*.id' => ['required_with:items', 'integer', 'exists:stock_transfer_items,id'],
-            'items.*.quantity_sent' => ['nullable', 'integer', 'min:0'],
-            'items.*.quantity_received' => ['nullable', 'integer', 'min:0'],
+            'items' => ['nullable', 'array', 'required_if:status,picked,received'],
+            'items.*.id' => ['required_with:items', 'integer', 'distinct:strict', 'exists:stock_transfer_items,id'],
+            'items.*.quantity_sent' => ['required_if:status,picked', 'nullable', 'integer', 'min:0'],
+            'items.*.quantity_received' => ['required_if:status,received', 'nullable', 'integer', 'min:0'],
         ];
     }
 }

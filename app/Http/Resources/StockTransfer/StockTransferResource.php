@@ -55,11 +55,14 @@ final class StockTransferResource extends JsonResource
                             'id' => $item->productVariant?->id,
                             'name' => $item->productVariant?->name,
                             'identifier' => $item->productVariant?->identifier,
-                            'barcode' => $item->productVariant?->barcode,
-                            'product' => [
-                                'id' => $item->productVariant?->product?->id,
-                                'name' => $item->productVariant?->product?->name,
-                            ],
+                            'product' => $item->productVariant?->product ? [
+                                'id' => $item->productVariant->product->id,
+                                'name' => $item->productVariant->product->name,
+                                'measurement_unit' => $item->productVariant->product->measurementUnit ? [
+                                    'id' => $item->productVariant->product->measurementUnit->id,
+                                    'name' => $item->productVariant->product->measurementUnit->name,
+                                ] : null,
+                            ] : null,
                         ],
                     ];
                 })->toArray();

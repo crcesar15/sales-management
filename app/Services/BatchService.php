@@ -104,8 +104,9 @@ final class BatchService
         });
     }
 
-    public function deductFIFOForTransfer(int $variantId, int $storeId, int $quantity): void
+    /** @return array<int, array{quantity: int, batch_identifier: string|null, expiry_date: \Carbon\CarbonInterface|null}> */
+    public function deductFIFOForTransfer(int $variantId, int $storeId, int $quantity): array
     {
-        $this->fifoStockDeductionService->deductForTransfer($variantId, $storeId, $quantity);
+        return $this->fifoStockDeductionService->deductForTransfer($variantId, $storeId, $quantity);
     }
 }

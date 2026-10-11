@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { DataTable, Column, Button, InputNumber, AutoComplete, Tag, useToast, useConfirm, ConfirmDialog } from "primevue";
+import { Button, Column, ConfirmDialog, DataTable, InputNumber, Tag, useConfirm, useToast } from "primevue";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { ref, computed } from "vue";
-import axios from "axios";
-import { route } from "ziggy-js";
-import type { ProductResponse } from "@app-types/product-types";
+import StockTransferProductPicker from "./StockTransferProductPicker.vue";
+import type { StockTransferVariantSearchResult } from "@app-types/stock-transfer-types";
 
 export interface TransferLineItem {
   id: string;
@@ -13,11 +12,13 @@ export interface TransferLineItem {
   variant_label: string;
   brand_name: string;
   measurement_unit_name: string;
+  available_stock: number;
   quantity_requested: number;
 }
 
 const props = defineProps<{
   modelValue: TransferLineItem[];
+  storeId: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -28,89 +29,55 @@ const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 
-interface VariantOption {
-  id: number;
-  name: string;
-  product: ProductResponse;
-  identifier: string;
-  stock: number;
-  label: string;
-}
-
-const variantSearchResults = ref<VariantOption[]>([]);
-const variantSearchLoading = ref(false);
-const selectedVariant = ref<VariantOption | null>(null);
-const autocompleteKey = ref(0);
-
 const items = computed({
   get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
+  set: (value) => emit("update:modelValue", value),
 });
+const addedVariantIds = computed(() => new Set(items.value.map((item) => item.product_variant_id)));
 
-async function searchVariants(event: { query: string }) {
-  if (!event.query || event.query.length < 2) {
-    variantSearchResults.value = [];
-    return;
-  }
-  variantSearchLoading.value = true;
-  try {
-    const response = await axios.get(route("api.v1.variants"), {
-      params: { filter: event.query, per_page: 15 },
-    });
-    variantSearchResults.value = (response.data.data || []).map((v: Record<string, unknown>) => {
-      const id = v.id as number;
-      const name = v.name as string;
-      const product = v.product as ProductResponse;
-      const identifier = v.identifier as string;
-      const stock = (v.stock as number) ?? 0;
-      const label = name ? `${product?.name ?? ""} - ${name}` : `${product?.name ?? ""}`;
-      return { id, name, product, identifier, stock, label };
-    });
-  } catch {
-    variantSearchResults.value = [];
-  } finally {
-    variantSearchLoading.value = false;
-  }
+function variantLabel(variant: StockTransferVariantSearchResult): string {
+  return variant.option_values ?? variant.identifier ?? variant.product?.name ?? "—";
 }
 
-function onVariantSelect(event: { value: VariantOption }) {
-  const variant = event.value;
-  const exists = items.value.some((i) => i.product_variant_id === variant.id);
-  if (exists) {
+function addVariant(variant: StockTransferVariantSearchResult) {
+  if (addedVariantIds.value.has(variant.id)) {
     toast.add({ severity: "warn", summary: t("Duplicate"), detail: t("Product already added"), life: 3000 });
-    selectedVariant.value = null;
     return;
   }
 
-  const productName = variant.product?.name ?? "—";
-  const variantLabel = variant.name || variant.identifier || productName;
-  const brandName = variant.product?.brand?.name ?? "—";
-  const measurementUnitName = variant.product?.measurement_unit?.name ?? "—";
+  if (variant.stock <= 0) {
+    toast.add({ severity: "warn", summary: t("Warning"), detail: t("Product is out of stock in the source store"), life: 3000 });
+    return;
+  }
 
-  const newItem: TransferLineItem = {
+  const item: TransferLineItem = {
     id: crypto.randomUUID(),
     product_variant_id: variant.id,
-    product_name: productName,
-    variant_label: variantLabel,
-    brand_name: brandName,
-    measurement_unit_name: measurementUnitName,
+    product_name: variant.product?.name ?? "—",
+    variant_label: variantLabel(variant),
+    brand_name: variant.product?.brand?.name ?? "—",
+    measurement_unit_name: variant.product?.measurement_unit?.name ?? t("Unit"),
+    available_stock: variant.stock,
     quantity_requested: 1,
   };
 
-  emit("update:modelValue", [...items.value, newItem]);
-  selectedVariant.value = null;
-  autocompleteKey.value++;
+  emit("update:modelValue", [...items.value, item]);
 }
 
-function updateQuantity(index: number, quantity: number) {
+function updateQuantity(index: number, quantity: number | null) {
+  const item = items.value[index];
+  if (!item || quantity === null) return;
+
   const updated = [...items.value];
-  updated[index] = { ...updated[index], quantity_requested: quantity };
+  updated[index] = { ...item, quantity_requested: Math.min(Math.max(1, quantity), item.available_stock) };
   emit("update:modelValue", updated);
 }
 
 function removeItem(index: number) {
-  const updated = items.value.filter((_, i) => i !== index);
-  emit("update:modelValue", updated);
+  emit(
+    "update:modelValue",
+    items.value.filter((_, itemIndex) => itemIndex !== index),
+  );
 }
 
 function confirmRemoveItem(index: number) {
@@ -122,100 +89,25 @@ function confirmRemoveItem(index: number) {
     acceptLabel: t("Delete"),
     rejectClass: "p-button-secondary",
     acceptClass: "p-button-primary",
-    accept: () => {
-      removeItem(index);
-    },
+    accept: () => removeItem(index),
   });
 }
 </script>
 
 <template>
-  <div>
-    <div class="flex flex-col gap-2 mb-3">
-      <label for="product-search">{{ t("Search Product") }}</label>
-      <AutoComplete
-        id="product-search"
-        :key="autocompleteKey"
-        v-model="selectedVariant"
-        :suggestions="variantSearchResults"
-        :loading="variantSearchLoading"
-        option-label="label"
-        :placeholder="t('Type to search products...')"
-        :empty-search-message="t('No results found')"
-        dropdown
-        force-selection
-        class="w-full"
-        input-class="w-full"
-        @complete="searchVariants"
-        @item-select="onVariantSelect"
-      >
-        <template #header>
-          <div
-            class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 text-sm font-semibold text-surface-500 uppercase tracking-wide border-b border-surface-200 dark:border-surface-700"
-          >
-            <span class="col-span-4">{{ t("Product") }}</span>
-            <span class="col-span-2">{{ t("Brand") }}</span>
-            <span class="col-span-2">{{ t("Unit") }}</span>
-            <span class="col-span-2">{{ t("Stock") }}</span>
-            <span class="col-span-2">{{ t("Identifier") }}</span>
-          </div>
-        </template>
-        <template #option="{ option }">
-          <!-- Desktop: grid row -->
-          <div class="hidden lg:grid grid-cols-12 gap-2 items-center w-full py-1">
-            <div class="col-span-4 flex flex-col gap-0.5 min-w-0">
-              <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
-              <span v-if="option.name" class="text-sm text-surface-500 truncate">{{ option.name }}</span>
-            </div>
-            <div class="col-span-2 text-sm text-surface-500 truncate">
-              {{ option.product?.brand?.name ?? "—" }}
-            </div>
-            <div class="col-span-2">
-              <span v-if="option.product?.measurement_unit" class="text-sm">
-                {{ option.product.measurement_unit.name }}
-              </span>
-            </div>
-            <div class="col-span-2">
-              <Tag
-                :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
-                :severity="option.stock === 0 ? 'danger' : 'success'"
-                class="text-sm"
-                rounded
-              />
-            </div>
-            <div class="col-span-2 text-sm text-surface-500 truncate">
-              {{ option.identifier }}
-            </div>
-          </div>
-          <!-- Mobile: card layout -->
-          <div class="lg:hidden flex flex-col gap-1.5 py-2 w-full">
-            <div class="flex items-center justify-between">
-              <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                <span class="font-medium text-sm truncate">{{ option.product?.name }}</span>
-                <span class="text-xs text-surface-500 truncate">
-                  <span v-if="option.product?.brand?.name">{{ option.product.brand.name }} ·</span>
-                  <span v-if="option.name">{{ option.name }}</span>
-                  <span v-if="option.product?.measurement_unit" class="ml-1">({{ option.product.measurement_unit.name }})</span>
-                </span>
-              </div>
-              <Tag
-                :value="option.stock === 0 ? t('Out of stock') : `${t('In stock')}: ${option.stock}`"
-                :severity="option.stock === 0 ? 'danger' : 'success'"
-                class="text-xs"
-                rounded
-              />
-            </div>
-          </div>
-        </template>
-      </AutoComplete>
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-2">
+      <label for="stock-transfer-product-search">{{ t("Search Product") }}</label>
+      <StockTransferProductPicker :store-id="storeId" :added-variant-ids="addedVariantIds" @select="addVariant" />
+      <small class="text-surface-500 dark:text-surface-400">{{ t("Quantities are entered in each product's base unit.") }}</small>
     </div>
 
     <DataTable :value="items" data-key="id" striped-rows row-hover>
       <template #empty>
-        <div class="flex flex-col items-center justify-center py-10 text-surface-400">
-          <i class="fa fa-boxes-stacked text-4xl mb-3"></i>
-          <span class="font-medium text-lg mb-1">{{ t("No items added yet") }}</span>
-          <small>{{ t("Use the search above to add products") }}</small>
+        <div class="flex flex-col items-center justify-center gap-2 py-10 text-surface-400">
+          <i class="fa fa-boxes-stacked text-4xl" />
+          <span class="font-medium text-lg">{{ t("No items added yet") }}</span>
+          <small>{{ t("Select a source store and search for products above") }}</small>
         </div>
       </template>
 
@@ -232,21 +124,28 @@ function confirmRemoveItem(index: number) {
         </template>
       </Column>
 
-      <Column :header="t('Unit')" style="min-width: 80px">
+      <Column :header="t('Base unit')" style="min-width: 100px">
         <template #body="{ data }">
           <span class="text-sm">{{ data.measurement_unit_name }}</span>
         </template>
       </Column>
 
-      <Column :header="t('Quantity')" style="min-width: 140px">
+      <Column :header="t('Available')" style="min-width: 140px">
+        <template #body="{ data }">
+          <Tag :value="`${data.available_stock} ${data.measurement_unit_name}`" severity="success" rounded />
+        </template>
+      </Column>
+
+      <Column :header="t('Quantity')" style="min-width: 170px">
         <template #body="{ data, index }">
           <InputNumber
             :model-value="data.quantity_requested"
             :min="1"
-            size="small"
+            :max="data.available_stock"
             :show-buttons="true"
+            size="small"
             input-class="w-full tabular-nums"
-            @update:model-value="(val: number) => updateQuantity(index, val)"
+            @update:model-value="updateQuantity(index, $event)"
           />
         </template>
       </Column>

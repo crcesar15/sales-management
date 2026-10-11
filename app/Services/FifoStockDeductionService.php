@@ -90,18 +90,19 @@ final class FifoStockDeductionService
      * Deduct stock for a transfer using FIFO.
      * Opens its own DB::transaction.
      *
+     * @return array<int, array{quantity: int, batch_identifier: string|null, expiry_date: \Carbon\CarbonInterface|null}>
+     *
      * @throws InvalidArgumentException if insufficient stock is available
      */
-    public function deductForTransfer(int $variantId, int $storeId, int $quantity): void
+    public function deductForTransfer(int $variantId, int $storeId, int $quantity): array
     {
-        DB::transaction(function () use ($variantId, $storeId, $quantity): void {
+        return DB::transaction(function () use ($variantId, $storeId, $quantity): array {
             $remaining = $quantity;
+            $allocations = [];
 
             $batches = Batch::query()
                 ->where('product_variant_id', $variantId)
-                ->where('store_id', $storeId)
-                ->where('status', 'active')
-                ->where('remaining_quantity', '>', 0)
+                ->fulfillableAt($storeId)
                 ->orderBy('created_at', 'asc')
                 ->lockForUpdate()
                 ->get();
@@ -126,6 +127,11 @@ final class FifoStockDeductionService
                 $deduct = min($remaining, (int) $batch->remaining_quantity);
                 $batch->decrement('remaining_quantity', $deduct);
                 $batch->increment('transferred_quantity', $deduct);
+                $allocations[] = [
+                    'quantity' => $deduct,
+                    'batch_identifier' => $batch->batch_identifier,
+                    'expiry_date' => $batch->expiry_date,
+                ];
                 $remaining -= $deduct;
 
                 $batch->refresh();
@@ -141,6 +147,8 @@ final class FifoStockDeductionService
             }
 
             $variant->recalculateStock();
+
+            return $allocations;
         });
     }
 }

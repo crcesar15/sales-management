@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import { Button, Card, Select, Textarea, useToast } from "primevue";
+import { Button, Card, ConfirmDialog, Select, Textarea, useConfirm, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
@@ -19,6 +19,7 @@ const props = defineProps<{
 }>();
 
 const toast = useToast();
+const confirm = useConfirm();
 const { t } = useI18n();
 
 const storeOptions = computed(() => props.stores.map((s) => ({ name: s.name, value: s.id })));
@@ -54,7 +55,6 @@ const itemsError = ref("");
 const selectedFromStoreName = computed(() => props.stores.find((s) => s.id === values.from_store_id)?.name ?? null);
 const selectedToStoreName = computed(() => props.stores.find((s) => s.id === values.to_store_id)?.name ?? null);
 const totalItems = computed(() => lineItems.value.length);
-const totalQuantityRequested = computed(() => lineItems.value.reduce((sum, i) => sum + i.quantity_requested, 0));
 
 const submit = handleSubmit((formValues) => {
   itemsError.value = "";
@@ -93,6 +93,31 @@ const submit = handleSubmit((formValues) => {
 function goBack() {
   router.visit(route("stock-transfers"));
 }
+
+function updateFromStore(storeId: number | null) {
+  if (storeId === values.from_store_id) return;
+
+  const applyStore = () => {
+    setFieldValue("from_store_id", storeId ?? (undefined as unknown as number));
+    lineItems.value = [];
+  };
+
+  if (lineItems.value.length === 0) {
+    applyStore();
+    return;
+  }
+
+  confirm.require({
+    group: "transfer-source-store",
+    message: t("Changing the source store will remove all transfer items. Do you want to continue?"),
+    header: t("Change source store"),
+    icon: "fa fa-triangle-exclamation",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Continue"),
+    rejectClass: "p-button-secondary",
+    accept: applyStore,
+  });
+}
 </script>
 
 <template>
@@ -128,7 +153,7 @@ function goBack() {
                     :placeholder="t('Select source store')"
                     :class="{ 'p-invalid': submitCount > 0 && !!errors.from_store_id }"
                     filter
-                    @update:model-value="setFieldValue('from_store_id', $event)"
+                     @update:model-value="updateFromStore($event)"
                   />
                   <small v-if="submitCount > 0 && errors.from_store_id" class="text-red-400 dark:text-red-300">
                     {{ errors.from_store_id }}
@@ -170,7 +195,7 @@ function goBack() {
         <Card>
           <template #title>{{ t("Transfer Items") }}</template>
           <template #content>
-            <TransferLineItemsTable v-model="lineItems" />
+             <TransferLineItemsTable v-model="lineItems" :store-id="values.from_store_id ?? null" />
             <small v-if="itemsError" class="text-red-400 dark:text-red-300 mt-2 block">{{ itemsError }}</small>
           </template>
         </Card>
@@ -198,14 +223,11 @@ function goBack() {
                 <span class="font-bold">{{ totalItems }}</span>
               </div>
 
-              <div class="flex justify-between">
-                <span class="text-surface-500">{{ t("Total Requested") }}</span>
-                <span class="font-bold">{{ totalQuantityRequested }}</span>
-              </div>
             </div>
           </template>
         </Card>
       </div>
     </div>
+    <ConfirmDialog group="transfer-source-store" />
   </div>
 </template>

@@ -11,9 +11,10 @@ use App\Models\StockTransfer;
 use App\Models\StockTransferItem;
 use App\Models\Store;
 use App\Models\User;
+use Spatie\Activitylog\Models\Activity;
+
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
-use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
     $this->admin = User::factory()->create();
@@ -48,6 +49,22 @@ function createTransfer(Store $from, Store $to, User $requestedBy, array $overri
     ]);
 
     return $transfer;
+}
+
+/** @param array<string, mixed> $overrides */
+function createAvailableBatch(ProductVariant $variant, Store $store, int $quantity, array $overrides = []): Batch
+{
+    return Batch::factory()->create([
+        'product_variant_id' => $variant->id,
+        'store_id' => $store->id,
+        'initial_quantity' => $quantity,
+        'remaining_quantity' => $quantity,
+        'sold_quantity' => 0,
+        'transferred_quantity' => 0,
+        'status' => 'active',
+        'expiry_date' => today()->addMonth()->toDateString(),
+        ...$overrides,
+    ]);
 }
 
 /*
@@ -112,6 +129,7 @@ it('admin can create a transfer', function () {
     $variant = ProductVariant::factory()->create([
         'product_id' => Product::factory()->create()->id,
     ]);
+    createAvailableBatch($variant, $this->storeA, 5);
 
     actingAs($this->admin)
         ->post(route('stock-transfers.store'), [
@@ -136,6 +154,7 @@ it('creating a transfer logs activity', function () {
     $variant = ProductVariant::factory()->create([
         'product_id' => Product::factory()->create()->id,
     ]);
+    createAvailableBatch($variant, $this->storeA, 5);
 
     actingAs($this->admin)
         ->post(route('stock-transfers.store'), [
@@ -204,6 +223,49 @@ it('rejects transfer with quantity_requested <= 0', function () {
         ->assertSessionHasErrors(['items.0.quantity_requested']);
 });
 
+it('rejects a transfer quantity above the source store availability', function () {
+    createAvailableBatch($this->variant, $this->storeA, 4);
+
+    actingAs($this->admin)
+        ->post(route('stock-transfers.store'), [
+            'from_store_id' => $this->storeA->id,
+            'to_store_id' => $this->storeB->id,
+            'items' => [
+                ['product_variant_id' => $this->variant->id, 'quantity_requested' => 5],
+            ],
+        ])
+        ->assertSessionHasErrors(['items.0.quantity_requested']);
+});
+
+it('excludes expired batches from source store availability', function () {
+    createAvailableBatch($this->variant, $this->storeA, 5, ['expiry_date' => today()->subDay()->toDateString()]);
+
+    actingAs($this->admin)
+        ->post(route('stock-transfers.store'), [
+            'from_store_id' => $this->storeA->id,
+            'to_store_id' => $this->storeB->id,
+            'items' => [
+                ['product_variant_id' => $this->variant->id, 'quantity_requested' => 1],
+            ],
+        ])
+        ->assertSessionHasErrors(['items.0.quantity_requested']);
+});
+
+it('rejects duplicate product variants in a transfer', function () {
+    createAvailableBatch($this->variant, $this->storeA, 10);
+
+    actingAs($this->admin)
+        ->post(route('stock-transfers.store'), [
+            'from_store_id' => $this->storeA->id,
+            'to_store_id' => $this->storeB->id,
+            'items' => [
+                ['product_variant_id' => $this->variant->id, 'quantity_requested' => 1],
+                ['product_variant_id' => $this->variant->id, 'quantity_requested' => 1],
+            ],
+        ])
+        ->assertSessionHasErrors(['items.0.product_variant_id', 'items.1.product_variant_id']);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Status Transitions
@@ -240,6 +302,7 @@ it('can transition from picked to in_transit', function () {
 
 it('can transition from in_transit to received', function () {
     $transfer = createTransfer($this->storeA, $this->storeB, $this->admin, ['status' => 'in_transit']);
+    $transfer->items->first()?->update(['quantity_sent' => 8]);
 
     actingAs($this->admin)
         ->patch(route('stock-transfers.update-status', $transfer), [
@@ -270,6 +333,9 @@ it('status transition is logged in activity log', function () {
     actingAs($this->admin)
         ->patch(route('stock-transfers.update-status', $transfer), [
             'status' => 'picked',
+            'items' => [
+                ['id' => $transfer->items->first()?->id, 'quantity_sent' => 10],
+            ],
         ]);
 
     $transfer->refresh();
@@ -282,13 +348,40 @@ it('status transition is logged in activity log', function () {
     expect($activity?->causer_id)->toBe($this->admin->id);
 });
 
+it('rejects sent quantities above the requested quantity', function () {
+    $transfer = createTransfer($this->storeA, $this->storeB, $this->admin);
+
+    actingAs($this->admin)
+        ->patch(route('stock-transfers.update-status', $transfer), [
+            'status' => 'picked',
+            'items' => [
+                ['id' => $transfer->items->first()?->id, 'quantity_sent' => 11],
+            ],
+        ])
+        ->assertSessionHasErrors(['status']);
+});
+
+it('rejects received quantities above the sent quantity', function () {
+    $transfer = createTransfer($this->storeA, $this->storeB, $this->admin, ['status' => 'in_transit']);
+    $transfer->items->first()?->update(['quantity_sent' => 8]);
+
+    actingAs($this->admin)
+        ->patch(route('stock-transfers.update-status', $transfer), [
+            'status' => 'received',
+            'items' => [
+                ['id' => $transfer->items->first()?->id, 'quantity_received' => 9],
+            ],
+        ])
+        ->assertSessionHasErrors(['status']);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Complete Transfer (FIFO)
 |--------------------------------------------------------------------------
 */
 
-it('completing a transfer deducts source batches and creates destination batch', function () {
+it('completing a transfer deducts source batches and preserves batch metadata at the destination', function () {
     $receptionOrder = ReceptionOrder::factory()->create();
 
     Batch::factory()->create([
@@ -300,6 +393,8 @@ it('completing a transfer deducts source batches and creates destination batch',
         'sold_quantity' => 0,
         'transferred_quantity' => 0,
         'status' => 'active',
+        'batch_identifier' => 'LOT-2026',
+        'expiry_date' => today()->addMonth()->toDateString(),
     ]);
 
     $transfer = StockTransfer::create([
@@ -339,9 +434,36 @@ it('completing a transfer deducts source batches and creates destination batch',
     expect($destBatch?->remaining_quantity)->toBe(8);
     expect($destBatch?->reception_order_id)->toBeNull();
     expect($destBatch?->status)->toBe('active');
+    expect($destBatch?->batch_identifier)->toBe('LOT-2026');
+    expect($destBatch?->expiry_date?->toDateString())->toBe(today()->addMonth()->toDateString());
 
     expect($transfer->fresh()?->status)->toBe('completed');
     expect($transfer->fresh()?->completed_at)->not->toBeNull();
+});
+
+it('cannot complete a transfer with stock that has expired since it was requested', function () {
+    createAvailableBatch($this->variant, $this->storeA, 5, ['expiry_date' => today()->subDay()->toDateString()]);
+
+    $transfer = StockTransfer::create([
+        'from_store_id' => $this->storeA->id,
+        'to_store_id' => $this->storeB->id,
+        'requested_by' => $this->admin->id,
+        'status' => 'received',
+    ]);
+
+    StockTransferItem::create([
+        'stock_transfer_id' => $transfer->id,
+        'product_variant_id' => $this->variant->id,
+        'quantity_requested' => 1,
+        'quantity_sent' => 1,
+        'quantity_received' => 1,
+    ]);
+
+    actingAs($this->admin)
+        ->patch(route('stock-transfers.update-status', $transfer), ['status' => 'completed'])
+        ->assertSessionHasErrors(['status']);
+
+    expect(Batch::query()->where('store_id', $this->storeB->id)->where('product_variant_id', $this->variant->id)->exists())->toBeFalse();
 });
 
 /*

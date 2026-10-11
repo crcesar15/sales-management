@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, Button, DataTable, Column } from "primevue";
+import { Card, Button, DataTable, Column, Stepper, StepList, Step } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
 import { router } from "@inertiajs/vue3";
@@ -8,7 +8,6 @@ import { ref, computed } from "vue";
 import type { StockTransferResponse } from "@/Types/stock-transfer-types";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import TransferStatusTag from "./Components/TransferStatusTag.vue";
-import TransferStatusStepper from "./Components/TransferStatusStepper.vue";
 import AdvanceTransferModal from "./Components/AdvanceTransferModal.vue";
 import CancelTransferModal from "./Components/CancelTransferModal.vue";
 
@@ -37,6 +36,37 @@ const nextAction = computed<{ label: string; status: string } | null>(() => {
 
 const canCancel = computed(() => !["completed", "cancelled"].includes(props.transfer.status));
 
+const isCancelled = computed(() => props.transfer.status === "cancelled");
+
+const stepperSteps = [
+  { key: "requested", value: "1", label: "Requested" },
+  { key: "picked", value: "2", label: "Picked" },
+  { key: "in_transit", value: "3", label: "In Transit" },
+  { key: "received", value: "4", label: "Received" },
+  { key: "completed", value: "5", label: "Completed" },
+];
+
+const activeStepValue = computed(() => {
+  if (isCancelled.value) return undefined;
+
+  const index = stepperSteps.findIndex((step) => step.key === props.transfer.status);
+  return index >= 0 ? String(index + 1) : "1";
+});
+
+const stepperPt = computed(() => {
+  const pt: Record<string, Record<string, string>> = {
+    root: { class: "pointer-events-none" },
+    step: { class: "pointer-events-none" },
+  };
+
+  if (isCancelled.value) {
+    pt.root.class += " opacity-100";
+    pt.separator = { class: "!bg-red-300 dark:!bg-red-700" };
+  }
+
+  return pt;
+});
+
 function openAdvanceModal() {
   if (nextAction.value) {
     targetStatus.value = nextAction.value.status;
@@ -57,7 +87,7 @@ function discrepancy(item: { quantity_sent: number; quantity_received: number })
         <h2 class="text-2xl font-bold m-0">{{ t("Transfer Details") }}</h2>
         <TransferStatusTag :status="transfer.status" />
       </div>
-      <div v-if="canCancel || nextAction" class="flex gap-2">
+      <div v-if="nextAction" class="flex gap-2">
         <Button
           v-if="nextAction"
           v-can="'stock_transfer.edit'"
@@ -65,19 +95,16 @@ function discrepancy(item: { quantity_sent: number; quantity_received: number })
           icon="fa fa-arrow-right"
           @click="openAdvanceModal"
         />
-        <Button
-          v-if="canCancel"
-          v-can="'stock_transfer.cancel'"
-          :label="t('Cancel Transfer')"
-          icon="fa fa-ban"
-          severity="danger"
-          outlined
-          @click="cancelModalVisible = true"
-        />
       </div>
     </div>
 
-    <TransferStatusStepper :current-status="transfer.status" :cancelled="transfer.status === 'cancelled'" class="mb-4" />
+    <Stepper :value="activeStepValue" :pt="stepperPt" class="mb-4 hidden xl:block">
+      <StepList>
+        <Step v-for="step in stepperSteps" :key="step.key" :value="step.value" :class="{ '!text-red-500': isCancelled }">
+          {{ t(step.label) }}
+        </Step>
+      </StepList>
+    </Stepper>
 
     <div class="grid grid-cols-12 gap-4">
       <div class="col-span-12 lg:col-span-8">
@@ -129,68 +156,69 @@ function discrepancy(item: { quantity_sent: number; quantity_received: number })
                 <span class="text-surface-500">{{ t("Total Items") }}</span>
                 <span class="font-bold">{{ transfer.items?.length ?? 0 }}</span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-surface-500">{{ t("Total Requested") }}</span>
-                <span class="font-bold">{{ transfer.items?.reduce((sum, i) => sum + i.quantity_requested, 0) ?? 0 }}</span>
-              </div>
-              <div v-if="['in_transit', 'received', 'completed'].includes(transfer.status)" class="flex justify-between">
-                <span class="text-surface-500">{{ t("Total Sent") }}</span>
-                <span class="font-bold">{{ transfer.items?.reduce((sum, i) => sum + i.quantity_sent, 0) ?? 0 }}</span>
-              </div>
-              <div v-if="['received', 'completed'].includes(transfer.status)" class="flex justify-between">
-                <span class="text-surface-500">{{ t("Total Received") }}</span>
-                <span class="font-bold">{{ transfer.items?.reduce((sum, i) => sum + i.quantity_received, 0) ?? 0 }}</span>
-              </div>
             </div>
+          </template>
+        </Card>
+        <Button
+          v-if="canCancel"
+          v-can="'stock_transfer.cancel'"
+          :label="t('Cancel Transfer')"
+          icon="fa fa-ban"
+          severity="danger"
+          class="w-full mt-4"
+          @click="cancelModalVisible = true"
+        />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-4 mt-4">
+      <div class="col-span-12 lg:col-span-8">
+        <Card>
+          <template #title>{{ t("Items") }}</template>
+          <template #content>
+            <DataTable :value="transfer.items ?? []" size="small">
+              <template #empty>
+                {{ t("No items") }}
+              </template>
+
+              <Column :header="t('Product')">
+                <template #body="{ data }">
+                  <span class="font-medium">{{ data.product_variant?.product?.name ?? "---" }}</span>
+                  <div class="text-sm text-surface-500">{{ data.product_variant?.name ?? data.product_variant?.identifier }}</div>
+                </template>
+              </Column>
+
+              <Column :header="t('Quantity Requested')" style="width: 150px">
+                <template #body="{ data }">
+                  {{ data.quantity_requested }} {{ data.product_variant?.product?.measurement_unit?.name }}
+                </template>
+              </Column>
+
+              <Column
+                v-if="['in_transit', 'received', 'completed', 'cancelled'].includes(transfer.status)"
+                :header="t('Quantity Sent')"
+                style="width: 140px"
+              >
+                <template #body="{ data }">
+                  {{ data.quantity_sent }} {{ data.product_variant?.product?.measurement_unit?.name }}
+                </template>
+              </Column>
+
+              <Column
+                v-if="['received', 'completed', 'cancelled'].includes(transfer.status)"
+                :header="t('Quantity Received')"
+                style="width: 160px"
+              >
+                <template #body="{ data }">
+                  <span>{{ data.quantity_received }} {{ data.product_variant?.product?.measurement_unit?.name }}</span>
+                  <span v-if="discrepancy(data) > 0" class="text-red-500 text-xs ml-2">({{ discrepancy(data) }} missing)</span>
+                </template>
+              </Column>
+            </DataTable>
           </template>
         </Card>
       </div>
     </div>
-
-    <Card class="mt-4">
-      <template #title>{{ t("Items") }}</template>
-      <template #content>
-        <DataTable :value="transfer.items ?? []" size="small">
-          <template #empty>
-            {{ t("No items") }}
-          </template>
-
-          <Column :header="t('Product')">
-            <template #body="{ data }">
-              <span class="font-medium">{{ data.product_variant?.product_name ?? "---" }}</span>
-              <div class="text-sm text-surface-500">{{ data.product_variant?.label }}</div>
-            </template>
-          </Column>
-
-          <Column :header="t('Quantity Requested')" style="width: 150px">
-            <template #body="{ data }">
-              {{ data.quantity_requested }}
-            </template>
-          </Column>
-
-          <Column
-            v-if="['in_transit', 'received', 'completed', 'cancelled'].includes(transfer.status)"
-            :header="t('Quantity Sent')"
-            style="width: 140px"
-          >
-            <template #body="{ data }">
-              {{ data.quantity_sent }}
-            </template>
-          </Column>
-
-          <Column
-            v-if="['received', 'completed', 'cancelled'].includes(transfer.status)"
-            :header="t('Quantity Received')"
-            style="width: 160px"
-          >
-            <template #body="{ data }">
-              <span>{{ data.quantity_received }}</span>
-              <span v-if="discrepancy(data) > 0" class="text-red-500 text-xs ml-2">({{ discrepancy(data) }} missing)</span>
-            </template>
-          </Column>
-        </DataTable>
-      </template>
-    </Card>
 
     <AdvanceTransferModal
       v-model:visible="advanceModalVisible"

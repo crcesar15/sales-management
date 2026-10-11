@@ -1064,6 +1064,13 @@
   "Sales order reopened for editing": "Sales order reopened for editing",
   "Sales order validated successfully": "Sales order validated successfully",
   "Select a store first": "Select a store first",
+  "Select a source store first": "Select a source store first",
+  "Select a source store and search for products above": "Select a source store and search for products above",
+  "Product is out of stock in the source store": "Product is out of stock in the source store",
+  "Quantities are entered in each product's base unit.": "Quantities are entered in each product's base unit.",
+  "Changing the source store will remove all transfer items. Do you want to continue?": "Changing the source store will remove all transfer items. Do you want to continue?",
+  "Change source store": "Change source store",
+  "Continue": "Continue",
   "Select a customer or mark the sale as walk-in": "Select a customer or mark the sale as walk-in",
   "Select a store to add products": "Select a store to add products",
   "Stock availability depends on the selected store": "Stock availability depends on the selected store",
@@ -1190,5 +1197,6 @@
   "Unallocated": "Unallocated",
   "Are you sure you want to remove this batch?": "Are you sure you want to remove this batch?",
   "Finalize": "Finalize",
-  "Overview": "Overview"
+  "Overview": "Overview",
+  "Item": "Item"
 }

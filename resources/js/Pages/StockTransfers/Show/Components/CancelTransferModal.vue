@@ -26,7 +26,7 @@ function close() {
 function confirm() {
   loading.value = true;
   router.patch(
-    route("stock-transfers.cancel", { stock_transfer: props.transferId }),
+    route("stock-transfers.cancel", { stockTransfer: props.transferId }),
     { reason: reason.value },
     {
       preserveScroll: true,
@@ -57,7 +57,7 @@ function confirm() {
       </div>
     </div>
     <template #footer>
-      <Button :label="t('Cancel')" severity="secondary" outlined @click="close" />
+      <Button :label="t('Cancel')" severity="secondary" @click="close" />
       <Button :label="t('Cancel Transfer')" severity="danger" :loading="loading" @click="confirm" />
     </template>
   </Dialog>

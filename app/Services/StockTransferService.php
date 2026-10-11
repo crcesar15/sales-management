@@ -37,7 +37,7 @@ final class StockTransferService
     public function list(array $filters, int $perPage, User $user): LengthAwarePaginator
     {
         $query = StockTransfer::query()
-            ->with(['fromStore', 'toStore', 'requestedBy', 'items.productVariant.product.brand']);
+            ->with(['fromStore', 'toStore', 'requestedBy', 'items.productVariant.product.measurementUnit']);
 
         if (! $user->hasRole(RolesEnum::ADMIN->value)) {
             $storeIds = $user->stores()->pluck('stores.id');
@@ -62,6 +62,8 @@ final class StockTransferService
     public function createTransfer(array $data, User $actor): StockTransfer
     {
         return DB::transaction(function () use ($data, $actor): StockTransfer {
+            $this->assertSourceAvailability($data['items'], $data['from_store_id']);
+
             $transfer = StockTransfer::create([
                 'from_store_id' => $data['from_store_id'],
                 'to_store_id' => $data['to_store_id'],
@@ -133,23 +135,32 @@ final class StockTransferService
             $transfer->load('items');
 
             foreach ($transfer->items as $item) {
-                $this->batchService->deductFIFOForTransfer(
+                $receivedQuantity = (int) $item->quantity_received;
+                if ($receivedQuantity <= 0) {
+                    continue;
+                }
+
+                $allocations = $this->batchService->deductFIFOForTransfer(
                     $item->product_variant_id,
                     $transfer->from_store_id,
-                    $item->quantity_received,
+                    $receivedQuantity,
                 );
 
-                Batch::create([
-                    'product_variant_id' => $item->product_variant_id,
-                    'reception_order_id' => null,
-                    'store_id' => $transfer->to_store_id,
-                    'initial_quantity' => $item->quantity_received,
-                    'remaining_quantity' => $item->quantity_received,
-                    'missing_quantity' => 0,
-                    'sold_quantity' => 0,
-                    'transferred_quantity' => 0,
-                    'status' => 'active',
-                ]);
+                foreach ($allocations as $allocation) {
+                    Batch::create([
+                        'product_variant_id' => $item->product_variant_id,
+                        'reception_order_id' => null,
+                        'store_id' => $transfer->to_store_id,
+                        'batch_identifier' => $allocation['batch_identifier'],
+                        'expiry_date' => $allocation['expiry_date'],
+                        'initial_quantity' => $allocation['quantity'],
+                        'remaining_quantity' => $allocation['quantity'],
+                        'missing_quantity' => 0,
+                        'sold_quantity' => 0,
+                        'transferred_quantity' => 0,
+                        'status' => 'active',
+                    ]);
+                }
             }
 
             $variantIds = $transfer->items->pluck('product_variant_id')->unique()->map(fn ($id) => (int) $id);
@@ -209,11 +220,47 @@ final class StockTransferService
      */
     private function updateItemQuantities(StockTransfer $transfer, array $itemQuantities, string $field): void
     {
+        $items = $transfer->items()->lockForUpdate()->get()->keyBy('id');
+        if ($items->count() !== count($itemQuantities)) {
+            throw new InvalidArgumentException('Quantities must be provided for every transfer item.');
+        }
+
         foreach ($itemQuantities as $itemData) {
-            StockTransferItem::query()
-                ->where('id', $itemData['id'])
-                ->where('stock_transfer_id', $transfer->id)
-                ->update([$field => $itemData[$field] ?? 0]);
+            /** @var StockTransferItem|null $item */
+            $item = $items->get($itemData['id']);
+            if ($item === null) {
+                throw new InvalidArgumentException('Transfer item does not belong to this transfer.');
+            }
+
+            $quantity = (int) ($itemData[$field] ?? 0);
+            $maximumQuantity = $field === 'quantity_sent' ? $item->quantity_requested : $item->quantity_sent;
+            if ($quantity > $maximumQuantity) {
+                throw new InvalidArgumentException('Transfer quantity cannot exceed the preceding quantity.');
+            }
+
+            $item->update([$field => $quantity]);
+        }
+    }
+
+    /** @param array<int, array{product_variant_id: int, quantity_requested: int}> $items */
+    private function assertSourceAvailability(array $items, int $storeId): void
+    {
+        $requestedByVariant = [];
+        foreach ($items as $item) {
+            $variantId = $item['product_variant_id'];
+            $requestedByVariant[$variantId] = ($requestedByVariant[$variantId] ?? 0) + $item['quantity_requested'];
+        }
+
+        foreach ($requestedByVariant as $variantId => $requestedQuantity) {
+            $availableQuantity = Batch::query()
+                ->where('product_variant_id', $variantId)
+                ->fulfillableAt($storeId)
+                ->lockForUpdate()
+                ->sum('remaining_quantity');
+
+            if ($requestedQuantity > $availableQuantity) {
+                throw new InvalidArgumentException("Requested quantity exceeds the available stock ({$availableQuantity}).");
+            }
         }
     }
 }

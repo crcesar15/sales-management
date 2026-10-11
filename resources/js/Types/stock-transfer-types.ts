@@ -1,5 +1,24 @@
 export type TransferStatus = "requested" | "picked" | "in_transit" | "received" | "completed" | "cancelled";
 
+export interface StockTransferVariantSearchResult {
+  id: number;
+  identifier: string | null;
+  option_values: string | null;
+  variant_options: Array<{
+    option_name: string | null;
+    value: string;
+  }>;
+  stock: number;
+  minimum_stock_level: number | null;
+  has_expiration: boolean;
+  product: {
+    id: number;
+    name: string;
+    brand: { id: number; name: string } | null;
+    measurement_unit: { id: number; name: string } | null;
+  } | null;
+}
+
 export interface StockTransferItem {
   id: number;
   product_variant_id: number;
@@ -8,8 +27,13 @@ export interface StockTransferItem {
   quantity_received: number;
   product_variant?: {
     id: number;
-    label: string;
-    product_name: string;
+    name: string;
+    identifier: string | null;
+    product: {
+      id: number;
+      name: string;
+      measurement_unit: { id: number; name: string } | null;
+    } | null;
   };
 }
 

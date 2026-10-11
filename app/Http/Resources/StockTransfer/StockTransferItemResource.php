@@ -27,8 +27,16 @@ final class StockTransferItemResource extends JsonResource
             'quantity_received' => $item->quantity_received,
             'product_variant' => $this->whenLoaded('productVariant', fn () => [
                 'id' => $item->productVariant?->id,
-                'label' => $item->productVariant?->name,
-                'product_name' => $item->productVariant?->product?->name,
+                'name' => $item->productVariant?->name,
+                'identifier' => $item->productVariant?->identifier,
+                'product' => $item->productVariant?->product ? [
+                    'id' => $item->productVariant->product->id,
+                    'name' => $item->productVariant->product->name,
+                    'measurement_unit' => $item->productVariant->product->measurementUnit ? [
+                        'id' => $item->productVariant->product->measurementUnit->id,
+                        'name' => $item->productVariant->product->measurementUnit->name,
+                    ] : null,
+                ] : null,
             ]),
         ];
     }

@@ -67,10 +67,14 @@ final class StockTransferController extends Controller
 
     public function store(CreateTransferRequest $request): RedirectResponse
     {
-        $transfer = $this->transferService->createTransfer(
-            $request->validated(),
-            $request->user() ?? throw new RuntimeException('Unauthenticated.'),
-        );
+        try {
+            $transfer = $this->transferService->createTransfer(
+                $request->validated(),
+                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
+            );
+        } catch (InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['items' => $e->getMessage()]);
+        }
 
         return redirect()->route('stock-transfers.show', $transfer->id)
             ->with('success', 'Transfer created successfully.');
@@ -80,7 +84,7 @@ final class StockTransferController extends Controller
     {
         $this->authorize(PermissionsEnum::STOCK_TRANSFERS_VIEW);
 
-        $stockTransfer->load(['fromStore', 'toStore', 'requestedBy', 'items.productVariant.product.brand']);
+        $stockTransfer->load(['fromStore', 'toStore', 'requestedBy', 'items.productVariant.product.measurementUnit']);
 
         return Inertia::render('StockTransfers/Show/Index', [
             'transfer' => (new StockTransferResource($stockTransfer))->resolve(),

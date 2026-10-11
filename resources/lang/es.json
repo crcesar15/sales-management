@@ -1066,6 +1066,13 @@
   "Sales order reopened for editing": "Orden de venta reabierta para edición",
   "Sales order validated successfully": "Orden de venta validada exitosamente",
   "Select a store first": "Seleccione una tienda primero",
+  "Select a source store first": "Seleccione primero una tienda de origen",
+  "Select a source store and search for products above": "Seleccione una tienda de origen y busque productos arriba",
+  "Product is out of stock in the source store": "El producto no tiene existencias en la tienda de origen",
+  "Quantities are entered in each product's base unit.": "Las cantidades se ingresan en la unidad base de cada producto.",
+  "Changing the source store will remove all transfer items. Do you want to continue?": "Cambiar la tienda de origen eliminará todos los artículos de la transferencia. ¿Desea continuar?",
+  "Change source store": "Cambiar tienda de origen",
+  "Continue": "Continuar",
   "Select a customer or mark the sale as walk-in": "Seleccione un cliente o marque la venta como cliente sin registro",
   "Select a store to add products": "Seleccione una tienda para agregar productos",
   "Stock availability depends on the selected store": "La disponibilidad de stock depende de la tienda seleccionada",
@@ -1192,5 +1199,6 @@
   "Unallocated": "Sin asignar",
   "Are you sure you want to remove this batch?": "¿Seguro que deseas eliminar este lote?",
   "Finalize": "Finalizar",
-  "Overview": "General"
+  "Overview": "General",
+  "Item": "Artículo"
 }

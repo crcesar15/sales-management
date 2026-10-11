@@ -22,7 +22,6 @@ const loading = ref(false);
 const localItems = ref<Array<{ id: number; quantity: number }>>([]);
 
 const needsQuantities = computed(() => props.targetStatus === "picked" || props.targetStatus === "received");
-const quantityField = computed(() => (props.targetStatus === "picked" ? "quantity_sent" : "quantity_received"));
 
 const statusLabels: Record<string, string> = {
   picked: "Mark as Picked",
@@ -45,21 +44,36 @@ function close() {
   localItems.value = [];
 }
 
+function productName(index: number): string {
+  return props.items?.[index]?.product_variant?.product?.name ?? "---";
+}
+
+function variantLabel(index: number): string | null {
+  const variant = props.items?.[index]?.product_variant;
+  return variant?.name ?? variant?.identifier ?? null;
+}
+
+function unitName(index: number): string | null {
+  return props.items?.[index]?.product_variant?.product?.measurement_unit?.name ?? null;
+}
+
 function confirm() {
   loading.value = true;
 
-  const payload: Record<string, unknown> = {
+  const payload: {
+    status: string;
+    items?: Array<{ id: number; quantity_sent?: number; quantity_received?: number }>;
+  } = {
     status: props.targetStatus,
   };
 
   if (needsQuantities.value) {
-    payload.items = localItems.value.map((li) => ({
-      id: li.id,
-      [quantityField.value]: li.quantity,
-    }));
+    payload.items = localItems.value.map((item) =>
+      props.targetStatus === "picked" ? { id: item.id, quantity_sent: item.quantity } : { id: item.id, quantity_received: item.quantity },
+    );
   }
 
-  router.patch(route("stock-transfers.update-status", { stock_transfer: props.transferId }), payload as any, {
+  router.patch(route("stock-transfers.update-status", { stockTransfer: props.transferId }), payload, {
     preserveScroll: true,
     onSuccess: () => close(),
     onFinish: () => {
@@ -87,18 +101,20 @@ function confirm() {
         <DataTable :value="localItems" size="small">
           <Column :header="t('Item')" style="min-width: 200px">
             <template #body="{ index }">
-              {{ items[index]?.product_variant?.product_name ?? "---" }}
-              <div class="text-xs text-surface-500">{{ items[index]?.product_variant?.label }}</div>
+              {{ productName(index) }}
+              <div v-if="variantLabel(index)" class="text-xs text-surface-500">{{ variantLabel(index) }}</div>
             </template>
           </Column>
           <Column :header="t('Quantity Requested')" style="width: 140px">
             <template #body="{ index }">
-              {{ items[index]?.quantity_requested ?? 0 }}
+              {{ items[index]?.quantity_requested ?? 0 }} {{ unitName(index) }}
             </template>
           </Column>
           <Column :header="t(targetStatus === 'picked' ? 'Quantity Sent' : 'Quantity Received')" style="width: 160px">
             <template #body="{ index }">
-              <InputNumber v-model="localItems[index].quantity" :min="0" class="w-full" :input-style="{ width: '100%' }" />
+              <div class="flex flex-col gap-1">
+                <InputNumber v-model="localItems[index].quantity" :min="0" class="w-full" :input-style="{ width: '100%' }" />
+              </div>
             </template>
           </Column>
         </DataTable>
@@ -106,7 +122,7 @@ function confirm() {
     </div>
 
     <template #footer>
-      <Button :label="t('Cancel')" severity="secondary" outlined @click="close" />
+      <Button :label="t('Cancel')" severity="secondary" @click="close" />
       <Button :label="t(statusLabels[targetStatus] ?? 'Confirm')" :loading="loading" @click="confirm" />
     </template>
   </Dialog>
