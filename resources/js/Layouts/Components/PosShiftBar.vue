@@ -117,7 +117,6 @@ function completeClose(): void {
         icon="fa fa-lock"
         :label="t('Close shift')"
         severity="danger"
-        outlined
         class="min-h-11 shrink-0"
         @click="closeShift"
       />

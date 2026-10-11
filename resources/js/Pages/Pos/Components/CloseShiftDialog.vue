@@ -32,7 +32,7 @@ const schema = toTypedSchema(
 
 const { handleSubmit, defineField, errors, isSubmitting, resetForm, setErrors, values } = useForm({
   validationSchema: schema,
-  initialValues: { closing_balance: undefined as number | undefined, closing_notes: null, discrepancy_reason: null },
+  initialValues: { closing_balance: 0, closing_notes: null, discrepancy_reason: null },
 });
 
 const [closingBalance, closingBalanceAttrs] = defineField("closing_balance");
@@ -54,7 +54,7 @@ watch(visible, (isVisible) => {
   step.value = "count";
   summary.value = null;
   closedShift.value = null;
-  resetForm({ values: { closing_balance: undefined, closing_notes: null, discrepancy_reason: null } });
+  resetForm({ values: { closing_balance: 0, closing_notes: null, discrepancy_reason: null } });
 });
 
 const review = handleSubmit(async () => {

@@ -254,6 +254,7 @@ function goToCustomerEdit() {
           <InputText
             id="customer-tax-id-name"
             ref="taxIdNameInputRef"
+            autocomplete="off"
             v-model="taxIdNameInput"
             :placeholder="t('Enter tax ID name')"
             :disabled="creating"
@@ -267,9 +268,8 @@ function goToCustomerEdit() {
         </small>
       </div>
       <template #footer>
-        <Button :label="t('Cancel')" severity="secondary" text @click="cancelCreate" />
+        <Button :label="t('Cancel')" severity="secondary" @click="cancelCreate" />
         <Button
-          icon="fa fa-check"
           :label="t('Create and assign')"
           :loading="creating"
           :disabled="creating || !taxIdNameInput.trim()"
