@@ -48,7 +48,7 @@ const { t } = useI18n();
     <div v-else-if="preview">
       <FulfillmentAllocationList :allocations="preview.allocations" compact />
       <div class="mt-4 flex items-center justify-between gap-4 border-t border-surface-200 pt-4 dark:border-surface-700">
-        <small class="text-surface-500 dark:text-surface-400">{{ t("Stock is rechecked when you confirm the sale.") }}</small>
+        <span class="text-surface-500 dark:text-surface-400">{{ t("Stock is rechecked when you confirm the sale.") }}</span>
         <Button :label="t('Refresh list')" icon="fa fa-rotate" severity="secondary" text @click="emit('regenerate')" />
       </div>
     </div>

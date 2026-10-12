@@ -24,8 +24,8 @@ const { formatDateOnly } = useDatetimeFormatter();
         >
           <div class="flex min-w-0 items-start justify-between gap-3">
             <div class="flex min-w-0 items-center gap-2">
-              <span class="truncate text-[16px] font-bold text-surface-900 dark:text-surface-50">{{ allocation.product }}</span>
-              <Badge v-if="allocation.variant" :value="allocation.variant" severity="primary" class="text-[14px] font-semibold" />
+              <span class="truncate text-xl font-bold text-surface-900 dark:text-surface-50">{{ allocation.product }}</span>
+              <Badge v-if="allocation.variant" :value="allocation.variant" severity="primary" />
             </div>
             <span v-if="allocation.brand" class="shrink-0 text-right text-[14px] font-semibold">
               <i class="fa fa-tag" aria-hidden="true" />
@@ -33,7 +33,7 @@ const { formatDateOnly } = useDatetimeFormatter();
             </span>
           </div>
 
-          <div class="grid grid-cols-2 gap-x-4 gap-y-3 text-[14px]">
+          <div class="grid grid-cols-2 gap-x-4 gap-y-3">
             <div class="min-w-0">
               <span class="block text-surface-500 dark:text-surface-400">{{ t("Quantity") }}</span>
               <span class="font-medium text-surface-900 dark:text-surface-50">{{ allocation.quantity }} {{ allocation.base_unit }}</span>

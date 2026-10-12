@@ -34,8 +34,8 @@ function printReceipt(): void {
 <template>
   <div class="min-h-full p-4 lg:p-6">
     <div class="mx-auto flex max-w-2xl flex-col gap-4">
-      <div class="no-print mb-4 flex justify-end gap-3">
-        <Button :label="t('Print receipt')" icon="fa fa-print" severity="secondary" outlined @click="printReceipt" />
+      <div class="no-print mb-4 flex justify-between gap-3">
+        <Button :label="t('Print receipt')" icon="fa fa-print" severity="info" @click="printReceipt" />
         <Button :label="t('New sale')" icon="fa fa-plus" raised @click="startNewSale" />
       </div>
       <PosReceiptPanel :order="order" />

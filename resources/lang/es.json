@@ -1215,5 +1215,7 @@
   "{count} in stock": "{count} en stock",
   "{count} needed": "Faltan {count}",
   "Subtotal": "Subtotal",
-  "Remove": "Remover"
+  "Remove": "Remover",
+  "Cash payment": "Pago en efectivo",
+  "Sale": "Venta"
 }

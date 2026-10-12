@@ -71,10 +71,7 @@ function completeClose(): void {
       />
 
       <!-- Store name -->
-      <span
-        class="flex min-w-0 max-w-40 items-center gap-2 text-sm text-surface-700 dark:text-surface-300 lg:max-w-56"
-        :title="storeName"
-      >
+      <span class="flex min-w-0 max-w-40 items-center gap-2 text-sm text-surface-700 dark:text-surface-300 lg:max-w-56" :title="storeName">
         <i class="fa fa-store text-primary-500" aria-hidden="true" />
         <span class="sr-only">{{ t("Store") }}:</span>
         <span class="truncate">{{ storeName }}</span>
@@ -116,19 +113,14 @@ function completeClose(): void {
         v-if="isShiftOpen && isCashier"
         icon="fa fa-lock"
         :label="t('Close shift')"
-        severity="danger"
+        severity="primary"
         class="min-h-11 shrink-0"
         @click="closeShift"
       />
     </div>
   </header>
 
-  <Popover
-    id="pos-shift-details"
-    ref="shiftDetailsPopover"
-    @show="isShiftDetailsVisible = true"
-    @hide="isShiftDetailsVisible = false"
-  >
+  <Popover id="pos-shift-details" ref="shiftDetailsPopover" @show="isShiftDetailsVisible = true" @hide="isShiftDetailsVisible = false">
     <div v-if="shiftStatus" class="min-w-64">
       <h2 class="mb-3 text-base font-semibold">{{ t("Shift Details") }}</h2>
       <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">

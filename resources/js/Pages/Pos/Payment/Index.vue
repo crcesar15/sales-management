@@ -101,10 +101,9 @@ onMounted(() => void generateHandoverPreview());
           :label="t('Back to sale')"
           icon="fa fa-arrow-left"
           severity="secondary"
-          outlined
           @click="router.visit(route('pos.sales.edit', order.id))"
         />
-        <Button :label="t('Discard sale')" icon="fa fa-trash-can" severity="danger" text @click="discardDraft" />
+        <Button :label="t('Discard sale')" icon="fa fa-trash-can" severity="danger" @click="discardDraft" />
       </header>
 
       <section
@@ -113,12 +112,13 @@ onMounted(() => void generateHandoverPreview());
       >
         <div class="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p class="m-0 text-surface-500 dark:text-surface-400">{{ t("Amount due") }}</p>
+            <p class="m-0 text-surface-700 dark:text-surface-200">{{ t("Amount due") }}</p>
             <h1 class="m-0 mt-1 text-4xl font-bold tabular-nums">{{ formatCurrency(String(order.total)) }}</h1>
           </div>
-          <div class="text-right text-sm text-surface-500 dark:text-surface-400">
-            <div>{{ t("Sale") }} #{{ order.id }}</div>
-            <div>{{ order.customer?.display_name ?? t("Walk-in customer") }}</div>
+          <div class="flex flex-col gap-y-2 text-right text-surface-700 dark:text-surface-200">
+            <span>{{ t("Sales Order") }} #{{ order.id }}</span>
+            <span>{{ t("Tax ID") }}: {{ order.customer?.tax_id ?? t("Walk-in customer") }}</span>
+            <span>{{ t("Tax ID Name") }}: {{ order.customer?.tax_id_name }}</span>
           </div>
         </div>
         <div class="mt-4 flex flex-wrap justify-end gap-x-5 gap-y-1 border-t border-surface-200 pt-3 text-sm dark:border-surface-700">
