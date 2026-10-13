@@ -2,7 +2,7 @@ import { readonly, shallowRef, watch } from "vue";
 
 // Module-level state (shared across all component instances, same pattern as useLayout)
 const POS_SIDEBAR_KEY = "pos-sidebar-collapsed";
-const isSidebarCollapsed = shallowRef(localStorage.getItem(POS_SIDEBAR_KEY) === "true");
+const isSidebarCollapsed = shallowRef(localStorage.getItem(POS_SIDEBAR_KEY) !== "false");
 const isCashMovementDialogVisible = shallowRef(false);
 
 watch(isSidebarCollapsed, (collapsed) => {

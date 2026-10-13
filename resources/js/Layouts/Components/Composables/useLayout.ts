@@ -30,7 +30,7 @@ const toggleDarkMode = (): void => {
 // ========================================
 const SIDEBAR_KEY = "app-sidebar-collapsed";
 
-const isSidebarCollapsed = ref<boolean>(localStorage.getItem(SIDEBAR_KEY) === "true");
+const isSidebarCollapsed = ref<boolean>(localStorage.getItem(SIDEBAR_KEY) !== "false");
 
 // Persist changes
 watch(isSidebarCollapsed, (newValue) => {
