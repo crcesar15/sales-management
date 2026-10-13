@@ -36,6 +36,13 @@ final class PosController extends Controller
         ]);
     }
 
+    public function completed(): InertiaResponse
+    {
+        $this->authorize(PermissionsEnum::POS_ACCESS);
+
+        return Inertia::render('Pos/Completed/Index');
+    }
+
     public function store(StorePosSaleRequest $request): RedirectResponse
     {
         try {
@@ -113,7 +120,7 @@ final class PosController extends Controller
             return redirect()->back()->withErrors(['payment' => $e->getMessage()]);
         }
 
-        return redirect()->route('pos.sales.receipt', $order)->with('success', 'Sale completed successfully.');
+        return redirect()->route('pos.sales.completed')->with('success', 'Sale completed successfully.');
     }
 
     public function discard(DiscardPosSaleRequest $request, SalesOrder $salesOrder): RedirectResponse
@@ -128,23 +135,5 @@ final class PosController extends Controller
         }
 
         return redirect()->route('pos')->with('success', 'Sale draft discarded.');
-    }
-
-    public function receipt(Request $request, SalesOrder $salesOrder): InertiaResponse|RedirectResponse
-    {
-        $this->authorize(PermissionsEnum::POS_ACCESS);
-
-        try {
-            $order = $this->salesOrderService->getPosReceipt(
-                $salesOrder,
-                $request->user() ?? throw new RuntimeException('Unauthenticated.'),
-            );
-        } catch (InvalidArgumentException $e) {
-            return redirect()->route('pos')->with('error', $e->getMessage());
-        }
-
-        return Inertia::render('Pos/Receipt/Index', [
-            'order' => (new SalesOrderResource($order))->resolve(),
-        ]);
     }
 }

@@ -223,15 +223,6 @@ final class SalesOrderService
         return $order === null ? null : $this->loadPosOrder($order);
     }
 
-    public function getPosReceipt(SalesOrder $order, User $actor): SalesOrder
-    {
-        if ($order->user_id !== $actor->id || $order->status !== SalesOrderStatus::COMPLETED) {
-            throw new InvalidArgumentException('This receipt is not available for the current cashier.');
-        }
-
-        return $this->loadPosOrder($order);
-    }
-
     /** @param array<string, mixed> $data */
     public function completePosSale(SalesOrder $order, array $data, User $actor): SalesOrder
     {

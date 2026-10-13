@@ -122,6 +122,13 @@ it('renders the payment page and rehydrates an editable draft', function (): voi
             ->has('draft.items', 1));
 });
 
+it('renders the payment completion confirmation', function (): void {
+    $this->actingAs($this->cashier)
+        ->get(route('pos.sales.completed'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('Pos/Completed/Index'));
+});
+
 it('discovers the current shift draft when reopening the POS', function (): void {
     $this->actingAs($this->cashier)->post(route('pos.sales.store'), ($this->draftPayload)());
     $order = SalesOrder::query()->sole();
@@ -160,7 +167,7 @@ it('completes a cash sale and records tendered cash and change', function (): vo
             'qr_reference' => null,
             'qr_confirmed' => false,
         ])
-        ->assertRedirect(route('pos.sales.receipt', $order));
+        ->assertRedirect(route('pos.sales.completed'));
 
     $payment = $order->payments()->sole();
     $allocation = $order->items()->sole()->stockAllocations()->sole();
@@ -185,7 +192,7 @@ it('completes a manually confirmed QR sale without requiring a reference', funct
             'payment_mode' => 'qr',
             'qr_confirmed' => true,
         ])
-        ->assertRedirect(route('pos.sales.receipt', $order));
+        ->assertRedirect(route('pos.sales.completed'));
 
     $payment = $order->payments()->sole();
     expect($payment->payment_method->value)->toBe('qr')
@@ -206,7 +213,7 @@ it('splits payment between cash and the automatically calculated QR remainder', 
             'qr_reference' => 'QR-123',
             'qr_confirmed' => true,
         ])
-        ->assertRedirect(route('pos.sales.receipt', $order));
+        ->assertRedirect(route('pos.sales.completed'));
 
     $payments = $order->payments()->orderBy('id')->get();
     expect($payments)->toHaveCount(2)
@@ -309,9 +316,9 @@ it('does not duplicate payments when a completed checkout is submitted again', f
 
     $this->actingAs($this->cashier)->post(route('pos.sales.complete', $order), $payload);
     $this->actingAs($this->cashier)
-        ->from(route('pos.sales.receipt', $order))
+        ->from(route('pos.sales.completed'))
         ->post(route('pos.sales.complete', $order), $payload)
-        ->assertRedirect(route('pos.sales.receipt', $order))
+        ->assertRedirect(route('pos.sales.completed'))
         ->assertSessionHasErrors('payment');
 
     expect($order->payments()->count())->toBe(1);
