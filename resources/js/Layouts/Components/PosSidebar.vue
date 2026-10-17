@@ -16,6 +16,9 @@ interface PosNavigationItem {
   label: string;
   icon: string;
   enabled: boolean;
+  href?: string;
+  active?: boolean;
+  command?: () => void;
 }
 
 const { t } = useI18n();
@@ -26,13 +29,28 @@ const { locale, migrateLegacyThemePreference, updateLocale, updateTheme } = useU
 const posStore = usePosStore();
 const { can } = useAuth();
 const userMenu = ref();
+const currentRouteName = computed(() => (page.url ? (route().current() ?? "") : ""));
 
 const itemClass =
   "flex min-h-12 w-full items-center gap-3 rounded-md px-3 text-left text-base font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary-500";
 
 const navigationItems = computed<PosNavigationItem[]>(() => [
-  { key: "pos", label: t("POS"), icon: "fa fa-cash-register", enabled: true },
-  { key: "sales", label: t("Sales"), icon: "fa fa-receipt", enabled: false },
+  {
+    key: "pos",
+    label: t("POS"),
+    icon: "fa fa-cash-register",
+    enabled: true,
+    href: route("pos"),
+    active: ["pos", "pos.sales.edit", "pos.sales.payment", "pos.sales.completed"].includes(currentRouteName.value),
+  },
+  {
+    key: "sales",
+    label: t("Sales"),
+    icon: "fa fa-receipt",
+    enabled: true,
+    href: route("pos.sales.index"),
+    active: ["pos.sales.index", "pos.sales.show"].includes(currentRouteName.value),
+  },
   { key: "customers", label: t("Customers"), icon: "fa fa-users", enabled: false },
   { key: "product-gallery", label: t("Product Gallery"), icon: "fa fa-images", enabled: false },
   {
@@ -40,6 +58,7 @@ const navigationItems = computed<PosNavigationItem[]>(() => [
     label: t("Cash movements"),
     icon: "fa fa-money-bill-transfer",
     enabled: posStore.isShiftOpen && can("cash_movement.create"),
+    command: openCashMovementDialog,
   },
 ]);
 
@@ -96,15 +115,17 @@ onMounted(migrateLegacyThemePreference);
     <nav class="flex flex-1 flex-col gap-1 p-2" :aria-label="t('POS navigation')">
       <template v-for="item in navigationItems" :key="item.key">
         <Link
-          v-if="item.key === 'pos'"
-          :href="route('pos')"
+          v-if="item.enabled && item.href"
+          :href="item.href"
           :class="[
             itemClass,
             isSidebarCollapsed ? 'justify-center px-2' : '',
-            'bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300',
+            item.active
+              ? 'bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300'
+              : 'text-surface-700 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800',
           ]"
           :aria-label="item.label"
-          aria-current="page"
+          :aria-current="item.active ? 'page' : undefined"
           :title="isSidebarCollapsed ? item.label : undefined"
         >
           <i :class="item.icon" class="w-5 shrink-0 text-center" aria-hidden="true" />
@@ -122,7 +143,7 @@ onMounted(migrateLegacyThemePreference);
           ]"
           :aria-label="item.label"
           :title="isSidebarCollapsed ? item.label : undefined"
-          @click="openCashMovementDialog"
+          @click="item.command?.()"
         >
           <i :class="item.icon" class="w-5 shrink-0 text-center" aria-hidden="true" />
           <span v-if="!isSidebarCollapsed" class="truncate">{{ item.label }}</span>

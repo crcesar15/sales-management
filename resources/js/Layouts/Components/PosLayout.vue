@@ -6,12 +6,18 @@ import PosSidebar from "@layouts/Components/PosSidebar.vue";
 import CashMovementDialog from "@pages/Pos/Components/CashMovementDialog.vue";
 import { useLayout } from "@layouts/Components/Composables/useLayout";
 import { usePosLayout } from "@composables/usePosLayout";
+import { usePosClient } from "@composables/usePosClient";
+import { usePosStore } from "@composables/usePosStore";
+import { usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
 
 const { isDarkMode } = useLayout();
 const { t } = useI18n();
 const { isCashMovementDialogVisible } = usePosLayout();
+const page = usePage();
+const posClient = usePosClient();
+const posStore = usePosStore();
 
 // Reactive viewport check (updates on resize)
 const windowWidth = ref(window.innerWidth);
@@ -20,8 +26,23 @@ const updateWidth = () => {
   windowWidth.value = window.innerWidth;
 };
 
+async function hydrateSessionForStandalonePage(): Promise<void> {
+  const currentRoute = route().current() ?? "";
+  if (["pos", "pos.sales.edit"].includes(currentRoute)) return;
+
+  const user = page.props.auth.user;
+  if (user !== null) posStore.setUserId(user.id);
+
+  try {
+    posStore.setSession(await posClient.getSession());
+  } catch {
+    // The page remains usable if the shift summary cannot be refreshed.
+  }
+}
+
 onMounted(() => {
   window.addEventListener("resize", updateWidth);
+  void hydrateSessionForStandalonePage();
 });
 
 onUnmounted(() => {

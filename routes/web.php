@@ -97,8 +97,10 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // POS Routes
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
+    Route::get('/pos/sales', [PosController::class, 'salesIndex'])->name('pos.sales.index');
     Route::get('/pos/sales/completed', [PosController::class, 'completed'])->name('pos.sales.completed');
     Route::post('/pos/sales', [PosController::class, 'store'])->name('pos.sales.store');
+    Route::get('/pos/sales/{salesOrder}', [PosController::class, 'salesShow'])->name('pos.sales.show');
     Route::get('/pos/sales/{salesOrder}/edit', [PosController::class, 'edit'])->name('pos.sales.edit');
     Route::put('/pos/sales/{salesOrder}', [PosController::class, 'update'])->name('pos.sales.update');
     Route::get('/pos/sales/{salesOrder}/payment', [PosController::class, 'payment'])->name('pos.sales.payment');

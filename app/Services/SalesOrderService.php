@@ -22,6 +22,8 @@ use App\Models\SalesOrderStockAllocation;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -97,6 +99,69 @@ final class SalesOrderService
         return $query->orderBy('created_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return Collection<int, SalesOrder>
+     */
+    public function listForPos(array $filters, User $actor, ?CashRegisterShift $shift): Collection
+    {
+        $query = $this->posVisibleOrdersQuery($actor, $shift)
+            ->with([
+                'customer:id,first_name,last_name',
+                'user:id,first_name,last_name',
+                'store:id,name,code',
+            ])
+            ->withCount('items');
+
+        $query->when(
+            $filters['search'] ?? null,
+            fn ($query, $search) => $query->where(function ($query) use ($search): void {
+                $query->where('id', 'like', "%{$search}%")
+                    ->orWhereHas('customer', fn ($query) => $query->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%"));
+            }),
+        );
+
+        $query->when(
+            $filters['status'] ?? null,
+            fn ($query, $status) => $query->where('status', $status),
+        );
+
+        $query->when(
+            $filters['from'] ?? null,
+            fn ($query, $from) => $query->whereDate('created_at', '>=', $from),
+        );
+
+        $query->when(
+            $filters['to'] ?? null,
+            fn ($query, $to) => $query->whereDate('created_at', '<=', $to),
+        );
+
+        return $query->latest('created_at')->get();
+    }
+
+    public function getPosVisibleOrder(SalesOrder $order, User $actor, ?CashRegisterShift $shift): SalesOrder
+    {
+        return $this->posVisibleOrdersQuery($actor, $shift)
+            ->with([
+                'customer',
+                'user',
+                'store',
+                'cashRegisterShift.register',
+                'fulfiller',
+                'items.productVariant.product.brand',
+                'items.productVariant.product.measurementUnit',
+                'items.productVariant.values',
+                'items.saleUnit',
+                'items.stockAllocations.batch',
+                'payments.user',
+                'payments.cashRegisterShift',
+            ])
+            ->whereKey($order->id)
+            ->firstOrFail();
     }
 
     /**
@@ -862,6 +927,24 @@ final class SalesOrderService
             'payments.user',
             'payments.cashRegisterShift',
         ]) ?? $order;
+    }
+
+    /** @return Builder<SalesOrder> */
+    private function posVisibleOrdersQuery(User $actor, ?CashRegisterShift $shift): Builder
+    {
+        $storeId = $shift?->register?->store_id;
+        if ($storeId !== null && $actor->stores()->whereKey($storeId)->exists()) {
+            return SalesOrder::query()
+                ->where('store_id', $storeId)
+                ->where(function (Builder $query) use ($actor): void {
+                    $query->where('user_id', $actor->id)
+                        ->orWhere('status', SalesOrderStatus::DRAFT);
+                });
+        }
+
+        return SalesOrder::query()
+            ->where('user_id', $actor->id)
+            ->whereHas('store.users', fn (Builder $query) => $query->whereKey($actor->id));
     }
 
     /**
