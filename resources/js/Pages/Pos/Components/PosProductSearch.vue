@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Badge, Button, IconField, InputIcon, InputText, Message, Tag, useToast } from "primevue";
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
 import { useSalesOrderClient } from "@composables/useSalesOrderClient";
@@ -21,6 +21,8 @@ const props = defineProps<{
   storeId: number | null;
   cartItems: PosCartItem[];
   getRemainingBase: (variantId: number) => number | null;
+  inputId?: string;
+  focusOnClear?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -162,6 +164,12 @@ function onSearchKeydown(event: KeyboardEvent): void {
 
   event.preventDefault();
 
+  submitSearch();
+}
+
+function submitSearch(): void {
+  if (!shouldSearch.value) return;
+
   const code = query.value.trim();
   const cartMatch = findCartMatch(code);
 
@@ -241,7 +249,15 @@ function resetResults(): void {
 function clearSearch(): void {
   query.value = "";
   resetResults();
-  document.getElementById("pos-product-search")?.focus();
+  if (props.focusOnClear !== false) focusSearch();
+}
+
+function focusSearch(): void {
+  void nextTick(() => document.getElementById(props.inputId ?? "pos-product-search")?.focus());
+}
+
+function resetSearch(): void {
+  clearSearch();
 }
 
 function addUnit(unit: SellableUnit): void {
@@ -277,35 +293,49 @@ function addUnit(unit: SellableUnit): void {
 watch(query, () => {
   resetResults();
 });
+
+defineExpose({ focusSearch, resetSearch });
 </script>
 
 <template>
   <section class="flex min-h-0 flex-1 flex-col" :aria-label="t('Products')">
     <div class="border-b border-surface-200 p-4 dark:border-surface-700">
-      <label for="pos-product-search" class="mb-2 block text-lg font-semibold">{{ t("Find products") }}</label>
-      <IconField>
-        <InputIcon class="fa fa-search" />
-        <InputText
-          id="pos-product-search"
-          v-model="query"
-          :placeholder="t('Search by product, identifier or barcode')"
-          :disabled="storeId === null"
-          autocomplete="off"
-          size="large"
-          class="w-full"
-          :aria-busy="loading"
-          @keydown.enter="onSearchKeydown"
+      <label :for="inputId ?? 'pos-product-search'" class="mb-2 block text-lg font-semibold">{{ t("Find products") }}</label>
+      <div class="flex gap-2">
+        <IconField class="min-w-0 flex-1">
+          <InputIcon class="fa fa-search" />
+          <InputText
+            :id="inputId ?? 'pos-product-search'"
+            v-model="query"
+            :placeholder="t('Search by product, identifier or barcode')"
+            :disabled="storeId === null"
+            autocomplete="off"
+            enterkeyhint="search"
+            size="large"
+            class="w-full"
+            :aria-busy="loading"
+            @keydown.enter="onSearchKeydown"
+          />
+          <InputIcon
+            v-if="query"
+            class="fa fa-xmark cursor-pointer"
+            role="button"
+            tabindex="0"
+            :aria-label="t('Clear search')"
+            @click="clearSearch"
+            @keydown.enter.prevent="clearSearch"
+          />
+        </IconField>
+        <Button
+          type="button"
+          icon="fa fa-search"
+          :disabled="!shouldSearch || loading"
+          :loading="loading"
+          raised
+          class="min-h-11 shrink-0"
+          @click="submitSearch"
         />
-        <InputIcon
-          v-if="query"
-          class="fa fa-xmark cursor-pointer"
-          role="button"
-          tabindex="0"
-          :aria-label="t('Clear search')"
-          @click="clearSearch"
-          @keydown.enter.prevent="clearSearch"
-        />
-      </IconField>
+      </div>
       <small class="mt-2 block text-surface-500 dark:text-surface-400">
         {{ t("Type at least 2 characters and press Enter to search") }}
       </small>

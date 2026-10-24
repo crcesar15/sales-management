@@ -14,7 +14,7 @@ import ShiftStatusBadge from "@pages/Pos/Components/ShiftStatusBadge.vue";
 const { t } = useI18n();
 const posStore = usePosStore();
 const { formatCurrency } = useCurrencyFormatter();
-const { isSidebarCollapsed, toggleSidebar } = usePosLayout();
+const { isSidebarCollapsed, isCompactViewport, isMobileNavigationOpen, toggleNavigation } = usePosLayout();
 const { shift: shiftStatus, isShiftOpen, isCashier } = storeToRefs(posStore);
 const shiftDetailsPopover = useTemplateRef<{ toggle: (event: Event) => void }>("shiftDetailsPopover");
 
@@ -28,6 +28,12 @@ const shiftDetailsLabel = computed(() => {
 });
 const showCloseDialog = shallowRef(false);
 const isShiftDetailsVisible = shallowRef(false);
+const navigationLabel = computed(() => {
+  if (isCompactViewport.value) return isMobileNavigationOpen.value ? t("Close menu") : t("Open menu");
+
+  return isSidebarCollapsed.value ? t("Expand sidebar") : t("Collapse sidebar");
+});
+const isNavigationExpanded = computed(() => (isCompactViewport.value ? isMobileNavigationOpen.value : !isSidebarCollapsed.value));
 
 const formattedOpeningBalance = computed(() => {
   if (!shiftStatus.value) return formatCurrency("0");
@@ -50,7 +56,7 @@ function completeClose(): void {
 
 <template>
   <header
-    class="fixed left-0 right-0 top-0 z-[1000] flex h-14 items-center gap-3 border-b border-surface-200 bg-surface-0 px-3 dark:border-surface-700 dark:bg-surface-900 lg:px-4"
+    class="fixed left-0 right-0 top-0 z-[1002] flex h-14 items-center gap-2 border-b border-surface-200 bg-surface-0 px-2 dark:border-surface-700 dark:bg-surface-900 sm:gap-3 sm:px-3 lg:px-4"
     role="banner"
     :aria-label="t('Point of Sale')"
   >
@@ -59,19 +65,22 @@ function completeClose(): void {
     <div class="flex min-w-0 flex-1 items-center gap-3">
       <!-- Sidebar toggle -->
       <Button
-        v-tooltip.right="isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
+        v-tooltip.right="navigationLabel"
         icon="fa fa-bars"
-        :aria-label="isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
-        :aria-expanded="!isSidebarCollapsed"
+        :aria-label="navigationLabel"
+        :aria-expanded="isNavigationExpanded"
         aria-controls="pos-sidebar"
         severity="secondary"
         text
         class="h-11 w-11 shrink-0"
-        @click="toggleSidebar"
+        @click="toggleNavigation"
       />
 
       <!-- Store name -->
-      <span class="flex min-w-0 max-w-40 items-center gap-2 text-sm text-surface-700 dark:text-surface-300 lg:max-w-56" :title="storeName">
+      <span
+        class="flex min-w-0 max-w-28 items-center gap-2 text-sm text-surface-700 dark:text-surface-300 sm:max-w-40 lg:max-w-56"
+        :title="storeName"
+      >
         <i class="fa fa-store text-primary-500" aria-hidden="true" />
         <span class="sr-only">{{ t("Store") }}:</span>
         <span class="truncate">{{ storeName }}</span>
@@ -79,7 +88,7 @@ function completeClose(): void {
 
       <!-- Register name -->
       <span
-        class="flex min-w-0 max-w-40 items-center gap-2 text-sm text-surface-700 dark:text-surface-300 lg:max-w-56"
+        class="hidden min-w-0 max-w-40 items-center gap-2 text-sm text-surface-700 dark:text-surface-300 md:flex lg:max-w-56"
         :title="registerName"
       >
         <i class="fa fa-cash-register text-primary-500" aria-hidden="true" />
@@ -115,6 +124,7 @@ function completeClose(): void {
         :label="t('Close shift')"
         severity="primary"
         class="min-h-11 shrink-0"
+        :pt="{ label: { class: 'hidden sm:inline' } }"
         @click="closeShift"
       />
     </div>

@@ -39,9 +39,13 @@ onUnmounted(() => {
 <template>
   <Head :title="t('Payment completed')" />
 
-  <div class="flex min-h-full items-center justify-center p-4 lg:p-6">
-    <section class="w-full max-w-xl rounded-lg border border-surface-200 bg-surface-0 p-6 text-center dark:border-surface-700 dark:bg-surface-900 sm:p-8">
-      <div class="mx-auto flex size-16 items-center justify-center rounded-full bg-green-100 text-3xl text-green-700 dark:bg-green-950 dark:text-green-300">
+  <div class="flex min-h-[calc(100dvh-3.5rem)] items-center justify-center p-3 sm:p-4 lg:min-h-full lg:p-6">
+    <section
+      class="w-full max-w-xl rounded-lg border border-surface-200 bg-surface-0 p-6 text-center dark:border-surface-700 dark:bg-surface-900 sm:p-8"
+    >
+      <div
+        class="mx-auto flex size-16 items-center justify-center rounded-full bg-green-100 text-3xl text-green-700 dark:bg-green-950 dark:text-green-300"
+      >
         <i class="fa fa-check" aria-hidden="true" />
       </div>
 

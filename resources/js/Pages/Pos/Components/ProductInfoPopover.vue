@@ -34,7 +34,7 @@ watch(
 
 <template>
   <Popover ref="popover">
-    <div v-if="info" class="w-96">
+    <div v-if="info" class="w-[calc(100vw-2rem)] max-w-96">
       <div class="mb-1 text-xs font-medium uppercase text-surface-500 dark:text-surface-400">{{ t("Product Details") }}</div>
       <div class="font-semibold">{{ info.product_name }}</div>
       <div v-if="info.brand_name" class="mt-0.5 text-surface-500 dark:text-surface-400">{{ t("Brand") }}: {{ info.brand_name }}</div>

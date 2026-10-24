@@ -143,7 +143,7 @@ function messageFor(error: unknown, fallback = t("Unable to close shift")): stri
     modal
     :closable="step !== 'complete'"
     :header="t('Close Shift')"
-    :style="{ width: '560px' }"
+    :style="{ width: '560px', maxHeight: 'calc(100dvh - 1rem)' }"
     :breakpoints="{ '768px': '98vw' }"
   >
     <div v-if="step === 'count'" class="flex flex-col gap-5">

@@ -114,7 +114,7 @@ The system is built on PrimeVue 4 with a custom Aura preset; the library owns co
 **Key Characteristics:**
 
 - Instrument-grade, not decorative: data and status carry the interface; chrome recedes.
-- Two registers share tokens, diverge in layout: admin (AppLayout, dense, sidebar) and POS (PosLayout, large hit targets, motion-reduced, tablet-first, hard 768px floor).
+- Two registers share tokens, diverge in layout: admin (AppLayout, dense, sidebar) and POS (PosLayout, large hit targets, motion-reduced, phone-to-desktop responsive workflow).
 - One primary color, used sparingly: Operational Navy `#00539b` appears on primary actions, active state, and key status — never as background wash or atmosphere.
 - Light and dark themes are first-class; dark mode is class-triggered via `.app-dark` (dual trigger with PrimeVue's class selector).
 - Motion is a budget, not a feature: state transitions only, instant on POS-critical paths, `prefers-reduced-motion` respected everywhere.
@@ -172,7 +172,7 @@ The login app (`resources/js/login/index.js`) uses a separate Noir preset: a zin
 - **Body** (400, 1rem / 16px, line-height 1.5): all default text, table cells, form labels. Cap line length at 65–75ch in prose contexts; tables and forms are exempt.
 - **Label** (500, 0.875rem / 14px): filter labels, table column headers, small captions. Not uppercase, not tracked — instrument labels read like labels, not kickers.
 
-Mobile font scaling: `html { font-size: 12px }` under 768px (see `resources/css/app.css`). The scale compresses, the hierarchy ratio is preserved.
+Mobile retains the 16px body baseline; touch targets and layout, not type shrinkage, adapt the interface to available space.
 
 ### Named Rules
 
@@ -235,7 +235,7 @@ Component-level styling is owned by PrimeVue 4 (Aura preset). This section docum
 ### Signature: The Two Layout Shells
 
 - **AppLayout** (`resources/js/Layouts/admin.vue` → `Components/AppLayout.vue`): admin density. Sidebar + main + footer. Tables, filters, forms. Dense by default; breathing room comes from the card padding, not from oversized controls.
-- **PosLayout** (`resources/js/Layouts/Components/PosLayout.vue`): POS speed. Fixed `PosShiftBar` at top (`pt-14` main), full-height scroll, no sidebar. Hard 768px viewport floor — below it, an unsupported-viewport message renders instead of the POS UI. Includes a keyboard skip-link (`#pos-main`) and `sr-only` utilities. Toasts are offset to `top: 64px` to clear the shift bar. Hit targets are larger; motion budget is tighter (instant or crossfade only).
+- **PosLayout** (`resources/js/Layouts/Components/PosLayout.vue`): POS speed. Fixed `PosShiftBar` at top (`pt-14` main), dynamic viewport height, and responsive navigation. On compact screens the sidebar becomes an overlay and the sale is cart-first: full-screen product search returns to the current sale after a successful add. Wider screens retain the split search/cart workspace. Includes a keyboard skip-link (`#pos-main`) and `sr-only` utilities. Toasts clear the safe-area-aware shift bar. Hit targets are larger; motion budget is tighter (instant or crossfade only).
 
 ### Chips / Tags
 
@@ -257,7 +257,7 @@ Concrete guardrails. Every anti-reference in PRODUCT.md is enforced here by name
 - **Do** darken on hover/active (`#003d74` → `#002d57`). Primary controls depress; they never glow or scale.
 - **Do** pair every status color with a label or icon. Color confirms; it never carries state alone (The Status-Pairs Rule).
 - **Do** separate surfaces by surface token first, border second, shadow last (The Tonal-Layering Rule). Resting cards are flat with a 1px border.
-- **Do** keep hit targets large on the POS surface and respect the 768px floor — the POS unsupported-viewport message is a feature, not a fallback.
+- **Do** keep hit targets large on the POS surface and make the cart-first compact workflow fully operable on phones and portrait tablets.
 - **Do** respect `prefers-reduced-motion` on every transition; POS-critical paths default to instant or crossfade regardless of the user setting.
 - **Do** use Lato in weight and size for hierarchy. One family, multiple weights (The One-Family Rule).
 - **Do** use sentence-case 14px/500 for labels. Labels read like labels, not kickers (The No-Kicker Rule).

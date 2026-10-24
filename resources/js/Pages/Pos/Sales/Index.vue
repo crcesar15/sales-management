@@ -167,7 +167,7 @@ onUnmounted(() => clearTimeout(searchTimer));
 </script>
 
 <template>
-  <div class="p-4 lg:p-6">
+  <div class="min-h-[calc(100dvh-3.5rem)] p-3 sm:p-4 lg:min-h-0 lg:p-6">
     <div class="mb-4">
       <h1 class="m-0 text-2xl font-bold">{{ t("Sales") }}</h1>
     </div>
@@ -203,7 +203,7 @@ onUnmounted(() => clearTimeout(searchTimer));
                 @click="filterPopover.toggle($event)"
               />
               <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
-              <IconField icon-position="left" class="ml-auto w-full max-w-80">
+              <IconField icon-position="left" class="w-full sm:ml-auto sm:max-w-80">
                 <InputIcon class="fa fa-search" />
                 <InputText v-model="search" :placeholder="t('Search') + '...'" class="w-full" />
               </IconField>

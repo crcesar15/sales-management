@@ -16,6 +16,7 @@ const props = defineProps<{
   customerChoiceMade: boolean;
   canPay: boolean;
   processing: boolean;
+  showPayAction: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -85,12 +86,16 @@ function updateDiscountValue(value: number | null): void {
       <span class="font-medium tabular-nums">{{ formatCurrency(String(taxAmount)) }}</span>
     </div>
 
-    <div class="mt-4 flex items-center justify-between border-t border-surface-200 pt-4 text-lg font-bold dark:border-surface-700">
+    <div
+      v-if="showPayAction"
+      class="mt-4 flex items-center justify-between border-t border-surface-200 pt-4 text-lg font-bold dark:border-surface-700"
+    >
       <span>{{ t("Total") }}</span>
       <span class="tabular-nums">{{ formatCurrency(String(total)) }}</span>
     </div>
 
     <Button
+      v-if="showPayAction"
       :label="t('Pay')"
       icon="fa fa-credit-card"
       :disabled="!canPay"
@@ -99,7 +104,7 @@ function updateDiscountValue(value: number | null): void {
       class="mt-4 min-h-12 w-full uppercase"
       @click="emit('pay')"
     />
-    <small class="mt-2 block text-center text-surface-500 dark:text-surface-400">
+    <small v-if="showPayAction" class="mt-2 block text-center text-surface-500 dark:text-surface-400">
       {{
         !customerChoiceMade
           ? t("Select a customer or Walk-in before payment")

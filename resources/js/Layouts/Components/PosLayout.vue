@@ -14,7 +14,8 @@ import { route } from "ziggy-js";
 
 const { isDarkMode } = useLayout();
 const { t } = useI18n();
-const { isCashMovementDialogVisible } = usePosLayout();
+const { isCashMovementDialogVisible, isCompactViewport, isMobileNavigationOpen, closeMobileNavigation, setCompactViewport } =
+  usePosLayout();
 const page = usePage();
 const posClient = usePosClient();
 const posStore = usePosStore();
@@ -24,6 +25,7 @@ const windowWidth = ref(window.innerWidth);
 
 const updateWidth = () => {
   windowWidth.value = window.innerWidth;
+  setCompactViewport(windowWidth.value < 1024);
 };
 
 async function hydrateSessionForStandalonePage(): Promise<void> {
@@ -41,6 +43,7 @@ async function hydrateSessionForStandalonePage(): Promise<void> {
 }
 
 onMounted(() => {
+  updateWidth();
   window.addEventListener("resize", updateWidth);
   void hydrateSessionForStandalonePage();
 });
@@ -49,8 +52,6 @@ onUnmounted(() => {
   window.removeEventListener("resize", updateWidth);
 });
 
-const isViewportUnsupported = computed(() => windowWidth.value < 768);
-
 const containerClass = computed(() => [
   "min-h-screen",
   isDarkMode.value ? "bg-surface-900 text-surface-0" : "bg-surface-ground text-surface-900",
@@ -58,34 +59,25 @@ const containerClass = computed(() => [
 </script>
 
 <template>
-  <!-- Skip link for keyboard users -->
-  <a v-if="!isViewportUnsupported" href="#pos-main" class="skip-link sr-only focus:not-sr-only">
+  <a href="#pos-main" class="skip-link sr-only focus:not-sr-only">
     {{ t("Skip to main content") }}
   </a>
 
   <div :class="containerClass">
-    <!-- Unsupported viewport message -->
-    <div v-if="isViewportUnsupported" class="flex flex-col items-center justify-center h-screen text-center p-8">
-      <i class="fa fa-tablet-alt text-6xl text-primary-500 mb-4" aria-hidden="true" />
-      <h2 class="text-xl font-semibold mb-2">{{ t("POS requires a tablet or desktop") }}</h2>
-      <p class="text-surface-500 dark:text-surface-400 mb-4">
-        {{ t("Please use a device with a screen width of at least 768px.") }}
-      </p>
-      <a :href="route('home')" class="text-primary-500 underline">
-        {{ t("Return to Dashboard") }}
-      </a>
+    <PosShiftBar />
+    <div class="flex min-h-[100dvh] pt-14 lg:h-screen lg:overflow-hidden">
+      <PosSidebar />
+      <button
+        v-if="isCompactViewport && isMobileNavigationOpen"
+        type="button"
+        class="fixed inset-0 z-[1000] bg-surface-950/50"
+        :aria-label="t('Close menu')"
+        @click="closeMobileNavigation"
+      />
+      <main id="pos-main" class="min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto" role="main">
+        <slot />
+      </main>
     </div>
-
-    <!-- Main POS interface -->
-    <template v-else>
-      <PosShiftBar />
-      <div class="flex h-screen overflow-hidden pt-14">
-        <PosSidebar />
-        <main id="pos-main" class="min-w-0 flex-1 overflow-y-auto" role="main">
-          <slot />
-        </main>
-      </div>
-    </template>
 
     <Toast position="top-center" group="pos" :pt="{ root: { class: 'pos-toast-offset' } }" />
     <ConfirmDialog />
@@ -95,7 +87,7 @@ const containerClass = computed(() => [
 
 <style scoped>
 .pos-toast-offset {
-  top: 64px !important; /* 56px bar + 8px spacing */
+  top: calc(64px + env(safe-area-inset-top)) !important;
 }
 
 /* Skip link for accessibility */

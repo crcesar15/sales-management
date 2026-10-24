@@ -91,7 +91,7 @@ function cancel(): void {
     v-model:visible="visible"
     modal
     :header="t('Select Register')"
-    :style="{ width: '520px' }"
+    :style="{ width: '520px', maxHeight: 'calc(100dvh - 1rem)' }"
     :breakpoints="{ '768px': '98vw' }"
     :closable="false"
     data-testid="register-select-dialog"

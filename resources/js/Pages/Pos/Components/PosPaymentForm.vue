@@ -120,7 +120,7 @@ const submit = handleSubmit((values) => {
     <Message v-if="serverError" severity="error" :closable="false">{{ serverError }}</Message>
 
     <section v-if="paymentMode === 'cash'" class="flex flex-col gap-4" :aria-label="t('Cash payment')">
-      <div class="flex items-end gap-3">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div class="min-w-0 flex-1">
           <label for="cash-received" class="mb-2 block font-medium">{{ t("Cash received") }}</label>
           <InputNumber
@@ -137,7 +137,7 @@ const submit = handleSubmit((values) => {
             :class="{ 'p-invalid': errors.cash_received }"
           />
         </div>
-        <Button type="button" :label="t('Exact')" outlined class="min-h-14" @click="applyExactCash" />
+        <Button type="button" :label="t('Exact')" outlined class="min-h-12 sm:min-h-14" @click="applyExactCash" />
       </div>
       <small v-if="errors.cash_received" class="text-red-400 dark:text-red-300">{{ errors.cash_received }}</small>
 
@@ -148,7 +148,7 @@ const submit = handleSubmit((values) => {
     </section>
 
     <section v-else class="flex flex-col gap-4" :aria-label="t('QR payment')">
-      <div v-if="paymentMode === 'split'" class="grid grid-cols-2 gap-4">
+      <div v-if="paymentMode === 'split'" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <div class="mb-2 flex items-center justify-between gap-2">
             <label for="cash-amount" class="font-medium">{{ t("Cash amount") }}</label>

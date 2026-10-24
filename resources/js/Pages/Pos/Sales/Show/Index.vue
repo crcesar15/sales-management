@@ -19,7 +19,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <div class="p-4 lg:p-6">
+  <div class="min-h-[calc(100dvh-3.5rem)] p-3 sm:p-4 lg:min-h-0 lg:p-6">
     <div class="mb-4 flex items-center gap-3">
       <Button
         :aria-label="t('Back')"

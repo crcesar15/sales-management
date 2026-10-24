@@ -57,7 +57,13 @@ const submit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <Dialog v-model:visible="visible" modal :header="t('Add Movement')" :style="{ width: '480px' }" :breakpoints="{ '768px': '98vw' }">
+  <Dialog
+    v-model:visible="visible"
+    modal
+    :header="t('Add Movement')"
+    :style="{ width: '480px', maxHeight: 'calc(100dvh - 1rem)' }"
+    :breakpoints="{ '768px': '98vw' }"
+  >
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2">
         <label for="pos-movement-type">{{ t("Movement Type") }}</label>

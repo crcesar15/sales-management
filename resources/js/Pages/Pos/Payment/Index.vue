@@ -94,9 +94,9 @@ onMounted(() => void generateHandoverPreview());
 </script>
 
 <template>
-  <div class="min-h-full p-4 lg:p-6">
+  <div class="min-h-[calc(100dvh-3.5rem)] p-3 sm:p-4 lg:min-h-full lg:p-6">
     <div class="mx-auto flex max-w-6xl flex-col gap-4">
-      <header class="flex items-center justify-between gap-4">
+      <header class="flex flex-wrap items-center justify-between gap-3">
         <Button
           :label="t('Back to sale')"
           icon="fa fa-arrow-left"
@@ -110,18 +110,20 @@ onMounted(() => void generateHandoverPreview());
         class="rounded-lg border border-surface-200 bg-surface-0 p-5 dark:border-surface-700 dark:bg-surface-900"
         :aria-label="t('Amount due')"
       >
-        <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p class="m-0 text-surface-700 dark:text-surface-200">{{ t("Amount due") }}</p>
             <h1 class="m-0 mt-1 text-4xl font-bold tabular-nums">{{ formatCurrency(String(order.total)) }}</h1>
           </div>
-          <div class="flex flex-col gap-y-2 text-right text-surface-700 dark:text-surface-200">
+          <div class="flex flex-col gap-y-2 text-left text-surface-700 dark:text-surface-200 sm:text-right">
             <span>{{ t("Sales Order") }} #{{ order.id }}</span>
             <span>{{ t("Tax ID") }}: {{ order.customer?.tax_id ?? t("Walk-in customer") }}</span>
             <span>{{ t("Tax ID Name") }}: {{ order.customer?.tax_id_name }}</span>
           </div>
         </div>
-        <div class="mt-4 flex flex-wrap justify-end gap-x-5 gap-y-1 border-t border-surface-200 pt-3 text-sm dark:border-surface-700">
+        <div
+          class="mt-4 flex flex-col gap-1 border-t border-surface-200 pt-3 text-sm dark:border-surface-700 sm:flex-row sm:flex-wrap sm:justify-end sm:gap-x-5"
+        >
           <span>
             {{ t("Subtotal") }}:
             <strong>{{ formatCurrency(String(order.sub_total)) }}</strong>

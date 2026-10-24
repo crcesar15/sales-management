@@ -17,7 +17,7 @@ const options = computed(() => [
 <template>
   <fieldset>
     <legend class="mb-3 font-semibold">{{ t("Payment method") }}</legend>
-    <div class="grid grid-cols-3 gap-3">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
       <Button
         v-for="option in options"
         :key="option.value"
@@ -26,7 +26,7 @@ const options = computed(() => [
         :icon="option.icon"
         :outlined="paymentMode !== option.value"
         :severity="paymentMode === option.value ? 'primary' : 'secondary'"
-        class="min-h-16 flex-col gap-2"
+        class="min-h-12 justify-start gap-2 sm:min-h-16 sm:flex-col sm:justify-center"
         :aria-pressed="paymentMode === option.value"
         @click="paymentMode = option.value"
       />

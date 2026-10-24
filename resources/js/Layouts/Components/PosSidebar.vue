@@ -23,7 +23,7 @@ interface PosNavigationItem {
 
 const { t } = useI18n();
 const page = usePage();
-const { isSidebarCollapsed, openCashMovementDialog } = usePosLayout();
+const { isSidebarCollapsed, isCompactViewport, isMobileNavigationOpen, closeMobileNavigation, openCashMovementDialog } = usePosLayout();
 const { isDarkMode } = useLayout();
 const { locale, migrateLegacyThemePreference, updateLocale, updateTheme } = useUserPreferences();
 const posStore = usePosStore();
@@ -103,14 +103,21 @@ function toggleUserMenu(event: Event): void {
   userMenu.value.toggle(event);
 }
 
+function openCashMovement(): void {
+  closeMobileNavigation();
+  openCashMovementDialog();
+}
+
 onMounted(migrateLegacyThemePreference);
 </script>
 
 <template>
   <aside
     id="pos-sidebar"
-    class="flex shrink-0 flex-col overflow-hidden border-r border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900"
-    :class="isSidebarCollapsed ? 'w-16' : 'w-60'"
+    class="fixed bottom-0 left-0 top-14 z-[1001] flex w-72 -translate-x-full flex-col overflow-y-auto border-r border-surface-200 bg-surface-0 transition-transform duration-200 dark:border-surface-700 dark:bg-surface-900 lg:static lg:z-auto lg:translate-x-0 lg:overflow-hidden"
+    :class="[isMobileNavigationOpen ? 'translate-x-0' : '', isSidebarCollapsed ? 'lg:w-16' : 'lg:w-60']"
+    :aria-hidden="isCompactViewport && !isMobileNavigationOpen"
+    :inert="isCompactViewport && !isMobileNavigationOpen"
   >
     <nav class="flex flex-1 flex-col gap-1 p-2" :aria-label="t('POS navigation')">
       <template v-for="item in navigationItems" :key="item.key">
@@ -119,7 +126,7 @@ onMounted(migrateLegacyThemePreference);
           :href="item.href"
           :class="[
             itemClass,
-            isSidebarCollapsed ? 'justify-center px-2' : '',
+            isSidebarCollapsed && !isCompactViewport ? 'justify-center px-2' : '',
             item.active
               ? 'bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300'
               : 'text-surface-700 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800',
@@ -127,9 +134,10 @@ onMounted(migrateLegacyThemePreference);
           :aria-label="item.label"
           :aria-current="item.active ? 'page' : undefined"
           :title="isSidebarCollapsed ? item.label : undefined"
+          @click="closeMobileNavigation"
         >
           <i :class="item.icon" class="w-5 shrink-0 text-center" aria-hidden="true" />
-          <span v-if="!isSidebarCollapsed" class="truncate">{{ item.label }}</span>
+          <span v-if="!isSidebarCollapsed || isCompactViewport" class="truncate">{{ item.label }}</span>
         </Link>
 
         <button
@@ -138,27 +146,31 @@ onMounted(migrateLegacyThemePreference);
           type="button"
           :class="[
             itemClass,
-            isSidebarCollapsed ? 'justify-center px-2' : '',
+            isSidebarCollapsed && !isCompactViewport ? 'justify-center px-2' : '',
             'text-surface-700 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800',
           ]"
           :aria-label="item.label"
           :title="isSidebarCollapsed ? item.label : undefined"
-          @click="item.command?.()"
+          @click="item.key === 'cash-movements' ? openCashMovement() : item.command?.()"
         >
           <i :class="item.icon" class="w-5 shrink-0 text-center" aria-hidden="true" />
-          <span v-if="!isSidebarCollapsed" class="truncate">{{ item.label }}</span>
+          <span v-if="!isSidebarCollapsed || isCompactViewport" class="truncate">{{ item.label }}</span>
         </button>
 
         <button
           v-else
           type="button"
           disabled
-          :class="[itemClass, isSidebarCollapsed ? 'justify-center px-2' : '', 'cursor-not-allowed text-surface-400 dark:text-surface-500']"
+          :class="[
+            itemClass,
+            isSidebarCollapsed && !isCompactViewport ? 'justify-center px-2' : '',
+            'cursor-not-allowed text-surface-400 dark:text-surface-500',
+          ]"
           :aria-label="item.label"
           :title="isSidebarCollapsed ? item.label : undefined"
         >
           <i :class="item.icon" class="w-5 shrink-0 text-center" aria-hidden="true" />
-          <span v-if="!isSidebarCollapsed" class="truncate">{{ item.label }}</span>
+          <span v-if="!isSidebarCollapsed || isCompactViewport" class="truncate">{{ item.label }}</span>
         </button>
       </template>
 
@@ -168,14 +180,15 @@ onMounted(migrateLegacyThemePreference);
           :href="route('home')"
           :class="[
             itemClass,
-            isSidebarCollapsed ? 'justify-center px-2' : '',
+            isSidebarCollapsed && !isCompactViewport ? 'justify-center px-2' : '',
             'text-surface-600 hover:bg-surface-100 hover:text-surface-900 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-0',
           ]"
           :aria-label="t('Return to Dashboard')"
           :title="isSidebarCollapsed ? t('Return to Dashboard') : undefined"
+          @click="closeMobileNavigation"
         >
           <i class="fa fa-arrow-left w-5 shrink-0 text-center" aria-hidden="true" />
-          <span v-if="!isSidebarCollapsed" class="truncate">{{ t("Dashboard") }}</span>
+          <span v-if="!isSidebarCollapsed || isCompactViewport" class="truncate">{{ t("Dashboard") }}</span>
         </Link>
       </div>
     </nav>
@@ -186,7 +199,7 @@ onMounted(migrateLegacyThemePreference);
         type="button"
         :class="[
           itemClass,
-          isSidebarCollapsed ? 'justify-center px-2' : '',
+          isSidebarCollapsed && !isCompactViewport ? 'justify-center px-2' : '',
           'text-surface-600 hover:bg-surface-100 hover:text-surface-900 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-0',
         ]"
         :aria-label="t('User settings')"
@@ -197,8 +210,8 @@ onMounted(migrateLegacyThemePreference);
         <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
           {{ userInitial }}
         </span>
-        <span v-if="!isSidebarCollapsed" class="min-w-0 flex-1 truncate">{{ userName }}</span>
-        <i v-if="!isSidebarCollapsed" class="fa fa-ellipsis-vertical shrink-0" aria-hidden="true" />
+        <span v-if="!isSidebarCollapsed || isCompactViewport" class="min-w-0 flex-1 truncate">{{ userName }}</span>
+        <i v-if="!isSidebarCollapsed || isCompactViewport" class="fa fa-ellipsis-vertical shrink-0" aria-hidden="true" />
       </button>
       <Menu ref="userMenu" :model="userMenuItems" popup />
     </div>
