@@ -1,9 +1,26 @@
 <script setup lang="ts">
 import { router, usePage } from "@inertiajs/vue3";
-import { Badge, Button, Card, Column, DataTable, DatePicker, IconField, InputIcon, InputText, Popover, Select } from "primevue";
+import {
+  Badge,
+  Button,
+  Card,
+  Column,
+  DataTable,
+  DatePicker,
+  IconField,
+  InputIcon,
+  InputText,
+  Popover,
+  Select,
+  useConfirm,
+  useToast,
+} from "primevue";
+import axios from "axios";
 import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
+import { usePosStore } from "@composables/usePosStore";
+import { usePosClient } from "@composables/usePosClient";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import PosLayout from "@layouts/pos.vue";
@@ -19,18 +36,24 @@ const props = defineProps<{
   };
   filters: SalesOrderFilters;
   currentShiftId: number | null;
+  currentShiftDraftCount: number;
 }>();
 
 const page = usePage();
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
 const { formatDatetime, parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
+const confirm = useConfirm();
+const toast = useToast();
+const posStore = usePosStore();
+const posClient = usePosClient();
 
 const search = ref(props.filters.search ?? "");
 const status = ref(props.filters.status || "all");
 const dateFrom = ref<Date | null>(parseDateOnly(props.filters.from ?? null));
 const dateTo = ref<Date | null>(parseDateOnly(props.filters.to ?? null));
 const filterPopover = ref();
+const discardingDrafts = ref(false);
 
 const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
@@ -91,6 +114,45 @@ function openOrder(order: PosSalesOrderResponse): void {
   router.visit(route(canResume(order) ? "pos.sales.edit" : "pos.sales.show", order.id));
 }
 
+function discardAllDrafts(): void {
+  confirm.require({
+    header: t("Discard all drafts"),
+    message: t("Discard all {count} saved drafts for this shift?", { count: props.currentShiftDraftCount }),
+    icon: "fa fa-triangle-exclamation",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Discard all drafts"),
+    acceptProps: { severity: "danger" },
+    accept: async () => {
+      discardingDrafts.value = true;
+
+      try {
+        const { discarded_count: discardedCount } = await posClient.discardCurrentShiftDrafts();
+        if (posStore.draftId !== null) posStore.clearSale();
+        toast.add({
+          severity: "success",
+          summary: t("Drafts discarded"),
+          detail: t("{count} drafts were discarded", { count: discardedCount }),
+          life: 3000,
+          group: "pos",
+        });
+        router.reload({ only: ["orders", "currentShiftDraftCount"] });
+      } catch (error) {
+        toast.add({ severity: "error", summary: t("Unable to discard drafts"), detail: messageFor(error), life: 4000, group: "pos" });
+      } finally {
+        discardingDrafts.value = false;
+      }
+    },
+  });
+}
+
+function messageFor(error: unknown): string {
+  if (axios.isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data.message ?? t("Unable to discard drafts");
+  }
+
+  return error instanceof Error ? error.message : t("Unable to discard drafts");
+}
+
 let searchTimer: ReturnType<typeof setTimeout>;
 let resettingFilters = false;
 watch(search, () => {
@@ -121,7 +183,16 @@ onUnmounted(() => clearTimeout(searchTimer));
           </template>
 
           <template #header>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <Button
+                v-if="currentShiftDraftCount > 0"
+                :label="t('Discard all drafts')"
+                icon="fa fa-trash-can"
+                severity="danger"
+                outlined
+                :loading="discardingDrafts"
+                @click="discardAllDrafts"
+              />
               <Button
                 type="button"
                 icon="fa fa-filter"
@@ -172,7 +243,14 @@ onUnmounted(() => clearTimeout(searchTimer));
             <template #body="{ data }">#{{ data.id }}</template>
           </Column>
           <Column :header="t('Customer')" style="min-width: 170px">
-            <template #body="{ data }">{{ customerName(data) }}</template>
+            <template #body="{ data }">
+              <div>
+                <span>{{ customerName(data) }}</span>
+                <small v-if="data.customer?.tax_id" class="block text-surface-500 dark:text-surface-400">
+                  {{ data.customer.tax_id }}
+                </small>
+              </div>
+            </template>
           </Column>
           <Column :header="t('Cashier')" style="min-width: 160px">
             <template #body="{ data }">{{ data.user?.full_name ?? "---" }}</template>

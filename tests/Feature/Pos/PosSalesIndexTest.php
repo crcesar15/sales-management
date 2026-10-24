@@ -8,6 +8,7 @@ use App\Enums\SalesOrderPaymentStatus;
 use App\Enums\SalesOrderStatus;
 use App\Models\CashRegister;
 use App\Models\CashRegisterShift;
+use App\Models\Customer;
 use App\Models\SalesOrder;
 use App\Models\Store;
 use App\Models\User;
@@ -69,6 +70,46 @@ it('shows own sales and all drafts from the active shift store', function (): vo
             ->where('currentShiftId', $this->shift->id)
             ->where('orders.data', fn ($orders): bool => $orders->pluck('id')->sort()->values()->all() === $expectedIds)
         );
+});
+
+it('includes the current cashiers open draft count', function (): void {
+    SalesOrder::factory()->count(2)->create([
+        'user_id' => $this->cashier,
+        'store_id' => $this->store,
+        'cash_register_shift_id' => $this->shift,
+        'status' => SalesOrderStatus::DRAFT->value,
+        'payment_status' => SalesOrderPaymentStatus::PENDING->value,
+    ]);
+
+    $this->actingAs($this->cashier)
+        ->get(route('pos.sales.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('currentShiftDraftCount', 2));
+});
+
+it('displays a saved customers tax ID name instead of Walk-in', function (): void {
+    $customer = Customer::factory()->create([
+        'first_name' => '',
+        'last_name' => '',
+        'tax_id_name' => 'Acme Retail',
+    ]);
+    $order = SalesOrder::factory()->create([
+        'customer_id' => $customer->id,
+        'user_id' => $this->cashier,
+        'store_id' => $this->store,
+        'cash_register_shift_id' => $this->shift,
+        'status' => SalesOrderStatus::DRAFT->value,
+        'payment_status' => SalesOrderPaymentStatus::PENDING->value,
+    ]);
+
+    $this->actingAs($this->cashier)
+        ->get(route('pos.sales.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('orders.data.0.id', $order->id)
+            ->where('orders.data.0.customer.id', $customer->id)
+            ->where('orders.data.0.customer.display_name', 'Acme Retail')
+            ->where('orders.data.0.customer.tax_id', $customer->tax_id));
 });
 
 it('shows only own sales from assigned stores without an open shift', function (): void {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Dialog, InputNumber, Tag, Textarea, useToast } from "primevue";
+import { Button, Dialog, InputNumber, Tag, Textarea, useConfirm, useToast } from "primevue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
 import { number, object, string } from "yup";
@@ -15,12 +15,14 @@ const emit = defineEmits<{
 
 const visible = defineModel<boolean>("visible", { default: false });
 const { t } = useI18n();
+const confirm = useConfirm();
 const toast = useToast();
 const { currencyCode, formatCurrencySymbol } = useCurrencyFormatter();
 const posClient = usePosClient();
 const step = ref<"count" | "review" | "complete">("count");
 const summary = ref<ShiftReconciliation | null>(null);
 const closedShift = ref<PosCloseShiftResponse | null>(null);
+const discardingDrafts = ref(false);
 
 const schema = toTypedSchema(
   object({
@@ -48,6 +50,7 @@ const discrepancyLabel = computed(() => (difference.value !== null && difference
 const differenceSeverity = computed(() =>
   difference.value === 0 ? "success" : difference.value && difference.value > 0 ? "warn" : "danger",
 );
+const canConfirmClose = computed(() => (summary.value?.open_drafts_count ?? 0) === 0);
 
 watch(visible, (isVisible) => {
   if (!isVisible) return;
@@ -67,6 +70,8 @@ const review = handleSubmit(async () => {
 });
 
 async function confirmClose(): Promise<void> {
+  if (!canConfirmClose.value) return;
+
   if (hasDiscrepancy.value && !values.discrepancy_reason?.trim()) {
     setErrors({ discrepancy_reason: t("A discrepancy reason is required") });
     return;
@@ -84,13 +89,51 @@ async function confirmClose(): Promise<void> {
   }
 }
 
-function messageFor(error: unknown): string {
+function discardAllDrafts(): void {
+  if (!summary.value || summary.value.open_drafts_count === 0) return;
+
+  confirm.require({
+    header: t("Discard all drafts"),
+    message: t("Discard all {count} saved drafts for this shift?", { count: summary.value.open_drafts_count }),
+    icon: "fa fa-triangle-exclamation",
+    rejectLabel: t("Cancel"),
+    acceptLabel: t("Discard all drafts"),
+    acceptProps: { severity: "danger" },
+    accept: async () => {
+      discardingDrafts.value = true;
+
+      try {
+        const { discarded_count: discardedCount } = await posClient.discardCurrentShiftDrafts();
+        summary.value = await posClient.getClosingSummary();
+        toast.add({
+          severity: "success",
+          summary: t("Drafts discarded"),
+          detail: t("{count} drafts were discarded", { count: discardedCount }),
+          life: 3000,
+          group: "pos",
+        });
+      } catch (error) {
+        toast.add({
+          severity: "error",
+          summary: t("Unable to discard drafts"),
+          detail: messageFor(error, t("Unable to discard drafts")),
+          life: 4000,
+          group: "pos",
+        });
+      } finally {
+        discardingDrafts.value = false;
+      }
+    },
+  });
+}
+
+function messageFor(error: unknown, fallback = t("Unable to close shift")): string {
   if (typeof error === "object" && error !== null && "response" in error) {
     const response = error.response as { data?: { message?: string } } | undefined;
-    return response?.data?.message ?? t("Unable to close shift");
+    return response?.data?.message ?? fallback;
   }
 
-  return error instanceof Error ? error.message : t("Unable to close shift");
+  return error instanceof Error ? error.message : fallback;
 }
 </script>
 
@@ -151,6 +194,28 @@ function messageFor(error: unknown): string {
         <span class="font-medium">{{ t("Difference") }}</span>
         <Tag :severity="differenceSeverity" :value="`${discrepancyLabel}: ${formatCurrencySymbol(String(Math.abs(difference ?? 0)))}`" />
       </div>
+      <div
+        v-if="summary.open_drafts_count > 0"
+        class="flex flex-col gap-3 rounded-md border border-orange-200 bg-orange-50 p-4 dark:border-orange-700 dark:bg-orange-950"
+      >
+        <div class="flex items-start gap-3">
+          <i class="fa fa-triangle-exclamation mt-0.5 text-orange-600 dark:text-orange-300" aria-hidden="true" />
+          <div>
+            <p class="m-0 font-medium text-orange-950 dark:text-orange-100">{{ t("Drafts must be resolved before closing") }}</p>
+            <p class="m-0 mt-1 text-sm text-orange-800 dark:text-orange-200">
+              {{ t("{count} saved drafts are still open for this shift", { count: summary.open_drafts_count }) }}
+            </p>
+          </div>
+        </div>
+        <Button
+          :label="t('Discard all drafts')"
+          icon="fa fa-trash-can"
+          severity="danger"
+          outlined
+          :loading="discardingDrafts"
+          @click="discardAllDrafts"
+        />
+      </div>
       <div v-if="hasDiscrepancy" class="flex flex-col gap-2">
         <label for="pos-discrepancy-reason" class="font-medium">
           {{ t("Discrepancy Reason") }}
@@ -189,7 +254,7 @@ function messageFor(error: unknown): string {
       <Button v-if="step === 'count'" severity="secondary" :label="t('Cancel')" @click="visible = false" />
       <Button v-if="step === 'count'" :label="t('Review Closing')" :loading="isSubmitting" @click="review" />
       <Button v-if="step === 'review'" severity="secondary" :label="t('Back')" @click="step = 'count'" />
-      <Button v-if="step === 'review'" severity="danger" :label="t('Confirm Close')" @click="confirmClose" />
+      <Button v-if="step === 'review'" severity="danger" :label="t('Confirm Close')" :disabled="!canConfirmClose" @click="confirmClose" />
       <Button v-if="step === 'complete'" :label="t('Finish')" @click="emit('completed')" />
     </template>
   </Dialog>

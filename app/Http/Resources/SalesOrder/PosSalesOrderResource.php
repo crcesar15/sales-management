@@ -28,7 +28,10 @@ final class PosSalesOrderResource extends JsonResource
             'items_count' => (int) $this->items_count,
             'customer' => $this->whenLoaded('customer', fn () => [
                 'id' => $this->customer?->id,
-                'display_name' => $this->customer ? mb_trim($this->customer->first_name . ' ' . $this->customer->last_name) : null,
+                'display_name' => $this->customer
+                    ? mb_trim($this->customer->tax_id_name) ?: mb_trim($this->customer->first_name . ' ' . $this->customer->last_name)
+                    : null,
+                'tax_id' => $this->customer?->tax_id,
             ]),
             'user' => $this->whenLoaded('user', fn () => [
                 'id' => $this->user?->id,

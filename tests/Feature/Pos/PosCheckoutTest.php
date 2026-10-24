@@ -9,6 +9,7 @@ use App\Enums\SalesOrderStatus;
 use App\Models\Batch;
 use App\Models\CashRegister;
 use App\Models\CashRegisterShift;
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\SalesOrder;
@@ -51,6 +52,7 @@ beforeEach(function (): void {
         'group' => 'tax',
     ]);
     $this->draftPayload = fn (): array => [
+        'intent' => 'payment',
         'customer_id' => null,
         'is_walk_in' => true,
         'discount_type' => 'flat',
@@ -80,6 +82,18 @@ it('creates a durable POS draft from the active shift and server prices', functi
         ->and((float) $order->tax_amount)->toBe(20.0)
         ->and((float) $order->total)->toBe(220.0)
         ->and((float) $order->items()->firstOrFail()->unit_price)->toBe(100.0);
+});
+
+it('persists a selected customer even when a stale walk-in flag is submitted', function (): void {
+    $customer = Customer::factory()->create();
+    $payload = ($this->draftPayload)();
+    $payload['intent'] = 'save';
+    $payload['customer_id'] = $customer->id;
+    $payload['is_walk_in'] = true;
+
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), $payload)->assertRedirect(route('pos'));
+
+    expect(SalesOrder::query()->sole()->customer_id)->toBe($customer->id);
 });
 
 it('uses a manually overridden unit price for POS drafts', function (): void {
@@ -129,28 +143,42 @@ it('renders the payment completion confirmation', function (): void {
         ->assertInertia(fn (AssertableInertia $page) => $page->component('Pos/Completed/Index'));
 });
 
-it('discovers the current shift draft when reopening the POS', function (): void {
+it('starts a new POS sale when reopening after a draft was saved', function (): void {
     $this->actingAs($this->cashier)->post(route('pos.sales.store'), ($this->draftPayload)());
-    $order = SalesOrder::query()->sole();
 
     $this->actingAs($this->cashier)
         ->get(route('pos'))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Pos/Index')
-            ->where('draft.id', $order->id));
+            ->where('draft', null));
 });
 
-it('updates the active shift draft instead of creating a duplicate', function (): void {
-    $this->actingAs($this->cashier)->post(route('pos.sales.store'), ($this->draftPayload)());
+it('creates a separate draft for each new POS sale', function (): void {
+    $savePayload = ($this->draftPayload)();
+    $savePayload['intent'] = 'save';
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), $savePayload)->assertRedirect(route('pos'));
     $payload = ($this->draftPayload)();
     $payload['items'][0]['quantity'] = 3;
 
     $this->actingAs($this->cashier)->post(route('pos.sales.store'), $payload);
 
+    expect(SalesOrder::query()->count())->toBe(2)
+        ->and(SalesOrder::query()->where('total', 200)->exists())->toBeTrue()
+        ->and(SalesOrder::query()->where('total', 300)->exists())->toBeTrue();
+});
+
+it('updates the selected POS draft when saving it again', function (): void {
+    $savePayload = ($this->draftPayload)();
+    $savePayload['intent'] = 'save';
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), $savePayload);
     $order = SalesOrder::query()->sole();
+    $savePayload['items'][0]['quantity'] = 3;
+
+    $this->actingAs($this->cashier)->put(route('pos.sales.update', $order), $savePayload)->assertRedirect(route('pos'));
+
     expect(SalesOrder::query()->count())->toBe(1)
-        ->and($order->items()->sole()->quantity)->toBe(3)
+        ->and($order->refresh()->items()->sole()->quantity)->toBe(3)
         ->and((float) $order->total)->toBe(300.0);
 });
 

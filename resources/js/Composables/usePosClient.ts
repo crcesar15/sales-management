@@ -4,6 +4,7 @@ import type {
   CashRegister,
   PosCloseShiftPayload,
   PosCloseShiftResponse,
+  PosDiscardDraftsResponse,
   PosMovementPayload,
   PosSession,
   ShiftReconciliation,
@@ -72,6 +73,16 @@ export function usePosClient() {
     }
   }
 
+  async function discardCurrentShiftDrafts(): Promise<PosDiscardDraftsResponse> {
+    try {
+      const { data } = await apiClient.delete<PosDiscardDraftsResponse>(route("api.v1.pos.session.shift.drafts.discard"));
+      return data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  }
+
   async function addMovement(payload: PosMovementPayload): Promise<PosSession> {
     try {
       const { data } = await apiClient.post<PosSession>(route("api.v1.pos.session.shift.movements.store"), payload);
@@ -99,6 +110,7 @@ export function usePosClient() {
     openShift,
     getClosingSummary,
     closeShift,
+    discardCurrentShiftDrafts,
     addMovement,
     generateHandoverPreview,
   };

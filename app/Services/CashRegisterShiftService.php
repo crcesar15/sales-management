@@ -228,7 +228,7 @@ final class CashRegisterShiftService
     }
 
     /**
-     * @return array{opening_balance: float, cash_sales: float, cash_sales_count: int, cash_in: float, cash_out: float, expected_closing: float}
+     * @return array{opening_balance: float, cash_sales: float, cash_sales_count: int, cash_in: float, cash_out: float, expected_closing: float, open_drafts_count: int}
      */
     public function reconciliation(CashRegisterShift $shift): array
     {
@@ -252,18 +252,24 @@ final class CashRegisterShiftService
             'cash_in' => $cashIn,
             'cash_out' => $cashOut,
             'expected_closing' => round($openingBalance + $cashIn - $cashOut + $cashSales, 2),
+            'open_drafts_count' => $this->openPosDraftCount($shift),
         ];
     }
 
     private function requireNoOpenPosDrafts(CashRegisterShift $shift): void
     {
-        if (SalesOrder::query()
+        if ($this->openPosDraftCount($shift) > 0) {
+            throw new InvalidArgumentException('Complete or discard the active POS sale before closing this shift.');
+        }
+    }
+
+    private function openPosDraftCount(CashRegisterShift $shift): int
+    {
+        return SalesOrder::query()
             ->where('cash_register_shift_id', $shift->id)
             ->where('status', SalesOrderStatus::DRAFT)
             ->where('payment_status', SalesOrderPaymentStatus::PENDING)
-            ->exists()) {
-            throw new InvalidArgumentException('Complete or discard the active POS sale before closing this shift.');
-        }
+            ->count();
     }
 
     private function validateTransition(string $from, string $to): void

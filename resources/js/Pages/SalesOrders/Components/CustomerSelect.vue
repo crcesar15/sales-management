@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button, Dialog, InputText, Message, Popover, useToast } from "primevue";
 import { useI18n } from "vue-i18n";
-import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { ref, computed, nextTick, watch } from "vue";
 import { route } from "ziggy-js";
 import { useCustomerClient } from "@composables/useCustomerClient";
 import type { CustomerOption } from "@/Types/sales-order-types";
@@ -9,6 +9,7 @@ import type { CustomerOption } from "@/Types/sales-order-types";
 const props = defineProps<{
   modelValue: number | null;
   initialCustomer?: CustomerOption | null;
+  isWalkIn?: boolean;
   toastGroup?: string;
 }>();
 
@@ -40,12 +41,29 @@ function buildLabel(c: CustomerOption): string {
 
 const displayLabel = computed(() => (selectedCustomer.value ? buildLabel(selectedCustomer.value) : ""));
 
-onMounted(() => {
-  if (props.initialCustomer) {
+function syncSelection(): void {
+  if (props.initialCustomer && props.initialCustomer.id === props.modelValue) {
     selectedCustomer.value = props.initialCustomer;
     taxIdInput.value = props.initialCustomer.tax_id;
+    walkInSelected.value = false;
+    return;
   }
-});
+
+  if (props.isWalkIn) {
+    selectedCustomer.value = null;
+    taxIdInput.value = "";
+    walkInSelected.value = true;
+    return;
+  }
+
+  if (props.modelValue === null) {
+    selectedCustomer.value = null;
+    taxIdInput.value = "";
+    walkInSelected.value = false;
+  }
+}
+
+watch([() => props.initialCustomer, () => props.modelValue, () => props.isWalkIn], syncSelection, { immediate: true });
 
 async function searchCustomer() {
   if (!taxIdInput.value.trim()) {

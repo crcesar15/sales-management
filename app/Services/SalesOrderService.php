@@ -109,7 +109,7 @@ final class SalesOrderService
     {
         $query = $this->posVisibleOrdersQuery($actor, $shift)
             ->with([
-                'customer:id,first_name,last_name',
+                'customer:id,first_name,last_name,tax_id,tax_id_name',
                 'user:id,first_name,last_name',
                 'store:id,name,code',
             ])
@@ -223,20 +223,6 @@ final class SalesOrderService
     {
         return DB::transaction(function () use ($data, $actor): SalesOrder {
             $shift = $this->requiredPosShift($actor, true);
-            $existingOrder = SalesOrder::query()
-                ->where('user_id', $actor->id)
-                ->where('cash_register_shift_id', $shift->id)
-                ->where('status', SalesOrderStatus::DRAFT)
-                ->where('payment_status', SalesOrderPaymentStatus::PENDING)
-                ->lockForUpdate()
-                ->latest()
-                ->first();
-            if ($existingOrder !== null) {
-                $order = $this->update($existingOrder, $this->preparePosDraftData($data, $shift), $actor);
-
-                return $this->loadPosOrder($order);
-            }
-
             $order = $this->create($this->preparePosDraftData($data, $shift), $actor);
 
             return $this->loadPosOrder($order);
@@ -265,27 +251,14 @@ final class SalesOrderService
         return $this->loadPosOrder($order);
     }
 
-    public function getCurrentPosDraft(User $actor): ?SalesOrder
+    public function countPosDrafts(CashRegisterShift $shift, User $actor): int
     {
-        $shift = CashRegisterShift::query()
-            ->where('user_id', $actor->id)
-            ->where('status', CashRegisterShiftStatus::OPEN)
-            ->latest('opened_at')
-            ->first();
-        if ($shift === null) {
-            return null;
-        }
-
-        $order = SalesOrder::query()
+        return SalesOrder::query()
             ->where('user_id', $actor->id)
             ->where('cash_register_shift_id', $shift->id)
-            ->whereHas('store.users', fn ($query) => $query->whereKey($actor->id))
             ->where('status', SalesOrderStatus::DRAFT)
             ->where('payment_status', SalesOrderPaymentStatus::PENDING)
-            ->latest()
-            ->first();
-
-        return $order === null ? null : $this->loadPosOrder($order);
+            ->count();
     }
 
     /** @param array<string, mixed> $data */
@@ -339,6 +312,26 @@ final class SalesOrderService
             $lockedOrder = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
             $this->assertPosDraft($lockedOrder, $actor, $shift);
             $this->cancel($lockedOrder, 'Discarded at POS checkout.', $actor);
+        });
+    }
+
+    public function discardCurrentPosDrafts(User $actor): int
+    {
+        return DB::transaction(function () use ($actor): int {
+            $shift = $this->requiredPosShift($actor, true);
+            $orders = SalesOrder::query()
+                ->where('user_id', $actor->id)
+                ->where('cash_register_shift_id', $shift->id)
+                ->where('status', SalesOrderStatus::DRAFT)
+                ->where('payment_status', SalesOrderPaymentStatus::PENDING)
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($orders as $order) {
+                $this->cancel($order, 'Discarded in bulk at POS.', $actor);
+            }
+
+            return $orders->count();
         });
     }
 
@@ -959,7 +952,7 @@ final class SalesOrderService
         }
 
         return [
-            'customer_id' => ($data['is_walk_in'] ?? false) ? null : ($data['customer_id'] ?? null),
+            'customer_id' => $data['customer_id'] ?? null,
             'store_id' => $register->store_id,
             'cash_register_shift_id' => $shift->id,
             'discount_type' => $data['discount_type'],

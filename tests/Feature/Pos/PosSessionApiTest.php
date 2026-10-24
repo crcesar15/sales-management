@@ -7,9 +7,12 @@ use App\Enums\CashRegisterShiftStatus;
 use App\Enums\CashRegisterStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PermissionsEnum;
+use App\Enums\SalesOrderPaymentStatus;
+use App\Enums\SalesOrderStatus;
 use App\Models\CashRegister;
 use App\Models\CashRegisterMovement;
 use App\Models\CashRegisterShift;
+use App\Models\SalesOrder;
 use App\Models\SalesOrderPayment;
 use App\Models\Store;
 use App\Models\User;
@@ -28,6 +31,7 @@ beforeEach(function () {
 
 it('returns the authenticated cashiers open POS shift', function () {
     $store = Store::factory()->create();
+    $this->cashier->stores()->attach($store);
     $register = CashRegister::factory()->create(['store_id' => $store->id]);
     $shift = CashRegisterShift::factory()->create([
         'cash_register_id' => $register->id,
@@ -144,6 +148,58 @@ it('closes the POS shift with separate closing notes and discrepancy reason', fu
     ]);
 });
 
+it('discards every pending draft from the cashiers current shift', function () {
+    $store = Store::factory()->create();
+    $this->cashier->stores()->attach($store);
+    $register = CashRegister::factory()->create(['store_id' => $store->id]);
+    $shift = CashRegisterShift::factory()->create([
+        'cash_register_id' => $register->id,
+        'user_id' => $this->cashier->id,
+    ]);
+    $firstDraft = SalesOrder::factory()->create([
+        'user_id' => $this->cashier->id,
+        'store_id' => $store->id,
+        'cash_register_shift_id' => $shift->id,
+        'status' => SalesOrderStatus::DRAFT->value,
+        'payment_status' => SalesOrderPaymentStatus::PENDING->value,
+    ]);
+    $secondDraft = SalesOrder::factory()->create([
+        'user_id' => $this->cashier->id,
+        'store_id' => $store->id,
+        'cash_register_shift_id' => $shift->id,
+        'status' => SalesOrderStatus::DRAFT->value,
+        'payment_status' => SalesOrderPaymentStatus::PENDING->value,
+    ]);
+    $completedOrder = SalesOrder::factory()->create([
+        'user_id' => $this->cashier->id,
+        'store_id' => $store->id,
+        'cash_register_shift_id' => $shift->id,
+        'status' => SalesOrderStatus::COMPLETED->value,
+        'payment_status' => SalesOrderPaymentStatus::PAID->value,
+    ]);
+
+    actingAs($this->cashier, 'sanctum')
+        ->getJson(route('api.v1.pos.session.shift.closing-summary'))
+        ->assertSuccessful()
+        ->assertJsonPath('data.open_drafts_count', 2);
+
+    actingAs($this->cashier, 'sanctum')
+        ->deleteJson(route('api.v1.pos.session.shift.drafts.discard'))
+        ->assertSuccessful()
+        ->assertJsonPath('discarded_count', 2);
+
+    expect($firstDraft->refresh()->status)->toBe(SalesOrderStatus::CANCELLED)
+        ->and($secondDraft->refresh()->status)->toBe(SalesOrderStatus::CANCELLED)
+        ->and($completedOrder->refresh()->status)->toBe(SalesOrderStatus::COMPLETED);
+
+    actingAs($this->cashier, 'sanctum')
+        ->patchJson(route('api.v1.pos.session.shift.close'), [
+            'closing_balance' => 0,
+            'discrepancy_reason' => 'No cash sales were recorded.',
+        ])
+        ->assertSuccessful();
+});
+
 it('records a POS cash movement against the authenticated cashiers open shift', function () {
     $shift = CashRegisterShift::factory()->create(['user_id' => $this->cashier->id]);
 
@@ -214,5 +270,9 @@ it('forbids POS API access without the required permissions', function () {
 
     actingAs($user, 'sanctum')
         ->getJson(route('api.v1.pos.registers'))
+        ->assertForbidden();
+
+    actingAs($user, 'sanctum')
+        ->deleteJson(route('api.v1.pos.session.shift.drafts.discard'))
         ->assertForbidden();
 });

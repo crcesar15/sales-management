@@ -31,6 +31,7 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
     Route::post('pos/session/shift/open', [PosSessionController::class, 'openShift'])->name('pos.session.shift.open');
     Route::get('pos/session/shift/closing-summary', [PosSessionController::class, 'closingSummary'])->name('pos.session.shift.closing-summary');
     Route::patch('pos/session/shift/close', [PosSessionController::class, 'closeShift'])->name('pos.session.shift.close');
+    Route::delete('pos/session/shift/drafts', [PosSessionController::class, 'discardDrafts'])->name('pos.session.shift.drafts.discard');
     Route::post('pos/session/shift/movements', [PosSessionController::class, 'addMovement'])->name('pos.session.shift.movements.store');
     Route::post('pos/sales/{salesOrder}/handover-preview', [PosSaleHandoverController::class, 'preview'])
         ->name('pos.sales.handover-preview');

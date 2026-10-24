@@ -28,16 +28,12 @@ final class PosController extends Controller
         private readonly PosSessionService $posSessionService,
     ) {}
 
-    public function index(Request $request): InertiaResponse
+    public function index(): InertiaResponse
     {
         $this->authorize(PermissionsEnum::POS_ACCESS);
 
-        $draft = $this->salesOrderService->getCurrentPosDraft(
-            $request->user() ?? throw new RuntimeException('Unauthenticated.'),
-        );
-
         return Inertia::render('Pos/Index', [
-            'draft' => $draft === null ? null : (new SalesOrderResource($draft))->resolve(),
+            'draft' => null,
         ]);
     }
 
@@ -74,6 +70,7 @@ final class PosController extends Controller
                 'to' => $request->string('to', '')->toString(),
             ],
             'currentShiftId' => $shift?->id,
+            'currentShiftDraftCount' => $shift === null ? 0 : $this->salesOrderService->countPosDrafts($shift, $actor),
         ]);
     }
 
@@ -104,7 +101,9 @@ final class PosController extends Controller
             return redirect()->back()->withErrors(['checkout' => $e->getMessage()]);
         }
 
-        return redirect()->route('pos.sales.payment', $order);
+        return $request->validated('intent') === 'save'
+            ? redirect()->route('pos')
+            : redirect()->route('pos.sales.payment', $order);
     }
 
     public function edit(Request $request, SalesOrder $salesOrder): InertiaResponse|RedirectResponse
@@ -137,7 +136,9 @@ final class PosController extends Controller
             return redirect()->back()->withErrors(['checkout' => $e->getMessage()]);
         }
 
-        return redirect()->route('pos.sales.payment', $order);
+        return $request->validated('intent') === 'save'
+            ? redirect()->route('pos')
+            : redirect()->route('pos.sales.payment', $order);
     }
 
     public function payment(Request $request, SalesOrder $salesOrder): InertiaResponse|RedirectResponse

@@ -101,11 +101,13 @@ function updateDiscountValue(value: number | null): void {
     />
     <small class="mt-2 block text-center text-surface-500 dark:text-surface-400">
       {{
-        total <= 0
-          ? t("Total must be greater than zero")
-          : customerChoiceMade
-            ? t("Payment will be available on the next step")
-            : t("Select a customer or Walk-in before payment")
+        !customerChoiceMade
+          ? t("Select a customer or Walk-in before payment")
+          : total <= 0
+            ? t("A draft can be saved, but the total must be greater than zero to pay")
+            : customerChoiceMade
+              ? t("Payment will be available on the next step")
+              : ""
       }}
     </small>
   </section>

@@ -23,6 +23,7 @@ final class StorePosSaleRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'intent' => ['required', 'string', 'in:save,payment'],
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'is_walk_in' => ['required', 'boolean'],
             'discount_type' => ['required', 'string', 'in:flat,percentage'],

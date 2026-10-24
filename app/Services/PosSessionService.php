@@ -14,7 +14,10 @@ use InvalidArgumentException;
 
 final class PosSessionService
 {
-    public function __construct(private readonly CashRegisterShiftService $shiftService) {}
+    public function __construct(
+        private readonly CashRegisterShiftService $shiftService,
+        private readonly SalesOrderService $salesOrderService,
+    ) {}
 
     public function currentShift(User $user): ?CashRegisterShift
     {
@@ -48,7 +51,7 @@ final class PosSessionService
         return $this->shiftService->openShift($register, $user, $openingBalance, $openingNotes);
     }
 
-    /** @return array{opening_balance: float, cash_sales: float, cash_sales_count: int, cash_in: float, cash_out: float, expected_closing: float} */
+    /** @return array{opening_balance: float, cash_sales: float, cash_sales_count: int, cash_in: float, cash_out: float, expected_closing: float, open_drafts_count: int} */
     public function closingSummary(User $user): array
     {
         return $this->shiftService->reconciliation($this->requiredCurrentShift($user));
@@ -76,7 +79,14 @@ final class PosSessionService
         return $shift->fresh(['register.store', 'cashier']) ?? $shift;
     }
 
-    /** @return array{opening_balance: float, cash_sales: float, cash_sales_count: int, cash_in: float, cash_out: float, expected_closing: float} */
+    public function discardCurrentShiftDrafts(User $user): int
+    {
+        $this->requiredCurrentShift($user);
+
+        return $this->salesOrderService->discardCurrentPosDrafts($user);
+    }
+
+    /** @return array{opening_balance: float, cash_sales: float, cash_sales_count: int, cash_in: float, cash_out: float, expected_closing: float, open_drafts_count: int} */
     public function reconciliation(CashRegisterShift $shift): array
     {
         return $this->shiftService->reconciliation($shift);

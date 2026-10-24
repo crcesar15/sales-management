@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Pos\ClosePosShiftRequest;
+use App\Http\Requests\Api\Pos\DiscardAllPosDraftsRequest;
 use App\Http\Requests\Api\Pos\ListPosRegistersRequest;
 use App\Http\Requests\Api\Pos\OpenPosShiftRequest;
 use App\Http\Requests\Api\Pos\StorePosMovementRequest;
@@ -105,6 +106,20 @@ final class PosSessionController extends Controller
                 'difference' => (float) $shift->difference,
             ],
         ]);
+    }
+
+    public function discardDrafts(DiscardAllPosDraftsRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        try {
+            $discardedCount = $this->posSessionService->discardCurrentShiftDrafts($user);
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['discarded_count' => $discardedCount]);
     }
 
     public function addMovement(StorePosMovementRequest $request): JsonResponse

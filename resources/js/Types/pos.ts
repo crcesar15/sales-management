@@ -65,6 +65,7 @@ export interface ShiftReconciliation {
   cash_in: number;
   cash_out: number;
   expected_closing: number;
+  open_drafts_count: number;
 }
 
 export interface ClosedShiftReconciliation extends ShiftReconciliation {
@@ -87,6 +88,10 @@ export interface PosMovementPayload {
 export interface PosCloseShiftResponse {
   shift: CashRegisterShift;
   summary: ClosedShiftReconciliation;
+}
+
+export interface PosDiscardDraftsResponse {
+  discarded_count: number;
 }
 
 export interface PosStore {

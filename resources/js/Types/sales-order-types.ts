@@ -145,7 +145,7 @@ export type PosSalesOrderResponse = Pick<
   SalesOrder,
   "id" | "user_id" | "store_id" | "cash_register_shift_id" | "status" | "payment_status" | "total" | "items_count" | "created_at"
 > & {
-  customer?: Pick<NonNullable<SalesOrder["customer"]>, "id" | "display_name"> | null;
+  customer?: Pick<NonNullable<SalesOrder["customer"]>, "id" | "display_name" | "tax_id"> | null;
   user?: Pick<UserResponse, "id" | "full_name">;
   store?: Pick<StoreResponse, "id" | "name" | "code">;
 };

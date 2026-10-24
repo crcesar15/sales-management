@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { Button, Message, ProgressSpinner, useToast } from "primevue";
+import { Button, Menu, Message, ProgressSpinner, useConfirm, useToast } from "primevue";
 import PosLayout from "@layouts/pos.vue";
 import RegisterSelectDialog from "./Components/RegisterSelectDialog.vue";
 import PosProductSearch from "./Components/PosProductSearch.vue";
@@ -11,10 +11,11 @@ import CustomerSelect from "@pages/SalesOrders/Components/CustomerSelect.vue";
 import { usePosStore } from "@/Composables/usePosStore";
 import { usePosClient } from "@/Composables/usePosClient";
 import { useStockLedger } from "@composables/useStockLedger";
-import { router, usePage } from "@inertiajs/vue3";
+import { router, useForm, usePage } from "@inertiajs/vue3";
 import { storeToRefs } from "pinia";
 import type { PosCartItem } from "@/Types/pos";
 import type { SalesOrderResponse } from "@/Types/sales-order-types";
+import type { MenuItem } from "primevue/menuitem";
 import { useAuth } from "@composables/useAuth";
 import { route } from "ziggy-js";
 
@@ -28,7 +29,9 @@ const { t } = useI18n();
 const posStore = usePosStore();
 const posClient = usePosClient();
 const page = usePage();
+const confirm = useConfirm();
 const toast = useToast();
+const discardForm = useForm({});
 const { getSetting } = useAuth();
 const { cartItems } = storeToRefs(posStore);
 
@@ -36,7 +39,28 @@ const showRegisterDialog = ref(false);
 const sessionLoading = ref(true);
 const sessionError = ref(false);
 const checkoutProcessing = ref(false);
-const canPay = computed(() => posStore.cartItems.length > 0 && posStore.customerChoiceMade && posStore.total > 0);
+const saveProcessing = ref(false);
+const customerSelectorKey = ref(0);
+const saleMenu = ref();
+const canSave = computed(() => posStore.cartItems.length > 0 && posStore.customerChoiceMade);
+const canPay = computed(
+  () => posStore.cartItems.length > 0 && posStore.customerChoiceMade && posStore.total > 0 && !discardForm.processing,
+);
+const saleMenuItems = computed<MenuItem[]>(() => [
+  {
+    label: t("Save as draft"),
+    icon: "fa fa-floppy-disk",
+    disabled: !canSave.value || checkoutProcessing.value || saveProcessing.value,
+    command: saveDraft,
+  },
+  { separator: true },
+  {
+    label: t("Discard sale"),
+    icon: "fa fa-trash-can",
+    disabled: posStore.cartItems.length === 0 || checkoutProcessing.value || saveProcessing.value || discardForm.processing,
+    command: discardSale,
+  },
+]);
 
 const { getRemainingBase, getRemainingBaseExcludingLine } = useStockLedger(cartItems);
 
@@ -83,10 +107,11 @@ async function loadSession(): Promise<void> {
   }
 }
 
-function checkoutPayload() {
+function checkoutPayload(intent: "save" | "payment") {
   return {
+    intent,
     customer_id: posStore.customer?.id ?? null,
-    is_walk_in: posStore.isWalkIn,
+    is_walk_in: posStore.customer === null && posStore.isWalkIn,
     discount_type: posStore.discountType,
     discount_value: posStore.discountValue,
     items: posStore.cartItems.map((item) => ({
@@ -98,32 +123,97 @@ function checkoutPayload() {
   };
 }
 
-function proceedToPayment(): void {
-  if (!canPay.value || checkoutProcessing.value) return;
+function submitSale(intent: "save" | "payment"): void {
+  if ((intent === "save" ? !canSave.value : !canPay.value) || checkoutProcessing.value || saveProcessing.value || discardForm.processing)
+    return;
 
-  checkoutProcessing.value = true;
+  if (intent === "save") {
+    saveProcessing.value = true;
+  } else {
+    checkoutProcessing.value = true;
+  }
   const options = {
     preserveScroll: true,
     onError: (errors: Record<string, string>) => {
       toast.add({
         severity: "error",
-        summary: t("Unable to continue"),
+        summary: intent === "save" ? t("Unable to save draft") : t("Unable to continue"),
         detail: errors.checkout ?? errors.items ?? t("Please review the sale and try again"),
         life: 4000,
         group: "pos",
       });
     },
+    onSuccess: () => {
+      if (intent === "save") {
+        posStore.clearSale();
+        customerSelectorKey.value += 1;
+        toast.add({ severity: "success", summary: t("Draft saved"), detail: t("Sale saved as draft"), life: 3000, group: "pos" });
+      }
+    },
     onFinish: () => {
       checkoutProcessing.value = false;
+      saveProcessing.value = false;
     },
   };
 
   if (posStore.draftId !== null) {
-    router.put(route("pos.sales.update", posStore.draftId), checkoutPayload(), options);
+    router.put(route("pos.sales.update", posStore.draftId), checkoutPayload(intent), options);
     return;
   }
 
-  router.post(route("pos.sales.store"), checkoutPayload(), options);
+  router.post(route("pos.sales.store"), checkoutPayload(intent), options);
+}
+
+function saveDraft(): void {
+  submitSale("save");
+}
+
+function clearCurrentSale(): void {
+  posStore.clearSale();
+  customerSelectorKey.value += 1;
+  toast.add({ severity: "success", summary: t("Sale discarded"), detail: t("The current sale was discarded"), life: 3000, group: "pos" });
+}
+
+function discardSale(): void {
+  if (posStore.cartItems.length === 0 || discardForm.processing) return;
+
+  confirm.require({
+    header: t("Discard sale"),
+    message: t("Discard this sale and return to an empty cart?"),
+    icon: "fa fa-triangle-exclamation",
+    rejectLabel: t("Keep sale"),
+    acceptLabel: t("Discard"),
+    acceptProps: { severity: "danger" },
+    rejectProps: { severity: "secondary" },
+    accept: () => {
+      if (posStore.draftId === null) {
+        clearCurrentSale();
+        return;
+      }
+
+      discardForm.delete(route("pos.sales.discard", posStore.draftId), {
+        preserveScroll: true,
+        onSuccess: clearCurrentSale,
+        onError: (errors) => {
+          toast.add({
+            severity: "error",
+            summary: t("Unable to discard sale"),
+            detail: errors.checkout ?? t("Please review the sale and try again"),
+            life: 4000,
+            group: "pos",
+          });
+        },
+      });
+    },
+  });
+}
+
+function toggleSaleMenu(event: Event): void {
+  saleMenu.value.toggle(event);
+}
+
+function proceedToPayment(): void {
+  submitSale("payment");
 }
 
 onMounted(async () => {
@@ -135,7 +225,11 @@ onMounted(async () => {
 
   posStore.setTaxRate(Number(getSetting("tax", "tax_rate", "0") ?? 0));
   await loadSession();
-  if (props.draft !== null) posStore.hydrateDraft(props.draft);
+  if (props.draft !== null) {
+    posStore.hydrateDraft(props.draft);
+  } else {
+    posStore.clearSale();
+  }
 });
 </script>
 
@@ -172,11 +266,24 @@ onMounted(async () => {
         class="col-span-7 flex min-h-0 flex-col overflow-hidden rounded-lg border border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900"
       >
         <div class="border-b border-surface-200 p-4 dark:border-surface-700">
-          <h2 class="m-0 text-lg font-semibold">{{ t("Current sale") }}</h2>
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="m-0 text-lg font-semibold">{{ t("Current sale") }}</h2>
+            <Button
+              v-tooltip.top="t('Sale actions')"
+              icon="fa fa-ellipsis-vertical"
+              severity="secondary"
+              rounded
+              :aria-label="t('Sale actions')"
+              @click="toggleSaleMenu"
+            />
+            <Menu ref="saleMenu" :model="saleMenuItems" popup />
+          </div>
           <div class="mt-3">
             <CustomerSelect
+              :key="customerSelectorKey"
               :model-value="posStore.customer?.id ?? null"
               :initial-customer="posStore.customer"
+              :is-walk-in="posStore.isWalkIn"
               toast-group="pos"
               @select="posStore.selectCustomer"
               @walk-in="posStore.selectWalkIn"
