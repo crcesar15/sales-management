@@ -1112,7 +1112,10 @@
   "Select a register to start a sale": "Seleccione una caja para iniciar una venta",
   "Current sale": "Venta actual",
   "Find products": "Buscar productos",
+  "Barcode mode": "Modo código de barras",
   "Search by product, identifier or barcode": "Buscar por producto, identificador o código de barras",
+  "Search by name, identifier or barcode, then select a product.": "Busca por nombre, identificador o código de barras y luego selecciona un producto.",
+  "Exact barcode matches are added automatically. Products with multiple sale units require selection.": "Las coincidencias exactas de código de barras se agregan automáticamente. Los productos con varias unidades de venta requieren selección.",
 
   "Search the catalog": "Buscar en el catálogo",
   "Products matching your search will appear here": "Los productos que coincidan con su búsqueda aparecerán aquí",

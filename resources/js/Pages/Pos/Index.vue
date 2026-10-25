@@ -47,6 +47,7 @@ const saveProcessing = ref(false);
 const customerSelectorKey = ref(0);
 const saleMenu = ref();
 const productPickerVisible = ref(false);
+const barcodeMode = ref(false);
 const checkoutBarHeight = shallowRef(0);
 const canSave = computed(() => posStore.cartItems.length > 0 && posStore.customerChoiceMade);
 const canPay = computed(
@@ -285,6 +286,7 @@ onMounted(async () => {
       >
         <PosProductSearch
           input-id="pos-product-search-desktop"
+          v-model:barcode-mode="barcodeMode"
           :store-id="posStore.store?.id ?? null"
           :cart-items="cartItems"
           :get-remaining-base="getRemainingBase"
@@ -371,6 +373,7 @@ onMounted(async () => {
 
       <PosProductPicker
         v-model:visible="productPickerVisible"
+        v-model:barcode-mode="barcodeMode"
         :store-id="posStore.store?.id ?? null"
         :cart-items="cartItems"
         :get-remaining-base="getRemainingBase"

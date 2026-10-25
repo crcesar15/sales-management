@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Badge, Button, IconField, InputIcon, InputText, Message, Tag, useToast } from "primevue";
+import { Badge, Button, IconField, InputIcon, InputText, Message, Tag, ToggleSwitch, useToast } from "primevue";
 import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
@@ -29,6 +29,7 @@ const emit = defineEmits<{
   (e: "add", item: PosCartItem): void;
 }>();
 
+const barcodeMode = defineModel<boolean>("barcodeMode", { default: false });
 const { t } = useI18n();
 const { formatCurrency } = useCurrencyFormatter();
 const toast = useToast();
@@ -40,6 +41,7 @@ const loading = ref(false);
 const failed = ref(false);
 const searched = ref(false);
 let requestId = 0;
+let barcodeModeVersion = 0;
 
 const units = computed<SellableUnit[]>(() =>
   results.value.flatMap((variant) => {
@@ -122,8 +124,9 @@ function canAdd(unit: SellableUnit): boolean {
   return remaining === null || remaining > 0;
 }
 
-async function searchProducts(commit = false): Promise<void> {
+async function searchProducts(autoAddBarcode = false): Promise<void> {
   const filter = query.value.trim();
+  const currentBarcodeModeVersion = barcodeModeVersion;
   if (filter.length < 2 || props.storeId === null) {
     results.value = [];
     loading.value = false;
@@ -142,7 +145,7 @@ async function searchProducts(commit = false): Promise<void> {
     const data = response.data?.data ?? [];
     results.value = Array.isArray(data) ? (data as VariantSearchResult[]) : [];
 
-    if (commit) handleScanCommit();
+    if (autoAddBarcode && barcodeMode.value && currentBarcodeModeVersion === barcodeModeVersion) handleBarcodeCommit(filter);
   } catch {
     if (currentRequest !== requestId) return;
 
@@ -170,59 +173,18 @@ function onSearchKeydown(event: KeyboardEvent): void {
 function submitSearch(): void {
   if (!shouldSearch.value) return;
 
-  const code = query.value.trim();
-  const cartMatch = findCartMatch(code);
-
-  if (cartMatch !== null) {
-    if (canIncrementCartItem(cartMatch)) {
-      incrementCartItem(cartMatch);
-    } else {
-      toast.add({
-        severity: "warn",
-        summary: t("Stock limit reached"),
-        detail: t("No more stock is available for this product"),
-        life: 3000,
-        group: "pos",
-      });
-    }
-
-    return;
-  }
-
-  void searchProducts(true);
+  void searchProducts(barcodeMode.value);
 }
 
-function findCartMatch(code: string): PosCartItem | null {
-  const matches = props.cartItems.filter((item) => !item.has_multiple_sale_units && (item.barcode === code || item.identifier === code));
+function handleBarcodeCommit(barcode: string): void {
+  const barcodeMatches = results.value.filter((variant) => variant.barcode === barcode);
+  if (barcodeMatches.length !== 1) return;
 
-  return matches.length === 1 ? (matches[0] ?? null) : null;
-}
+  const [variant] = barcodeMatches;
+  const matchingUnits = units.value.filter((unit) => unit.variant.id === variant.id);
+  if (matchingUnits.length !== 1) return;
 
-function canIncrementCartItem(item: PosCartItem): boolean {
-  const remainingBase = props.getRemainingBase(item.product_variant_id);
-  if (remainingBase === null) return true;
-
-  const conversionFactor = item.conversion_factor > 0 ? item.conversion_factor : 1;
-
-  return remainingBase >= conversionFactor;
-}
-
-function incrementCartItem(item: PosCartItem): void {
-  emit("add", {
-    ...item,
-    id: crypto.randomUUID(),
-    quantity: 1,
-    line_total: item.unit_price,
-  });
-
-  clearSearch();
-}
-
-function handleScanCommit(): void {
-  const availableUnits = units.value;
-  if (availableUnits.length !== 1) return;
-
-  const [unit] = availableUnits;
+  const [unit] = matchingUnits;
 
   if (!canAdd(unit)) {
     toast.add({
@@ -294,13 +256,27 @@ watch(query, () => {
   resetResults();
 });
 
+watch(barcodeMode, () => {
+  barcodeModeVersion++;
+});
+
 defineExpose({ focusSearch, resetSearch });
 </script>
 
 <template>
   <section class="flex min-h-0 flex-1 flex-col" :aria-label="t('Products')">
     <div class="border-b border-surface-200 p-4 dark:border-surface-700">
-      <label :for="inputId ?? 'pos-product-search'" class="mb-2 block text-lg font-semibold">{{ t("Find products") }}</label>
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <label :for="inputId ?? 'pos-product-search'" class="text-lg font-semibold">{{ t("Find products") }}</label>
+        <div class="flex items-center gap-2">
+          <label :for="`${inputId ?? 'pos-product-search'}-barcode-mode`" class="text-sm font-medium">{{ t("Barcode mode") }}</label>
+          <ToggleSwitch
+            :input-id="`${inputId ?? 'pos-product-search'}-barcode-mode`"
+            :aria-describedby="`${inputId ?? 'pos-product-search'}-barcode-mode-help`"
+            v-model="barcodeMode"
+          />
+        </div>
+      </div>
       <div class="flex gap-2">
         <IconField class="min-w-0 flex-1">
           <InputIcon class="fa fa-search" />
@@ -329,6 +305,7 @@ defineExpose({ focusSearch, resetSearch });
         <Button
           type="button"
           icon="fa fa-search"
+          :aria-label="t('Search')"
           :disabled="!shouldSearch || loading"
           :loading="loading"
           raised
@@ -336,8 +313,12 @@ defineExpose({ focusSearch, resetSearch });
           @click="submitSearch"
         />
       </div>
-      <small class="mt-2 block text-surface-500 dark:text-surface-400">
-        {{ t("Type at least 2 characters and press Enter to search") }}
+      <small :id="`${inputId ?? 'pos-product-search'}-barcode-mode-help`" class="mt-2 block text-surface-500 dark:text-surface-400">
+        {{
+          barcodeMode
+            ? t("Exact barcode matches are added automatically. Products with multiple sale units require selection.")
+            : t("Search by name, identifier or barcode, then select a product.")
+        }}
       </small>
     </div>
 

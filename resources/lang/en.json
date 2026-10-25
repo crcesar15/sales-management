@@ -1110,7 +1110,10 @@
   "Select a register to start a sale": "Select a register to start a sale",
   "Current sale": "Current sale",
   "Find products": "Find products",
+  "Barcode mode": "Barcode mode",
   "Search by product, identifier or barcode": "Search by product, identifier or barcode",
+  "Search by name, identifier or barcode, then select a product.": "Search by name, identifier or barcode, then select a product.",
+  "Exact barcode matches are added automatically. Products with multiple sale units require selection.": "Exact barcode matches are added automatically. Products with multiple sale units require selection.",
 
   "Search the catalog": "Search the catalog",
   "Products matching your search will appear here": "Products matching your search will appear here",

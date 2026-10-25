@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Button, Dialog } from "primevue";
 import { nextTick, ref } from "vue";
-import { useI18n } from "vue-i18n";
 import PosProductSearch from "./PosProductSearch.vue";
 import type { PosCartItem } from "@/Types/pos";
 
@@ -16,7 +15,7 @@ const emit = defineEmits<{
 }>();
 
 const visible = defineModel<boolean>("visible", { default: false });
-const { t } = useI18n();
+const barcodeMode = defineModel<boolean>("barcodeMode", { default: false });
 const search = ref<InstanceType<typeof PosProductSearch>>();
 
 function focusSearch(): void {
@@ -45,20 +44,14 @@ function resetSearch(): void {
   >
     <template #header>
       <div class="flex min-w-0 flex-1 items-center justify-end gap-2">
-        <Button
-          icon="fa fa-times"
-          text
-          rounded
-          severity="secondary"
-          class="min-h-11 shrink-0"
-          @click="visible = false"
-        />
+        <Button icon="fa fa-times" text rounded severity="secondary" class="min-h-11 shrink-0" @click="visible = false" />
       </div>
     </template>
 
     <PosProductSearch
       ref="search"
       input-id="pos-product-search-mobile"
+      v-model:barcode-mode="barcodeMode"
       :store-id="props.storeId"
       :cart-items="props.cartItems"
       :get-remaining-base="props.getRemainingBase"
