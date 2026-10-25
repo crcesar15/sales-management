@@ -113,6 +113,15 @@ export interface PosFilters {
 
 export type PosCartItem = SalesOrderLineItemForm;
 
+export interface PosSellableUnit {
+  key: string;
+  variant: VariantSearchResult;
+  saleUnitId: number | null;
+  saleUnitName: string;
+  conversionFactor: number;
+  unitPrice: number;
+}
+
 export interface PosAddItemOptions {
   keepProductPickerOpen?: boolean;
 }
@@ -139,4 +148,4 @@ export interface PosPaymentPayload {
   qr_reference: string | null;
   qr_confirmed: boolean;
 }
-import type { CustomerOption, SalesOrderLineItemForm } from "@/Types/sales-order-types";
+import type { CustomerOption, SalesOrderLineItemForm, VariantSearchResult } from "@/Types/sales-order-types";

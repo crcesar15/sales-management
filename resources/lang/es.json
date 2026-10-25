@@ -1266,5 +1266,8 @@
   "Edit price": "Editar precio",
   "Line total": "Total de línea",
   "Remove discount": "Quitar descuento",
-  "Reset price": "Restablecer precio"
+  "Reset price": "Restablecer precio",
+  "Grid view": "Vista de cuadrícula",
+  "List view": "Vista de lista",
+  "Results view": "Vista de resultados"
 }

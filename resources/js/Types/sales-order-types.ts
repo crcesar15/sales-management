@@ -243,6 +243,7 @@ export interface VariantSearchResult {
   price: number;
   stock: number | null;
   minimum_stock_level: number | null;
+  thumbnail_url?: string | null;
   product?: {
     id: number;
     name: string;

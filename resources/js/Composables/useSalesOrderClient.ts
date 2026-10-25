@@ -9,14 +9,20 @@ export function useSalesOrderClient() {
    * Search product variants by name/identifier.
    * Returns enriched data including stock, price, brand, and sale units for AutoComplete suggestions.
    * When `storeId` is provided, stock is scoped to that store's active batches only.
+   * When `withThumbnail` is enabled, each result also carries a `thumbnail_url`.
    */
-  const searchVariantsApi = async (filter: string, storeId?: number | null, signal?: AbortSignal) => {
+  const searchVariantsApi = async (
+    filter: string,
+    storeId?: number | null,
+    signal?: AbortSignal,
+    options: { withThumbnail?: boolean } = {},
+  ) => {
     if (!filter || filter.length < 2) return { data: [] };
     return await apiClient.get(route("api.v1.variants.search"), {
       signal,
       params: {
         filter,
-        includes: "saleUnits",
+        includes: options.withThumbnail ? "saleUnits,thumbnail" : "saleUnits",
         ...(storeId ? { store_id: storeId } : {}),
       },
     });

@@ -1264,5 +1264,8 @@
   "Edit price": "Edit price",
   "Line total": "Line total",
   "Remove discount": "Remove discount",
-  "Reset price": "Reset price"
+  "Reset price": "Reset price",
+  "Grid view": "Grid view",
+  "List view": "List view",
+  "Results view": "Results view"
 }

@@ -1,23 +1,16 @@
 <script setup lang="ts">
-import { Badge, Button, IconField, InputIcon, InputText, Message, Tag, ToggleSwitch, useToast } from "primevue";
+import { Button, IconField, InputIcon, InputText, Message, SelectButton, ToggleSwitch, useToast } from "primevue";
 import { computed, nextTick, onScopeDispose, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
+import { usePosProductView, type PosProductView } from "@composables/usePosProductView";
+import { usePosUnitStock } from "@composables/usePosUnitStock";
 import { useSalesOrderClient } from "@composables/useSalesOrderClient";
 import { isScannerSupported } from "@composables/useBarcodeScanner";
 import ProductInfoPopover from "./ProductInfoPopover.vue";
+import PosProductResults from "./PosProductResults.vue";
 import PosScannerDialog from "./PosScannerDialog.vue";
-import type { PosAddItemOptions, PosCartItem, PosProductInfo } from "@/Types/pos";
+import type { PosAddItemOptions, PosCartItem, PosProductInfo, PosSellableUnit } from "@/Types/pos";
 import type { VariantSearchResult } from "@/Types/sales-order-types";
-
-interface SellableUnit {
-  key: string;
-  variant: VariantSearchResult;
-  saleUnitId: number | null;
-  saleUnitName: string;
-  conversionFactor: number;
-  unitPrice: number;
-}
 
 type BarcodeCommitStatus = "added" | "needs-selection" | "no-match" | "stock-unavailable";
 type ProductSearchStatus = BarcodeCommitStatus | "cancelled" | "error" | null;
@@ -43,9 +36,15 @@ const emit = defineEmits<{
 
 const barcodeMode = defineModel<boolean>("barcodeMode", { default: false });
 const { t } = useI18n();
-const { formatCurrency } = useCurrencyFormatter();
 const toast = useToast();
 const { searchVariantsApi } = useSalesOrderClient();
+const { productView, setProductView } = usePosProductView();
+const { canAdd } = usePosUnitStock((variantId) => props.getRemainingBase(variantId));
+
+const viewOptions = computed<Array<{ value: PosProductView; icon: string; label: string }>>(() => [
+  { value: "grid", icon: "fa fa-table-cells-large", label: t("Grid view") },
+  { value: "list", icon: "fa fa-list", label: t("List view") },
+]);
 
 const query = ref("");
 const results = ref<VariantSearchResult[]>([]);
@@ -59,11 +58,11 @@ let barcodeModeVersion = 0;
 let scannerSessionId = 0;
 let activeSearchController: AbortController | null = null;
 
-const units = computed<SellableUnit[]>(() =>
+const units = computed<PosSellableUnit[]>(() =>
   results.value.flatMap((variant) => {
     const baseUnitName = variant.product?.measurement_unit?.name ?? t("Unit");
     const basePrice = Number(variant.price) || 0;
-    const baseUnit: SellableUnit = {
+    const baseUnit: PosSellableUnit = {
       key: `${variant.id}:base`,
       variant,
       saleUnitId: null,
@@ -106,38 +105,9 @@ const infoData = computed<PosProductInfo | null>(() => {
   };
 });
 
-function toggleInfo(event: Event, unit: SellableUnit): void {
+function toggleInfo(event: Event, unit: PosSellableUnit): void {
   infoUnitKey.value = unit.key;
   infoPopover.value?.toggle(event);
-}
-
-function remainingInUnit(unit: SellableUnit): number | null {
-  const remainingBase = props.getRemainingBase(unit.variant.id) ?? unit.variant.stock ?? null;
-  if (remainingBase === null) return null;
-
-  return Math.floor(remainingBase / unit.conversionFactor);
-}
-
-function stockSeverity(unit: SellableUnit): "success" | "warn" | "danger" {
-  const remaining = remainingInUnit(unit);
-  if (remaining === null || remaining > (unit.variant.minimum_stock_level ?? 0)) return "success";
-  if (remaining <= 0) return "danger";
-
-  return "warn";
-}
-
-function stockLabel(unit: SellableUnit): string {
-  const remaining = remainingInUnit(unit);
-  if (remaining === null) return t("Stock unavailable");
-  if (remaining <= 0) return t("Out of stock");
-
-  return `${t("Available")}: ${String(remaining)}`;
-}
-
-function canAdd(unit: SellableUnit): boolean {
-  const remaining = remainingInUnit(unit);
-
-  return remaining === null || remaining > 0;
 }
 
 function cancelSearch(): void {
@@ -164,7 +134,7 @@ async function searchProducts(filterValue: string, options: ProductSearchOptions
   const currentRequest = ++requestId;
 
   try {
-    const response = await searchVariantsApi(filter, props.storeId, controller.signal);
+    const response = await searchVariantsApi(filter, props.storeId, controller.signal, { withThumbnail: true });
     if (controller.signal.aborted || currentRequest !== requestId) return "cancelled";
 
     const data = response.data?.data ?? [];
@@ -313,7 +283,7 @@ function resetSearch(): void {
   clearSearch();
 }
 
-function addUnit(unit: SellableUnit, options?: PosAddItemOptions): void {
+function addUnit(unit: PosSellableUnit, options?: PosAddItemOptions): void {
   if (!canAdd(unit)) return;
 
   const variant = unit.variant;
@@ -376,13 +346,29 @@ defineExpose({ focusSearch, resetSearch });
     <div class="border-b border-surface-200 p-4 dark:border-surface-700">
       <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
         <label :for="inputId ?? 'pos-product-search'" class="text-lg font-semibold">{{ t("Find products") }}</label>
-        <div class="flex items-center gap-2">
-          <label :for="`${inputId ?? 'pos-product-search'}-barcode-mode`" class="text-sm font-medium">{{ t("Barcode mode") }}</label>
-          <ToggleSwitch
-            :input-id="`${inputId ?? 'pos-product-search'}-barcode-mode`"
-            :aria-describedby="`${inputId ?? 'pos-product-search'}-barcode-mode-help`"
-            v-model="barcodeMode"
-          />
+        <div class="flex w-full justify-between">
+          <SelectButton
+            :model-value="productView"
+            :options="viewOptions"
+            option-value="value"
+            option-label="label"
+            :allow-empty="false"
+            :aria-label="t('Results view')"
+            @update:model-value="setProductView"
+          >
+            <template #option="{ option }">
+              <i v-tooltip.bottom="option.label" :class="option.icon" aria-hidden="true" />
+              <span class="sr-only">{{ option.label }}</span>
+            </template>
+          </SelectButton>
+          <div class="flex items-center gap-2">
+            <label :for="`${inputId ?? 'pos-product-search'}-barcode-mode`" class="text-sm font-medium">{{ t("Barcode mode") }}</label>
+            <ToggleSwitch
+              :input-id="`${inputId ?? 'pos-product-search'}-barcode-mode`"
+              :aria-describedby="`${inputId ?? 'pos-product-search'}-barcode-mode-help`"
+              v-model="barcodeMode"
+            />
+          </div>
         </div>
       </div>
       <div class="flex gap-2">
@@ -453,8 +439,31 @@ defineExpose({ focusSearch, resetSearch });
         <small>{{ t("Products matching your search will appear here") }}</small>
       </div>
 
-      <div v-else-if="loading" class="flex flex-col gap-3 p-4" aria-label="Loading">
-        <div v-for="index in 5" :key="index" class="h-20 animate-pulse rounded bg-surface-100 dark:bg-surface-800" />
+      <div
+        v-else-if="loading"
+        class="p-4"
+        :class="
+          productView === 'grid'
+            ? 'grid grid-cols-[repeat(auto-fill,minmax(max(9.5rem,calc((100%_-_24px)/3)),1fr))] gap-3'
+            : 'flex flex-col gap-3'
+        "
+        aria-label="Loading"
+      >
+        <template v-if="productView === 'grid'">
+          <div
+            v-for="index in 5"
+            :key="index"
+            class="flex flex-col overflow-hidden rounded-lg border border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900"
+          >
+            <div class="aspect-square animate-pulse bg-surface-100 dark:bg-surface-800" />
+            <div class="p-3">
+              <div class="h-24 animate-pulse rounded bg-surface-100 dark:bg-surface-800" />
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <div v-for="index in 5" :key="index" class="h-20 animate-pulse rounded bg-surface-100 dark:bg-surface-800" />
+        </template>
       </div>
 
       <Message v-else-if="failed" severity="error" :closable="false" class="m-4">
@@ -473,48 +482,14 @@ defineExpose({ focusSearch, resetSearch });
         <small>{{ t("Try another product name, identifier or barcode") }}</small>
       </div>
 
-      <ul v-else class="divide-y divide-surface-200 dark:divide-surface-700">
-        <li v-for="unit in units" :key="unit.key" class="p-4">
-          <div class="flex items-start gap-3">
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="font-bold text-lg">{{ unit.variant.product?.name ?? "—" }}</span>
-                <Badge v-if="unit.variant.option_values" :value="unit.variant.option_values" severity="primary" />
-                <i
-                  class="fa fa-circle-info shrink-0 cursor-pointer text-surface-400 hover:text-primary dark:text-surface-500 dark:hover:text-primary"
-                  role="button"
-                  tabindex="0"
-                  :aria-label="`${t('Product Details')}: ${unit.variant.product?.name ?? t('Product')}`"
-                  @click="toggleInfo($event, unit)"
-                  @keydown.enter.prevent="toggleInfo($event, unit)"
-                />
-              </div>
-              <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-surface-600 dark:text-surface-200">
-                <span v-if="unit.variant.product?.brand?.name">{{ unit.variant.product.brand.name }}</span>
-                <span>|</span>
-                <span>
-                  {{ unit.saleUnitName }}
-                  <template v-if="unit.conversionFactor !== 1">
-                    = {{ unit.conversionFactor }} {{ unit.variant.product?.measurement_unit?.name ?? t("Unit") }}
-                  </template>
-                </span>
-              </div>
-              <div class="mt-3 flex flex-wrap items-center gap-2">
-                <span class="font-semibold tabular-nums">{{ formatCurrency(String(unit.unitPrice)) }}</span>
-                <Tag :value="stockLabel(unit)" :severity="stockSeverity(unit)" rounded />
-              </div>
-            </div>
-            <Button
-              icon="fa fa-plus"
-              :aria-label="`${t('Add')} ${unit.variant.product?.name ?? t('Product')}`"
-              :disabled="!canAdd(unit)"
-              raised
-              class="min-h-11 min-w-11 shrink-0"
-              @click="addUnit(unit)"
-            />
-          </div>
-        </li>
-      </ul>
+      <PosProductResults
+        v-else
+        :units="units"
+        :view="productView"
+        :get-remaining-base="getRemainingBase"
+        @add="addUnit"
+        @info="toggleInfo"
+      />
     </div>
 
     <ProductInfoPopover ref="infoPopover" :info="infoData" />
