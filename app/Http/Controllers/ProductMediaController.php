@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Products\StoreProductMediaRequest;
 use App\Models\PendingMediaUpload;
 use App\Services\PendingMediaService;
 use Illuminate\Http\JsonResponse;
@@ -18,13 +19,9 @@ final class ProductMediaController extends Controller
         $this->pendingMediaService = $pendingMediaService;
     }
 
-    public function store(): JsonResponse
+    public function store(StoreProductMediaRequest $request): JsonResponse
     {
-        request()->validate([
-            'file' => ['required', 'image'],
-        ]);
-
-        $pending = $this->pendingMediaService->upload(request()->file('file'));
+        $pending = $this->pendingMediaService->upload($request->file('file'));
 
         $media = $pending->getFirstMedia('temp');
 
@@ -32,7 +29,7 @@ final class ProductMediaController extends Controller
             'id' => $pending->id,
             'thumb_url' => $media?->getUrl('thumb'),
             'full_url' => $media?->getUrl(),
-        ]);
+        ], 201);
     }
 
     public function destroy(PendingMediaUpload $pendingMediaUpload): Response

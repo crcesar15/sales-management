@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Button, Dialog, FileUpload, Galleria, useToast } from "primevue";
-import { ref, computed } from "vue";
+import { Button, Dialog, Galleria, useToast } from "primevue";
+import { computed, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
 import axios from "axios";
@@ -16,6 +16,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   "update:pendingMedia": [value: MediaItem[]];
   "update:removeMediaIds": [value: number[]];
+  "update:processing": [value: boolean];
 }>();
 const toast = useToast();
 const { t } = useI18n();
@@ -26,6 +27,9 @@ interface MediaItem {
   full_url: string;
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
 // Combined display list
 const displayFiles = computed(() => [...(props.existingMedia ?? []), ...props.pendingMedia]);
 
@@ -34,7 +38,7 @@ const galleriaItems = computed(() =>
   displayFiles.value.map((f) => ({
     itemImageSrc: f.full_url,
     thumbnailImageSrc: f.thumb_url,
-    alt: "Product image",
+    alt: t("Product image"),
   })),
 );
 
@@ -48,35 +52,106 @@ const lightboxActiveIndex = ref(0);
 // Cropper state
 const cropperVisible = ref(false);
 const cropperImageSrc = ref("");
-const cropperRef = ref();
-const fileUploadRef = ref();
+const isReading = ref(false);
+const isUploading = ref(false);
+const isRemoving = ref(false);
+const cropperRef = useTemplateRef<InstanceType<typeof Cropper>>("cropperRef");
+const galleryInputRef = useTemplateRef<HTMLInputElement>("galleryInputRef");
+const cameraInputRef = useTemplateRef<HTMLInputElement>("cameraInputRef");
 
-const openFileUpload = () => {
+const isProcessing = computed(() => isReading.value || isUploading.value || isRemoving.value);
+
+watch(isProcessing, (value) => emit("update:processing", value), { immediate: true });
+
+const resetCropper = () => {
   cropperVisible.value = false;
   cropperImageSrc.value = "";
-  fileUploadRef.value?.choose();
 };
 
-const onUploader = (event: { files: File[] | File }) => {
-  const file = Array.isArray(event.files) ? event.files[0] : event.files;
-  loadImage(file);
+const openGalleryPicker = () => {
+  if (!isProcessing.value) {
+    galleryInputRef.value?.click();
+  }
+};
+
+const openCameraPicker = () => {
+  if (!isProcessing.value) {
+    cameraInputRef.value?.click();
+  }
+};
+
+const showError = (detail: string) => {
+  toast.add({ severity: "error", summary: t("Error"), detail: t(detail), life: 3000 });
+};
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (axios.isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data?.message ?? t(fallback);
+  }
+
+  return t(fallback);
+};
+
+const readFileAsDataUrl = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Unable to read image"));
+    reader.onabort = () => reject(new Error("Unable to read image"));
+    reader.readAsDataURL(file);
+  });
+};
+
+const validateImage = (file: File): boolean => {
+  if (!ACCEPTED_IMAGE_TYPES.has(file.type)) {
+    showError("Unsupported image format. Please choose a JPG, PNG, or WebP image.");
+
+    return false;
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    showError("Image must not exceed 10 MB.");
+
+    return false;
+  }
+
+  return true;
+};
+
+const loadImage = async (file: File) => {
+  if (isProcessing.value || !validateImage(file)) {
+    return;
+  }
+
+  isReading.value = true;
+
+  try {
+    cropperImageSrc.value = await readFileAsDataUrl(file);
+    cropperVisible.value = true;
+  } catch {
+    showError("Unable to read image");
+  } finally {
+    isReading.value = false;
+  }
+};
+
+const onFileSelected = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+
+  if (file) {
+    void loadImage(file);
+  }
 };
 
 const onDrop = (event: DragEvent) => {
   isDragOver.value = false;
   const file = event.dataTransfer?.files?.[0];
-  if (file && file.type.startsWith("image/")) {
-    loadImage(file);
-  }
-};
 
-const loadImage = (file: File) => {
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => {
-    cropperImageSrc.value = String(reader.result);
-    cropperVisible.value = true;
-  };
+  if (file) {
+    void loadImage(file);
+  }
 };
 
 const openLightbox = (index: number) => {
@@ -84,7 +159,7 @@ const openLightbox = (index: number) => {
   lightboxVisible.value = true;
 };
 
-const flip = (x: number, y: number) => {
+const flip = (x: boolean, y: boolean) => {
   cropperRef.value?.flip(x, y);
 };
 
@@ -92,44 +167,80 @@ const rotate = (angle: number) => {
   cropperRef.value?.rotate(angle);
 };
 
-const saveCropped = () => {
-  const { canvas } = cropperRef.value.getResult();
-  canvas.toBlob((blob: Blob) => {
+const canvasToBlob = (canvas: HTMLCanvasElement): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob);
+
+          return;
+        }
+
+        reject(new Error("Unable to process image"));
+      },
+      "image/webp",
+      0.9,
+    );
+  });
+};
+
+const saveCropped = async () => {
+  if (isUploading.value) {
+    return;
+  }
+
+  const canvas = cropperRef.value?.getResult().canvas;
+
+  if (!canvas) {
+    showError("Unable to process image");
+
+    return;
+  }
+
+  isUploading.value = true;
+
+  try {
+    const blob = await canvasToBlob(canvas);
+
+    if (blob.size > MAX_FILE_SIZE) {
+      showError("Image must not exceed 10 MB.");
+
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("file", blob, `${Date.now()}.webp`);
+    const extension = blob.type === "image/webp" ? "webp" : "png";
+    formData.append("file", blob, `${Date.now()}.${extension}`);
 
     toast.add({ severity: "info", summary: t("Uploading..."), life: 3000 });
 
-    axios
-      .post(route("products.media.store"), formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((response) => {
-        const data: PendingMediaResponse = response.data;
-        const newMedia: MediaItem = {
-          id: data.id,
-          thumb_url: data.thumb_url,
-          full_url: data.full_url,
-        };
-        emit("update:pendingMedia", [...props.pendingMedia, newMedia]);
-        toast.add({
-          severity: "success",
-          summary: t("Success"),
-          detail: t("File uploaded"),
-          life: 3000,
-        });
-      })
-      .catch((error) => {
-        toast.add({
-          severity: "error",
-          summary: t("Error"),
-          detail: t(error?.response?.data?.message || "Upload failed"),
-          life: 3000,
-        });
-      });
-
-    cropperVisible.value = false;
-  });
+    const response = await axios.post<PendingMediaResponse>(route("products.media.store"), formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    const newMedia: MediaItem = {
+      id: response.data.id,
+      thumb_url: response.data.thumb_url,
+      full_url: response.data.full_url,
+    };
+    emit("update:pendingMedia", [...props.pendingMedia, newMedia]);
+    resetCropper();
+    toast.add({
+      severity: "success",
+      summary: t("Success"),
+      detail: t("File uploaded"),
+      life: 3000,
+    });
+  } catch (error: unknown) {
+    toast.add({
+      severity: "error",
+      summary: t("Error"),
+      detail: getErrorMessage(error, "Upload failed"),
+      life: 3000,
+    });
+  } finally {
+    isUploading.value = false;
+  }
 };
 
 const removeFile = (file: MediaItem) => {
@@ -138,6 +249,12 @@ const removeFile = (file: MediaItem) => {
   if (isExisting) {
     emit("update:removeMediaIds", [...props.removeMediaIds, file.id]);
   } else {
+    if (isProcessing.value) {
+      return;
+    }
+
+    isRemoving.value = true;
+
     axios
       .delete(route("products.media.destroy", file.id))
       .then(() => {
@@ -156,9 +273,12 @@ const removeFile = (file: MediaItem) => {
         toast.add({
           severity: "error",
           summary: t("Error"),
-          detail: t(error?.response?.data?.message || "Remove failed"),
+          detail: getErrorMessage(error, "Remove failed"),
           life: 3000,
         });
+      })
+      .finally(() => {
+        isRemoving.value = false;
       });
   }
 };
@@ -169,13 +289,12 @@ const removeFile = (file: MediaItem) => {
     <!-- Drop Zone (empty state) -->
     <div
       v-if="displayFiles.length === 0"
-      class="relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 transition-colors duration-150 cursor-pointer"
+      class="relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 transition-colors duration-150"
       :class="
         isDragOver
           ? 'border-primary-400 bg-primary-50 dark:border-primary-300 dark:bg-primary-500/10'
           : 'border-slate-300 bg-slate-50 hover:border-primary-300 hover:bg-primary-50/50 dark:border-slate-600 dark:bg-slate-800/50 dark:hover:border-primary-400 dark:hover:bg-primary-500/5'
       "
-      @click="openFileUpload()"
       @dragenter.prevent="isDragOver = true"
       @dragover.prevent="isDragOver = true"
       @dragleave.prevent="isDragOver = false"
@@ -193,11 +312,21 @@ const removeFile = (file: MediaItem) => {
       </div>
       <div class="text-center">
         <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
-          {{ t("Drop images here or click to browse") }}
+          {{ t("Drop images here") }}
         </p>
         <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">
           {{ t("WebP, PNG, JPG up to 10MB") }}
         </p>
+      </div>
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <Button
+          :label="t('Choose image')"
+          icon="fa-solid fa-images"
+          severity="secondary"
+          :disabled="isProcessing"
+          @click="openGalleryPicker"
+        />
+        <Button :label="t('Take photo')" icon="fa-solid fa-camera" :disabled="isProcessing" @click="openCameraPicker" />
       </div>
     </div>
 
@@ -213,9 +342,9 @@ const removeFile = (file: MediaItem) => {
           <!-- Image -->
           <img :src="file.thumb_url || file.full_url" :alt="t('Product image')" class="h-full w-full object-cover" />
 
-          <!-- Hover Overlay -->
+          <!-- Persistent controls keep touch actions available on every device. -->
           <div
-            class="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity duration-150 group-hover:opacity-100"
+            class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-gradient-to-t from-black/60 to-transparent px-2 pb-2 pt-8"
           >
             <Button
               v-tooltip.top="t('Preview')"
@@ -224,6 +353,7 @@ const removeFile = (file: MediaItem) => {
               severity="secondary"
               size="small"
               class="!bg-white/90 !text-slate-700 hover:!bg-white dark:!bg-slate-800/90 dark:!text-slate-200 dark:hover:!bg-slate-800"
+              :disabled="isProcessing"
               @click="openLightbox(index)"
             />
             <Button
@@ -233,6 +363,7 @@ const removeFile = (file: MediaItem) => {
               severity="secondary"
               size="small"
               class="!bg-white/90 !text-slate-700 hover:!bg-white dark:!bg-slate-800/90 dark:!text-slate-200 dark:hover:!bg-slate-800"
+              :disabled="isProcessing"
               @click="removeFile(file)"
             />
           </div>
@@ -240,39 +371,34 @@ const removeFile = (file: MediaItem) => {
 
         <!-- Add Card -->
         <div
-          class="flex aspect-square cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 transition-colors duration-150 hover:border-primary-400 hover:bg-primary-50/50 dark:border-slate-600 dark:bg-slate-800/50 dark:hover:border-primary-400 dark:hover:bg-primary-500/5"
-          @click="openFileUpload()"
+          class="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-3 transition-colors duration-150 hover:border-primary-400 hover:bg-primary-50/50 dark:border-slate-600 dark:bg-slate-800/50 dark:hover:border-primary-400 dark:hover:bg-primary-500/5"
           @dragenter.prevent="isDragOver = true"
           @dragover.prevent="isDragOver = true"
           @dragleave.prevent="isDragOver = false"
           @drop.prevent="onDrop"
         >
-          <div class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
-            <i class="fa-solid fa-plus text-xl" />
-            <span class="text-xs">{{ t("Add") }}</span>
-          </div>
+          <Button
+            icon="fa-solid fa-images"
+            severity="secondary"
+            text
+            :label="t('Choose image')"
+            :disabled="isProcessing"
+            @click="openGalleryPicker"
+          />
+          <Button icon="fa-solid fa-camera" text :label="t('Take photo')" :disabled="isProcessing" @click="openCameraPicker" />
         </div>
       </div>
     </div>
 
-    <!-- Hidden FileUpload -->
-    <FileUpload
-      ref="fileUploadRef"
-      :pt="{ root: { class: 'hidden' } }"
-      mode="basic"
-      :auto="true"
-      accept="image/*"
-      :max-file-size="10000000"
-      :multiple="false"
-      :custom-upload="true"
-      @uploader="onUploader"
-    />
+    <input ref="galleryInputRef" type="file" accept="image/*" class="hidden" @change="onFileSelected" />
+    <input ref="cameraInputRef" type="file" accept="image/*" capture="environment" class="hidden" @change="onFileSelected" />
 
     <!-- Cropper Dialog -->
     <Dialog
       v-model:visible="cropperVisible"
       modal
       :closable="false"
+      :close-on-escape="!isUploading"
       :style="{ width: '50rem' }"
       :breakpoints="{ '1199px': '80vw', '575px': '95vw' }"
       :pt="{
@@ -310,7 +436,7 @@ const removeFile = (file: MediaItem) => {
             rounded
             size="small"
             class="!text-white hover:!bg-white/20"
-            @click="flip(0, 1)"
+            @click="flip(false, true)"
           />
           <Button
             v-tooltip.top="t('Flip Horizontal')"
@@ -319,7 +445,7 @@ const removeFile = (file: MediaItem) => {
             rounded
             size="small"
             class="!text-white hover:!bg-white/20"
-            @click="flip(1, 0)"
+            @click="flip(true, false)"
           />
           <div class="mx-1 h-5 w-px bg-white/30" />
           <Button
@@ -345,8 +471,8 @@ const removeFile = (file: MediaItem) => {
 
       <template #footer>
         <div class="flex items-center justify-end gap-2 pt-2">
-          <Button :label="t('Cancel')" severity="secondary" @click="cropperVisible = false" />
-          <Button :label="t('Crop & Save')" @click="saveCropped" />
+          <Button :label="t('Cancel')" severity="secondary" :disabled="isUploading" @click="resetCropper" />
+          <Button :label="t('Crop & Save')" :loading="isUploading" :disabled="isUploading" @click="saveCropped" />
         </div>
       </template>
     </Dialog>

@@ -98,9 +98,14 @@ const existingMedia = computed(() => {
 // Media state
 const pendingMedia = ref<MediaItem[]>([]);
 const removeMediaIds = ref<number[]>([]);
+const mediaProcessing = ref(false);
 
 const onRemoveMediaIdsUpdate = (ids: number[]) => {
   removeMediaIds.value = ids;
+};
+
+const onMediaProcessingUpdate = (processing: boolean) => {
+  mediaProcessing.value = processing;
 };
 
 // Schema
@@ -160,6 +165,17 @@ const onDescriptionInput = () => {};
 
 // Submit
 const onSubmit = handleSubmit((values) => {
+  if (mediaProcessing.value) {
+    toast.add({
+      severity: "warn",
+      summary: t("Warning"),
+      detail: t("Please wait for media uploads to finish."),
+      life: 3000,
+    });
+
+    return;
+  }
+
   const payload = {
     ...values,
     pending_media_ids: pendingMedia.value.map((m) => m.id),
@@ -169,6 +185,8 @@ const onSubmit = handleSubmit((values) => {
 
   router.put(route("products.update", props.product.id), payload, {
     onSuccess: () => {
+      pendingMedia.value = [];
+      removeMediaIds.value = [];
       toast.add({
         severity: "success",
         summary: t("Success"),
@@ -199,7 +217,15 @@ const onSubmit = handleSubmit((values) => {
         </h4>
       </div>
       <div class="flex flex-col justify-center">
-        <Button icon="fa fa-save" :label="t('Save')" class="uppercase" raised :loading="isSubmitting" @click="onSubmit()" />
+        <Button
+          icon="fa fa-save"
+          :label="t('Save')"
+          class="uppercase"
+          raised
+          :loading="isSubmitting"
+          :disabled="mediaProcessing"
+          @click="onSubmit()"
+        />
       </div>
     </div>
 
@@ -256,6 +282,7 @@ const onSubmit = handleSubmit((values) => {
               :existing-media="existingMedia"
               :remove-media-ids="removeMediaIds"
               @update:remove-media-ids="onRemoveMediaIdsUpdate"
+              @update:processing="onMediaProcessingUpdate"
             />
           </template>
         </Card>
@@ -424,7 +451,6 @@ const onSubmit = handleSubmit((values) => {
             </div>
           </template>
         </Card>
-
       </div>
     </div>
     <CreateBrandDialog v-model:show-modal="showBrandEditor" @created="onBrandCreated" />

@@ -152,9 +152,25 @@ const onDescriptionInput = () => {};
 
 // Pending media tracking
 const pendingMedia = ref<Array<{ id: number; thumb_url: string; full_url: string }>>([]);
+const mediaProcessing = ref(false);
+
+const onMediaProcessingUpdate = (processing: boolean) => {
+  mediaProcessing.value = processing;
+};
 
 // Submit
 const onSubmit = handleSubmit((values) => {
+  if (mediaProcessing.value) {
+    toast.add({
+      severity: "warn",
+      summary: t("Warning"),
+      detail: t("Please wait for media uploads to finish."),
+      life: 3000,
+    });
+
+    return;
+  }
+
   const payload: Record<string, unknown> = {
     ...values,
     pending_media_ids: pendingMedia.value.map((m) => m.id),
@@ -220,7 +236,15 @@ const onSubmit = handleSubmit((values) => {
         </h4>
       </div>
       <div class="flex flex-col justify-center">
-        <Button icon="fa fa-save" :label="t('Save')" class="uppercase" raised :loading="isSubmitting" @click="onSubmit()" />
+        <Button
+          icon="fa fa-save"
+          :label="t('Save')"
+          class="uppercase"
+          raised
+          :loading="isSubmitting"
+          :disabled="mediaProcessing"
+          @click="onSubmit()"
+        />
       </div>
     </div>
 
@@ -272,7 +296,12 @@ const onSubmit = handleSubmit((values) => {
             {{ t("Images") }}
           </template>
           <template #content>
-            <ProductImages v-model:pending-media="pendingMedia" :remove-media-ids="[]" @update:remove-media-ids="() => {}" />
+            <ProductImages
+              v-model:pending-media="pendingMedia"
+              :remove-media-ids="[]"
+              @update:remove-media-ids="() => {}"
+              @update:processing="onMediaProcessingUpdate"
+            />
           </template>
         </Card>
 
