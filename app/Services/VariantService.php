@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Catalog;
 use App\Models\ProductVariant;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 final class VariantService
@@ -117,6 +118,57 @@ final class VariantService
         $perPage = $config['per_page'];
 
         return $query->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Search sellable product variants by product name, identifier, or barcode.
+     * Exact barcode and identifier matches rank first. Optional includes add
+     * sale units, purchase units, or a thumbnail without extra queries.
+     *
+     * @param  array{filter: string, includes: array<int, string>, store_id: int}  $config
+     * @return EloquentCollection<int, ProductVariant>
+     */
+    public function search(array $config): EloquentCollection
+    {
+        $filter = $config['filter'];
+        $includes = $config['includes'];
+        $storeId = $config['store_id'];
+
+        $relations = ['product.brand', 'product.measurementUnit', 'values.option'];
+
+        if (in_array('saleUnits', $includes, true)) {
+            $relations[] = 'activeSaleUnits';
+        }
+
+        if (in_array('purchaseUnits', $includes, true)) {
+            $relations[] = 'activePurchaseUnits';
+        }
+
+        if (in_array('thumbnail', $includes, true)) {
+            $relations[] = 'images';
+            $relations[] = 'product.media';
+        }
+
+        $query = ProductVariant::query()
+            ->with($relations)
+            ->where('status', '!=', 'archived')
+            ->where(function ($query) use ($filter): void {
+                $query->whereHas('product', fn ($productQuery) => $productQuery->where('name', 'like', "%{$filter}%"))
+                    ->orWhere('identifier', 'like', "%{$filter}%")
+                    ->orWhere('barcode', 'like', "%{$filter}%");
+            });
+
+        if ($storeId > 0) {
+            $query->withSum([
+                'batches as fulfillable_stock' => fn ($query) => $query->fulfillableAt($storeId),
+            ], 'remaining_quantity');
+        }
+
+        return $query
+            ->orderByRaw('case when product_variants.barcode = ? then 0 when product_variants.identifier = ? then 1 else 2 end', [$filter, $filter])
+            ->orderBy('identifier')
+            ->limit(20)
+            ->get();
     }
 
     /**

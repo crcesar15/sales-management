@@ -8,6 +8,7 @@ use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Catalog\VariantVendorResource;
 use App\Http\Resources\Product\ProductVariantCollection;
+use App\Http\Resources\Product\VariantSearchCollection;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
@@ -94,105 +95,15 @@ final class VariantsController extends Controller
         return response()->json(['data' => $variant], 200);
     }
 
-    public function search(Request $request): JsonResponse
+    public function search(Request $request, VariantService $variantService): JsonResponse
     {
-        $filter = $request->string('filter', '')->value();
-        $includes = $request->string('includes', '')->value();
-        $includeList = array_filter(explode(',', $includes));
-        $storeId = $request->integer('store_id', 0);
-        $relations = ['product.brand', 'values.option'];
+        $variants = $variantService->search([
+            'filter' => $request->string('filter', '')->value(),
+            'includes' => array_filter(explode(',', $request->string('includes', '')->value())),
+            'store_id' => $request->integer('store_id', 0),
+        ]);
 
-        if (in_array('saleUnits', $includeList, true)) {
-            $relations[] = 'activeSaleUnits';
-        }
-
-        if (in_array('purchaseUnits', $includeList, true)) {
-            $relations[] = 'activePurchaseUnits';
-        }
-
-        $query = ProductVariant::query()
-            ->with($relations)
-            ->where('status', '!=', 'archived')
-            ->where(function ($q) use ($filter): void {
-                $q->whereHas('product', function ($sq) use ($filter): void {
-                    $sq->where('name', 'like', "%{$filter}%");
-                })
-                    ->orWhere('identifier', 'like', "%{$filter}%")
-                    ->orWhere('barcode', 'like', "%{$filter}%");
-            });
-
-        if ($storeId > 0) {
-            $query->withSum([
-                'batches as fulfillable_stock' => fn ($query) => $query->fulfillableAt($storeId),
-            ], 'remaining_quantity');
-        }
-
-        $variants = $query
-            ->orderByRaw('case when product_variants.barcode = ? then 0 when product_variants.identifier = ? then 1 else 2 end', [$filter, $filter])
-            ->orderBy('identifier')
-            ->limit(20)
-            ->get()
-            ->map(function ($variant) use ($storeId) {
-                $brandName = $variant->product?->brand?->name;
-
-                $optionValues = $variant->values->isNotEmpty()
-                    ? $variant->values->map(fn ($v) => $v->value)->implode(' / ')
-                    : null;
-
-                $variantOptions = $variant->values
-                    ->map(fn ($value) => [
-                        'option_name' => $value->option?->name,
-                        'value' => $value->value,
-                    ])
-                    ->values()
-                    ->toArray();
-
-                $stock = $storeId > 0
-                    ? (int) ($variant->getAttribute('fulfillable_stock') ?? 0)
-                    : $variant->stock;
-
-                $data = [
-                    'id' => $variant->id,
-                    'identifier' => $variant->identifier,
-                    'barcode' => $variant->barcode,
-                    'option_values' => $optionValues,
-                    'variant_options' => $variantOptions,
-                    'price' => (float) $variant->price,
-                    'stock' => $stock,
-                    'minimum_stock_level' => $variant->minimum_stock_level,
-                    'has_expiration' => $variant->has_expiration,
-                    'product' => $variant->product ? [
-                        'id' => $variant->product->id,
-                        'name' => $variant->product->name,
-                        'brand' => $brandName ? ['id' => $variant->product->brand->id, 'name' => $brandName] : null,
-                        'measurement_unit' => $variant->product->measurementUnit ? [
-                            'id' => $variant->product->measurementUnit->id,
-                            'name' => $variant->product->measurementUnit->name,
-                        ] : null,
-                    ] : null,
-                ];
-
-                if ($variant->relationLoaded('activeSaleUnits') && $variant->activeSaleUnits->isNotEmpty()) {
-                    $data['sale_units'] = $variant->activeSaleUnits->map(fn ($unit) => [
-                        'id' => $unit->id,
-                        'name' => $unit->name,
-                        'conversion_factor' => $unit->conversion_factor,
-                        'price' => (float) $unit->price,
-                    ])->values()->toArray();
-                }
-
-                if ($variant->relationLoaded('activePurchaseUnits') && $variant->activePurchaseUnits->isNotEmpty()) {
-                    $data['purchase_units'] = $variant->activePurchaseUnits->map(fn ($unit) => [
-                        'id' => $unit->id,
-                        'name' => $unit->name,
-                        'conversion_factor' => $unit->conversion_factor,
-                    ])->values()->toArray();
-                }
-
-                return $data;
-            });
-
-        return response()->json(['data' => $variants], 200);
+        return (new VariantSearchCollection($variants))->response()->setStatusCode(200);
     }
 
     public function purchaseUnits(ProductVariant $variant): JsonResponse
