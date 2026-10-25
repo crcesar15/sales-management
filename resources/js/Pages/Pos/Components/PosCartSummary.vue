@@ -95,6 +95,7 @@ function removeDiscount(): void {
             :model-value="discountValue"
             :mode="discountType === 'flat' ? 'currency' : 'decimal'"
             :currency="discountType === 'flat' ? currencyCode : undefined"
+            show-clear
             :suffix="discountType === 'percentage' ? '%' : undefined"
             :min="0"
             :max="maximumDiscount"
@@ -102,7 +103,7 @@ function removeDiscount(): void {
             :max-fraction-digits="2"
             :disabled="subTotal === 0"
             :aria-label="t('Discount value')"
-            input-class="min-h-11 w-28 text-right tabular-nums"
+            input-class="min-h-11 w-18 text-right tabular-nums"
             @update:model-value="updateDiscountValue($event)"
           />
         </div>

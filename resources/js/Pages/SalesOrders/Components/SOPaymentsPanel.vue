@@ -119,6 +119,7 @@ function showApplyRemaining(index: number): boolean {
           :model-value="payment.amount"
           mode="currency"
           :currency="currencyCode"
+          show-clear
           :min="0"
           :max="maximumPaymentAmount(index)"
           :min-fraction-digits="2"

@@ -133,6 +133,7 @@ function doClose(): void {
             v-bind="closingBalanceAttrs"
             mode="currency"
             :currency="currencyCode"
+            show-clear
             :min="0"
             :min-fraction-digits="2"
             :max-fraction-digits="2"

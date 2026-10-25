@@ -167,7 +167,7 @@ export default {
           </div>
           <div class="col-span-12 flex flex-col">
             <label for="product-price">{{ $t("Price") }}</label>
-            <InputNumber id="product-price" v-model="price" mode="currency" currency="BOB" :readonly="false" />
+            <InputNumber id="product-price" v-model="price" mode="currency" currency="BOB" show-clear :readonly="false" />
           </div>
           <div class="col-span-12 flex flex-col">
             <label for="product-payment-term">{{ $t("Payment Term") }}</label>

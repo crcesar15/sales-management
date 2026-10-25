@@ -284,6 +284,7 @@ watch(
                 :max-fraction-digits="4"
                 mode="currency"
                 :currency="currencyCode"
+                show-clear
                 fluid
                 input-class="min-h-[44px] w-full tabular-nums 2xl:!text-sm"
                 @update:model-value="(val: number | null) => updatePrice(index, val ?? item.price)"

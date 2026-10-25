@@ -89,6 +89,7 @@ function updateNotes(val: string | null) {
               :model-value="discountDisplayValue"
               :mode="discountMode === 'percentage' ? 'decimal' : 'currency'"
               :currency="discountMode === 'amount' ? currencyCode : undefined"
+              show-clear
               :suffix="discountMode === 'percentage' ? '%' : undefined"
               :min="0"
               :max="discountMax"

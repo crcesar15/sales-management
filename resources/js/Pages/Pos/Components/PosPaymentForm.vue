@@ -129,6 +129,7 @@ const submit = handleSubmit((values) => {
             input-id="cash-received"
             mode="currency"
             :currency="currencyCode"
+            show-clear
             :min="0"
             :min-fraction-digits="2"
             :max-fraction-digits="2"
@@ -160,6 +161,7 @@ const submit = handleSubmit((values) => {
             input-id="cash-amount"
             mode="currency"
             :currency="currencyCode"
+            show-clear
             :min="0.01"
             :max="maximumSplitCash"
             :min-fraction-digits="2"

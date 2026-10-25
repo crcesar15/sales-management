@@ -141,6 +141,7 @@ const submit = handleSubmit((values) => {
           v-bind="openingBalanceAttrs"
           mode="currency"
           :currency="currencyCode"
+          show-clear
           :min-fraction-digits="2"
           :max-fraction-digits="2"
           :class="{ 'p-invalid': submitCount > 0 && !!errors.opening_balance }"

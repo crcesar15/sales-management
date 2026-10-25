@@ -85,6 +85,7 @@ const submit = handleSubmit(async (values) => {
           v-bind="amountAttrs"
           mode="currency"
           :currency="currencyCode"
+          show-clear
           :min="0.01"
           :min-fraction-digits="2"
           :max-fraction-digits="2"

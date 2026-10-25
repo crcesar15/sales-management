@@ -591,6 +591,7 @@ watch(formType, () => {
             v-bind="priceAttrs"
             mode="currency"
             :currency="currency"
+            show-clear
             :min="0"
             :invalid="submitCount > 0 && !!errors.price"
           />

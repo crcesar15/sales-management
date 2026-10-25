@@ -182,6 +182,7 @@ const breakdownText = computed(() => {
           v-model="purchasePrice"
           mode="currency"
           :currency="currency"
+          show-clear
           :min="0"
           :disabled="!canEdit"
           placeholder="0"
@@ -198,6 +199,7 @@ const breakdownText = computed(() => {
             v-model="marginValue"
             :mode="marginType === 'amount' ? 'currency' : undefined"
             :currency="marginType === 'amount' ? currency : undefined"
+            show-clear
             :suffix="marginType === 'percent' ? '%' : undefined"
             :min-fraction-digits="marginType === 'percent' ? 2 : undefined"
             :max-fraction-digits="marginType === 'percent' ? 2 : undefined"
@@ -227,6 +229,7 @@ const breakdownText = computed(() => {
         v-model="price"
         mode="currency"
         :currency="currency"
+        show-clear
         :min="0"
         :disabled="!canEdit"
         placeholder="0"

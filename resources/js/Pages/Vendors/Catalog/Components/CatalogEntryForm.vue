@@ -178,6 +178,7 @@ defineExpose({
                 v-bind="priceAttrs"
                 mode="currency"
                 currency="BOB"
+                show-clear
                 :min="0"
                 :class="{ 'p-invalid': submitCount > 0 && !!errors.price }"
               />

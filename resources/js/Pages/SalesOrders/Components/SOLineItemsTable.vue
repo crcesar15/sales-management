@@ -246,6 +246,7 @@ function hasPriceOverride(item: LineItem): boolean {
                 :max-fraction-digits="4"
                 mode="currency"
                 :currency="currencyCode"
+                show-clear
                 fluid
                 input-class="min-h-[44px] w-full !text-[16px] tabular-nums xl:!text-sm"
                 @update:model-value="(val: number) => updatePrice(index, val)"
