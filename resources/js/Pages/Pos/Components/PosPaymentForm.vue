@@ -36,7 +36,7 @@ const { defineField, errors, handleSubmit, setFieldError, setFieldValue } = useF
   validationSchema: schema,
   initialValues: {
     payment_mode: "cash",
-    cash_received: props.total,
+    cash_received: null,
     cash_amount: null,
     qr_reference: null,
     qr_confirmed: false,
@@ -63,11 +63,11 @@ const maximumSplitCash = computed(() => Math.max(0, props.total - 0.01));
 watch(paymentMode, (mode) => {
   setFieldValue("qr_confirmed", false);
   if (mode === "cash") {
-    setFieldValue("cash_received", props.total);
+    setFieldValue("cash_received", null);
   } else if (mode === "qr") {
     setFieldValue("cash_amount", null);
   } else {
-    setFieldValue("cash_amount", Math.floor((props.total / 2) * 100) / 100);
+    setFieldValue("cash_amount", null);
   }
 });
 

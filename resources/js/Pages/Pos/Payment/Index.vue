@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { router, useForm } from "@inertiajs/vue3";
-import { Button, useConfirm, useToast } from "primevue";
+import { Button, Dialog, Message, useConfirm, useToast } from "primevue";
 import axios from "axios";
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, shallowRef, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
 import PosLayout from "@layouts/pos.vue";
@@ -32,6 +32,28 @@ const paymentError = ref<string>();
 const handoverPreview = ref<SalesOrderHandoverPreview | null>(null);
 const handoverLoading = ref(false);
 const handoverError = ref<string>();
+const handoverDialogVisible = shallowRef(false);
+const isWideHandoverLayout = shallowRef(window.matchMedia("(min-width: 1280px)").matches);
+const shouldFocusPaymentAfterDialogClose = shallowRef(false);
+const paymentSection = useTemplateRef<HTMLElement>("paymentSection");
+
+const handoverLayoutQuery = window.matchMedia("(min-width: 1280px)");
+
+function updateHandoverLayout(event: MediaQueryListEvent): void {
+  isWideHandoverLayout.value = event.matches;
+
+  if (!event.matches || !handoverDialogVisible.value) return;
+
+  shouldFocusPaymentAfterDialogClose.value = true;
+  handoverDialogVisible.value = false;
+}
+
+function focusPaymentAfterDialogClose(): void {
+  if (!shouldFocusPaymentAfterDialogClose.value) return;
+
+  shouldFocusPaymentAfterDialogClose.value = false;
+  void nextTick(() => paymentSection.value?.focus());
+}
 
 async function generateHandoverPreview(): Promise<void> {
   handoverLoading.value = true;
@@ -90,7 +112,12 @@ function discardDraft(): void {
   });
 }
 
-onMounted(() => void generateHandoverPreview());
+onMounted(() => {
+  handoverLayoutQuery.addEventListener("change", updateHandoverLayout);
+  void generateHandoverPreview();
+});
+
+onUnmounted(() => handoverLayoutQuery.removeEventListener("change", updateHandoverLayout));
 </script>
 
 <template>
@@ -137,19 +164,43 @@ onMounted(() => void generateHandoverPreview());
             <strong>{{ formatCurrency(String(order.tax_amount)) }}</strong>
           </span>
         </div>
+
+        <div class="mt-4 border-t border-surface-200 pt-4 dark:border-surface-700 xl:hidden">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="min-w-0">
+              <p class="m-0 font-medium">{{ t("Products to collect") }}</p>
+              <p v-if="handoverLoading" class="m-0 mt-1 text-sm text-surface-500 dark:text-surface-400" aria-live="polite">
+                <i class="fa fa-spinner fa-spin mr-1" aria-hidden="true" />
+                {{ t("Generating handover list") }}
+              </p>
+            </div>
+            <Button
+              :label="t('Products to collect')"
+              icon="fa fa-boxes-stacked"
+              severity="secondary"
+              outlined
+              class="min-h-12 shrink-0"
+              aria-controls="pos-handover-dialog"
+              aria-haspopup="dialog"
+              :aria-expanded="handoverDialogVisible"
+              @click="handoverDialogVisible = true"
+            />
+          </div>
+
+          <Message v-if="handoverError" severity="error" :closable="false" class="mt-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span>{{ handoverError }}</span>
+              <Button :label="t('Retry')" icon="fa fa-rotate" severity="danger" text @click="generateHandoverPreview" />
+            </div>
+          </Message>
+        </div>
       </section>
 
       <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <PosHandoverPanel
-          class="xl:col-start-2 xl:row-start-1"
-          :preview="handoverPreview"
-          :loading="handoverLoading"
-          :error="handoverError"
-          @regenerate="generateHandoverPreview"
-        />
-
         <section
-          class="rounded-lg border border-surface-200 bg-surface-0 p-5 dark:border-surface-700 dark:bg-surface-900 xl:col-start-1 xl:row-start-1"
+          ref="paymentSection"
+          tabindex="-1"
+          class="rounded-lg border border-surface-200 bg-surface-0 p-5 outline-none dark:border-surface-700 dark:bg-surface-900 xl:col-start-1 xl:row-start-1"
         >
           <PosPaymentForm
             :total="order.total"
@@ -159,7 +210,41 @@ onMounted(() => void generateHandoverPreview());
             @submit="submitPayment"
           />
         </section>
+
+        <PosHandoverPanel
+          v-if="isWideHandoverLayout"
+          class="xl:col-start-2 xl:row-start-1"
+          :preview="handoverPreview"
+          :loading="handoverLoading"
+          :error="handoverError"
+          @regenerate="generateHandoverPreview"
+        />
       </div>
+
+      <Dialog
+        id="pos-handover-dialog"
+        v-model:visible="handoverDialogVisible"
+        modal
+        dismissable-mask
+        :header="t('Products to collect')"
+        :draggable="false"
+        :style="{ maxHeight: 'calc(100dvh - 1rem)' }"
+        class="mx-2 w-[calc(100vw-1rem)] max-w-3xl sm:mx-4 sm:w-[calc(100vw-2rem)]"
+        :pt="{ content: { class: '!overflow-y-auto !p-4 sm:!p-5' }, footer: { class: '!px-4 !pb-4 sm:!px-5 sm:!pb-5' } }"
+        @after-hide="focusPaymentAfterDialogClose"
+      >
+        <PosHandoverPanel
+          embedded
+          :preview="handoverPreview"
+          :loading="handoverLoading"
+          :error="handoverError"
+          @regenerate="generateHandoverPreview"
+        />
+
+        <template #footer>
+          <Button :label="t('Back to payment')" severity="secondary" @click="handoverDialogVisible = false" />
+        </template>
+      </Dialog>
     </div>
   </div>
 </template>

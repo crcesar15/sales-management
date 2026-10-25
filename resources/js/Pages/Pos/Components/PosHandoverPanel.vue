@@ -4,10 +4,11 @@ import { useI18n } from "vue-i18n";
 import FulfillmentAllocationList from "@pages/SalesOrders/Components/FulfillmentAllocationList.vue";
 import type { SalesOrderHandoverPreview } from "@/Types/sales-order-types";
 
-defineProps<{
+const props = defineProps<{
   preview: SalesOrderHandoverPreview | null;
   loading: boolean;
   error?: string;
+  embedded?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -19,10 +20,14 @@ const { t } = useI18n();
 
 <template>
   <section
-    class="rounded-lg border border-surface-200 bg-surface-0 p-5 dark:border-surface-700 dark:bg-surface-900"
+    :class="[
+      props.embedded
+        ? 'flex flex-col gap-4'
+        : 'rounded-lg border border-surface-200 bg-surface-0 p-5 dark:border-surface-700 dark:bg-surface-900',
+    ]"
     :aria-label="t('Products to collect')"
   >
-    <header class="mb-4 flex items-start justify-between gap-4">
+    <header v-if="!props.embedded" class="mb-4 flex items-start justify-between gap-4">
       <div>
         <h2 class="m-0 text-xl font-bold">{{ t("Products to collect") }}</h2>
         <p class="m-0 mt-1 text-sm text-surface-500 dark:text-surface-400">
@@ -31,6 +36,10 @@ const { t } = useI18n();
       </div>
       <i class="fa fa-boxes-stacked mt-1 text-xl text-primary-600 dark:text-primary-400" aria-hidden="true" />
     </header>
+
+    <p v-else class="m-0 text-sm text-surface-500 dark:text-surface-400">
+      {{ t("Collect the listed batches before confirming the sale.") }}
+    </p>
 
     <div v-if="loading" class="flex flex-col gap-4" aria-live="polite">
       <span class="sr-only">{{ t("Generating handover list") }}</span>
