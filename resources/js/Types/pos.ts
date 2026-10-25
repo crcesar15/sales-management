@@ -113,6 +113,10 @@ export interface PosFilters {
 
 export type PosCartItem = SalesOrderLineItemForm;
 
+export interface PosAddItemOptions {
+  keepProductPickerOpen?: boolean;
+}
+
 export interface PosProductInfo {
   product_name: string;
   brand_name: string | null;

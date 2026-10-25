@@ -10,9 +10,10 @@ export function useSalesOrderClient() {
    * Returns enriched data including stock, price, brand, and sale units for AutoComplete suggestions.
    * When `storeId` is provided, stock is scoped to that store's active batches only.
    */
-  const searchVariantsApi = async (filter: string, storeId?: number | null) => {
+  const searchVariantsApi = async (filter: string, storeId?: number | null, signal?: AbortSignal) => {
     if (!filter || filter.length < 2) return { data: [] };
     return await apiClient.get(route("api.v1.variants.search"), {
+      signal,
       params: {
         filter,
         includes: "saleUnits",

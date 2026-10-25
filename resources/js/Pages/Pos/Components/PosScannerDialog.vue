@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Button, Dialog, ProgressSpinner } from "primevue";
 import { useBarcodeScanner, type ScannerErrorType } from "@composables/useBarcodeScanner";
 
-const emit = defineEmits<{
-  (e: "detected", code: string): void;
+const props = defineProps<{
+  processCode: (code: string) => Promise<void>;
 }>();
 
 const visible = defineModel<boolean>("visible", { default: false });
@@ -13,10 +13,20 @@ const { t } = useI18n();
 
 const video = ref<HTMLVideoElement>();
 const starting = ref(false);
+const processing = ref(false);
 const error = ref<ScannerErrorType | null>(null);
+let startAttempt = 0;
+let processAttempt = 0;
 
-const { start, stop } = useBarcodeScanner((code: string) => {
-  emit("detected", code);
+const { start, stop } = useBarcodeScanner(async (code: string) => {
+  const attempt = ++processAttempt;
+  processing.value = true;
+
+  try {
+    await props.processCode(code);
+  } finally {
+    if (attempt === processAttempt) processing.value = false;
+  }
 });
 
 const showRetry = computed(() => error.value !== null && error.value !== "unsupported" && error.value !== "insecure-context");
@@ -52,32 +62,49 @@ const errorIcon = computed<string>(() => {
 async function startScanner(): Promise<void> {
   if (!visible.value) return;
 
+  const attempt = ++startAttempt;
   starting.value = true;
   error.value = null;
   await nextTick();
 
+  if (attempt !== startAttempt || !visible.value) return;
+
   const videoEl = video.value;
   if (videoEl === undefined) {
+    if (attempt !== startAttempt) return;
+
     starting.value = false;
     error.value = "unknown";
     return;
   }
 
   const startError = await start(videoEl);
-  starting.value = false;
+  if (attempt !== startAttempt || !visible.value) return;
 
-  if (!visible.value) {
-    stop();
-    return;
-  }
+  starting.value = false;
   error.value = startError;
 }
 
 function stopScanner(): void {
+  startAttempt++;
+  processAttempt++;
   stop();
   starting.value = false;
+  processing.value = false;
   error.value = null;
 }
+
+function handleHide(): void {
+  if (!visible.value) stopScanner();
+}
+
+watch(
+  visible,
+  (isVisible) => {
+    if (!isVisible) stopScanner();
+  },
+  { flush: "sync" },
+);
 </script>
 
 <template>
@@ -90,7 +117,7 @@ function stopScanner(): void {
     :style="{ width: 'min(440px, 94vw)' }"
     data-testid="pos-scanner-dialog"
     @show="startScanner"
-    @hide="stopScanner"
+    @hide="handleHide"
   >
     <div class="flex flex-col gap-3">
       <div class="relative overflow-hidden rounded-lg border border-surface-200 bg-black dark:border-surface-700">
@@ -98,6 +125,10 @@ function stopScanner(): void {
         <div v-if="starting" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80">
           <ProgressSpinner style="width: 36px; height: 36px" />
           <span class="text-white">{{ t("Starting camera...") }}</span>
+        </div>
+        <div v-else-if="processing" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80">
+          <ProgressSpinner style="width: 36px; height: 36px" />
+          <span class="text-white">{{ t("Searching products") }}</span>
         </div>
         <div v-else-if="error" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 px-6 text-center">
           <i :class="errorIcon" class="text-3xl text-white" aria-hidden="true" />

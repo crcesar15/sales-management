@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Button, Dialog } from "primevue";
-import { nextTick, ref } from "vue";
+import { nextTick, ref, watch } from "vue";
 import PosProductSearch from "./PosProductSearch.vue";
-import type { PosCartItem } from "@/Types/pos";
+import type { PosAddItemOptions, PosCartItem } from "@/Types/pos";
 
 const props = defineProps<{
   storeId: number | null;
@@ -11,7 +11,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "add", item: PosCartItem): void;
+  (e: "add", item: PosCartItem, options?: PosAddItemOptions): void;
 }>();
 
 const visible = defineModel<boolean>("visible", { default: false });
@@ -25,6 +25,22 @@ function focusSearch(): void {
 function resetSearch(): void {
   search.value?.resetSearch();
 }
+
+function addItem(item: PosCartItem, options?: PosAddItemOptions): void {
+  emit("add", item, options);
+}
+
+function handleHide(): void {
+  if (!visible.value) resetSearch();
+}
+
+watch(
+  visible,
+  (isVisible) => {
+    if (!isVisible) resetSearch();
+  },
+  { flush: "sync" },
+);
 </script>
 
 <template>
@@ -40,7 +56,7 @@ function resetSearch(): void {
       content: { class: '!flex !min-h-0 !flex-1 !p-0' },
     }"
     @show="focusSearch"
-    @hide="resetSearch"
+    @hide="handleHide"
   >
     <template #header>
       <div class="flex min-w-0 flex-1 items-center justify-end gap-2">
@@ -56,7 +72,7 @@ function resetSearch(): void {
       :cart-items="props.cartItems"
       :get-remaining-base="props.getRemainingBase"
       :focus-on-clear="false"
-      @add="emit('add', $event)"
+      @add="addItem"
     />
   </Dialog>
 </template>

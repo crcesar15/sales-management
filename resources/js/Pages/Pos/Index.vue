@@ -15,7 +15,7 @@ import { usePosClient } from "@/Composables/usePosClient";
 import { useStockLedger } from "@composables/useStockLedger";
 import { router, useForm, usePage } from "@inertiajs/vue3";
 import { storeToRefs } from "pinia";
-import type { PosCartItem } from "@/Types/pos";
+import type { PosAddItemOptions, PosCartItem } from "@/Types/pos";
 import type { SalesOrderResponse } from "@/Types/sales-order-types";
 import type { MenuItem } from "primevue/menuitem";
 import { useAuth } from "@composables/useAuth";
@@ -82,10 +82,13 @@ function updateCheckoutBarHeight(height: number): void {
   checkoutBarHeight.value = height;
 }
 
-function addCartItem(item: PosCartItem): void {
+function addCartItem(item: PosCartItem, options?: PosAddItemOptions): void {
   if (posStore.addCartItem(item)) {
-    productPickerVisible.value = false;
-    void nextTick(() => document.getElementById("pos-add-products")?.focus());
+    if (!options?.keepProductPickerOpen) {
+      productPickerVisible.value = false;
+      void nextTick(() => document.getElementById("pos-add-products")?.focus());
+    }
+
     toast.add({ severity: "success", summary: t("Added"), detail: t("Product added to the sale"), life: 2000, group: "pos" });
     return;
   }
