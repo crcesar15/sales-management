@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, shallowRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Button, Menu, Message, ProgressSpinner, useConfirm, useToast } from "primevue";
 import PosLayout from "@layouts/pos.vue";
@@ -47,6 +47,7 @@ const saveProcessing = ref(false);
 const customerSelectorKey = ref(0);
 const saleMenu = ref();
 const productPickerVisible = ref(false);
+const checkoutBarHeight = shallowRef(0);
 const canSave = computed(() => posStore.cartItems.length > 0 && posStore.customerChoiceMade);
 const canPay = computed(
   () => posStore.cartItems.length > 0 && posStore.customerChoiceMade && posStore.total > 0 && !discardForm.processing,
@@ -68,6 +69,17 @@ const saleMenuItems = computed<MenuItem[]>(() => [
 ]);
 
 const { getRemainingBase, getRemainingBaseExcludingLine } = useStockLedger(cartItems);
+const cartPanelStyle = computed(() =>
+  isCompactViewport.value && checkoutBarHeight.value > 0 ? { marginBottom: `${checkoutBarHeight.value}px` } : undefined,
+);
+
+watch(isCompactViewport, (isCompact) => {
+  if (!isCompact) checkoutBarHeight.value = 0;
+});
+
+function updateCheckoutBarHeight(height: number): void {
+  checkoutBarHeight.value = height;
+}
 
 function addCartItem(item: PosCartItem): void {
   if (posStore.addCartItem(item)) {
@@ -282,12 +294,13 @@ onMounted(async () => {
 
       <div
         class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900 lg:col-span-7"
+        :style="cartPanelStyle"
       >
         <div class="border-b border-surface-200 p-4 dark:border-surface-700">
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2">
               <Button
-              v-tooltip.top="t('Sale actions')"
+                v-tooltip.top="t('Sale actions')"
                 icon="fa fa-ellipsis-vertical"
                 severity="secondary"
                 :aria-label="t('Sale actions')"
@@ -301,7 +314,7 @@ onMounted(async () => {
                 v-if="isCompactViewport"
                 id="pos-add-products"
                 icon="fa fa-plus"
-                :label="t('Add products')"
+                :label="t('Products')"
                 raised
                 class="min-h-11"
                 @click="openProductPicker"
@@ -314,6 +327,7 @@ onMounted(async () => {
               :model-value="posStore.customer?.id ?? null"
               :initial-customer="posStore.customer"
               :is-walk-in="posStore.isWalkIn"
+              :compact-pos="isCompactViewport"
               toast-group="pos"
               @select="posStore.selectCustomer"
               @walk-in="posStore.selectWalkIn"
@@ -342,14 +356,18 @@ onMounted(async () => {
           @update-discount="posStore.setDiscount"
           @pay="proceedToPayment"
         />
-        <PosCheckoutBar
-          v-if="isCompactViewport"
-          :total="posStore.total"
-          :can-pay="canPay"
-          :processing="checkoutProcessing"
-          @pay="proceedToPayment"
-        />
       </div>
+
+      <PosCheckoutBar
+        v-if="isCompactViewport"
+        :total="posStore.total"
+        :has-items="posStore.cartItems.length > 0"
+        :customer-choice-made="posStore.customerChoiceMade"
+        :can-pay="canPay"
+        :processing="checkoutProcessing"
+        @pay="proceedToPayment"
+        @resize="updateCheckoutBarHeight"
+      />
 
       <PosProductPicker
         v-model:visible="productPickerVisible"

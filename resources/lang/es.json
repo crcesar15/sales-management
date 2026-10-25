@@ -1240,5 +1240,13 @@
   "Subtotal": "Subtotal",
   "Remove": "Remover",
   "Cash payment": "Pago en efectivo",
-  "Sale": "Venta"
+  "Sale": "Venta",
+  "Add discount": "Agregar descuento",
+  "Add products to continue": "Agregue productos para continuar",
+  "Changed from": "Cambiado de",
+  "Continue to payment": "Continuar al pago",
+  "Edit price": "Editar precio",
+  "Line total": "Total de línea",
+  "Remove discount": "Quitar descuento",
+  "Reset price": "Restablecer precio"
 }

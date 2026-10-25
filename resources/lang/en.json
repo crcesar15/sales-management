@@ -1238,5 +1238,13 @@
   "Subtotal": "Subtotal",
   "Remove": "Remove",
   "Cash payment": "Cash payment",
-  "Sale": "Sale"
+  "Sale": "Sale",
+  "Add discount": "Add discount",
+  "Add products to continue": "Add products to continue",
+  "Changed from": "Changed from",
+  "Continue to payment": "Continue to payment",
+  "Edit price": "Edit price",
+  "Line total": "Line total",
+  "Remove discount": "Remove discount",
+  "Reset price": "Reset price"
 }

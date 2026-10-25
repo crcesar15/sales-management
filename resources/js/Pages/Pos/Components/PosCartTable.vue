@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Badge, Button, InputNumber, useConfirm } from "primevue";
-import { computed, ref } from "vue";
+import { useConfirm } from "primevue";
+import { computed, nextTick, shallowRef } from "vue";
 import { useI18n } from "vue-i18n";
-import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
+import PosCartPriceDialog from "./PosCartPriceDialog.vue";
+import PosCartRow from "./PosCartRow.vue";
 import ProductInfoPopover from "./ProductInfoPopover.vue";
 import type { PosCartItem, PosProductInfo } from "@/Types/pos";
 
@@ -13,13 +14,13 @@ const props = defineProps<{
 const items = defineModel<PosCartItem[]>({ required: true });
 
 const { t } = useI18n();
-const { currencyCode, formatCurrency } = useCurrencyFormatter();
 const confirm = useConfirm();
-
 const hasItems = computed(() => items.value.length > 0);
-
-const infoPopover = ref();
-const infoItemId = ref<string | null>(null);
+const infoPopover = shallowRef<{ toggle: (event: Event) => void }>();
+const infoItemId = shallowRef<string | null>(null);
+const priceItemId = shallowRef<string | null>(null);
+const priceEditorVisible = shallowRef(false);
+const priceEditTrigger = shallowRef<HTMLElement | null>(null);
 const infoData = computed<PosProductInfo | null>(() => {
   const item = items.value.find((entry) => entry.id === infoItemId.value);
   if (item === undefined) return null;
@@ -33,6 +34,7 @@ const infoData = computed<PosProductInfo | null>(() => {
     conversion_factor: item.conversion_factor,
   };
 });
+const priceItem = computed(() => items.value.find((item) => item.id === priceItemId.value) ?? null);
 
 function toggleInfo(event: Event, item: PosCartItem): void {
   infoItemId.value = item.id;
@@ -56,18 +58,27 @@ function updateQuantity(index: number, quantity: number | null): void {
   items.value = updated;
 }
 
-function priceModified(item: PosCartItem): boolean {
-  return Number(item.unit_price.toFixed(2)) !== Number(item.original_unit_price.toFixed(2));
+function openPriceEditor(item: PosCartItem, trigger: HTMLElement): void {
+  priceItemId.value = item.id;
+  priceEditTrigger.value = trigger;
+  priceEditorVisible.value = true;
 }
 
-function updateUnitPrice(index: number, price: number | null): void {
-  if (price === null) return;
+function updateUnitPrice(itemId: string, price: number): void {
+  const index = items.value.findIndex((item) => item.id === itemId);
+  if (index === -1) return;
 
   const updated = [...items.value];
   const current = updated[index];
-  const nextPrice = Math.max(Number(price.toFixed(2)), 0);
-  updated[index] = { ...current, unit_price: nextPrice, line_total: nextPrice * current.quantity };
+  updated[index] = { ...current, unit_price: price, line_total: price * current.quantity };
   items.value = updated;
+}
+
+function updatePriceEditorVisibility(visible: boolean): void {
+  priceEditorVisible.value = visible;
+  if (visible) return;
+
+  void nextTick(() => priceEditTrigger.value?.focus());
 }
 
 function confirmRemove(index: number): void {
@@ -77,6 +88,8 @@ function confirmRemove(index: number): void {
     icon: "fa fa-exclamation-triangle",
     rejectLabel: t("Cancel"),
     acceptLabel: t("Remove"),
+    acceptProps: { severity: "danger" },
+    rejectProps: { severity: "secondary" },
     accept: () => {
       items.value = items.value.filter((_, itemIndex) => itemIndex !== index);
     },
@@ -96,100 +109,56 @@ function confirmRemove(index: number): void {
     </div>
 
     <div v-else class="min-h-0 flex-1 overflow-y-auto">
-      <div
-        class="hidden grid-cols-[minmax(0,1fr)_10rem_8rem_9rem_2.75rem] gap-3 border-b border-surface-200 bg-surface-50 px-4 py-3 text-sm font-medium dark:border-surface-700 dark:bg-surface-950 xl:grid"
-      >
-        <span>{{ t("Product") }}</span>
-        <span>{{ t("Quantity") }}</span>
-        <span>{{ t("Unit Price") }}</span>
-        <span class="text-right">{{ t("Amount") }}</span>
-        <span class="sr-only">{{ t("Actions") }}</span>
+      <div class="pos-cart-layout">
+        <div
+          class="pos-cart-column-header border-b border-surface-200 px-4 py-3 text-xs font-medium uppercase tracking-wide text-surface-500 dark:border-surface-700 dark:text-surface-400"
+        >
+          <span>{{ t("Product") }}</span>
+          <span>{{ t("Quantity") }}</span>
+          <span>{{ t("Unit Price") }}</span>
+          <span class="text-right">{{ t("Line total") }}</span>
+          <span class="text-center">{{ t("Actions") }}</span>
+        </div>
+        <ul class="divide-y divide-surface-300 dark:divide-surface-600">
+          <PosCartRow
+            v-for="(item, index) in items"
+            :key="item.id"
+            :class="{ 'bg-surface-50 dark:bg-surface-800/50': index % 2 === 1 }"
+            :item="item"
+            :maximum-quantity="maximumQuantity(item)"
+            @update-quantity="updateQuantity(index, $event)"
+            @show-details="toggleInfo($event, item)"
+            @edit-price="openPriceEditor(item, $event)"
+            @remove="confirmRemove(index)"
+          />
+        </ul>
       </div>
-
-      <ul class="divide-y divide-surface-200 dark:divide-surface-700">
-        <li v-for="(item, index) in items" :key="item.id" class="p-4">
-          <div class="grid grid-cols-2 gap-3 xl:grid-cols-[minmax(0,1fr)_10rem_8rem_9rem_2.75rem] xl:items-start">
-            <div class="col-span-2 min-w-0 xl:col-span-1">
-              <div class="flex items-center gap-2">
-                <span class="font-semibold text-lg">{{ item.product_name }}</span>
-                <i
-                  class="fa fa-circle-info shrink-0 cursor-pointer text-surface-400 hover:text-primary dark:text-surface-500 dark:hover:text-primary"
-                  role="button"
-                  tabindex="0"
-                  :aria-label="`${t('Product Details')}: ${item.product_name}`"
-                  @click="toggleInfo($event, item)"
-                  @keydown.enter.prevent="toggleInfo($event, item)"
-                />
-              </div>
-              <div class="mt-1 flex flex-wrap gap-x-2 text-surface-500 dark:text-surface-400">
-                <Badge v-if="item.variant_identity" :value="item.variant_identity" severity="primary" />
-              </div>
-            </div>
-
-            <div class="min-w-0">
-              <label :for="`pos-quantity-${item.id}`" class="mb-1 block text-sm font-medium xl:sr-only">{{ t("Quantity") }}</label>
-              <InputNumber
-                :input-id="`pos-quantity-${item.id}`"
-                :model-value="item.quantity"
-                :min="1"
-                :max="maximumQuantity(item)"
-                :min-fraction-digits="0"
-                :max-fraction-digits="0"
-                :aria-label="`${t('Quantity')}: ${item.product_name}`"
-                show-buttons
-                button-layout="horizontal"
-                increment-button-icon="fa fa-plus"
-                decrement-button-icon="fa fa-minus"
-                fluid
-                input-class="min-h-11 w-full tabular-nums"
-                decrement-button-class="!min-h-11 !min-w-11"
-                increment-button-class="!min-h-11 !min-w-11"
-                @update:model-value="updateQuantity(index, $event)"
-              />
-              <small class="mt-1 block text-surface-500 dark:text-surface-400">{{ t("Max") }}: {{ maximumQuantity(item) }}</small>
-            </div>
-
-            <div class="min-w-0">
-              <label :for="`pos-price-${item.id}`" class="mb-1 block text-sm font-medium xl:sr-only">{{ t("Unit Price") }}</label>
-              <InputNumber
-                :input-id="`pos-price-${item.id}`"
-                :model-value="item.unit_price"
-                :min="0"
-                :min-fraction-digits="2"
-                :max-fraction-digits="2"
-                :currency="currencyCode"
-                mode="currency"
-                :aria-label="`${t('Unit Price')}: ${item.product_name}`"
-                fluid
-                input-class="min-h-11 w-full tabular-nums"
-                @update:model-value="updateUnitPrice(index, $event)"
-              />
-              <small v-if="priceModified(item)" class="mt-1 block text-surface-500 dark:text-surface-400" :title="t('Original price')">
-                {{ t("Orig.") }}:
-                <span class="line-through">{{ formatCurrency(String(item.original_unit_price)) }}</span>
-              </small>
-            </div>
-
-            <div class="flex items-end justify-end text-right xl:min-h-11 xl:items-center">
-              <span class="font-semibold tabular-nums">{{ formatCurrency(String(item.line_total)) }}</span>
-            </div>
-
-            <div class="flex items-end justify-end xl:min-h-11 xl:items-center">
-              <Button
-                icon="fa fa-trash-can"
-                severity="danger"
-                text
-                rounded
-                :aria-label="`${t('Remove')}: ${item.product_name}`"
-                class="min-h-11 min-w-11"
-                @click="confirmRemove(index)"
-              />
-            </div>
-          </div>
-        </li>
-      </ul>
     </div>
 
     <ProductInfoPopover ref="infoPopover" :info="infoData" />
+    <PosCartPriceDialog
+      :visible="priceEditorVisible"
+      :item="priceItem"
+      @update:visible="updatePriceEditorVisibility"
+      @update-price="updateUnitPrice"
+    />
   </section>
 </template>
+
+<style scoped>
+.pos-cart-layout {
+  container-type: inline-size;
+}
+
+.pos-cart-column-header {
+  display: none;
+}
+
+@container (min-width: 44rem) {
+  .pos-cart-column-header {
+    display: grid;
+    grid-template-columns: minmax(9rem, 1fr) 10rem minmax(9rem, 1fr) 8.5rem 6rem;
+    gap: 0.75rem;
+  }
+}
+</style>

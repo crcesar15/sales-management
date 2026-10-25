@@ -11,6 +11,7 @@ const props = defineProps<{
   initialCustomer?: CustomerOption | null;
   isWalkIn?: boolean;
   toastGroup?: string;
+  compactPos?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -251,6 +252,7 @@ function goToCustomerEdit() {
         severity="secondary"
         outlined
         raised
+        :class="{ 'min-h-11': props.compactPos }"
         :aria-label="t('Sell to a walk-in customer')"
         @click="selectWalkIn"
       />
