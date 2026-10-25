@@ -4,7 +4,9 @@ import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
 import { useSalesOrderClient } from "@composables/useSalesOrderClient";
+import { isScannerSupported } from "@composables/useBarcodeScanner";
 import ProductInfoPopover from "./ProductInfoPopover.vue";
+import PosScannerDialog from "./PosScannerDialog.vue";
 import type { PosCartItem, PosProductInfo } from "@/Types/pos";
 import type { VariantSearchResult } from "@/Types/sales-order-types";
 
@@ -16,6 +18,8 @@ interface SellableUnit {
   conversionFactor: number;
   unitPrice: number;
 }
+
+type BarcodeCommitStatus = "added" | "needs-selection" | "no-match";
 
 const props = defineProps<{
   storeId: number | null;
@@ -40,6 +44,8 @@ const results = ref<VariantSearchResult[]>([]);
 const loading = ref(false);
 const failed = ref(false);
 const searched = ref(false);
+const scannerSupported = isScannerSupported();
+const scannerVisible = ref(false);
 let requestId = 0;
 let barcodeModeVersion = 0;
 
@@ -124,13 +130,13 @@ function canAdd(unit: SellableUnit): boolean {
   return remaining === null || remaining > 0;
 }
 
-async function searchProducts(autoAddBarcode = false): Promise<void> {
+async function searchProducts(autoAddBarcode = false, forceBarcodeCommit = false): Promise<BarcodeCommitStatus | "error" | null> {
   const filter = query.value.trim();
   const currentBarcodeModeVersion = barcodeModeVersion;
   if (filter.length < 2 || props.storeId === null) {
     results.value = [];
     loading.value = false;
-    return;
+    return null;
   }
 
   loading.value = true;
@@ -140,18 +146,22 @@ async function searchProducts(autoAddBarcode = false): Promise<void> {
 
   try {
     const response = await searchVariantsApi(filter, props.storeId);
-    if (currentRequest !== requestId) return;
+    if (currentRequest !== requestId) return null;
 
     const data = response.data?.data ?? [];
     results.value = Array.isArray(data) ? (data as VariantSearchResult[]) : [];
 
-    if (autoAddBarcode && barcodeMode.value && currentBarcodeModeVersion === barcodeModeVersion) handleBarcodeCommit(filter);
+    if (autoAddBarcode && (forceBarcodeCommit || barcodeMode.value) && currentBarcodeModeVersion === barcodeModeVersion) {
+      return handleBarcodeCommit(filter);
+    }
+    return null;
   } catch {
-    if (currentRequest !== requestId) return;
+    if (currentRequest !== requestId) return null;
 
     results.value = [];
     failed.value = true;
     toast.add({ severity: "error", summary: t("Error"), detail: t("Failed to search products"), life: 3000, group: "pos" });
+    return "error";
   } finally {
     if (currentRequest === requestId) loading.value = false;
   }
@@ -176,13 +186,14 @@ function submitSearch(): void {
   void searchProducts(barcodeMode.value);
 }
 
-function handleBarcodeCommit(barcode: string): void {
+function handleBarcodeCommit(barcode: string): BarcodeCommitStatus {
   const barcodeMatches = results.value.filter((variant) => variant.barcode === barcode);
-  if (barcodeMatches.length !== 1) return;
+  if (barcodeMatches.length === 0) return "no-match";
+  if (barcodeMatches.length > 1) return "needs-selection";
 
   const [variant] = barcodeMatches;
   const matchingUnits = units.value.filter((unit) => unit.variant.id === variant.id);
-  if (matchingUnits.length !== 1) return;
+  if (matchingUnits.length !== 1) return "needs-selection";
 
   const [unit] = matchingUnits;
 
@@ -194,10 +205,39 @@ function handleBarcodeCommit(barcode: string): void {
       life: 3000,
       group: "pos",
     });
-    return;
+    return "added";
   }
 
   addUnit(unit);
+  return "added";
+}
+
+function notifyScanNotFound(): void {
+  toast.add({
+    severity: "warn",
+    summary: t("Product not found"),
+    detail: t("No product matches the scanned code"),
+    life: 3000,
+    group: "pos",
+  });
+}
+
+function openScanner(): void {
+  if (props.storeId === null) return;
+  scannerVisible.value = true;
+}
+
+async function handleScan(code: string): Promise<void> {
+  if (props.storeId === null || code.trim().length < 2) {
+    notifyScanNotFound();
+    return;
+  }
+
+  query.value = code;
+  const status = await searchProducts(true, true);
+
+  if (status === "no-match") notifyScanNotFound();
+  else if (status === "needs-selection") scannerVisible.value = false;
 }
 
 function resetResults(): void {
@@ -280,6 +320,17 @@ defineExpose({ focusSearch, resetSearch });
       <div class="flex gap-2">
         <IconField class="min-w-0 flex-1">
           <InputIcon class="fa fa-search" />
+          <InputIcon
+            v-if="scannerSupported"
+            class="fa fa-barcode left-[2.25rem] cursor-pointer"
+            :class="{ 'pointer-events-none opacity-50': storeId === null }"
+            role="button"
+            tabindex="0"
+            :aria-label="t('Scan barcode with camera')"
+            :title="t('Scan barcode with camera')"
+            @click="openScanner"
+            @keydown.enter.prevent="openScanner"
+          />
           <InputText
             :id="inputId ?? 'pos-product-search'"
             v-model="query"
@@ -289,6 +340,7 @@ defineExpose({ focusSearch, resetSearch });
             enterkeyhint="search"
             size="large"
             class="w-full"
+            :style="scannerSupported ? { paddingLeft: '4rem' } : undefined"
             :aria-busy="loading"
             @keydown.enter="onSearchKeydown"
           />
@@ -397,5 +449,6 @@ defineExpose({ focusSearch, resetSearch });
     </div>
 
     <ProductInfoPopover ref="infoPopover" :info="infoData" />
+    <PosScannerDialog v-model:visible="scannerVisible" @detected="handleScan" />
   </section>
 </template>
