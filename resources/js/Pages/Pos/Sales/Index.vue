@@ -10,13 +10,14 @@ import {
   IconField,
   InputIcon,
   InputText,
+  Menu,
   Popover,
   Select,
   useConfirm,
   useToast,
 } from "primevue";
 import axios from "axios";
-import { computed, nextTick, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onUnmounted, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
 import { usePosStore } from "@composables/usePosStore";
@@ -27,6 +28,7 @@ import PosLayout from "@layouts/pos.vue";
 import OrderStatusBadge from "@pages/SalesOrders/Components/OrderStatusBadge.vue";
 import PaymentStatusBadge from "@pages/SalesOrders/Components/PaymentStatusBadge.vue";
 import type { PosSalesOrderResponse, SalesOrderFilters } from "@/Types/sales-order-types";
+import type { MenuItem } from "primevue/menuitem";
 
 defineOptions({ layout: PosLayout });
 
@@ -53,6 +55,7 @@ const status = ref(props.filters.status || "all");
 const dateFrom = ref<Date | null>(parseDateOnly(props.filters.from ?? null));
 const dateTo = ref<Date | null>(parseDateOnly(props.filters.to ?? null));
 const filterPopover = ref();
+const actionsMenu = useTemplateRef<{ toggle: (event: Event) => void }>("actionsMenu");
 const discardingDrafts = ref(false);
 
 const statusOptions = computed(() => [
@@ -69,6 +72,14 @@ const activeFilterCount = computed(
   () => [status.value !== "all", dateFrom.value !== null, dateTo.value !== null, search.value !== ""].filter(Boolean).length,
 );
 const currentUserId = computed(() => page.props.auth.user?.id ?? null);
+const actionsMenuItems = computed<MenuItem[]>(() => [
+  {
+    label: t("Discard all drafts"),
+    icon: "fa fa-trash-can",
+    disabled: props.currentShiftDraftCount === 0 || discardingDrafts.value,
+    command: discardAllDrafts,
+  },
+]);
 
 function applyFilters(): void {
   router.visit(route("pos.sales.index"), {
@@ -122,6 +133,7 @@ function discardAllDrafts(): void {
     rejectLabel: t("Cancel"),
     acceptLabel: t("Discard all drafts"),
     acceptProps: { severity: "danger" },
+    rejectProps: { severity: "secondary"},
     accept: async () => {
       discardingDrafts.value = true;
 
@@ -143,6 +155,10 @@ function discardAllDrafts(): void {
       }
     },
   });
+}
+
+function toggleActionsMenu(event: Event): void {
+  actionsMenu.value?.toggle(event);
 }
 
 function messageFor(error: unknown): string {
@@ -185,15 +201,6 @@ onUnmounted(() => clearTimeout(searchTimer));
           <template #header>
             <div class="flex flex-wrap items-center gap-2">
               <Button
-                v-if="currentShiftDraftCount > 0"
-                :label="t('Discard all drafts')"
-                icon="fa fa-trash-can"
-                severity="danger"
-                outlined
-                :loading="discardingDrafts"
-                @click="discardAllDrafts"
-              />
-              <Button
                 type="button"
                 icon="fa fa-filter"
                 :label="t('Filters')"
@@ -203,10 +210,22 @@ onUnmounted(() => clearTimeout(searchTimer));
                 @click="filterPopover.toggle($event)"
               />
               <Badge v-if="activeFilterCount > 0" :value="activeFilterCount" severity="primary" />
-              <IconField icon-position="left" class="w-full sm:ml-auto sm:max-w-80">
-                <InputIcon class="fa fa-search" />
-                <InputText v-model="search" :placeholder="t('Search') + '...'" class="w-full" />
-              </IconField>
+              <div class="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
+                <IconField icon-position="left" class="min-w-0 flex-1 sm:w-80">
+                  <InputIcon class="fa fa-search" />
+                  <InputText v-model="search" :placeholder="t('Search') + '...'" class="w-full" />
+                </IconField>
+                <Button
+                  v-tooltip.top="t('Actions')"
+                  type="button"
+                  icon="fa fa-ellipsis-vertical"
+                  severity="secondary"
+                  outlined
+                  :aria-label="t('Actions')"
+                  @click="toggleActionsMenu"
+                />
+                <Menu ref="actionsMenu" :model="actionsMenuItems" popup />
+              </div>
             </div>
 
             <Popover ref="filterPopover">
