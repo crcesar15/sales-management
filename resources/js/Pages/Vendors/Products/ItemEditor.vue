@@ -4,7 +4,6 @@ import Dialog from "primevue/dialog";
 import PButton from "primevue/button";
 import Textarea from "primevue/textarea";
 import InputNumber from "primevue/inputnumber";
-import i18n from "../../../app";
 
 export default {
   components: {
@@ -38,13 +37,13 @@ export default {
       price: "",
       status: "active",
       payment_terms: [
-        { label: i18n.global.t("Immediate payment"), value: "immediate" },
-        { label: i18n.global.t("Credit"), value: "credit" },
-        { label: i18n.global.t("Immediate payment or credit"), value: "both" },
+        { label: this.$t("Immediate payment"), value: "immediate" },
+        { label: this.$t("Credit"), value: "credit" },
+        { label: this.$t("Immediate payment or credit"), value: "both" },
       ],
       statusOptions: [
-        { label: i18n.global.t("Active"), value: "active" },
-        { label: i18n.global.t("Inactive"), value: "inactive" },
+        { label: this.$t("Active"), value: "active" },
+        { label: this.$t("Inactive"), value: "inactive" },
       ],
       showModal: false,
       products: [],

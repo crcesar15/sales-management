@@ -121,5 +121,3 @@ createInertiaApp({
       .mount(el);
   },
 });
-
-export default i18n;

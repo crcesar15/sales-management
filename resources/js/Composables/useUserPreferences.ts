@@ -2,7 +2,7 @@ import { computed, shallowRef } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useToast } from "primevue/usetoast";
 import { route } from "ziggy-js";
-import i18n from "@/app";
+import { useI18n } from "vue-i18n";
 import { useAuth } from "@composables/useAuth";
 import { useLayout } from "@layouts/Components/Composables/useLayout";
 import type { UserLocale, UserTheme } from "@app-types/user-types";
@@ -14,13 +14,14 @@ let isMigratingLegacyTheme = false;
 
 export function useUserPreferences() {
   const toast = useToast();
+  const { locale: globalLocale, t } = useI18n({ useScope: "global" });
   const { user } = useAuth();
   const { isDarkMode, setDarkMode } = useLayout();
   const theme = computed<UserTheme>(() => (isDarkMode.value ? "dark" : "light"));
 
   function setLocale(value: UserLocale): void {
     locale.value = value;
-    i18n.global.locale.value = value;
+    globalLocale.value = value;
     document.documentElement.lang = value;
   }
 
@@ -31,7 +32,7 @@ export function useUserPreferences() {
       onSuccess: () => onSuccess?.(),
       onError: () => {
         rollback();
-        toast.add({ severity: "error", summary: i18n.global.t("Error"), detail: i18n.global.t("Unable to save preferences"), life: 3000 });
+        toast.add({ severity: "error", summary: t("Error"), detail: t("Unable to save preferences"), life: 3000 });
       },
     });
   }
