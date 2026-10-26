@@ -19,7 +19,9 @@ final class CustomerService
         'first_name' => 'first_name',
         'last_name' => 'last_name',
         'email' => 'email',
+        'phone' => 'phone',
         'tax_id' => 'tax_id',
+        'tax_id_name' => 'tax_id_name',
         'status' => 'status',
         'created_at' => 'created_at',
         'updated_at' => 'updated_at',
@@ -30,13 +32,13 @@ final class CustomerService
      */
     public function list(
         string $status = 'all',
-        string $orderBy = 'first_name',
+        string $orderBy = 'tax_id_name',
         string $orderDirection = 'asc',
         int $perPage = 20,
         ?string $filter = null,
     ): LengthAwarePaginator {
         $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'created_at';
-        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'asc';
+        $direction = mb_strtolower($orderDirection) === 'desc' ? 'desc' : 'asc';
 
         return Customer::query()
             ->when(

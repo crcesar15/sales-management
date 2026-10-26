@@ -1,6 +1,7 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import type { CashRegister, CashRegisterShift, PosCartItem, PosCustomer, PosDiscountType, PosSession, PosStore } from "@/Types/pos";
+import type { CustomerPayload } from "@/Types/customer-types";
 import type { SalesOrderResponse } from "@/Types/sales-order-types";
 
 function roundCurrency(amount: number): number {
@@ -110,6 +111,20 @@ export const usePosStore = defineStore("pos", () => {
     isWalkIn.value = false;
   }
 
+  function updateCustomer(customerId: number, data: CustomerPayload): void {
+    if (customer.value?.id !== customerId) return;
+
+    customer.value = {
+      ...customer.value,
+      first_name: data.first_name ?? "",
+      last_name: data.last_name ?? "",
+      email: data.email ?? null,
+      phone: data.phone ?? null,
+      tax_id: data.tax_id,
+      tax_id_name: data.tax_id_name,
+    };
+  }
+
   function setDiscount(type: PosDiscountType, value: number | null): void {
     discountType.value = type;
     discountValue.value = Math.max(value ?? 0, 0);
@@ -208,6 +223,7 @@ export const usePosStore = defineStore("pos", () => {
     selectCustomer,
     selectWalkIn,
     clearCustomer,
+    updateCustomer,
     setDiscount,
     setTaxRate,
     hydrateDraft,

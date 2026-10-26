@@ -51,7 +51,14 @@ const navigationItems = computed<PosNavigationItem[]>(() => [
     href: route("pos.sales.index"),
     active: ["pos.sales.index", "pos.sales.show"].includes(currentRouteName.value),
   },
-  { key: "customers", label: t("Customers"), icon: "fa fa-users", enabled: false },
+  {
+    key: "customers",
+    label: t("Customers"),
+    icon: "fa fa-users",
+    enabled: can("customer.view"),
+    href: route("pos.customers.index"),
+    active: currentRouteName.value.startsWith("pos.customers."),
+  },
   { key: "product-gallery", label: t("Product Gallery"), icon: "fa fa-images", enabled: false },
   {
     key: "cash-movements",

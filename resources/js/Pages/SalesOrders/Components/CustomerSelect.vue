@@ -3,6 +3,7 @@ import { Button, Dialog, InputText, Message, Popover, useToast } from "primevue"
 import { useI18n } from "vue-i18n";
 import { ref, computed, nextTick, watch } from "vue";
 import { route } from "ziggy-js";
+import { router } from "@inertiajs/vue3";
 import { useCustomerClient } from "@composables/useCustomerClient";
 import type { CustomerOption } from "@/Types/sales-order-types";
 
@@ -12,6 +13,7 @@ const props = defineProps<{
   isWalkIn?: boolean;
   toastGroup?: string;
   compactPos?: boolean;
+  editUrl?: string;
 }>();
 
 const emit = defineEmits<{
@@ -178,8 +180,12 @@ function toggleCustomerInfo(event: Event) {
 
 function goToCustomerEdit() {
   if (selectedCustomer.value) {
-    const url = route("customers.edit", { customer: selectedCustomer.value.id });
-    window.open(url, "_blank");
+    if (props.editUrl) {
+      router.visit(props.editUrl);
+      return;
+    }
+
+    window.open(route("customers.edit", { customer: selectedCustomer.value.id }), "_blank");
   }
 }
 </script>

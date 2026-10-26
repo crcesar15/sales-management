@@ -54,7 +54,7 @@ onUnmounted(() => {
 
 const containerClass = computed(() => [
   "min-h-screen",
-  isDarkMode.value ? "bg-surface-900 text-surface-0" : "bg-surface-ground text-surface-900",
+  isDarkMode.value ? "bg-surface-ground text-surface-0" : "bg-surface-ground text-surface-900",
 ]);
 </script>
 

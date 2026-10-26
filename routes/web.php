@@ -17,6 +17,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\OptionValueController;
+use App\Http\Controllers\Pos\PosCustomerController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductMediaController;
@@ -106,6 +107,12 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/pos/sales/{salesOrder}/payment', [PosController::class, 'payment'])->name('pos.sales.payment');
     Route::post('/pos/sales/{salesOrder}/complete', [PosController::class, 'complete'])->name('pos.sales.complete');
     Route::delete('/pos/sales/{salesOrder}', [PosController::class, 'discard'])->name('pos.sales.discard');
+    Route::get('/pos/customers', [PosCustomerController::class, 'index'])->name('pos.customers.index');
+    Route::get('/pos/customers/create', [PosCustomerController::class, 'create'])->name('pos.customers.create');
+    Route::post('/pos/customers', [PosCustomerController::class, 'store'])->name('pos.customers.store');
+    Route::get('/pos/customers/{customer}/edit', [PosCustomerController::class, 'edit'])->name('pos.customers.edit');
+    Route::put('/pos/customers/{customer}', [PosCustomerController::class, 'update'])->name('pos.customers.update');
+    Route::delete('/pos/customers/{customer}', [PosCustomerController::class, 'destroy'])->name('pos.customers.destroy');
 
     // Cash Register Routes
     Route::get('/cash-registers', [CashRegisterController::class, 'index'])->name('cash-registers');

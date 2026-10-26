@@ -243,6 +243,12 @@ function proceedToPayment(): void {
   submitSale("payment");
 }
 
+function hydrateIncomingDraft(): void {
+  if (props.draft !== null && posStore.draftId !== props.draft.id) {
+    posStore.hydrateDraft(props.draft);
+  }
+}
+
 onMounted(async () => {
   // Set user info from Inertia page props
   const authUser = page.props.auth?.user as unknown as { id: number; name: string; email: string } | undefined;
@@ -252,12 +258,10 @@ onMounted(async () => {
 
   posStore.setTaxRate(Number(getSetting("tax", "tax_rate", "0") ?? 0));
   await loadSession();
-  if (props.draft !== null) {
-    posStore.hydrateDraft(props.draft);
-  } else {
-    posStore.clearSale();
-  }
+  hydrateIncomingDraft();
 });
+
+watch(() => props.draft, hydrateIncomingDraft);
 </script>
 
 <template>
@@ -333,6 +337,7 @@ onMounted(async () => {
               :initial-customer="posStore.customer"
               :is-walk-in="posStore.isWalkIn"
               :compact-pos="isCompactViewport"
+              :edit-url="posStore.customer ? route('pos.customers.edit', posStore.customer.id) : undefined"
               toast-group="pos"
               @select="posStore.selectCustomer"
               @walk-in="posStore.selectWalkIn"
