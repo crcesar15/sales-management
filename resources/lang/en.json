@@ -1275,5 +1275,21 @@
   "Reset price": "Reset price",
   "Grid view": "Grid view",
   "List view": "List view",
-  "Results view": "Results view"
+  "Results view": "Results view",
+  "Additional sale units": "Additional sale units",
+  "All brands": "All brands",
+  "All categories": "All categories",
+  "Availability is shown across all stores": "Availability is shown across all stores",
+  "Base price": "Base price",
+  "Clear filters": "Clear filters",
+  "In stock only": "In stock only",
+  "No images available": "No images available",
+  "Product details": "Product details",
+  "Product filters": "Product filters",
+  "Search products, variants or barcode": "Search products, variants or barcode",
+  "Try adjusting your search or filters": "Try adjusting your search or filters",
+  "Unable to load product details": "Unable to load product details",
+  "Updating products": "Updating products",
+  "View {product}": "View {product}",
+  "{count} products": "{count} products"
 }

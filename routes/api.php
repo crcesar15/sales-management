@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\MeasurementUnitController;
 use App\Http\Controllers\Api\PermissionsController;
 use App\Http\Controllers\Api\PosSaleHandoverController;
 use App\Http\Controllers\Api\PosSessionController;
+use App\Http\Controllers\Api\ProductGalleryController;
 use App\Http\Controllers\Api\PurchaseOrdersController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SalesOrderHandoverController;
@@ -35,6 +36,7 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
     Route::post('pos/session/shift/movements', [PosSessionController::class, 'addMovement'])->name('pos.session.shift.movements.store');
     Route::post('pos/sales/{salesOrder}/handover-preview', [PosSaleHandoverController::class, 'preview'])
         ->name('pos.sales.handover-preview');
+    Route::get('pos/product-gallery/{variant}', [ProductGalleryController::class, 'show'])->name('pos.product-gallery.show');
 
     // Routes for Batches
     Route::get('batches/available', [BatchesController::class, 'available'])->name('batches.available');

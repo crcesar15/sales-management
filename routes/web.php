@@ -18,6 +18,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\OptionValueController;
 use App\Http\Controllers\Pos\PosCustomerController;
+use App\Http\Controllers\Pos\ProductGalleryController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductMediaController;
@@ -98,6 +99,7 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     // POS Routes
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
+    Route::get('/pos/product-gallery', [ProductGalleryController::class, 'index'])->name('pos.product-gallery.index');
     Route::get('/pos/sales', [PosController::class, 'salesIndex'])->name('pos.sales.index');
     Route::get('/pos/sales/completed', [PosController::class, 'completed'])->name('pos.sales.completed');
     Route::post('/pos/sales', [PosController::class, 'store'])->name('pos.sales.store');

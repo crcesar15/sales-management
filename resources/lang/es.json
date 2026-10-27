@@ -1277,5 +1277,21 @@
   "Reset price": "Restablecer precio",
   "Grid view": "Vista de cuadrícula",
   "List view": "Vista de lista",
-  "Results view": "Vista de resultados"
+  "Results view": "Vista de resultados",
+  "Additional sale units": "Unidades de venta adicionales",
+  "All brands": "Todas las marcas",
+  "All categories": "Todas las categorías",
+  "Availability is shown across all stores": "La disponibilidad se muestra en todos los locales",
+  "Base price": "Precio base",
+  "Clear filters": "Limpiar filtros",
+  "In stock only": "Solo en stock",
+  "No images available": "No hay imágenes disponibles",
+  "Product details": "Detalles del producto",
+  "Product filters": "Filtros de productos",
+  "Search products, variants or barcode": "Buscar productos, variantes o código de barras",
+  "Try adjusting your search or filters": "Intenta ajustar tu búsqueda o filtros",
+  "Unable to load product details": "No se pudieron cargar los detalles del producto",
+  "Updating products": "Actualizando productos",
+  "View {product}": "Ver {product}",
+  "{count} products": "{count} productos"
 }
