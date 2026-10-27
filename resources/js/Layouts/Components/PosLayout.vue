@@ -65,7 +65,7 @@ const containerClass = computed(() => [
 
   <div :class="containerClass">
     <PosShiftBar />
-    <div class="flex min-h-[100dvh] pt-14 lg:h-screen lg:overflow-hidden">
+    <div class="flex min-h-[100dvh] pt-14 lg:fixed lg:inset-x-0 lg:bottom-0 lg:top-14 lg:min-h-0 lg:overflow-hidden lg:pt-0">
       <PosSidebar />
       <button
         v-if="isCompactViewport && isMobileNavigationOpen"
@@ -74,7 +74,7 @@ const containerClass = computed(() => [
         :aria-label="t('Close menu')"
         @click="closeMobileNavigation"
       />
-      <main id="pos-main" class="min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto" role="main">
+      <main id="pos-main" class="min-w-0 flex-1 overflow-x-clip lg:min-h-0 lg:overflow-x-hidden lg:overflow-y-auto" role="main">
         <slot />
       </main>
     </div>
@@ -86,6 +86,11 @@ const containerClass = computed(() => [
 </template>
 
 <style scoped>
+/* Debugbar reserves body space for its fixed toolbar, which creates a second POS scrollbar. */
+:global(body:has(#pos-main)) {
+  padding-bottom: 0 !important;
+}
+
 .pos-toast-offset {
   top: calc(64px + env(safe-area-inset-top)) !important;
 }
