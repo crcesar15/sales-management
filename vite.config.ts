@@ -2,13 +2,23 @@ import { defineConfig } from "vite";
 import laravel from "laravel-vite-plugin";
 import vue from "@vitejs/plugin-vue";
 import path from "path";
+import fs from "fs";
+import os from "os";
 import tailwindcss from "tailwindcss";
+
+const tlsKey = path.join(os.homedir(), ".config/sales-management/sales.local.key");
+const tlsCert = "/etc/ssl/certs/sales.local.crt";
+const useLocalTls = fs.existsSync(tlsKey) && fs.existsSync(tlsCert);
 
 export default defineConfig({
   server: {
-      host: '0.0.0.0', // Allows connections from any IP
+      host: '0.0.0.0',
+      ...(useLocalTls ? {
+          https: { key: fs.readFileSync(tlsKey), cert: fs.readFileSync(tlsCert) },
+          cors: { origin: ['https://sales.local', 'https://192.168.1.68'] },
+      } : {}),
       hmr: {
-          host: '192.168.31.95' // Points hot-reloading to your exact IP
+          host: useLocalTls ? '192.168.1.68' : '192.168.31.95'
       }
   },
   css: {
