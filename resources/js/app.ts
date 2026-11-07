@@ -24,6 +24,12 @@ import { configureYupLocale } from "./validations/yupLocale";
 import en from "../lang/en.json";
 import es from "../lang/es.json";
 
+document.addEventListener("focusin", (event: Event) => {
+  if (event.target instanceof HTMLInputElement && event.target.classList.contains("p-inputnumber-input")) {
+    event.target.select();
+  }
+});
+
 const messages = {
   en,
   es,
