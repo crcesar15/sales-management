@@ -108,6 +108,99 @@ it('uses a manually overridden unit price for POS drafts', function (): void {
         ->and((float) $order->items()->sole()->unit_price)->toBe(90.0);
 });
 
+it('applies a fixed line discount once before the order discount and tax and restores it in a draft', function (): void {
+    Setting::set('tax_rate', 10);
+    $payload = ($this->draftPayload)();
+    $payload['intent'] = 'save';
+    $payload['discount_type'] = 'percentage';
+    $payload['discount_value'] = 10;
+    $payload['items'][0]['quantity'] = 3;
+    $payload['items'][0]['line_discount'] = 5;
+
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), $payload)->assertRedirect(route('pos'));
+    $order = SalesOrder::query()->sole();
+    expect((float) $order->items()->sole()->line_discount)->toBe(5.0)
+        ->and((float) $order->items()->sole()->line_total)->toBe(295.0)
+        ->and((float) $order->sub_total)->toBe(295.0)
+        ->and((float) $order->discount)->toBe(29.5)
+        ->and((float) $order->tax_amount)->toBe(26.55)
+        ->and((float) $order->total)->toBe(292.05);
+
+    $this->actingAs($this->cashier)->get(route('pos.sales.edit', $order))->assertInertia(
+        fn (AssertableInertia $page) => $page->where('draft.items.0.line_discount', 5)->etc()
+    );
+});
+
+it('rejects invalid line discount values and discounts above the server price', function (): void {
+    $payload = ($this->draftPayload)();
+    $payload['items'][0]['line_discount'] = -1;
+    $this->actingAs($this->cashier)->postJson(route('pos.sales.store'), $payload)->assertInvalid('items.0.line_discount');
+    $payload['items'][0]['line_discount'] = 1.234;
+    $this->actingAs($this->cashier)->postJson(route('pos.sales.store'), $payload)->assertInvalid('items.0.line_discount');
+    $payload['items'][0]['line_discount'] = 201;
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), $payload)->assertSessionHasErrors('checkout');
+    expect(SalesOrder::query()->count())->toBe(0);
+});
+
+it('preserves a discount when a draft update omits the line discount', function (): void {
+    $payload = ($this->draftPayload)();
+    $payload['intent'] = 'save';
+    $payload['items'][0]['line_discount'] = 5;
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), $payload);
+    $order = SalesOrder::query()->sole();
+    unset($payload['items'][0]['line_discount']);
+    $this->actingAs($this->cashier)->put(route('pos.sales.update', $order), $payload)->assertSessionHasNoErrors();
+    expect((float) $order->fresh()->items()->sole()->line_discount)->toBe(5.0)
+        ->and((float) $order->fresh()->total)->toBe(195.0);
+});
+
+it('collects the discounted total when completing a sale', function (): void {
+    $payload = ($this->draftPayload)();
+    $payload['items'][0]['line_discount'] = 5;
+    $payload['discount_type'] = 'flat';
+    $payload['discount_value'] = 10;
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), $payload);
+    $order = SalesOrder::query()->sole();
+
+    $this->actingAs($this->cashier)->post(route('pos.sales.complete', $order), [
+        'handover_token' => ($this->handoverToken)($order),
+        'payment_mode' => 'cash',
+        'cash_received' => 200,
+    ])->assertRedirect(route('pos.sales.completed'));
+
+    expect((float) $order->fresh()->total)->toBe(185.0)
+        ->and((float) $order->payments()->sole()->amount)->toBe(185.0)
+        ->and((float) $order->payments()->sole()->change_amount)->toBe(15.0);
+});
+
+it('preserves line and percentage order discounts when an admin updates a POS draft', function (): void {
+    $payload = ($this->draftPayload)();
+    $payload['intent'] = 'save';
+    $payload['items'][0]['line_discount'] = 5;
+    $payload['discount_type'] = 'percentage';
+    $payload['discount_value'] = 10;
+    $this->actingAs($this->cashier)->post(route('pos.sales.store'), $payload);
+    $order = SalesOrder::query()->sole();
+    $this->cashier->givePermissionTo(PermissionsEnum::SALES_MANAGE->value);
+
+    $this->actingAs($this->cashier)->put(route('sales-orders.update', $order), [
+        'customer_id' => null,
+        'is_walk_in' => true,
+        'discount_type' => 'percentage',
+        'discount_value' => 10,
+        'items' => [[
+            'product_variant_id' => $this->variant->id,
+            'quantity' => 2,
+            'unit_price' => 100,
+            'line_discount' => 5,
+        ]],
+    ])->assertSessionHasNoErrors();
+
+    expect((float) $order->fresh()->items()->sole()->line_discount)->toBe(5.0)
+        ->and((float) $order->fresh()->total)->toBe(175.5)
+        ->and($order->fresh()->discount_type->value)->toBe('percentage');
+});
+
 it('rejects a negative manual unit price', function (): void {
     $payload = ($this->draftPayload)();
     $payload['items'][0]['unit_price'] = -1;
