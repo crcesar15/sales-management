@@ -51,7 +51,7 @@ final class SalesOrderResource extends JsonResource
             'fulfilled_by' => $this->fulfilled_by,
             'customer' => $this->whenLoaded('customer', fn () => [
                 'id' => $this->customer?->id,
-                'display_name' => $this->customer ? trim($this->customer->first_name . ' ' . $this->customer->last_name) : null,
+                'display_name' => $this->customer ? mb_trim($this->customer->first_name . ' ' . $this->customer->last_name) ?: $this->customer->tax_id_name : null,
                 'email' => $this->customer?->email,
                 'first_name' => $this->customer?->first_name,
                 'last_name' => $this->customer?->last_name,
