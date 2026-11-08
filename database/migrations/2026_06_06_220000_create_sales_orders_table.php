@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('cash_register_shift_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('fulfilled_by')->nullable()->constrained('users')->nullOnDelete();
             $table->enum('status', ['draft', 'validated', 'fulfilled', 'completed', 'cancelled'])->default('draft');
-            $table->enum('payment_status', ['pending', 'partially_paid', 'paid'])->default('pending');
+            $table->enum('payment_status', ['pending', 'partially_paid', 'paid', 'voided'])->default('pending');
             $table->enum('discount_type', ['flat', 'percentage'])->default('flat');
             $table->decimal('sub_total', 12, 2)->default(0);
             $table->decimal('discount_value', 10, 2)->default(0);

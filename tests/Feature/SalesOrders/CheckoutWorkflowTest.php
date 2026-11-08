@@ -324,6 +324,7 @@ it('only cancels unpaid draft or validated orders with a reason', function (): v
     $this->service->cancel($order, 'Customer changed their mind.', $this->actor);
 
     expect($order->refresh()->status)->toBe(SalesOrderStatus::CANCELLED)
+        ->and($order->payment_status)->toBe(SalesOrderPaymentStatus::VOIDED)
         ->and($order->cancellation_reason)->toBe('Customer changed their mind.')
         ->and($this->batch->refresh()->remaining_quantity)->toBe(10);
 });

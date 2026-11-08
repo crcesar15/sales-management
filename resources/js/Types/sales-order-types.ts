@@ -3,7 +3,7 @@ import type { StoreResponse } from "./store-types";
 import type { PaymentMethod } from "./purchase-order-types";
 
 export type SalesOrderStatus = "draft" | "validated" | "fulfilled" | "completed" | "cancelled";
-export type SalesOrderPaymentStatus = "pending" | "partially_paid" | "paid";
+export type SalesOrderPaymentStatus = "pending" | "partially_paid" | "paid" | "voided";
 export type DiscountType = "flat" | "percentage";
 
 export interface SalesOrderItem {
@@ -164,7 +164,7 @@ export interface SalesOrderListResponse {
 export interface SalesOrderFilters {
   search?: string;
   status?: string;
-  payment_status?: "unpaid";
+  payment_status?: SalesOrderPaymentStatus | "unpaid";
   from?: string;
   to?: string;
 }

@@ -189,7 +189,9 @@ it('discards every pending draft from the cashiers current shift', function () {
         ->assertJsonPath('discarded_count', 2);
 
     expect($firstDraft->refresh()->status)->toBe(SalesOrderStatus::CANCELLED)
+        ->and($firstDraft->payment_status)->toBe(SalesOrderPaymentStatus::VOIDED)
         ->and($secondDraft->refresh()->status)->toBe(SalesOrderStatus::CANCELLED)
+        ->and($secondDraft->payment_status)->toBe(SalesOrderPaymentStatus::VOIDED)
         ->and($completedOrder->refresh()->status)->toBe(SalesOrderStatus::COMPLETED);
 
     actingAs($this->cashier, 'sanctum')

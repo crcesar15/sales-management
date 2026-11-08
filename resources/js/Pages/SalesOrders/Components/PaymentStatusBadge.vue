@@ -12,6 +12,7 @@ const config = computed(() => {
     pending: { label: "Pending", severity: "warn" },
     partially_paid: { label: "Partially Paid", severity: "secondary" },
     paid: { label: "Paid", severity: "success" },
+    voided: { label: "Voided", severity: "secondary" },
   };
 
   return statuses[props.status];

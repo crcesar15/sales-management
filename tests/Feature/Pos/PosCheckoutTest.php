@@ -507,5 +507,6 @@ it('discards an unpaid POS draft', function (): void {
         ->assertRedirect(route('pos'));
 
     expect($order->refresh()->status)->toBe(SalesOrderStatus::CANCELLED)
+        ->and($order->payment_status)->toBe(SalesOrderPaymentStatus::VOIDED)
         ->and($order->cancellation_reason)->toBe('Discarded at POS checkout.');
 });

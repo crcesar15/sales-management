@@ -86,10 +86,14 @@ final class SalesOrderService
             fn ($q, $status) => $q->where('status', $status),
         );
 
-        $query->when(
-            ($filters['payment_status'] ?? null) === 'unpaid',
-            fn ($q) => $q->whereIn('payment_status', [SalesOrderPaymentStatus::PENDING, SalesOrderPaymentStatus::PARTIALLY_PAID]),
-        );
+        $paymentStatus = $filters['payment_status'] ?? null;
+        if ($paymentStatus === 'unpaid') {
+            $query
+                ->where('status', SalesOrderStatus::FULFILLED)
+                ->whereIn('payment_status', [SalesOrderPaymentStatus::PENDING, SalesOrderPaymentStatus::PARTIALLY_PAID]);
+        } elseif (is_string($paymentStatus) && ($paymentStatusEnum = SalesOrderPaymentStatus::tryFrom($paymentStatus)) !== null) {
+            $query->where('payment_status', $paymentStatusEnum);
+        }
 
         $query->when(
             $filters['from'] ?? null,
@@ -621,7 +625,12 @@ final class SalesOrderService
                 throw new InvalidArgumentException('Only unpaid draft or validated orders can be cancelled.');
             }
             $previousStatus = $lockedOrder->status->value;
-            $lockedOrder->update(['status' => SalesOrderStatus::CANCELLED, 'cancelled_at' => now(), 'cancellation_reason' => $reason]);
+            $lockedOrder->update([
+                'status' => SalesOrderStatus::CANCELLED,
+                'payment_status' => SalesOrderPaymentStatus::VOIDED,
+                'cancelled_at' => now(),
+                'cancellation_reason' => $reason,
+            ]);
 
             activity('sales_order')
                 ->performedOn($lockedOrder)

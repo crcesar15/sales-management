@@ -68,6 +68,10 @@ const statusOptions = computed(() => [
 const paymentStatusOptions = computed(() => [
   { label: t("All"), value: "all" },
   { label: t("Unpaid"), value: "unpaid" },
+  { label: t("Pending"), value: "pending" },
+  { label: t("Partially Paid"), value: "partially_paid" },
+  { label: t("Paid"), value: "paid" },
+  { label: t("Voided"), value: "voided" },
 ]);
 
 const hasActiveFilters = computed(
