@@ -264,6 +264,158 @@ it('creates sale and purchase units from the canonical workspace', function () {
     ])->exists())->toBeTrue();
 });
 
+it('replicates a sale unit to all sibling variants and updates matching units', function () {
+    $product = Product::factory()->create();
+    $source = ProductVariant::factory()->for($product)->create();
+    $matchingSibling = ProductVariant::factory()->for($product)->create(['status' => 'inactive']);
+    $missingSibling = ProductVariant::factory()->for($product)->create(['status' => 'archived']);
+    $matchingUnit = ProductVariantUnit::query()->create([
+        'product_variant_id' => $matchingSibling->id,
+        'type' => 'sale',
+        'name' => 'Box',
+        'conversion_factor' => 6,
+        'price' => 60,
+        'status' => 'inactive',
+        'sort_order' => 4,
+    ]);
+    $matchingUnitId = $matchingUnit->id;
+    ProductVariantUnit::query()->create([
+        'product_variant_id' => $matchingSibling->id,
+        'type' => 'sale',
+        'name' => 'Pack',
+        'conversion_factor' => 3,
+        'price' => 30,
+        'status' => 'active',
+        'sort_order' => 1,
+    ]);
+
+    actingAs(inventoryAdmin())
+        ->post(route('variant.units.store', ['product' => $product, 'variant' => $source]), [
+            'type' => 'sale',
+            'name' => 'Box',
+            'conversion_factor' => 12,
+            'price' => 120,
+            'status' => 'active',
+            'sort_order' => 2,
+            'replicate_to_siblings' => true,
+        ])
+        ->assertRedirect();
+
+    $matchingUnit->refresh();
+    expect($matchingUnit->id)->toBe($matchingUnitId);
+    expect($matchingUnit->conversion_factor)->toBe(12);
+    expect($matchingUnit->price)->toBe('120.00');
+    expect($matchingUnit->status)->toBe('active');
+    expect($matchingUnit->sort_order)->toBe(2);
+    expect(ProductVariantUnit::query()->where([
+        'product_variant_id' => $missingSibling->id,
+        'type' => 'sale',
+        'name' => 'Box',
+        'conversion_factor' => 12,
+        'price' => 120,
+        'status' => 'active',
+        'sort_order' => 2,
+    ])->exists())->toBeTrue();
+    expect(ProductVariantUnit::query()->where([
+        'product_variant_id' => $matchingSibling->id,
+        'type' => 'sale',
+        'name' => 'Pack',
+    ])->exists())->toBeTrue();
+});
+
+it('replicates an edited purchase unit using its original name', function () {
+    $product = Product::factory()->create();
+    $source = ProductVariant::factory()->for($product)->create();
+    $sibling = ProductVariant::factory()->for($product)->create();
+    $sourceUnit = ProductVariantUnit::query()->create([
+        'product_variant_id' => $source->id,
+        'type' => 'purchase',
+        'name' => 'Carton',
+        'conversion_factor' => 24,
+        'price' => null,
+        'status' => 'active',
+        'sort_order' => 1,
+    ]);
+    $siblingUnit = ProductVariantUnit::query()->create([
+        'product_variant_id' => $sibling->id,
+        'type' => 'purchase',
+        'name' => 'Carton',
+        'conversion_factor' => 12,
+        'price' => null,
+        'status' => 'inactive',
+        'sort_order' => 3,
+    ]);
+    $siblingUnitId = $siblingUnit->id;
+
+    actingAs(inventoryAdmin())
+        ->put(route('variant.units.update', ['product' => $product, 'variant' => $source, 'unit' => $sourceUnit]), [
+            'name' => 'Case',
+            'conversion_factor' => 48,
+            'status' => 'active',
+            'sort_order' => 2,
+            'replicate_to_siblings' => true,
+        ])
+        ->assertRedirect();
+
+    $siblingUnit->refresh();
+    expect($siblingUnit->id)->toBe($siblingUnitId);
+    expect($siblingUnit->name)->toBe('Case');
+    expect($siblingUnit->conversion_factor)->toBe(48);
+    expect($siblingUnit->price)->toBeNull();
+    expect($siblingUnit->sort_order)->toBe(2);
+});
+
+it('rolls back replicated unit updates when a sibling has the new name', function () {
+    $product = Product::factory()->create();
+    $source = ProductVariant::factory()->for($product)->create();
+    $sibling = ProductVariant::factory()->for($product)->create();
+    $sourceUnit = ProductVariantUnit::query()->create([
+        'product_variant_id' => $source->id,
+        'type' => 'sale',
+        'name' => 'Box',
+        'conversion_factor' => 12,
+        'price' => 120,
+        'status' => 'active',
+        'sort_order' => 1,
+    ]);
+    ProductVariantUnit::query()->create([
+        'product_variant_id' => $sibling->id,
+        'type' => 'sale',
+        'name' => 'Box',
+        'conversion_factor' => 12,
+        'price' => 120,
+        'status' => 'active',
+        'sort_order' => 1,
+    ]);
+    ProductVariantUnit::query()->create([
+        'product_variant_id' => $sibling->id,
+        'type' => 'sale',
+        'name' => 'Case',
+        'conversion_factor' => 24,
+        'price' => 240,
+        'status' => 'active',
+        'sort_order' => 2,
+    ]);
+
+    actingAs(inventoryAdmin())
+        ->put(route('variant.units.update', ['product' => $product, 'variant' => $source, 'unit' => $sourceUnit]), [
+            'name' => 'Case',
+            'conversion_factor' => 48,
+            'price' => 480,
+            'status' => 'inactive',
+            'sort_order' => 3,
+            'replicate_to_siblings' => true,
+        ])
+        ->assertSessionHasErrors('replicate_to_siblings');
+
+    $sourceUnit->refresh();
+    expect($sourceUnit->name)->toBe('Box');
+    expect($sourceUnit->conversion_factor)->toBe(12);
+    expect($sourceUnit->price)->toBe('120.00');
+    expect($sourceUnit->status)->toBe('active');
+    expect($sourceUnit->sort_order)->toBe(1);
+});
+
 it('requires inventory edit permission to manage units and variant images', function () {
     $variant = ProductVariant::factory()->for(Product::factory())->create();
     $salesman = User::factory()->create();
