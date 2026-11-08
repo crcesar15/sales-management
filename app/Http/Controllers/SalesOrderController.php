@@ -41,6 +41,7 @@ final class SalesOrderController extends Controller
             filters: [
                 'search' => $request->string('search', '')->toString() ?: null,
                 'status' => $request->string('status', '')->toString() ?: null,
+                'payment_status' => $request->string('payment_status', '')->toString() ?: null,
                 'from' => $request->string('from', '')->toString() ?: null,
                 'to' => $request->string('to', '')->toString() ?: null,
             ],
@@ -53,6 +54,7 @@ final class SalesOrderController extends Controller
             'filters' => [
                 'search' => $request->string('search', '')->toString(),
                 'status' => $request->string('status', '')->toString(),
+                'payment_status' => $request->string('payment_status', '')->toString(),
                 'from' => $request->string('from', '')->toString(),
                 'to' => $request->string('to', '')->toString(),
             ],

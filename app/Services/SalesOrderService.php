@@ -87,6 +87,11 @@ final class SalesOrderService
         );
 
         $query->when(
+            ($filters['payment_status'] ?? null) === 'unpaid',
+            fn ($q) => $q->whereIn('payment_status', [SalesOrderPaymentStatus::PENDING, SalesOrderPaymentStatus::PARTIALLY_PAID]),
+        );
+
+        $query->when(
             $filters['from'] ?? null,
             fn ($q, $from) => $q->whereDate('created_at', '>=', $from),
         );

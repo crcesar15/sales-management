@@ -49,6 +49,7 @@ const { formatCurrency } = useCurrencyFormatter();
 
 const search = ref(props.filters.search ?? "");
 const status = ref(props.filters.status || "all");
+const paymentStatus = ref(props.filters.payment_status ?? "all");
 const dateFrom = ref<Date | null>(parseDateOnly(props.filters.from ?? null));
 const dateTo = ref<Date | null>(parseDateOnly(props.filters.to ?? null));
 const sortField = ref("created_at");
@@ -58,17 +59,25 @@ const filterPopover = ref();
 const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
   { label: t("Draft"), value: "draft" },
-    { label: t("Validated"), value: "validated" },
-    { label: t("Fulfilled"), value: "fulfilled" },
-    { label: t("Completed"), value: "completed" },
+  { label: t("Validated"), value: "validated" },
+  { label: t("Fulfilled"), value: "fulfilled" },
+  { label: t("Completed"), value: "completed" },
   { label: t("Cancelled"), value: "cancelled" },
 ]);
 
-const hasActiveFilters = computed(() => status.value !== "all" || dateFrom.value !== null || dateTo.value !== null || search.value !== "");
+const paymentStatusOptions = computed(() => [
+  { label: t("All"), value: "all" },
+  { label: t("Unpaid"), value: "unpaid" },
+]);
+
+const hasActiveFilters = computed(
+  () => status.value !== "all" || paymentStatus.value !== "all" || dateFrom.value !== null || dateTo.value !== null || search.value !== "",
+);
 
 const activeFilterCount = computed(() => {
   let count = 0;
   if (status.value !== "all") count++;
+  if (paymentStatus.value !== "all") count++;
   if (dateFrom.value !== null) count++;
   if (dateTo.value !== null) count++;
   if (search.value) count++;
@@ -80,6 +89,7 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
     data: {
       search: search.value || "",
       status: status.value === "all" ? "" : status.value,
+      payment_status: paymentStatus.value === "all" ? "" : paymentStatus.value,
       from: toDateOnly(dateFrom.value) ?? "",
       to: toDateOnly(dateTo.value) ?? "",
       order_by: sortField.value,
@@ -94,6 +104,7 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
 function resetFilters() {
   search.value = "";
   status.value = "all";
+  paymentStatus.value = "all";
   dateFrom.value = null;
   dateTo.value = null;
   applyFilters();
@@ -106,6 +117,7 @@ watch(search, () => {
 });
 
 watch(status, () => applyFilters());
+watch(paymentStatus, () => applyFilters());
 watch(dateFrom, () => applyFilters());
 watch(dateTo, () => applyFilters());
 
@@ -187,12 +199,16 @@ function customerName(order: SalesOrderResponse): string {
                   <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />
                 </div>
                 <div>
+                  <label class="text-sm font-medium mb-1 block">{{ t("Payment Status") }}</label>
+                  <Select v-model="paymentStatus" :options="paymentStatusOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
+                <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date From") }}</label>
-                   <DatePicker v-model="dateFrom" :show-icon="true" :placeholder="t('From')" :date-format="datePickerFormat" class="w-full" />
+                  <DatePicker v-model="dateFrom" :show-icon="true" :placeholder="t('From')" :date-format="datePickerFormat" class="w-full" />
                 </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Date To") }}</label>
-                   <DatePicker v-model="dateTo" :show-icon="true" :placeholder="t('To')" :date-format="datePickerFormat" class="w-full" />
+                  <DatePicker v-model="dateTo" :show-icon="true" :placeholder="t('To')" :date-format="datePickerFormat" class="w-full" />
                 </div>
                 <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
                   <Button

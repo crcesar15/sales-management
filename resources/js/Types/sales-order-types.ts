@@ -164,6 +164,7 @@ export interface SalesOrderListResponse {
 export interface SalesOrderFilters {
   search?: string;
   status?: string;
+  payment_status?: "unpaid";
   from?: string;
   to?: string;
 }
