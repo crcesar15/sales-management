@@ -45,6 +45,7 @@ final class UpdateProductVariantUnitRequest extends FormRequest
             'price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'status' => ['sometimes', 'required', 'in:active,inactive'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'replicate_to_siblings' => ['sometimes', 'boolean'],
         ];
     }
 

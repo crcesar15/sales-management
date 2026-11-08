@@ -1308,5 +1308,7 @@
   "Apply to all variants": "Aplicar a todas las variantes",
   "Variant configuration applied to all variants": "La configuración de la variante se aplicó a todas las variantes",
   "Copies stock policy to {count} variants. Statuses stay unchanged.": "Copia la política de inventario a {count} variantes. Sus estados no cambian.",
-  "Copies pricing to {count} variants.": "Copia los precios a {count} variantes."
+  "Copies pricing to {count} variants.": "Copia los precios a {count} variantes.",
+  "Apply to all sibling variants": "Aplicar a todas las variantes relacionadas",
+  "Copies this unit to {count} sibling variants. Matching units will be updated.": "Copia esta unidad a {count} variantes relacionadas. Las unidades coincidentes se actualizarán."
 }

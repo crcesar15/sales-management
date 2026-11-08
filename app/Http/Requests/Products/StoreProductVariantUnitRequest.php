@@ -42,6 +42,7 @@ final class StoreProductVariantUnitRequest extends FormRequest
             'price' => ['nullable', 'numeric', 'min:0', Rule::requiredIf($type === 'sale')],
             'status' => ['required', 'in:active,inactive'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'replicate_to_siblings' => ['sometimes', 'boolean'],
         ];
     }
 

@@ -152,7 +152,7 @@ onUnmounted(() => {
                   <OverviewTab :variant="variant" :can-edit="canEdit" :sibling-count="siblings.length - 1" @update:dirty="overviewDirty = $event" />
                 </TabPanel>
                 <TabPanel value="units">
-                  <UnitsTab :product="product" :variant="variant" :measurement-units="measurementUnits" />
+                  <UnitsTab :product="product" :variant="variant" :measurement-units="measurementUnits" :sibling-count="siblings.length - 1" />
                 </TabPanel>
                 <TabPanel v-if="product.has_variants" value="images">
                   <ImagesTab

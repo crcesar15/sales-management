@@ -2,6 +2,7 @@
 import {
   AutoComplete,
   Button,
+  Checkbox,
   Column,
   ConfirmDialog,
   DataTable,
@@ -36,6 +37,7 @@ const props = defineProps<{
   product: InventoryProductDetail;
   variant: InventoryVariantDetail;
   measurementUnits: Pick<MeasurementUnitResponse, "id" | "name" | "abbreviation">[];
+  siblingCount: number;
 }>();
 const toast = useToast();
 const confirm = useConfirm();
@@ -47,6 +49,7 @@ const currency = getSetting("finance", "currency") ?? "USD";
 const activeTab = ref<"sale" | "purchase">("sale");
 const dialogVisible = ref(false);
 const editing = ref<VariantUnitResource | null>(null);
+const replicateToSiblings = ref(false);
 const isEditing = computed(() => editing.value !== null);
 
 const saleUnits = computed(() => props.variant.sale_units ?? []);
@@ -179,6 +182,7 @@ const suggestedPrice = computed(() => {
 
 const openCreate = () => {
   editing.value = null;
+  replicateToSiblings.value = false;
   setFormType(currentType.value);
   resetForm({
     values: {
@@ -196,6 +200,7 @@ const openCreate = () => {
 
 const openEdit = (unit: VariantUnitResource) => {
   editing.value = unit;
+  replicateToSiblings.value = false;
   setFormType(unit.type);
   resetForm({
     values: {
@@ -227,6 +232,7 @@ const onSubmit = handleSubmit(async (values) => {
     price: formType.value === "purchase" ? null : values.price,
     status: values.status,
     sort_order: values.sort_order ?? 0,
+    replicate_to_siblings: replicateToSiblings.value,
   };
 
   const onSuccess = () => {
@@ -627,6 +633,16 @@ watch(formType, () => {
         <div class="flex flex-col gap-2">
           <label for="unit-sort-order">{{ t("Display Order") }}</label>
           <InputNumber input-id="unit-sort-order" v-model="sortOrderField" v-bind="sortOrderAttrs" :min="0" :use-grouping="false" />
+        </div>
+
+        <div v-if="siblingCount > 0" class="flex flex-col gap-2 rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+          <div class="flex items-center gap-3">
+            <Checkbox input-id="replicate-unit" v-model="replicateToSiblings" binary />
+            <label for="replicate-unit" class="font-medium">{{ t("Apply to all sibling variants") }}</label>
+          </div>
+          <small class="text-surface-500 dark:text-surface-400">
+            {{ t("Copies this unit to {count} sibling variants. Matching units will be updated.", { count: siblingCount }) }}
+          </small>
         </div>
       </form>
 
