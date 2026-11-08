@@ -65,6 +65,7 @@ final class SalesOrderItemResource extends JsonResource
             ),
             'quantity' => $this->quantity,
             'unit_price' => (float) $this->unit_price,
+            'line_discount' => (float) $this->line_discount,
             'original_unit_price' => $this->when(
                 $this->relationLoaded('productVariant'),
                 fn (): float => match (true) {

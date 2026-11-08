@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('sale_unit_id')->nullable()->constrained('product_variant_units')->nullOnDelete();
             $table->unsignedInteger('quantity');
             $table->decimal('unit_price', 12, 2);
+            $table->decimal('line_discount', 12, 2)->default(0);
             $table->unsignedInteger('conversion_factor')->default(1);
             $table->decimal('line_total', 12, 2);
             $table->timestamps();

@@ -195,7 +195,7 @@ final class SalesOrderService
 
             foreach ($items as $item) {
                 $conversionFactor = $this->conversionFactorFor($item);
-                $lineTotal = (float) $item['unit_price'] * (int) $item['quantity'];
+                $lineTotal = $this->calculateLineTotal($item);
 
                 SalesOrderItem::create([
                     'sales_order_id' => $order->id,
@@ -203,6 +203,7 @@ final class SalesOrderService
                     'sale_unit_id' => $item['sale_unit_id'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
+                    'line_discount' => $item['line_discount'] ?? 0,
                     'conversion_factor' => $conversionFactor,
                     'line_total' => $lineTotal,
                 ]);
@@ -349,6 +350,13 @@ final class SalesOrderService
             }
 
             $items = $data['items'] ?? [];
+            $existingItems = $lockedOrder->items()->get()->keyBy(fn (SalesOrderItem $item): string => $item->product_variant_id . ':' . ($item->sale_unit_id ?? 'base'));
+            foreach ($items as &$item) {
+                $key = $item['product_variant_id'] . ':' . ($item['sale_unit_id'] ?? 'base');
+                $existingItem = $existingItems->get($key);
+                $item['line_discount'] ??= $existingItem instanceof SalesOrderItem ? (float) $existingItem->line_discount : 0;
+            }
+            unset($item);
             $discountType = $data['discount_type'] ?? $lockedOrder->discount_type->value;
             $discountValue = (float) ($data['discount_value'] ?? $lockedOrder->discount_value);
             $taxRate = (float) Setting::get('tax_rate', 0);
@@ -370,7 +378,7 @@ final class SalesOrderService
             $lockedOrder->items()->delete();
             foreach ($items as $item) {
                 $conversionFactor = $this->conversionFactorFor($item);
-                $lineTotal = (float) $item['unit_price'] * (int) $item['quantity'];
+                $lineTotal = $this->calculateLineTotal($item);
 
                 SalesOrderItem::create([
                     'sales_order_id' => $lockedOrder->id,
@@ -378,6 +386,7 @@ final class SalesOrderService
                     'sale_unit_id' => $item['sale_unit_id'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
+                    'line_discount' => $item['line_discount'] ?? 0,
                     'conversion_factor' => $conversionFactor,
                     'line_total' => $lineTotal,
                 ]);
@@ -578,7 +587,7 @@ final class SalesOrderService
         $subTotal = 0.0;
 
         foreach ($items as $item) {
-            $subTotal += (float) $item['unit_price'] * (int) $item['quantity'];
+            $subTotal += $this->calculateLineTotal($item);
         }
 
         if ($discountType === DiscountType::FLAT->value) {
@@ -615,6 +624,18 @@ final class SalesOrderService
                 ->withProperties(['from' => $previousStatus, 'to' => 'cancelled', 'reason' => $reason])
                 ->log("Order {$lockedOrder->id} cancelled: {$reason}");
         });
+    }
+
+    /** @param array<string, mixed> $item */
+    private function calculateLineTotal(array $item): float
+    {
+        $gross = round((float) $item['unit_price'] * (int) $item['quantity'], 2);
+        $discount = (float) ($item['line_discount'] ?? 0);
+        if ($discount < 0 || round($discount, 2) !== $discount || $discount > $gross) {
+            throw new InvalidArgumentException('The line discount must be between zero and the line amount, with at most two decimal places.');
+        }
+
+        return round($gross - $discount, 2);
     }
 
     /** @param array<int, mixed> $allocations */
@@ -997,12 +1018,17 @@ final class SalesOrderService
                 $unitPrice = (float) $item['unit_price'];
             }
 
-            return [
+            $normalized = [
                 'product_variant_id' => $variantId,
                 'sale_unit_id' => $saleUnitId,
                 'quantity' => (int) $item['quantity'],
                 'unit_price' => $unitPrice,
             ];
+            if (array_key_exists('line_discount', $item)) {
+                $normalized['line_discount'] = (float) $item['line_discount'];
+            }
+
+            return $normalized;
         }, $items);
     }
 

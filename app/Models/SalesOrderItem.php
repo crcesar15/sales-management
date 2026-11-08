@@ -24,6 +24,7 @@ final class SalesOrderItem extends Model
         'sale_unit_id',
         'quantity',
         'unit_price',
+        'line_discount',
         'conversion_factor',
         'line_total',
     ];
@@ -69,6 +70,7 @@ final class SalesOrderItem extends Model
         return [
             'quantity' => 'integer',
             'unit_price' => 'decimal:2',
+            'line_discount' => 'decimal:2',
             'conversion_factor' => 'integer',
             'line_total' => 'decimal:2',
             'created_at' => 'datetime:Y-m-d H:i',
