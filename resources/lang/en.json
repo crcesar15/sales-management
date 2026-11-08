@@ -1302,5 +1302,9 @@
   "Unable to load product details": "Unable to load product details",
   "Updating products": "Updating products",
   "View {product}": "View {product}",
-  "{count} products": "{count} products"
+  "{count} products": "{count} products",
+  "Apply to all variants": "Apply to all variants",
+  "Variant configuration applied to all variants": "Variant configuration applied to all variants",
+  "Copies stock policy to {count} variants. Statuses stay unchanged.": "Copies stock policy to {count} variants. Statuses stay unchanged.",
+  "Copies pricing to {count} variants.": "Copies pricing to {count} variants."
 }

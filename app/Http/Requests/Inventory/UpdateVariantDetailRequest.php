@@ -31,6 +31,8 @@ final class UpdateVariantDetailRequest extends FormRequest
             'minimum_stock_level' => ['nullable', 'integer', 'min:0'],
             'has_expiration' => ['boolean'],
             'status' => ['required', 'in:active,inactive,archived'],
+            'replicate_pricing' => ['sometimes', 'boolean'],
+            'replicate_inventory_policy' => ['sometimes', 'boolean'],
         ];
     }
 }

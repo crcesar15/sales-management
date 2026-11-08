@@ -237,6 +237,8 @@ const breakdownText = computed(() => {
       <small class="text-surface-500 dark:text-surface-400">{{ breakdownText }}</small>
     </div>
 
+    <slot name="before-history" />
+
     <details class="border-t border-surface-200 pt-4 dark:border-surface-700" :open="showHistory">
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3" @click.prevent="toggleHistory">
         <span class="font-medium">{{ t("Purchase History") }}</span>

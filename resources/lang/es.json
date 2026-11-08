@@ -1304,5 +1304,9 @@
   "Unable to load product details": "No se pudieron cargar los detalles del producto",
   "Updating products": "Actualizando productos",
   "View {product}": "Ver {product}",
-  "{count} products": "{count} productos"
+  "{count} products": "{count} productos",
+  "Apply to all variants": "Aplicar a todas las variantes",
+  "Variant configuration applied to all variants": "La configuración de la variante se aplicó a todas las variantes",
+  "Copies stock policy to {count} variants. Statuses stay unchanged.": "Copia la política de inventario a {count} variantes. Sus estados no cambian.",
+  "Copies pricing to {count} variants.": "Copia los precios a {count} variantes."
 }

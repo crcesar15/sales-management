@@ -76,6 +76,96 @@ it('updates variant overview fields with nullable purchase pricing', function ()
         ->and($variant->has_expiration)->toBeTrue();
 });
 
+it('replicates exact pricing to sibling variants only', function () {
+    $product = Product::factory()->create();
+    $source = ProductVariant::factory()->create([
+        'product_id' => $product->id,
+        'price' => 15,
+        'purchase_price' => 8,
+        'margin_type' => 'amount',
+        'margin_value' => 7,
+        'minimum_stock_level' => 2,
+        'has_expiration' => false,
+    ]);
+    $sibling = ProductVariant::factory()->inactive()->create([
+        'product_id' => $product->id,
+        'price' => 45,
+        'purchase_price' => 20,
+        'margin_type' => 'percent',
+        'margin_value' => 50,
+        'minimum_stock_level' => 12,
+        'has_expiration' => true,
+    ]);
+    $otherProductVariant = ProductVariant::factory()->for(Product::factory())->create([
+        'price' => 75,
+        'purchase_price' => 40,
+        'margin_type' => 'percent',
+        'margin_value' => 25,
+    ]);
+
+    actingAs(inventoryAdmin())
+        ->put(route('inventory.variant.update', $source), [
+            ...variantUpdatePayload($source),
+            'purchase_price' => 10,
+            'margin_type' => 'percent',
+            'margin_value' => 20,
+            'price' => 12.5,
+            'replicate_pricing' => true,
+            'replicate_inventory_policy' => false,
+        ])
+        ->assertRedirect();
+
+    $sibling->refresh();
+    $otherProductVariant->refresh();
+
+    expect((float) $sibling->purchase_price)->toBe(10.0)
+        ->and($sibling->margin_type->value)->toBe('percent')
+        ->and((float) $sibling->margin_value)->toBe(20.0)
+        ->and((float) $sibling->price)->toBe(12.5)
+        ->and($sibling->minimum_stock_level)->toBe(12)
+        ->and($sibling->has_expiration)->toBeTrue()
+        ->and($sibling->status)->toBe('inactive')
+        ->and((float) $otherProductVariant->purchase_price)->toBe(40.0)
+        ->and((float) $otherProductVariant->price)->toBe(75.0);
+});
+
+it('replicates inventory policy without changing sibling statuses', function () {
+    $product = Product::factory()->create();
+    $source = ProductVariant::factory()->create([
+        'product_id' => $product->id,
+        'minimum_stock_level' => 3,
+        'has_expiration' => false,
+        'status' => 'inactive',
+    ]);
+    $sibling = ProductVariant::factory()->create([
+        'product_id' => $product->id,
+        'price' => 45,
+        'minimum_stock_level' => 20,
+        'has_expiration' => false,
+        'status' => 'archived',
+    ]);
+
+    actingAs(inventoryAdmin())
+        ->put(route('inventory.variant.update', $source), [
+            ...variantUpdatePayload($source),
+            'minimum_stock_level' => null,
+            'has_expiration' => true,
+            'status' => 'active',
+            'replicate_pricing' => false,
+            'replicate_inventory_policy' => true,
+        ])
+        ->assertRedirect();
+
+    $source->refresh();
+    $sibling->refresh();
+
+    expect($source->status)->toBe('active')
+        ->and($sibling->minimum_stock_level)->toBeNull()
+        ->and($sibling->has_expiration)->toBeTrue()
+        ->and((float) $sibling->price)->toBe(45.0)
+        ->and($sibling->status)->toBe('archived');
+});
+
 it('rejects a duplicate variant identifier', function () {
     $product = Product::factory()->create();
     $existing = ProductVariant::factory()->create(['product_id' => $product->id]);

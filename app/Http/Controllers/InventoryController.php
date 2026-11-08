@@ -174,7 +174,11 @@ final class InventoryController extends Controller
 
     public function update(UpdateVariantDetailRequest $request, ProductVariant $variant): RedirectResponse
     {
-        $this->variantService->update($variant, $request->validated());
+        $this->variantService->update($variant, [
+            ...$request->validated(),
+            'replicate_pricing' => $request->boolean('replicate_pricing'),
+            'replicate_inventory_policy' => $request->boolean('replicate_inventory_policy'),
+        ]);
 
         return redirect()->back();
     }

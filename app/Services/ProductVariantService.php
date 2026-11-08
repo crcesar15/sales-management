@@ -16,6 +16,30 @@ use InvalidArgumentException;
 
 final class ProductVariantService
 {
+    private const VARIANT_UPDATE_FIELDS = [
+        'identifier',
+        'price',
+        'barcode',
+        'purchase_price',
+        'margin_type',
+        'margin_value',
+        'minimum_stock_level',
+        'has_expiration',
+        'status',
+    ];
+
+    private const PRICING_FIELDS = [
+        'purchase_price',
+        'margin_type',
+        'margin_value',
+        'price',
+    ];
+
+    private const INVENTORY_POLICY_FIELDS = [
+        'minimum_stock_level',
+        'has_expiration',
+    ];
+
     /**
      * Generate variants from options data using Cartesian product.
      *
@@ -177,11 +201,42 @@ final class ProductVariantService
     public function update(ProductVariant $variant, array $data): ProductVariant
     {
         return DB::transaction(function () use ($variant, $data): ProductVariant {
-            $updateData = collect($data)->only(['identifier', 'price', 'barcode', 'purchase_price', 'margin_type', 'margin_value', 'minimum_stock_level', 'has_expiration', 'status'])->toArray();
+            $variants = ProductVariant::query()
+                ->where('product_id', $variant->product_id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
 
-            $variant->update($updateData);
+            /** @var ProductVariant $sourceVariant */
+            $sourceVariant = $variants->firstOrFail(fn (ProductVariant $candidate): bool => $candidate->is($variant));
+            $updateData = collect($data)->only(self::VARIANT_UPDATE_FIELDS)->toArray();
 
-            return $variant->refresh();
+            $sourceVariant->update($updateData);
+
+            $replicatedFields = [];
+            if ($data['replicate_pricing'] ?? false) {
+                $replicatedFields = [...$replicatedFields, ...self::PRICING_FIELDS];
+            }
+
+            if ($data['replicate_inventory_policy'] ?? false) {
+                $replicatedFields = [...$replicatedFields, ...self::INVENTORY_POLICY_FIELDS];
+            }
+
+            if ($replicatedFields !== []) {
+                $replicationData = collect($data)->only($replicatedFields)->toArray();
+
+                $variants
+                    ->reject(fn (ProductVariant $sibling): bool => $sibling->is($sourceVariant))
+                    ->each(function (ProductVariant $sibling) use ($replicationData): void {
+                        $sibling->fill($replicationData);
+
+                        if ($sibling->isDirty()) {
+                            $sibling->save();
+                        }
+                    });
+            }
+
+            return $sourceVariant->refresh();
         });
     }
 

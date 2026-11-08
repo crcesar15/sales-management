@@ -1,25 +1,29 @@
 <script setup lang="ts">
-import { Button, InputNumber, InputText, Select, ToggleSwitch, useToast } from "primevue";
+import { Button, InputNumber, InputText, Message, Select, ToggleSwitch, useToast } from "primevue";
 
-import { nextTick, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { toTypedSchema } from "@vee-validate/yup";
 import { useForm } from "vee-validate";
 import { boolean, number, object, string } from "yup";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
-import type { InventoryVariantDetail, VariantOverviewPayload } from "@app-types/inventory-variant-types";
+import type { InventoryVariantDetail, VariantOverviewPayload, VariantOverviewUpdatePayload } from "@app-types/inventory-variant-types";
 import PurchasePriceMargin from "./PurchasePriceMargin.vue";
 
 const props = defineProps<{
   variant: InventoryVariantDetail;
   canEdit: boolean;
+  siblingCount: number;
 }>();
 const emit = defineEmits<{
   (e: "update:dirty", value: boolean): void;
 }>();
 const { t } = useI18n();
 const toast = useToast();
+const replicatePricing = ref(false);
+const replicateInventoryPolicy = ref(false);
+const isSaving = ref(false);
 
 const schema = toTypedSchema(
   object({
@@ -69,28 +73,59 @@ const statusOptions = [
   { name: t("Archived"), value: "archived" },
 ];
 
+const isDirty = computed(() => meta.value.dirty || replicatePricing.value || replicateInventoryPolicy.value);
+
+const clearReplication = () => {
+  replicatePricing.value = false;
+  replicateInventoryPolicy.value = false;
+};
+
 watch(
-  () => meta.value.dirty,
-  (isDirty) => emit("update:dirty", isDirty),
+  isDirty,
+  (value) => emit("update:dirty", value),
   { immediate: true },
 );
 
 watch(
   () => props.variant,
-  () => resetForm({ values: initialValues() }),
+  (variant, previousVariant) => {
+    if (variant.id === previousVariant?.id) return;
+
+    resetForm({ values: initialValues() });
+    clearReplication();
+  },
 );
 
 const onSubmit = handleSubmit((values) => {
-  router.put(route("inventory.variant.update", { variant: props.variant.id }), { ...values }, {
+  if (isSaving.value) return;
+
+  isSaving.value = true;
+  const payload: VariantOverviewUpdatePayload = {
+    ...values,
+    replicate_pricing: replicatePricing.value,
+    replicate_inventory_policy: replicateInventoryPolicy.value,
+  };
+
+  router.put(route("inventory.variant.update", { variant: props.variant.id }), { ...payload }, {
     preserveScroll: true,
     onSuccess: () => {
       resetForm({ values });
-      toast.add({ severity: "success", summary: t("Success"), detail: t("Variant updated successfully"), life: 3000 });
+      const replicated = replicatePricing.value || replicateInventoryPolicy.value;
+      clearReplication();
+      toast.add({
+        severity: "success",
+        summary: t("Success"),
+        detail: replicated ? t("Variant configuration applied to all variants") : t("Variant updated successfully"),
+        life: 3000,
+      });
     },
     onError: (serverErrors) => {
       setErrors(serverErrors);
       toast.add({ severity: "error", summary: t("Error"), detail: t("Please review the errors in the form"), life: 3000 });
       nextTick(() => document.querySelector<HTMLInputElement>(".p-invalid")?.focus());
+    },
+    onFinish: () => {
+      isSaving.value = false;
     },
   });
 });
@@ -110,7 +145,7 @@ const onSubmit = handleSubmit((values) => {
             v-model="identifier"
             v-bind="identifierAttrs"
             autocomplete="off"
-            :disabled="!canEdit"
+            :disabled="!canEdit || isSaving"
             :invalid="submitCount > 0 && !!errors.identifier"
           />
           <small v-if="submitCount > 0 && errors.identifier" class="text-red-500 dark:text-red-300">{{ errors.identifier }}</small>
@@ -122,7 +157,7 @@ const onSubmit = handleSubmit((values) => {
             v-model="barcode"
             v-bind="barcodeAttrs"
             autocomplete="off"
-            :disabled="!canEdit"
+            :disabled="!canEdit || isSaving"
             :invalid="submitCount > 0 && !!errors.barcode"
           />
           <small v-if="submitCount > 0 && errors.barcode" class="text-red-500 dark:text-red-300">{{ errors.barcode }}</small>
@@ -144,7 +179,7 @@ const onSubmit = handleSubmit((values) => {
             :options="statusOptions"
             option-label="name"
             option-value="value"
-            :disabled="!canEdit"
+            :disabled="!canEdit || isSaving"
             :invalid="submitCount > 0 && !!errors.status"
           />
           <small v-if="submitCount > 0 && errors.status" class="text-red-500 dark:text-red-300">{{ errors.status }}</small>
@@ -156,7 +191,7 @@ const onSubmit = handleSubmit((values) => {
             v-model="minimumStockLevel"
             v-bind="minimumStockLevelAttrs"
             :min="0"
-            :disabled="!canEdit"
+            :disabled="!canEdit || isSaving"
             :invalid="submitCount > 0 && !!errors.minimum_stock_level"
             placeholder="—"
             autocomplete="off"
@@ -177,10 +212,19 @@ const onSubmit = handleSubmit((values) => {
             />
           </div>
           <div class="flex min-h-10 items-center gap-3">
-            <ToggleSwitch input-id="has-expiration" v-model="hasExpiration" v-bind="hasExpirationAttrs" :disabled="!canEdit" />
+            <ToggleSwitch input-id="has-expiration" v-model="hasExpiration" v-bind="hasExpirationAttrs" :disabled="!canEdit || isSaving" />
             <span class="text-sm text-surface-600 dark:text-surface-300">{{ hasExpiration ? t("Yes") : t("No") }}</span>
           </div>
         </div>
+      </div>
+      <div v-if="siblingCount > 0 && canEdit" class="flex flex-wrap items-center gap-3 pt-4">
+        <div class="flex items-center gap-3">
+          <ToggleSwitch input-id="replicate-inventory-policy" v-model="replicateInventoryPolicy" :disabled="isSaving" />
+          <label for="replicate-inventory-policy" class="font-medium">{{ t("Apply to all variants") }}</label>
+        </div>
+        <Message v-if="replicateInventoryPolicy" severity="warn" icon="fa fa-triangle-exclamation" :closable="false" class="m-0 flex-1">
+          {{ t("Copies stock policy to {count} variants. Statuses stay unchanged.", { count: siblingCount }) }}
+        </Message>
       </div>
     </section>
     <hr class="m-0">
@@ -194,8 +238,20 @@ const onSubmit = handleSubmit((values) => {
         v-model:margin-value="marginValue"
         v-model:price="price"
         :variant-id="variant.id"
-        :can-edit="canEdit"
-      />
+        :can-edit="canEdit && !isSaving"
+      >
+        <template v-if="siblingCount > 0 && canEdit" #before-history>
+          <div class="flex flex-wrap items-center gap-3 pt-4">
+            <div class="flex items-center gap-3">
+              <ToggleSwitch input-id="replicate-pricing" v-model="replicatePricing" :disabled="isSaving" />
+              <label for="replicate-pricing" class="font-medium">{{ t("Apply to all variants") }}</label>
+            </div>
+            <Message v-if="replicatePricing" severity="warn" icon="fa fa-triangle-exclamation" :closable="false" class="m-0 flex-1">
+              {{ t("Copies pricing to {count} variants.", { count: siblingCount }) }}
+            </Message>
+          </div>
+        </template>
+      </PurchasePriceMargin>
       <small v-if="submitCount > 0 && (errors.purchase_price || errors.margin_type || errors.margin_value || errors.price)" class="text-red-500 dark:text-red-300">
         {{ errors.purchase_price ?? errors.margin_type ?? errors.margin_value ?? errors.price }}
       </small>
@@ -208,8 +264,8 @@ const onSubmit = handleSubmit((values) => {
         icon="fa fa-save"
         raised
         class="uppercase"
-        :loading="isSubmitting"
-        :disabled="!meta.dirty"
+        :loading="isSaving || isSubmitting"
+        :disabled="!isDirty || isSaving"
       />
     </div>
   </form>

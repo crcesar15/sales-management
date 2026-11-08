@@ -23,10 +23,22 @@ const initialMediaIds = ref<number[]>(props.variant.images.map((image) => image.
 const selectedMediaIds = ref<number[]>([...initialMediaIds.value]);
 const saving = ref(false);
 
+const mediaIdsMatch = (left: number[], right: number[]): boolean => {
+  if (left.length !== right.length) return false;
+
+  const sortedLeft = [...left].sort((a, b) => a - b);
+  const sortedRight = [...right].sort((a, b) => a - b);
+
+  return sortedLeft.every((id, index) => id === sortedRight[index]);
+};
+
 watch(
   () => props.variant.images,
   (images) => {
-    initialMediaIds.value = images.map((image) => image.id);
+    const nextInitialMediaIds = images.map((image) => image.id);
+    if (mediaIdsMatch(nextInitialMediaIds, initialMediaIds.value)) return;
+
+    initialMediaIds.value = nextInitialMediaIds;
     selectedMediaIds.value = [...initialMediaIds.value];
   },
 );

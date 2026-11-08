@@ -85,6 +85,11 @@ export interface VariantOverviewPayload {
   status: "active" | "inactive" | "archived";
 }
 
+export interface VariantOverviewUpdatePayload extends VariantOverviewPayload {
+  replicate_pricing: boolean;
+  replicate_inventory_policy: boolean;
+}
+
 export interface VariantUnitResource {
   id: number;
   type: "sale" | "purchase";
