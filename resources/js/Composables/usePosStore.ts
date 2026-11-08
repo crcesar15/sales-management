@@ -64,6 +64,12 @@ export const usePosStore = defineStore("pos", () => {
   }
 
   function addCartItem(item: PosCartItem): boolean {
+    const matchingItems = cartItems.value.filter((entry) => entry.product_variant_id === item.product_variant_id);
+    const snapshot = matchingItems.find((entry) => entry.stock != null)?.stock ?? item.stock ?? null;
+    const allocated = matchingItems.reduce((total, entry) => total + entry.quantity * (entry.conversion_factor > 0 ? entry.conversion_factor : 1), 0);
+    const additional = item.conversion_factor > 0 ? item.conversion_factor : 1;
+    if (snapshot !== null && snapshot - allocated < additional) return false;
+
     const existingIndex = cartItems.value.findIndex(
       (cartItem) => cartItem.product_variant_id === item.product_variant_id && cartItem.sale_unit_id === item.sale_unit_id,
     );
@@ -74,16 +80,10 @@ export const usePosStore = defineStore("pos", () => {
     }
 
     const existing = cartItems.value[existingIndex];
-    const conversionFactor = existing.conversion_factor > 0 ? existing.conversion_factor : 1;
-    const maximumQuantity = existing.stock === null || existing.stock === undefined ? null : Math.floor(existing.stock / conversionFactor);
-
-    if (maximumQuantity !== null && existing.quantity >= maximumQuantity) {
-      return false;
-    }
-
     const updated = [...cartItems.value];
     updated[existingIndex] = {
       ...existing,
+      stock: existing.stock ?? item.stock,
       quantity: existing.quantity + 1,
       line_total: roundCurrency(roundCurrency((existing.quantity + 1) * existing.unit_price) - (existing.line_discount ?? 0)),
     };

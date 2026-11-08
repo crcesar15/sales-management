@@ -22,7 +22,7 @@ export function useStockLedger(lineItems: Ref<LineItem[]>) {
   const baseStockByVariant = computed<Map<number, number | null>>(() => {
     const map = new Map<number, number | null>();
     for (const item of lineItems.value) {
-      if (!map.has(item.product_variant_id)) {
+      if (!map.has(item.product_variant_id) || (map.get(item.product_variant_id) === null && item.stock != null)) {
         map.set(item.product_variant_id, item.stock ?? null);
       }
     }

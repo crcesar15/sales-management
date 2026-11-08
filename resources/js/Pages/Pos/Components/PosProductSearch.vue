@@ -22,13 +22,14 @@ interface ProductSearchOptions {
   addOptions?: PosAddItemOptions;
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   storeId: number | null;
   cartItems: PosCartItem[];
   getRemainingBase: (variantId: number) => number | null;
   inputId?: string;
   focusOnClear?: boolean;
-}>();
+  toastGroup?: string | null;
+}>(), { toastGroup: "pos" });
 
 const emit = defineEmits<{
   (e: "add", item: PosCartItem, options?: PosAddItemOptions): void;
@@ -39,7 +40,18 @@ const { t } = useI18n();
 const toast = useToast();
 const { searchVariantsApi } = useSalesOrderClient();
 const { productView, setProductView } = usePosProductView();
-const { canAdd } = usePosUnitStock((variantId) => props.getRemainingBase(variantId));
+const { canAdd } = usePosUnitStock(remainingBase);
+
+function remainingBase(variantId: number): number | null {
+  const live = props.getRemainingBase(variantId);
+  if (live !== null) return live;
+  const snapshot = results.value.find((variant) => variant.id === variantId)?.stock ?? null;
+  if (snapshot === null) return null;
+  const allocated = props.cartItems.reduce((total, item) => item.product_variant_id === variantId
+    ? total + item.quantity * (item.conversion_factor > 0 ? item.conversion_factor : 1)
+    : total, 0);
+  return snapshot - allocated;
+}
 
 const viewOptions = computed<Array<{ value: PosProductView; icon: string; label: string }>>(() => [
   { value: "grid", icon: "fa fa-table-cells-large", label: t("Grid view") },
@@ -151,7 +163,7 @@ async function searchProducts(filterValue: string, options: ProductSearchOptions
 
     results.value = [];
     failed.value = true;
-    toast.add({ severity: "error", summary: t("Error"), detail: t("Failed to search products"), life: 3000, group: "pos" });
+    toast.add({ severity: "error", summary: t("Error"), detail: t("Failed to search products"), life: 3000, group: props.toastGroup ?? undefined });
     return "error";
   } finally {
     if (currentRequest === requestId) {
@@ -197,7 +209,7 @@ function handleBarcodeCommit(barcode: string, options?: PosAddItemOptions): Barc
       summary: t("Stock limit reached"),
       detail: t("No more stock is available for this product"),
       life: 3000,
-      group: "pos",
+      group: props.toastGroup ?? undefined,
     });
     return "stock-unavailable";
   }
@@ -212,7 +224,7 @@ function notifyScanNotFound(): void {
     summary: t("Product not found"),
     detail: t("No product matches the scanned code"),
     life: 3000,
-    group: "pos",
+    group: props.toastGroup ?? undefined,
   });
 }
 
@@ -322,6 +334,8 @@ function addUnit(unit: PosSellableUnit, options?: PosAddItemOptions): void {
 watch(barcodeMode, () => {
   barcodeModeVersion++;
 });
+
+watch(() => props.storeId, resetSearch);
 
 watch(
   scannerVisible,
@@ -487,7 +501,7 @@ defineExpose({ focusSearch, resetSearch });
         v-else
         :units="units"
         :view="productView"
-        :get-remaining-base="getRemainingBase"
+        :get-remaining-base="remainingBase"
         @add="addUnit"
         @info="toggleInfo"
       />

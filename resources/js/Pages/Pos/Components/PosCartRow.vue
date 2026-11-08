@@ -7,7 +7,8 @@ import type { PosCartItem } from "@/Types/pos";
 
 const props = defineProps<{
   item: PosCartItem;
-  maximumQuantity: number;
+  maximumQuantity: number | null;
+  toastGroup?: string;
 }>();
 
 const emit = defineEmits<{
@@ -29,9 +30,14 @@ function editPrice(event: MouseEvent): void {
 
 function updateQuantity(quantity: number | null): void {
   if (quantity === null) return;
+  if (props.maximumQuantity !== null && props.maximumQuantity < 1) {
+    quantityInputKey.value++;
+    toast.add({ severity: "warn", summary: t("Stock limit reached"), detail: t("No more stock is available for this product"), life: 4000, group: props.toastGroup });
+    return;
+  }
   if (Math.round(quantity * props.item.unit_price * 100) < Math.round((props.item.line_discount ?? 0) * 100)) {
     quantityInputKey.value++;
-    toast.add({ severity: "warn", summary: t("Cannot update item"), detail: t("Reduce the line discount before lowering the quantity or price"), life: 4000, group: "pos" });
+    toast.add({ severity: "warn", summary: t("Cannot update item"), detail: t("Reduce the line discount before lowering the quantity or price"), life: 4000, group: props.toastGroup });
     return;
   }
   emit("updateQuantity", quantity);
@@ -78,7 +84,7 @@ function updateQuantity(quantity: number | null): void {
         :input-id="`pos-quantity-${props.item.id}`"
         :model-value="props.item.quantity"
         :min="1"
-        :max="props.maximumQuantity"
+        :max="props.maximumQuantity === null ? undefined : Math.max(1, props.maximumQuantity)"
         :min-fraction-digits="0"
         :max-fraction-digits="0"
         :aria-label="`${t('Quantity')}: ${props.item.product_name}`"
@@ -92,7 +98,7 @@ function updateQuantity(quantity: number | null): void {
         increment-button-class="!min-h-11 !min-w-11"
         @update:model-value="updateQuantity"
       />
-      <small class="mt-1 block text-surface-500 dark:text-surface-400">{{ t("Max") }}: {{ props.maximumQuantity }}</small>
+      <small v-if="props.maximumQuantity !== null" class="mt-1 block text-surface-500 dark:text-surface-400">{{ t("Max") }}: {{ props.maximumQuantity }}</small>
     </div>
 
     <div class="pos-cart-row__price min-w-0">

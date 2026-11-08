@@ -348,6 +348,7 @@ watch(() => props.draft, hydrateIncomingDraft);
         </div>
 
         <PosCartTable
+          toast-group="pos"
           :model-value="posStore.cartItems"
           :get-remaining-base-excluding-line="getRemainingBaseExcludingLine"
           @update:model-value="posStore.setCartItems"

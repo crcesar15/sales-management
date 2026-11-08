@@ -10,7 +10,7 @@ import type { PosCartItem } from "@/Types/pos";
 
 const props = defineProps<{
   item: PosCartItem | null;
-  maximumQuantity: number;
+  maximumQuantity: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -48,15 +48,17 @@ watch(visible, (isVisible) => {
 const applyPrice = handleSubmit(({ quantity: nextQuantity, unitPrice: price, lineDiscount: discount }) => {
   if (props.item === null) return;
 
-  if (nextQuantity > props.maximumQuantity) {
+  if (props.maximumQuantity !== null && nextQuantity > props.maximumQuantity) {
     setFieldError("quantity", t("Quantity cannot exceed available stock"));
     return;
   }
-  if (Math.round(discount * 100) > Math.round(price * nextQuantity * 100)) {
+  const normalizedPrice = Number(price.toFixed(2));
+  const normalizedDiscount = Number(discount.toFixed(2));
+  if (Math.round(normalizedDiscount * 100) > Math.round(normalizedPrice * nextQuantity * 100)) {
     setFieldError("lineDiscount", t("Line discount cannot exceed the line amount"));
     return;
   }
-  emit("updateItem", props.item.id, nextQuantity, Number(price.toFixed(2)), Number(discount.toFixed(2)));
+  emit("updateItem", props.item.id, nextQuantity, normalizedPrice, normalizedDiscount);
   visible.value = false;
 });
 
@@ -114,7 +116,7 @@ function resetPrice(): void {
           v-model="quantity"
           v-bind="quantityAttrs"
           :min="1"
-          :max="maximumQuantity"
+          :max="maximumQuantity === null ? undefined : Math.max(1, maximumQuantity)"
           :min-fraction-digits="0"
           :max-fraction-digits="0"
           :class="{ 'p-invalid': errors.quantity }"
@@ -128,7 +130,7 @@ function resetPrice(): void {
           increment-button-class="!min-h-11 !min-w-11"
         />
         <small v-if="errors.quantity" class="text-red-400 dark:text-red-300">{{ errors.quantity }}</small>
-        <small v-else class="text-surface-500 dark:text-surface-400">{{ t("Max") }}: {{ maximumQuantity }}</small>
+        <small v-else-if="maximumQuantity !== null" class="text-surface-500 dark:text-surface-400">{{ t("Max") }}: {{ maximumQuantity }}</small>
       </div>
 
       <div class="flex flex-col gap-1">

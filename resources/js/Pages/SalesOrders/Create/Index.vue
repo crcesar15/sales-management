@@ -95,6 +95,7 @@ const submit = handleSubmit(() => {
       sale_unit_id: item.sale_unit_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
+      line_discount: item.line_discount ?? 0,
     })),
   };
 
@@ -154,7 +155,7 @@ function goBack() {
         </section>
 
         <Card class="!border !border-surface-200 !shadow-none dark:!border-surface-700">
-          <template #title>{{ t("Products") }}</template>
+          <template v-if="selectedStoreId === null" #title>{{ t("Products") }}</template>
           <template #content>
             <div
               v-if="selectedStoreId === null"

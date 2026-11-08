@@ -101,7 +101,7 @@ const lineItems = ref<LineItem[]>(
     quantity: item.quantity,
     unit_price: item.unit_price,
     line_discount: item.line_discount ?? 0,
-    original_unit_price: item.unit_price,
+    original_unit_price: item.original_unit_price ?? item.unit_price,
     conversion_factor: item.conversion_factor,
     line_total: item.line_total,
     stock: item.stock ?? null,
@@ -376,7 +376,6 @@ function cancelOrder(reason: string): void {
         </Card>
 
         <Card>
-          <template #title>{{ t("Products") }}</template>
           <template #content>
             <SOLineItemsTable
               v-model="lineItems"
@@ -409,7 +408,11 @@ function cancelOrder(reason: string): void {
               />
               <div v-else class="flex items-center justify-between gap-2">
                 <label for="so-order-percent">{{ t("Order discount") }} (%)</label>
-                <InputNumber input-id="so-order-percent" :model-value="discountValue" :min="0" :max="100"
+                <InputNumber
+                  input-id="so-order-percent"
+                  :model-value="discountValue"
+                  :min="0"
+                  :max="100"
                   :min-fraction-digits="0" :max-fraction-digits="2" suffix="%" @update:model-value="setFieldValue('discount_value', $event)" />
               </div>
             </template>

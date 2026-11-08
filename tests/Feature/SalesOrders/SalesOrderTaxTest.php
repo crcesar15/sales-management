@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Enums\DiscountType;
+use App\Enums\PermissionsEnum;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\SalesOrder;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
@@ -103,4 +105,23 @@ it('saves tax_amount and total with a 13% tax rate and a percentage discount', f
         ->and((float) $order->discount)->toBe(100.0)
         ->and((float) $order->tax_amount)->toBe(117.0)
         ->and((float) $order->total)->toBe(1017.0);
+});
+
+it('creates an order with a line discount without an open register', function (): void {
+    $this->actor->givePermissionTo(PermissionsEnum::SALES_MANAGE->value);
+
+    $this->actingAs($this->actor)->post(route('sales-orders.store'), [
+        'store_id' => $this->store->id,
+        'items' => [[
+            'product_variant_id' => $this->variant->id,
+            'quantity' => 2,
+            'unit_price' => 100,
+            'line_discount' => 15,
+        ]],
+    ])->assertSessionHasNoErrors()->assertRedirect();
+
+    $order = SalesOrder::query()->sole();
+    expect($order->cash_register_shift_id)->toBeNull()
+        ->and((float) $order->items()->sole()->line_discount)->toBe(15.0)
+        ->and((float) $order->sub_total)->toBe(185.0);
 });

@@ -9,6 +9,8 @@ import type { PosCartItem, PosProductInfo } from "@/Types/pos";
 
 const props = defineProps<{
   getRemainingBaseExcludingLine: (variantId: number, lineId: string) => number | null;
+  toastGroup?: string;
+  salesOrder?: boolean;
 }>();
 
 const items = defineModel<PosCartItem[]>({ required: true });
@@ -42,21 +44,25 @@ function toggleInfo(event: Event, item: PosCartItem): void {
   infoPopover.value?.toggle(event);
 }
 
-function maximumQuantity(item: PosCartItem): number {
+function maximumQuantity(item: PosCartItem): number | null {
   const remainingBase = props.getRemainingBaseExcludingLine(item.product_variant_id, item.id);
-  if (remainingBase === null) return 99999;
+  if (remainingBase === null) return null;
 
-  return Math.max(1, Math.floor(remainingBase / Math.max(item.conversion_factor, 1)));
+  return Math.max(0, Math.floor(remainingBase / (item.conversion_factor > 0 ? item.conversion_factor : 1)));
 }
 
-function updateQuantity(index: number, quantity: number | null): void {
-  if (quantity === null) return;
+function updateQuantity(itemId: string, quantity: number | null): void {
+  if (quantity === null || !Number.isFinite(quantity)) return;
 
   const updated = [...items.value];
+  const index = updated.findIndex((item) => item.id === itemId);
+  if (index === -1) return;
   const current = updated[index];
-  const nextQuantity = Math.min(Math.max(Math.floor(quantity), 1), maximumQuantity(current));
+  const maximum = maximumQuantity(current);
+  if (maximum !== null && maximum < 1) return;
+  const nextQuantity = Math.min(Math.max(Math.floor(quantity), 1), maximum ?? 99999);
   if (Math.round(nextQuantity * current.unit_price * 100) < Math.round((current.line_discount ?? 0) * 100)) {
-    toast.add({ severity: "warn", summary: t("Cannot update item"), detail: t("Reduce the line discount before lowering the quantity or price"), life: 4000, group: "pos" });
+    toast.add({ severity: "warn", summary: t("Cannot update item"), detail: t("Reduce the line discount before lowering the quantity or price"), life: 4000, group: props.toastGroup });
     return;
   }
   updated[index] = { ...current, quantity: nextQuantity, line_total: (Math.round(nextQuantity * current.unit_price * 100) - Math.round((current.line_discount ?? 0) * 100)) / 100 };
@@ -75,6 +81,11 @@ function updateItem(itemId: string, quantity: number, price: number, discount: n
 
   const updated = [...items.value];
   const current = updated[index];
+  const maximum = maximumQuantity(current);
+  if ((maximum !== null && quantity > maximum) || quantity < 1 || !Number.isInteger(quantity)) {
+    toast.add({ severity: "warn", summary: t("Cannot update item"), detail: t("Quantity cannot exceed available stock"), life: 4000, group: props.toastGroup });
+    return;
+  }
   updated[index] = { ...current, quantity, unit_price: price, line_discount: discount, line_total: (Math.round(price * quantity * 100) - Math.round(discount * 100)) / 100 };
   items.value = updated;
 }
@@ -86,7 +97,7 @@ function updatePriceEditorVisibility(visible: boolean): void {
   void nextTick(() => priceEditTrigger.value?.focus());
 }
 
-function confirmRemove(index: number): void {
+function confirmRemove(itemId: string): void {
   confirm.require({
     message: t("Are you sure you want to remove this item?"),
     header: t("Confirm"),
@@ -96,7 +107,7 @@ function confirmRemove(index: number): void {
     acceptProps: { severity: "danger" },
     rejectProps: { severity: "secondary" },
     accept: () => {
-      items.value = items.value.filter((_, itemIndex) => itemIndex !== index);
+      items.value = items.value.filter((item) => item.id !== itemId);
     },
   });
 }
@@ -109,8 +120,8 @@ function confirmRemove(index: number): void {
       class="flex min-h-64 flex-1 flex-col items-center justify-center px-6 text-center text-surface-500 dark:text-surface-400"
     >
       <i class="fa fa-cart-shopping mb-3 text-3xl" aria-hidden="true" />
-      <p class="m-0 font-medium">{{ t("Your sale is empty") }}</p>
-      <small>{{ t("Search for products to add them to this sale") }}</small>
+      <p class="m-0 font-medium">{{ t(salesOrder ? "No items added yet" : "Your sale is empty") }}</p>
+      <small>{{ t(salesOrder ? "Use Add products to add products" : "Search for products to add them to this sale") }}</small>
     </div>
 
     <div v-else class="min-h-0 flex-1 overflow-y-auto">
@@ -131,10 +142,11 @@ function confirmRemove(index: number): void {
             :class="{ 'bg-surface-50 dark:bg-surface-800/50': index % 2 === 1 }"
             :item="item"
             :maximum-quantity="maximumQuantity(item)"
-            @update-quantity="updateQuantity(index, $event)"
+            :toast-group="toastGroup"
+            @update-quantity="updateQuantity(item.id, $event)"
             @show-details="toggleInfo($event, item)"
             @edit-price="openPriceEditor(item, $event)"
-            @remove="confirmRemove(index)"
+            @remove="confirmRemove(item.id)"
           />
         </ul>
       </div>
@@ -144,7 +156,7 @@ function confirmRemove(index: number): void {
     <PosCartPriceDialog
       :visible="priceEditorVisible"
       :item="priceItem"
-      :maximum-quantity="priceItem ? maximumQuantity(priceItem) : 1"
+      :maximum-quantity="priceItem ? maximumQuantity(priceItem) : null"
       @update:visible="updatePriceEditorVisibility"
       @update-item="updateItem"
     />
