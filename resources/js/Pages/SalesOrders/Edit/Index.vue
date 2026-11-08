@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Card, Dialog, Message, Select, Textarea, useToast } from "primevue";
+import { Button, Card, Dialog, InputNumber, Message, Select, Textarea, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import type { FormDataConvertible } from "@inertiajs/core";
 import { useI18n } from "vue-i18n";
@@ -100,6 +100,7 @@ const lineItems = ref<LineItem[]>(
     sale_unit_id: item.sale_unit_id,
     quantity: item.quantity,
     unit_price: item.unit_price,
+    line_discount: item.line_discount ?? 0,
     original_unit_price: item.unit_price,
     conversion_factor: item.conversion_factor,
     line_total: item.line_total,
@@ -140,7 +141,9 @@ const { getRemainingBase, getRemainingBaseExcludingLine, hasOversell } = useStoc
 
 // Totals computation — must mirror SalesOrderService::calculateTotals()
 const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.line_total, 0));
-const discountAmount = computed(() => values.discount_value ?? 0);
+const discountAmount = computed(() => props.order.discount_type === "percentage"
+  ? Math.round(subTotal.value * Math.min(values.discount_value ?? 0, 100)) / 100
+  : Math.min(values.discount_value ?? 0, subTotal.value));
 const taxRate = computed(() => Number(getSetting("sales", "tax_rate", "0") ?? 0) / 100);
 const taxAmount = computed(() => Math.round((subTotal.value - discountAmount.value) * taxRate.value * 100) / 100);
 const totalAmount = computed(() => Math.round((subTotal.value - discountAmount.value + taxAmount.value) * 100) / 100);
@@ -192,7 +195,7 @@ function saveDraft(formValues: { discount_value?: number | null; notes?: string 
   const payload = {
     customer_id: selectedCustomerId.value,
     is_walk_in: isWalkIn.value,
-    discount_type: "flat" as const,
+    discount_type: props.order.discount_type,
     discount_value: formValues.discount_value ?? 0,
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
@@ -200,6 +203,7 @@ function saveDraft(formValues: { discount_value?: number | null; notes?: string 
       sale_unit_id: item.sale_unit_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
+      line_discount: item.line_discount ?? 0,
       conversion_factor: item.conversion_factor,
     })),
   };
@@ -396,12 +400,18 @@ function cancelOrder(reason: string): void {
           >
             <template #discount>
               <SODiscountField
+                v-if="order.discount_type === 'flat'"
                 :sub-total="subTotal"
                 :discount-value="discountValue"
                 :discount-attrs="discountValueAttrs"
                 :max-discount="subTotal"
                 @update:discount-value="setFieldValue('discount_value', $event)"
               />
+              <div v-else class="flex items-center justify-between gap-2">
+                <label for="so-order-percent">{{ t("Order discount") }} (%)</label>
+                <InputNumber input-id="so-order-percent" :model-value="discountValue" :min="0" :max="100"
+                  :min-fraction-digits="0" :max-fraction-digits="2" suffix="%" @update:model-value="setFieldValue('discount_value', $event)" />
+              </div>
             </template>
             <template #notes>
               <div class="flex flex-col gap-1">

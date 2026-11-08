@@ -10,43 +10,60 @@ import type { PosCartItem } from "@/Types/pos";
 
 const props = defineProps<{
   item: PosCartItem | null;
+  maximumQuantity: number;
 }>();
 
 const emit = defineEmits<{
-  (e: "updatePrice", itemId: string, price: number): void;
+  (e: "updateItem", itemId: string, quantity: number, price: number, discount: number): void;
 }>();
 
 const visible = defineModel<boolean>("visible", { default: false });
 const { t } = useI18n();
 const { currencyCode, formatCurrency } = useCurrencyFormatter();
-const schema = toTypedSchema(object({ unitPrice: number().required().min(0) }));
-const { handleSubmit, defineField, errors, resetForm } = useForm({
+const schema = toTypedSchema(object({
+  quantity: number().required().integer().min(1),
+  unitPrice: number().required().min(0),
+  lineDiscount: number().transform((value, originalValue) => (originalValue === null || originalValue === "" ? 0 : value)).required().min(0),
+}));
+const { handleSubmit, defineField, errors, resetForm, setFieldValue, setFieldError } = useForm({
   validationSchema: schema,
-  initialValues: { unitPrice: 0 },
+  initialValues: { quantity: 1, unitPrice: 0, lineDiscount: 0 },
 });
+const [quantity, quantityAttrs] = defineField("quantity");
 const [unitPrice, unitPriceAttrs] = defineField("unitPrice");
+const [lineDiscount, lineDiscountAttrs] = defineField("lineDiscount");
+const grossAmount = computed(() => Math.round((unitPrice.value ?? 0) * (quantity.value ?? 0) * 100) / 100);
+const previewTotal = computed(() => Math.max(0, Math.round((grossAmount.value - (lineDiscount.value ?? 0)) * 100) / 100));
 const priceModified = computed(
-  () => props.item !== null && Number(props.item.unit_price.toFixed(2)) !== Number(props.item.original_unit_price.toFixed(2)),
+  () => props.item !== null && Number((unitPrice.value ?? 0).toFixed(2)) !== Number(props.item.original_unit_price.toFixed(2)),
 );
 
 watch(visible, (isVisible) => {
   if (!isVisible || props.item === null) return;
 
-  resetForm({ values: { unitPrice: props.item.unit_price } });
+  resetForm({ values: { quantity: props.item.quantity, unitPrice: props.item.unit_price, lineDiscount: props.item.line_discount ?? 0 } });
   void nextTick(() => document.getElementById("pos-unit-price")?.focus());
 });
 
-const applyPrice = handleSubmit(({ unitPrice: price }) => {
+const applyPrice = handleSubmit(({ quantity: nextQuantity, unitPrice: price, lineDiscount: discount }) => {
   if (props.item === null) return;
 
-  emit("updatePrice", props.item.id, Number(price.toFixed(2)));
+  if (nextQuantity > props.maximumQuantity) {
+    setFieldError("quantity", t("Quantity cannot exceed available stock"));
+    return;
+  }
+  if (Math.round(discount * 100) > Math.round(price * nextQuantity * 100)) {
+    setFieldError("lineDiscount", t("Line discount cannot exceed the line amount"));
+    return;
+  }
+  emit("updateItem", props.item.id, nextQuantity, Number(price.toFixed(2)), Number(discount.toFixed(2)));
   visible.value = false;
 });
 
 function resetPrice(): void {
   if (props.item === null) return;
 
-  resetForm({ values: { unitPrice: props.item.original_unit_price } });
+  setFieldValue("unitPrice", props.item.original_unit_price);
 }
 </script>
 
@@ -54,7 +71,7 @@ function resetPrice(): void {
   <Dialog
     v-model:visible="visible"
     modal
-    :header="t('Edit price')"
+    :header="t('Edit item')"
     :style="{ width: '420px', maxHeight: 'calc(100dvh - 1rem)' }"
     :breakpoints="{ '768px': 'calc(100vw - 1rem)' }"
   >
@@ -71,7 +88,7 @@ function resetPrice(): void {
       <div class="flex flex-col gap-1">
         <label for="pos-unit-price">{{ t("Unit Price") }}</label>
         <InputNumber
-          id="pos-unit-price"
+          input-id="pos-unit-price"
           v-model="unitPrice"
           v-bind="unitPriceAttrs"
           mode="currency"
@@ -82,14 +99,59 @@ function resetPrice(): void {
           :max-fraction-digits="2"
           :class="{ 'p-invalid': errors.unitPrice }"
           input-class="min-h-11 tabular-nums"
-          autofocus
         />
         <small v-if="errors.unitPrice" class="text-red-400 dark:text-red-300">{{ errors.unitPrice }}</small>
+        <div v-if="props.item" class="flex items-center justify-between gap-3 text-sm text-surface-500 dark:text-surface-400">
+          <span>{{ t("Original price") }}</span>
+          <span class="tabular-nums">{{ formatCurrency(String(props.item.original_unit_price)) }}</span>
+        </div>
       </div>
 
-      <div v-if="props.item" class="flex items-center justify-between gap-3 text-sm text-surface-500 dark:text-surface-400">
-        <span>{{ t("Original price") }}</span>
-        <span class="tabular-nums">{{ formatCurrency(String(props.item.original_unit_price)) }}</span>
+      <div class="flex flex-col gap-1">
+        <label for="pos-edit-quantity">{{ t("Quantity") }}</label>
+        <InputNumber
+          input-id="pos-edit-quantity"
+          v-model="quantity"
+          v-bind="quantityAttrs"
+          :min="1"
+          :max="maximumQuantity"
+          :min-fraction-digits="0"
+          :max-fraction-digits="0"
+          :class="{ 'p-invalid': errors.quantity }"
+          show-buttons
+          button-layout="horizontal"
+          increment-button-icon="fa fa-plus"
+          decrement-button-icon="fa fa-minus"
+          fluid
+          input-class="min-h-11 w-full tabular-nums"
+          decrement-button-class="!min-h-11 !min-w-11"
+          increment-button-class="!min-h-11 !min-w-11"
+        />
+        <small v-if="errors.quantity" class="text-red-400 dark:text-red-300">{{ errors.quantity }}</small>
+        <small v-else class="text-surface-500 dark:text-surface-400">{{ t("Max") }}: {{ maximumQuantity }}</small>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label for="pos-line-discount">{{ t("Line discount") }}</label>
+        <InputNumber
+          input-id="pos-line-discount"
+          v-model="lineDiscount"
+          v-bind="lineDiscountAttrs"
+          mode="currency"
+          :currency="currencyCode"
+          show-clear
+          :min="0"
+          :min-fraction-digits="2"
+          :max-fraction-digits="2"
+          :class="{ 'p-invalid': errors.lineDiscount }"
+          input-class="min-h-11 tabular-nums"
+        />
+        <small v-if="errors.lineDiscount" class="text-red-400 dark:text-red-300">{{ errors.lineDiscount }}</small>
+      </div>
+
+      <div class="flex items-baseline justify-between gap-3 border-t border-surface-200 pt-4 dark:border-surface-700" aria-live="polite">
+        <span class="font-semibold">{{ t("Line total") }}</span>
+        <span class="text-2xl font-bold tabular-nums">{{ formatCurrency(String(previewTotal)) }}</span>
       </div>
     </form>
 

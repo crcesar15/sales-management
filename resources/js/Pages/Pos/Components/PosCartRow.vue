@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Button, InputNumber } from "primevue";
-import { computed } from "vue";
+import { Button, InputNumber, useToast } from "primevue";
+import { computed, shallowRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@composables/useCurrencyFormatter";
 import type { PosCartItem } from "@/Types/pos";
@@ -18,11 +18,23 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const toast = useToast();
+const quantityInputKey = shallowRef(0);
 const { formatCurrency } = useCurrencyFormatter();
 const priceModified = computed(() => Number(props.item.unit_price.toFixed(2)) !== Number(props.item.original_unit_price.toFixed(2)));
 
 function editPrice(event: MouseEvent): void {
   emit("editPrice", event.currentTarget as HTMLElement);
+}
+
+function updateQuantity(quantity: number | null): void {
+  if (quantity === null) return;
+  if (Math.round(quantity * props.item.unit_price * 100) < Math.round((props.item.line_discount ?? 0) * 100)) {
+    quantityInputKey.value++;
+    toast.add({ severity: "warn", summary: t("Cannot update item"), detail: t("Reduce the line discount before lowering the quantity or price"), life: 4000, group: "pos" });
+    return;
+  }
+  emit("updateQuantity", quantity);
 }
 </script>
 
@@ -62,6 +74,7 @@ function editPrice(event: MouseEvent): void {
         {{ t("Quantity") }}
       </label>
       <InputNumber
+        :key="quantityInputKey"
         :input-id="`pos-quantity-${props.item.id}`"
         :model-value="props.item.quantity"
         :min="1"
@@ -77,31 +90,35 @@ function editPrice(event: MouseEvent): void {
         input-class="min-h-11 w-full tabular-nums"
         decrement-button-class="!min-h-11 !min-w-11"
         increment-button-class="!min-h-11 !min-w-11"
-        @update:model-value="emit('updateQuantity', $event)"
+        @update:model-value="updateQuantity"
       />
       <small class="mt-1 block text-surface-500 dark:text-surface-400">{{ t("Max") }}: {{ props.maximumQuantity }}</small>
     </div>
 
     <div class="pos-cart-row__price min-w-0">
       <span class="pos-cart-row__field-label mb-1 block text-sm font-medium">{{ t("Unit Price") }}</span>
-      <div class="pos-cart-row__price-control rounded-md border border-surface-300 px-2 dark:border-surface-600">
+      <div class="pos-cart-row__price-control">
         <span class="pos-cart-row__price-value tabular-nums">{{ formatCurrency(String(props.item.unit_price)) }}</span>
-        <Button
-          v-tooltip.top="t('Edit price')"
-          icon="fa fa-pen"
-          text
-          rounded
-          class="min-h-11 min-w-11"
-          :aria-label="`${t('Edit price')}: ${props.item.product_name}`"
-          @click="editPrice"
-        />
       </div>
       <small v-if="priceModified" class="pos-cart-row__price-change mt-1 block text-surface-500 dark:text-surface-400">
         {{ t("Changed from") }} {{ formatCurrency(String(props.item.original_unit_price)) }}
       </small>
+      <small v-if="(props.item.line_discount ?? 0) > 0" class="mt-1 block text-surface-500 dark:text-surface-400">
+        {{ t("Line discount") }}: −{{ formatCurrency(String(props.item.line_discount)) }}
+      </small>
     </div>
 
-    <div class="pos-cart-row__actions flex items-center justify-center">
+    <div class="pos-cart-row__actions flex items-center justify-center gap-2">
+      <Button
+        v-tooltip.top="t('Edit item')"
+        :label="t('Edit')"
+        icon="fa fa-pen"
+        severity="primary"
+        outlined
+        class="min-h-11 w-full"
+        :aria-label="`${t('Edit item')}: ${props.item.product_name}`"
+        @click="editPrice"
+      />
       <Button
         v-tooltip.top="t('Remove')"
         :label="t('Remove')"

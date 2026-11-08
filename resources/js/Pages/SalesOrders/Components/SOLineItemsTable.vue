@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Button, InputNumber, Tag, useConfirm, ConfirmDialog, Badge } from "primevue";
+import { Button, InputNumber, useConfirm, useToast, ConfirmDialog, Badge } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
-import { computed } from "vue";
+import { computed, shallowRef } from "vue";
 import SOProductPicker from "./SOProductPicker.vue";
 import type { SalesOrderLineItemForm } from "@/Types/sales-order-types";
 
@@ -37,6 +37,8 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const { formatCurrency, currencyCode } = useCurrencyFormatter();
 const confirm = useConfirm();
+const toast = useToast();
+const inputKey = shallowRef(0);
 
 const items = computed({
   get: () => props.modelValue,
@@ -92,17 +94,6 @@ function remainingInSaleUnit(item: LineItem): number | null {
   return Math.floor(remainingBase / (item.conversion_factor > 0 ? item.conversion_factor : 1));
 }
 
-function stockStatus(item: LineItem): null | { label: string; severity: "warn" | "danger" } {
-  const remainingBase = remainingBaseAfterOrder(item);
-  if (remainingBase === null) return null;
-  if (remainingBase <= 0) return { label: t("Out of stock"), severity: "danger" };
-  if (item.minimum_stock_level !== null && item.minimum_stock_level !== undefined && remainingBase <= item.minimum_stock_level) {
-    return { label: t("Low Stock"), severity: "warn" };
-  }
-
-  return null;
-}
-
 function saleUnitName(item: LineItem): string {
   return item.sale_unit?.name ?? item.base_unit_name ?? "—";
 }
@@ -112,22 +103,41 @@ function onPickerAdd(item: LineItem) {
 }
 
 function updateQuantity(index: number, quantity: number) {
+  if (quantity === null || Math.round(quantity * items.value[index].unit_price * 100) < Math.round((items.value[index].line_discount ?? 0) * 100)) {
+    inputKey.value++;
+    toast.add({ severity: "warn", summary: t("Cannot update item"), detail: t("Reduce the line discount before lowering the quantity or price"), life: 4000 });
+    return;
+  }
   const updated = [...items.value];
   updated[index] = {
     ...updated[index],
     quantity,
-    line_total: quantity * updated[index].unit_price,
+    line_total: (Math.round(quantity * updated[index].unit_price * 100) - Math.round((updated[index].line_discount ?? 0) * 100)) / 100,
   };
   emit("update:modelValue", updated);
 }
 
 function updatePrice(index: number, price: number) {
+  if (price === null || Math.round(price * items.value[index].quantity * 100) < Math.round((items.value[index].line_discount ?? 0) * 100)) {
+    inputKey.value++;
+    toast.add({ severity: "warn", summary: t("Cannot update item"), detail: t("Reduce the line discount before lowering the quantity or price"), life: 4000 });
+    return;
+  }
   const updated = [...items.value];
   updated[index] = {
     ...updated[index],
     unit_price: price,
-    line_total: updated[index].quantity * price,
+    line_total: (Math.round(updated[index].quantity * price * 100) - Math.round((updated[index].line_discount ?? 0) * 100)) / 100,
   };
+  emit("update:modelValue", updated);
+}
+
+function updateLineDiscount(index: number, discount: number | null): void {
+  if (discount === null) return;
+  const item = items.value[index];
+  if (discount < 0 || Math.round(discount * 100) > Math.round(item.quantity * item.unit_price * 100)) return;
+  const updated = [...items.value];
+  updated[index] = { ...item, line_discount: discount, line_total: (Math.round(item.quantity * item.unit_price * 100) - Math.round(discount * 100)) / 100 };
   emit("update:modelValue", updated);
 }
 
@@ -238,6 +248,7 @@ function hasPriceOverride(item: LineItem): boolean {
                 {{ t("Unit Price") }}
               </label>
               <InputNumber
+                :key="`price-${inputKey}`"
                 :input-id="`so-item-price-${item.id}`"
                 :model-value="item.unit_price"
                 :aria-label="getInputLabel('Unit Price', item)"
@@ -261,6 +272,7 @@ function hasPriceOverride(item: LineItem): boolean {
                 {{ t("Quantity") }}
               </label>
               <InputNumber
+                :key="`quantity-${inputKey}`"
                 :input-id="`so-item-quantity-${item.id}`"
                 :model-value="item.quantity"
                 :aria-label="getInputLabel('Quantity', item)"
@@ -286,6 +298,10 @@ function hasPriceOverride(item: LineItem): boolean {
               <span class="flex items-center text-[16px] tabular-nums xl:min-h-0">
                 {{ formatCurrency(String(item.line_total)) }}
               </span>
+              <label :for="`so-line-discount-${item.id}`" class="mt-2 block text-sm">{{ t("Line discount") }}</label>
+              <InputNumber :input-id="`so-line-discount-${item.id}`" :model-value="item.line_discount ?? 0" mode="currency"
+                :currency="currencyCode" :min="0" :max="item.quantity * item.unit_price" :min-fraction-digits="2" :max-fraction-digits="2"
+                fluid input-class="min-h-11 w-full" @update:model-value="updateLineDiscount(index, $event)" />
             </div>
 
             <div class="flex items-center justify-end xl:items-center">

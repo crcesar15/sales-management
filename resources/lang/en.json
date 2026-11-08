@@ -1,4 +1,13 @@
 {
+  "Edit item": "Edit item",
+  "Line discount": "Line discount",
+  "Order discount": "Order discount",
+  "Subtotal after line discounts": "Subtotal after line discounts",
+  "Line discounts included": "Line discounts included",
+  "Cannot update item": "Cannot update item",
+  "Reduce the line discount before lowering the quantity or price": "Reduce the line discount before lowering the quantity or price",
+  "Line discount cannot exceed the line amount": "Line discount cannot exceed the line amount",
+  "Quantity cannot exceed available stock": "Quantity cannot exceed available stock",
   "#": "#",
   "1 day": "1 day",
   ":days days": ":days days",

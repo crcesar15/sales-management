@@ -40,12 +40,12 @@ const discountPercentage = computed(() => {
     <template #content>
       <div class="flex flex-col gap-3">
         <div class="flex justify-between">
-          <span class="text-lg lg:text-base">{{ t("Sub Total") }}</span>
+          <span class="text-lg lg:text-base">{{ t("Subtotal after line discounts") }}</span>
           <span class="text-lg lg:text-base">{{ formatCurrency(String(subTotal)) }}</span>
         </div>
         <slot v-if="$slots.discount" name="discount" />
         <div v-else-if="discount > 0" class="flex justify-between items-center">
-          <span class="text-lg lg:text-base">{{ t("Discount") }}</span>
+          <span class="text-lg lg:text-base">{{ t("Order discount") }}</span>
           <div class="text-right">
             <span class="text-red-500 dark:text-red-400 font-medium">-{{ formatCurrency(String(discount)) }}</span>
             <span v-if="discountPercentage" class="text-surface-400 text-sm ml-1">({{ discountPercentage }}%)</span>

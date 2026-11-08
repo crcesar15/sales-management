@@ -142,6 +142,7 @@ function checkoutPayload(intent: "save" | "payment") {
       sale_unit_id: item.sale_unit_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
+      line_discount: item.line_discount ?? 0,
     })),
   };
 }

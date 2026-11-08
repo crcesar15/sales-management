@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useConfirm } from "primevue";
+import { useConfirm, useToast } from "primevue";
 import { computed, nextTick, shallowRef } from "vue";
 import { useI18n } from "vue-i18n";
 import PosCartPriceDialog from "./PosCartPriceDialog.vue";
@@ -15,6 +15,7 @@ const items = defineModel<PosCartItem[]>({ required: true });
 
 const { t } = useI18n();
 const confirm = useConfirm();
+const toast = useToast();
 const hasItems = computed(() => items.value.length > 0);
 const infoPopover = shallowRef<{ toggle: (event: Event) => void }>();
 const infoItemId = shallowRef<string | null>(null);
@@ -54,7 +55,11 @@ function updateQuantity(index: number, quantity: number | null): void {
   const updated = [...items.value];
   const current = updated[index];
   const nextQuantity = Math.min(Math.max(Math.floor(quantity), 1), maximumQuantity(current));
-  updated[index] = { ...current, quantity: nextQuantity, line_total: nextQuantity * current.unit_price };
+  if (Math.round(nextQuantity * current.unit_price * 100) < Math.round((current.line_discount ?? 0) * 100)) {
+    toast.add({ severity: "warn", summary: t("Cannot update item"), detail: t("Reduce the line discount before lowering the quantity or price"), life: 4000, group: "pos" });
+    return;
+  }
+  updated[index] = { ...current, quantity: nextQuantity, line_total: (Math.round(nextQuantity * current.unit_price * 100) - Math.round((current.line_discount ?? 0) * 100)) / 100 };
   items.value = updated;
 }
 
@@ -64,13 +69,13 @@ function openPriceEditor(item: PosCartItem, trigger: HTMLElement): void {
   priceEditorVisible.value = true;
 }
 
-function updateUnitPrice(itemId: string, price: number): void {
+function updateItem(itemId: string, quantity: number, price: number, discount: number): void {
   const index = items.value.findIndex((item) => item.id === itemId);
   if (index === -1) return;
 
   const updated = [...items.value];
   const current = updated[index];
-  updated[index] = { ...current, unit_price: price, line_total: price * current.quantity };
+  updated[index] = { ...current, quantity, unit_price: price, line_discount: discount, line_total: (Math.round(price * quantity * 100) - Math.round(discount * 100)) / 100 };
   items.value = updated;
 }
 
@@ -139,8 +144,9 @@ function confirmRemove(index: number): void {
     <PosCartPriceDialog
       :visible="priceEditorVisible"
       :item="priceItem"
+      :maximum-quantity="priceItem ? maximumQuantity(priceItem) : 1"
       @update:visible="updatePriceEditorVisibility"
-      @update-price="updateUnitPrice"
+      @update-item="updateItem"
     />
   </section>
 </template>

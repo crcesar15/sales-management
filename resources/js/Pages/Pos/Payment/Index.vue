@@ -2,7 +2,7 @@
 import { router, useForm } from "@inertiajs/vue3";
 import { Button, Dialog, Message, useConfirm, useToast } from "primevue";
 import axios from "axios";
-import { nextTick, onMounted, onUnmounted, ref, shallowRef, useTemplateRef } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
 import PosLayout from "@layouts/pos.vue";
@@ -36,6 +36,7 @@ const handoverDialogVisible = shallowRef(false);
 const isWideHandoverLayout = shallowRef(window.matchMedia("(min-width: 1280px)").matches);
 const shouldFocusPaymentAfterDialogClose = shallowRef(false);
 const paymentSection = useTemplateRef<HTMLElement>("paymentSection");
+const lineDiscountTotal = computed(() => (props.order.items ?? []).reduce((sum, item) => sum + (item.line_discount ?? 0), 0));
 
 const handoverLayoutQuery = window.matchMedia("(min-width: 1280px)");
 
@@ -152,13 +153,14 @@ onUnmounted(() => handoverLayoutQuery.removeEventListener("change", updateHandov
           class="mt-4 flex flex-col gap-1 border-t border-surface-200 pt-3 text-sm dark:border-surface-700 sm:flex-row sm:flex-wrap sm:justify-end sm:gap-x-5"
         >
           <span>
-            {{ t("Subtotal") }}:
+            {{ t("Subtotal after line discounts") }}:
             <strong>{{ formatCurrency(String(order.sub_total)) }}</strong>
           </span>
           <span>
-            {{ t("Discount") }}:
+            {{ t("Order discount") }}:
             <strong>−{{ formatCurrency(String(order.discount)) }}</strong>
           </span>
+          <span v-if="lineDiscountTotal > 0">{{ t("Line discounts included") }}: <strong>−{{ formatCurrency(String(lineDiscountTotal)) }}</strong></span>
           <span>
             {{ t("Tax") }}:
             <strong>{{ formatCurrency(String(order.tax_amount)) }}</strong>

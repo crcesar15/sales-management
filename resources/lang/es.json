@@ -1,4 +1,13 @@
 {
+  "Edit item": "Editar producto",
+  "Line discount": "Descuento de línea",
+  "Order discount": "Descuento del pedido",
+  "Subtotal after line discounts": "Subtotal después de descuentos por línea",
+  "Line discounts included": "Descuentos por línea incluidos",
+  "Cannot update item": "No se puede actualizar el producto",
+  "Reduce the line discount before lowering the quantity or price": "Reduzca el descuento de línea antes de disminuir la cantidad o el precio",
+  "Line discount cannot exceed the line amount": "El descuento de línea no puede superar el importe de la línea",
+  "Quantity cannot exceed available stock": "La cantidad no puede superar el stock disponible",
   "#": "#",
   "1 day": "1 dia",
   ":days days": ":days dias",

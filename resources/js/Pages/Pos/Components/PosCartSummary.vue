@@ -58,7 +58,7 @@ function removeDiscount(): void {
 <template>
   <section class="pos-cart-summary border-t border-surface-200 p-4 dark:border-surface-700" :aria-label="t('Sale summary')">
     <div class="flex items-center justify-between gap-4 text-surface-600 dark:text-surface-300">
-      <span>{{ t("Subtotal") }}</span>
+      <span>{{ t("Subtotal after line discounts") }}</span>
       <span class="font-medium tabular-nums">{{ formatCurrency(String(subTotal)) }}</span>
     </div>
 
@@ -69,7 +69,7 @@ function removeDiscount(): void {
 
     <div class="mt-3">
       <div v-if="!discountEditing" class="flex items-center justify-between gap-3">
-        <span class="font-medium">{{ t("Discount") }}</span>
+        <span class="font-medium">{{ t("Order discount") }}</span>
         <Button
           :label="t('Add discount')"
           icon="fa fa-plus"
@@ -81,7 +81,7 @@ function removeDiscount(): void {
       </div>
 
       <div v-else class="flex flex-wrap items-center justify-between gap-3">
-        <span class="font-medium">{{ t("Discount") }}</span>
+        <span class="font-medium">{{ t("Order discount") }}</span>
         <div class="flex items-center gap-2">
           <SelectButton
             :model-value="discountType"

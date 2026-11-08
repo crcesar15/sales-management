@@ -13,6 +13,7 @@ export interface SalesOrderItem {
   sale_unit_id: number | null;
   quantity: number;
   unit_price: number;
+  line_discount?: number;
   original_unit_price?: number;
   conversion_factor: number;
   line_total: number;
@@ -174,6 +175,7 @@ export interface SalesOrderItemPayload {
   sale_unit_id?: number | null;
   quantity: number;
   unit_price: number;
+  line_discount?: number;
   conversion_factor?: number;
 }
 
@@ -208,6 +210,7 @@ export interface SalesOrderLineItemForm {
   sale_unit_id: number | null;
   quantity: number;
   unit_price: number;
+  line_discount?: number;
   original_unit_price: number;
   conversion_factor: number;
   line_total: number;

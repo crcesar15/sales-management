@@ -66,6 +66,9 @@ const { formatCurrency } = useCurrencyFormatter();
               {{ formatCurrency(String(item.line_total)) }}
             </span>
           </div>
+          <div v-if="(item.line_discount ?? 0) > 0" class="col-span-2 flex justify-between text-surface-600 dark:text-surface-300">
+            <span>{{ t("Line discount") }}</span><span>−{{ formatCurrency(String(item.line_discount)) }}</span>
+          </div>
         </div>
       </li>
     </ul>
@@ -108,6 +111,7 @@ const { formatCurrency } = useCurrencyFormatter();
       <Column :header="t('Line Total')" style="min-width: 120px" :pt="{headerCell: {class: '!bg-surface-200 dark:!bg-surface-800'}}">
         <template #body="{ data }">
           <span class="font-medium">{{ formatCurrency(String(data.line_total)) }}</span>
+          <div v-if="data.line_discount > 0" class="text-sm text-surface-500">{{ t("Line discount") }}: −{{ formatCurrency(String(data.line_discount)) }}</div>
         </template>
       </Column>
     </DataTable>

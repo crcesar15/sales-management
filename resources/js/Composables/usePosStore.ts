@@ -85,7 +85,7 @@ export const usePosStore = defineStore("pos", () => {
     updated[existingIndex] = {
       ...existing,
       quantity: existing.quantity + 1,
-      line_total: roundCurrency((existing.quantity + 1) * existing.unit_price),
+      line_total: roundCurrency(roundCurrency((existing.quantity + 1) * existing.unit_price) - (existing.line_discount ?? 0)),
     };
     cartItems.value = updated;
 
@@ -93,7 +93,7 @@ export const usePosStore = defineStore("pos", () => {
   }
 
   function setCartItems(items: PosCartItem[]): void {
-    cartItems.value = items.map((item) => ({ ...item, line_total: roundCurrency(item.quantity * item.unit_price) }));
+    cartItems.value = items.map((item) => ({ ...item, line_total: roundCurrency(roundCurrency(item.quantity * item.unit_price) - (item.line_discount ?? 0)) }));
   }
 
   function selectCustomer(value: PosCustomer): void {
@@ -164,6 +164,7 @@ export const usePosStore = defineStore("pos", () => {
       sale_unit_id: item.sale_unit_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
+      line_discount: item.line_discount ?? 0,
       original_unit_price: item.original_unit_price ?? item.unit_price,
       conversion_factor: item.conversion_factor,
       line_total: item.line_total,

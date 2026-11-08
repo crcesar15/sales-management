@@ -304,6 +304,7 @@ function addUnit(unit: PosSellableUnit, options?: PosAddItemOptions): void {
       quantity: 1,
       unit_price: unit.unitPrice,
       original_unit_price: unit.unitPrice,
+      line_discount: 0,
       conversion_factor: unit.conversionFactor,
       line_total: unit.unitPrice,
       stock: variant.stock ?? null,
