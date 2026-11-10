@@ -558,7 +558,7 @@ it('paginates both alert lists independently', function () {
 
     for ($index = 1; $index <= 3; $index++) {
         $lowStockVariant = createVariantWithMinimumStock(10);
-        createActiveBatch($lowStockVariant, $this->store, $index);
+        createActiveBatch($lowStockVariant, $this->store, $index, ['expiry_date' => null]);
 
         $expiryVariant = createVariantWithMinimumStock(1);
         createActiveBatch($expiryVariant, $this->store, 10, [
