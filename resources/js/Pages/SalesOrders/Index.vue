@@ -41,6 +41,7 @@ const props = defineProps<{
   };
   filters: SalesOrderFilters;
   canViewAll: boolean;
+  stores: Array<{ id: number; name: string }>;
 }>();
 
 const { formatDatetime, parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
@@ -55,6 +56,10 @@ const dateTo = ref<Date | null>(parseDateOnly(props.filters.to ?? null));
 const sortField = ref("created_at");
 const sortOrder = ref(-1);
 const filterPopover = ref();
+const storeId = ref<number | null>(props.filters.store_id ?? null);
+const dateBasis = ref(props.filters.date_basis ?? "created");
+const storeOptions = computed(() => [{ label: t("All permitted stores"), value: null }, ...props.stores.map((store) => ({ label: store.name, value: store.id }))]);
+const dateBasisOptions = computed(() => [{ label: t("Created At"), value: "created" }, { label: t("Fulfilled at"), value: "fulfilled" }]);
 
 const statusOptions = computed(() => [
   { label: t("All"), value: "all" },
@@ -92,6 +97,9 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
   router.visit(route("sales-orders"), {
     data: {
       search: search.value || "",
+      store_id: storeId.value,
+      date_basis: dateBasis.value,
+      report_to: toDateOnly(dateFrom.value) === props.filters.from && toDateOnly(dateTo.value) === props.filters.to && dateBasis.value === props.filters.date_basis ? props.filters.report_to : undefined,
       status: status.value === "all" ? "" : status.value,
       payment_status: paymentStatus.value === "all" ? "" : paymentStatus.value,
       from: toDateOnly(dateFrom.value) ?? "",
@@ -107,6 +115,8 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
 
 function resetFilters() {
   search.value = "";
+  storeId.value = null;
+  dateBasis.value = "created";
   status.value = "all";
   paymentStatus.value = "all";
   dateFrom.value = null;
@@ -121,6 +131,8 @@ watch(search, () => {
 });
 
 watch(status, () => applyFilters());
+watch(storeId, () => applyFilters());
+watch(dateBasis, () => applyFilters());
 watch(paymentStatus, () => applyFilters());
 watch(dateFrom, () => applyFilters());
 watch(dateTo, () => applyFilters());
@@ -157,6 +169,7 @@ function customerName(order: SalesOrderResponse): string {
         @click="router.visit(route('sales-orders.create'))"
       />
     </div>
+    <p v-if="filters.date_basis === 'fulfilled'" class="text-sm text-surface-600 dark:text-surface-300">{{ t("Fulfilled sales, excluding draft and cancelled orders") }}<span v-if="filters.report_to"> · {{ t("Before {time}", { time: formatDatetime(filters.report_to) }) }}</span></p>
     <Card>
       <template #content>
         <DataTable
@@ -198,6 +211,14 @@ function customerName(order: SalesOrderResponse): string {
 
             <Popover ref="filterPopover">
               <div class="flex flex-col gap-4 p-4 min-w-72">
+                <div>
+                  <label for="sales-store-filter" class="mb-1 block text-sm font-medium">{{ t("Store") }}</label>
+                  <Select v-model="storeId" input-id="sales-store-filter" :options="storeOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
+                <div>
+                  <label for="sales-date-basis" class="mb-1 block text-sm font-medium">{{ t("Date basis") }}</label>
+                  <Select v-model="dateBasis" input-id="sales-date-basis" :options="dateBasisOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
                   <Select v-model="status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />

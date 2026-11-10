@@ -87,6 +87,9 @@ interface ShiftListResponse {
 }
 
 interface ShiftFilters {
+  store_id?: number | null;
+  date_basis?: "opened" | "closed";
+  report_to?: string | null;
   cash_register_id?: number | null;
   user_id?: number | null;
   status?: string;

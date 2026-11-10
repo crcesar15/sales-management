@@ -66,6 +66,7 @@ export interface StockAdjustmentResponse extends StockAdjustment {
     remaining_quantity: number;
     batch_identifier: string | null;
     expiry_date: string | null;
+    unit_cost?: string | null;
   } | null;
 }
 

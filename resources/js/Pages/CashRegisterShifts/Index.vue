@@ -18,6 +18,7 @@ const props = defineProps<{
   filters: ShiftFilters;
   registers: RegisterOption[];
   cashiers: Array<{ id: number; full_name: string }>;
+  stores: Array<{ id: number; name: string }>;
 }>();
 
 const { t } = useI18n();
@@ -34,6 +35,10 @@ const cashierId = ref<string | number>(props.filters.user_id ?? ALL);
 const dateFrom = ref<Date | null>(parseDateOnly(props.filters.date_from ?? null));
 const dateTo = ref<Date | null>(parseDateOnly(props.filters.date_to ?? null));
 const filterPopover = ref();
+const storeId = ref<number | null>(props.filters.store_id ?? null);
+const dateBasis = ref(props.filters.date_basis ?? "opened");
+const storeOptions = computed(() => [{ label: t("All permitted stores"), value: null }, ...props.stores.map((store) => ({ label: store.name, value: store.id }))]);
+const dateBasisOptions = computed(() => [{ label: t("Opening Time"), value: "opened" }, { label: t("Closing Time"), value: "closed" }]);
 
 const statusOptions = computed(() => [
   { label: t("All"), value: ALL },
@@ -70,6 +75,9 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
   router.visit(route("shifts"), {
     data: {
       status: status.value === ALL ? null : status.value,
+      store_id: storeId.value,
+      date_basis: dateBasis.value,
+      report_to: toDateOnly(dateFrom.value) === props.filters.date_from && toDateOnly(dateTo.value) === props.filters.date_to && dateBasis.value === props.filters.date_basis ? props.filters.report_to : undefined,
       cash_register_id: registerId.value === ALL ? null : registerId.value,
       user_id: cashierId.value === ALL ? null : cashierId.value,
       date_from: toDateOnly(dateFrom.value),
@@ -83,6 +91,8 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
 
 function resetFilters() {
   status.value = ALL;
+  storeId.value = null;
+  dateBasis.value = "opened";
   registerId.value = ALL;
   cashierId.value = ALL;
   dateFrom.value = null;
@@ -91,6 +101,8 @@ function resetFilters() {
 }
 
 watch(status, () => applyFilters());
+watch(storeId, () => applyFilters());
+watch(dateBasis, () => applyFilters());
 watch(registerId, () => applyFilters());
 watch(cashierId, () => applyFilters());
 
@@ -158,6 +170,7 @@ const onShiftOpened = () => {
       />
     </div>
     <Toast />
+    <p v-if="filters.date_basis === 'closed'" class="text-sm text-surface-600 dark:text-surface-300">{{ t("Shifts closed in the selected period") }}<span v-if="filters.report_to"> · {{ t("Before {time}", { time: formatDatetime(filters.report_to) }) }}</span></p>
     <Card>
       <template #content>
         <DataTable
@@ -193,6 +206,14 @@ const onShiftOpened = () => {
 
             <Popover ref="filterPopover">
               <div class="flex flex-col gap-4 p-4 min-w-72">
+                <div>
+                  <label for="shift-store-filter" class="mb-1 block text-sm font-medium">{{ t("Store") }}</label>
+                  <Select v-model="storeId" input-id="shift-store-filter" :options="storeOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
+                <div>
+                  <label for="shift-date-basis" class="mb-1 block text-sm font-medium">{{ t("Date basis") }}</label>
+                  <Select v-model="dateBasis" input-id="shift-date-basis" :options="dateBasisOptions" option-label="label" option-value="value" class="w-full" />
+                </div>
                 <div>
                   <label class="text-sm font-medium mb-1 block">{{ t("Status") }}</label>
                   <Select

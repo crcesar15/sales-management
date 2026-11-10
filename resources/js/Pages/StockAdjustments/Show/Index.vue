@@ -107,6 +107,10 @@ const formattedQuantity = computed(() => {
                 <span class="text-surface-500">{{ t("Initial Quantity") }}</span>
                 <span class="font-bold">{{ adjustment.batch.initial_quantity }}</span>
               </div>
+              <div v-if="adjustment.batch.unit_cost !== undefined" class="flex justify-between gap-3">
+                <span class="text-surface-600 dark:text-surface-300">{{ t("Historical cost per base unit") }}</span>
+                <span class="break-all font-medium tabular-nums">{{ adjustment.batch.unit_cost ?? t("Unknown") }}</span>
+              </div>
               <div class="flex justify-between">
                 <span class="text-surface-500">{{ t("Remaining Quantity") }}</span>
                 <span class="font-bold">{{ adjustment.batch.remaining_quantity }}</span>

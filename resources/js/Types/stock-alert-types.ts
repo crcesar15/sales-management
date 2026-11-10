@@ -1,5 +1,8 @@
 export interface LowStockAlertItem {
   id: number;
+  row_key: string;
+  store_id: number | null;
+  store_name: string | null;
   product_id: number;
   product_name: string | null;
   brand_name: string | null;
@@ -65,6 +68,7 @@ export interface AlertsSummary {
 }
 
 export interface AlertsFilters {
+  per_store?: boolean;
   store_id: number | null;
   tab: "low-stock" | "expiry";
 }

@@ -29,7 +29,7 @@ function onPage(event: PageState) {
 }
 
 function viewVariant(item: LowStockAlertItem) {
-  router.visit(route("inventory.variants.show", { variant: item.id }));
+  router.visit(route("inventory.variants.show", { variant: item.id, store_id: item.store_id }));
 }
 </script>
 
@@ -38,7 +38,7 @@ function viewVariant(item: LowStockAlertItem) {
     <div class="hidden md:block">
       <DataTable
         :value="alerts.data"
-        data-key="id"
+        data-key="row_key"
         lazy
         striped-rows
         paginator
@@ -60,6 +60,7 @@ function viewVariant(item: LowStockAlertItem) {
           <template #body="{ data }: { data: LowStockAlertItem }">
             <div class="min-w-0">
               <p class="m-0 font-medium text-surface-900 dark:text-surface-0">{{ data.product_name ?? "—" }}</p>
+              <p v-if="data.store_name" class="m-0 mt-1 text-sm text-surface-600 dark:text-surface-300">{{ data.store_name }}</p>
               <div v-if="data.values.length" class="mt-1 flex flex-wrap gap-1">
                 <Badge
                   v-for="value in data.values"
@@ -110,10 +111,11 @@ function viewVariant(item: LowStockAlertItem) {
 
     <div class="md:hidden">
       <ul v-if="alerts.data.length" class="m-0 flex list-none flex-col divide-y divide-surface-200 p-0 dark:divide-surface-700">
-        <li v-for="item in alerts.data" :key="item.id" class="p-4">
+        <li v-for="item in alerts.data" :key="item.row_key" class="p-4">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <p class="m-0 font-semibold text-surface-900 dark:text-surface-0">{{ item.product_name ?? "—" }}</p>
+              <p v-if="item.store_name" class="m-0 mt-1 text-sm text-surface-600 dark:text-surface-300">{{ item.store_name }}</p>
               <p v-if="item.brand_name || item.identifier" class="m-0 mt-0.5 text-sm text-surface-500 dark:text-surface-400">
                 {{ [item.brand_name, item.identifier].filter(Boolean).join(" · ") }}
               </p>

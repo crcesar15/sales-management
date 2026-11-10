@@ -11,6 +11,7 @@ import { ref, computed, watch } from "vue";
 import AppLayout from "@layouts/admin.vue";
 import { useBatchClient } from "@/Composables/useBatchClient";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
+import { useAuth } from "@/Composables/useAuth";
 import StockAdjustmentProductPicker from "./Components/StockAdjustmentProductPicker.vue";
 import type { AvailableBatch, StockAdjustmentVariantSearchResult } from "@/Types/stock-adjustment-types";
 
@@ -23,6 +24,7 @@ const props = defineProps<{
 
 const toast = useToast();
 const { t } = useI18n();
+const { can } = useAuth();
 const { fetchAvailableBatchesApi } = useBatchClient();
 const { parseDateOnly, toDateOnly, datePickerFormat } = useDatetimeFormatter();
 
@@ -41,6 +43,7 @@ const schema = toTypedSchema(
       }),
     expiry_date: string().nullable().optional(),
     batch_identifier: string().nullable().optional().max(255),
+    unit_cost: string().nullable().optional().matches(/^\d+(\.\d{1,12})?$/, { message: t("Enter a non-negative cost with up to 12 decimal places."), excludeEmptyString: true }),
     quantity_change: number()
       .required()
       .typeError(t("Quantity Change is required"))
@@ -67,6 +70,7 @@ const { handleSubmit, errors, setFieldValue, setErrors, values, submitCount } = 
     batch_id: null as number | null,
     expiry_date: null as string | null,
     batch_identifier: null as string | null,
+    unit_cost: null as string | null,
     quantity_change: undefined as unknown as number,
     reason: "",
     notes: "",
@@ -167,6 +171,7 @@ watch(
 watch(
   () => values.reason,
   (newReason) => {
+    setFieldValue("unit_cost", null);
     if (newReason === "initial_stock") {
       resetBatchSelection();
       availableBatches.value = [];
@@ -395,6 +400,14 @@ const submit = handleSubmit((formValues) => {
                 </div>
               </div>
 
+              <div v-if="isInitialStock && can('dashboard.profit.view')" class="col-span-12 md:col-span-6">
+                <div class="mb-3 flex flex-col gap-2">
+                  <label for="opening-unit-cost">{{ t("Historical cost per base unit") }}</label>
+                  <InputText id="opening-unit-cost" :model-value="values.unit_cost ?? ''" inputmode="decimal" :invalid="!!errors.unit_cost" @update:model-value="setFieldValue('unit_cost', $event || null)" />
+                  <small class="text-surface-600 dark:text-surface-300">{{ t("Leave blank if unknown. Zero means genuinely free stock.") }}</small>
+                  <small v-if="errors.unit_cost" class="text-red-600 dark:text-red-300">{{ errors.unit_cost }}</small>
+                </div>
+              </div>
               <div class="col-span-12">
                 <div class="flex flex-col gap-2 mb-3">
                   <label for="notes">{{ t("Notes") }}</label>

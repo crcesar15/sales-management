@@ -33,6 +33,7 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
   router.visit(route("inventory.alerts"), {
     data: {
       store_id: storeId.value === ALL ? "" : storeId.value,
+      per_store: props.filters.per_store ? 1 : 0,
       tab: activeTab.value,
       low_stock_page: props.lowStockAlerts.meta.current_page,
       low_stock_per_page: props.lowStockAlerts.meta.per_page,

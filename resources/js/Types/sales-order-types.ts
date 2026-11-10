@@ -162,6 +162,9 @@ export interface SalesOrderListResponse {
 }
 
 export interface SalesOrderFilters {
+  store_id?: number | null;
+  date_basis?: "created" | "fulfilled";
+  report_to?: string;
   search?: string;
   status?: string;
   payment_status?: SalesOrderPaymentStatus | "unpaid";

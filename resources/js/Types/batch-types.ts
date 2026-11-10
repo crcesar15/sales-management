@@ -2,7 +2,7 @@ export interface Batch {
   // columns
   id: number;
   product_variant_id: number;
-  reception_order_id: number;
+  reception_order_id: number | null;
   store_id: number;
   batch_identifier: string | null;
   expiry_date: string | null;
@@ -40,6 +40,7 @@ export interface BatchReceptionOrder {
 }
 
 export interface BatchResponse extends Batch {
+  unit_cost?: string | null;
   expiry_status: ExpiryStatus;
   product: BatchProduct;
   product_variant: BatchProductVariant;
