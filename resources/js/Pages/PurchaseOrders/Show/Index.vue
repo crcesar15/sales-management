@@ -91,7 +91,7 @@ const canCreateReception = computed(() => props.purchaseOrder.status === "approv
 const isCancelled = computed(() => props.purchaseOrder.status === "cancelled");
 
 const receiptProgress = computed(() => {
-  const map: Record<PurchaseOrderReceiptStatus, { label: string; severity: "success" | "info" | "warn" }> = {
+  const map: Record<PurchaseOrderReceiptStatus, { label: string; severity: "success" | "info" | "warn" | "danger" | "contrast" }> = {
     not_received: { label: "Not Received", severity: "danger" },
     partially_received: { label: "Partially Received", severity: "warn" },
     fully_received: { label: "Fully Received", severity: "contrast" },

@@ -39,6 +39,7 @@ export interface PurchaseOrderLineItem {
   total: number;
   product_variant: Pick<ProductVariantResponse, "id" | "name" | "identifier" | "stock" | "minimum_stock_level" | "has_expiration"> & {
     product: Pick<ProductVariantResponse["product"], "id" | "name"> & {
+      brand?: { id: number; name: string } | null;
       measurement_unit?: { id: number; name: string; abbreviation: string } | null;
     };
   };
