@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Enums\RolesEnum;
 use App\Models\Brand;
 use App\Models\Catalog;
 use App\Models\Category;
@@ -43,7 +44,7 @@ final class DatabaseSeeder extends Seeder
             ]
         );
 
-        $admin->assignRole(['Super Administrator']);
+        $admin->assignRole(RolesEnum::ADMIN->value);
 
         // Run settings and permissions seeder
         $this->call(SettingsSeeder::class);

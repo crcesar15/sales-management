@@ -21,6 +21,9 @@ final class LowStockAlertResource extends JsonResource
 
         return [
             'id' => $variant->id,
+            'store_id' => $variant->getAttribute('store_id'),
+            'store_name' => $variant->getAttribute('store_name'),
+            'row_key' => $variant->id . ':' . ($variant->getAttribute('store_id') ?? 'all'),
             'product_id' => $variant->product_id,
             'product_name' => $variant->product?->name,
             'brand_name' => $variant->product?->brand?->name,

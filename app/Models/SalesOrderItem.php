@@ -27,6 +27,7 @@ final class SalesOrderItem extends Model
         'line_discount',
         'conversion_factor',
         'line_total',
+        'net_sales_amount',
     ];
 
     /** @return BelongsTo<SalesOrder, $this> */
@@ -73,6 +74,7 @@ final class SalesOrderItem extends Model
             'line_discount' => 'decimal:2',
             'conversion_factor' => 'integer',
             'line_total' => 'decimal:2',
+            'net_sales_amount' => 'decimal:2',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',
         ];

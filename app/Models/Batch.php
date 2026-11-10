@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/** @property string|null $unit_cost */
 final class Batch extends Model
 {
     /** @use HasFactory<BatchFactory> */
@@ -26,6 +27,9 @@ final class Batch extends Model
         'reception_order_id',
         'reception_order_batch_allocation_id',
         'store_id',
+        'unit_cost',
+        'cost_source',
+        'source_batch_id',
         'expiry_date',
         'batch_identifier',
         'initial_quantity',
@@ -37,6 +41,14 @@ final class Batch extends Model
     ];
 
     protected $appends = ['expiry_status'];
+
+    protected $hidden = ['unit_cost'];
+
+    /** @return BelongsTo<self, $this> */
+    public function sourceBatch(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'source_batch_id');
+    }
 
     /** @return BelongsTo<ProductVariant, $this> */
     public function productVariant(): BelongsTo
@@ -84,7 +96,7 @@ final class Batch extends Model
             ->where('remaining_quantity', '>', 0)
             ->where(fn (Builder $query) => $query
                 ->whereNull('expiry_date')
-                ->orWhereDate('expiry_date', '>=', today()));
+                ->orWhereDate('expiry_date', '>=', now((string) Setting::get('timezone', config('app.timezone')))->toDateString()));
     }
 
     /** @param  Builder<self>  $query */
@@ -117,7 +129,7 @@ final class Batch extends Model
     public function scopeExpiringSoon(Builder $query, int $days): Builder
     {
         return $query->whereNotNull('expiry_date')
-            ->where('expiry_date', '<=', now()->addDays($days)->endOfDay()->toDateTimeString())
+            ->where('expiry_date', '<=', now((string) Setting::get('timezone', config('app.timezone')))->addDays($days)->toDateString())
             ->active();
     }
 
@@ -127,6 +139,7 @@ final class Batch extends Model
     {
         return LogOptions::defaults()
             ->logFillable()
+            ->logExcept(['unit_cost'])
             ->logOnlyDirty()
             ->useLogName('batch')
             ->dontSubmitEmptyLogs();
@@ -150,11 +163,12 @@ final class Batch extends Model
 
             $threshold = (int) Setting::get('expiry_alert_days', 30);
 
-            if ($date->isPast()) {
+            $today = now((string) Setting::get('timezone', config('app.timezone')));
+            if ($date->toDateString() < $today->toDateString()) {
                 return 'expired';
             }
 
-            if ($date->lessThanOrEqualTo(now()->addDays($threshold))) {
+            if ($date->toDateString() <= $today->addDays($threshold)->toDateString()) {
                 return 'expiring_soon';
             }
 
@@ -170,6 +184,7 @@ final class Batch extends Model
     protected function casts(): array
     {
         return [
+            'unit_cost' => 'decimal:12',
             'expiry_date' => 'date',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',

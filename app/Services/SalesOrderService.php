@@ -21,6 +21,7 @@ use App\Models\SalesOrderPayment;
 use App\Models\SalesOrderStockAllocation;
 use App\Models\Setting;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -47,6 +48,7 @@ use InvalidArgumentException;
 final class SalesOrderService
 {
     public function __construct(
+        private readonly InventoryCostService $inventoryCostService,
     ) {}
 
     /**
@@ -55,7 +57,7 @@ final class SalesOrderService
      */
     public function list(array $filters, User $actor, int $perPage = 20): LengthAwarePaginator
     {
-        $query = SalesOrder::query()
+        $query = app(ReportingScopeService::class)->sales($actor, isset($filters['store_id']) ? (int) $filters['store_id'] : null)
             ->with([
                 'customer',
                 'user',
@@ -64,8 +66,7 @@ final class SalesOrderService
                 'items.productVariant.product.brand',
                 'items.saleUnit',
                 'payments',
-            ])
-            ->where('store_id', $actor->stores()->first()->id ?? 0);
+            ]);
 
         if (! $actor->can('sales.view_all')) {
             $query->where('user_id', $actor->id);
@@ -95,15 +96,21 @@ final class SalesOrderService
             $query->where('payment_status', $paymentStatusEnum);
         }
 
-        $query->when(
-            $filters['from'] ?? null,
-            fn ($q, $from) => $q->whereDate('created_at', '>=', $from),
-        );
-
-        $query->when(
-            $filters['to'] ?? null,
-            fn ($q, $to) => $q->whereDate('created_at', '<=', $to),
-        );
+        $dateColumn = ($filters['date_basis'] ?? 'created') === 'fulfilled' ? 'fulfilled_at' : 'created_at';
+        if ($dateColumn === 'fulfilled_at') {
+            $query->whereIn('status', [SalesOrderStatus::FULFILLED, SalesOrderStatus::COMPLETED]);
+        }
+        $timezone = (string) Setting::get('timezone', config('app.timezone'));
+        $storageTimezone = (string) config('app.timezone');
+        if (! empty($filters['from'])) {
+            $query->where($dateColumn, '>=', CarbonImmutable::parse($filters['from'], $timezone)->startOfDay()->setTimezone($storageTimezone)->format('Y-m-d H:i:s'));
+        }
+        if (! empty($filters['to'])) {
+            $query->where($dateColumn, '<', CarbonImmutable::parse($filters['to'], $timezone)->addDay()->startOfDay()->setTimezone($storageTimezone)->format('Y-m-d H:i:s'));
+        }
+        if (! empty($filters['report_to'])) {
+            $query->where($dateColumn, '<', CarbonImmutable::parse($filters['report_to'])->setTimezone($storageTimezone)->format('Y-m-d H:i:s'));
+        }
 
         return $query->orderBy('created_at', 'desc')
             ->paginate($perPage)
@@ -708,7 +715,7 @@ final class SalesOrderService
                     || $batch->product_variant_id !== $item->product_variant_id
                     || $batch->store_id !== $lockedOrder->store_id
                     || $batch->status !== 'active'
-                    || $batch->expiry_date?->lessThan(today())) {
+                    || ($batch->expiry_date !== null && $batch->expiry_date->toDateString() < now((string) Setting::get('timezone', config('app.timezone')))->toDateString())) {
                     throw new InvalidArgumentException('The handover list is no longer available. Generate a new list.');
                 }
             }
@@ -729,8 +736,11 @@ final class SalesOrderService
                 $item?->stockAllocations()->create([
                     'batch_id' => $allocation['batch_id'],
                     'quantity' => $allocation['quantity'],
+                    'unit_cost' => $batches->get($allocation['batch_id'])?->unit_cost,
                 ]);
             }
+
+            $this->inventoryCostService->snapshotLineRevenue($lockedOrder);
 
             foreach ($quantitiesByBatch as $batchId => $quantity) {
                 $batch = $batches->get($batchId);
@@ -946,7 +956,7 @@ final class SalesOrderService
                 ->where('store_id', $order->store_id)
                 ->where('status', 'active')
                 ->where('remaining_quantity', '>', 0)
-                ->where(fn ($query) => $query->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', today()))
+                ->where(fn ($query) => $query->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', now((string) Setting::get('timezone', config('app.timezone')))->toDateString()))
                 ->orderByRaw('expiry_date IS NULL')
                 ->orderBy('expiry_date')
                 ->orderBy('created_at'),

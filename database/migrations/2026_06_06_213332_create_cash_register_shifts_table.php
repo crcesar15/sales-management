@@ -27,6 +27,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['cash_register_id', 'status']);
+            $table->index(['cash_register_id', 'closed_at']);
             $table->index('user_id');
         });
     }

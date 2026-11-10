@@ -75,6 +75,15 @@ final class CreateAdjustmentRequest extends FormRequest
                     }
                 },
             ],
+            'unit_cost' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:999999999999.999999999999',
+                'decimal:0,12',
+                Rule::prohibitedIf(fn (): bool => $this->input('reason') !== AdjustmentReason::INITIAL_STOCK->value
+                    || ! ($this->user()?->can(PermissionsEnum::DASHBOARD_PROFIT_VIEW->value) ?? false)),
+            ],
             'reason' => ['required', Rule::enum(AdjustmentReason::class)],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];

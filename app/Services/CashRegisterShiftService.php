@@ -14,9 +14,10 @@ use App\Models\CashRegister;
 use App\Models\CashRegisterMovement;
 use App\Models\CashRegisterShift;
 use App\Models\SalesOrder;
+use App\Models\Setting;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -34,9 +35,14 @@ final class CashRegisterShiftService
      * @param  array<string, mixed>  $filters
      * @return LengthAwarePaginator<int, CashRegisterShift>
      */
-    public function list(array $filters, int $perPage = 20): LengthAwarePaginator
+    public function list(array $filters, int $perPage = 20, ?User $actor = null): LengthAwarePaginator
     {
+        $dateColumn = ($filters['date_basis'] ?? 'opened') === 'closed' ? 'closed_at' : 'opened_at';
+        $timezone = (string) Setting::get('timezone', config('app.timezone'));
+        $storeIds = $actor !== null ? app(ReportingScopeService::class)->storeIds($actor, isset($filters['store_id']) ? (int) $filters['store_id'] : null) : [];
+
         return CashRegisterShift::query()
+            ->when($actor !== null, fn ($q) => $q->whereHas('register', fn ($r) => $r->whereIn('store_id', $storeIds)))
             ->with(['register', 'cashier', 'movements'])
             ->when(
                 isset($filters['cash_register_id']),
@@ -52,12 +58,13 @@ final class CashRegisterShiftService
             )
             ->when(
                 isset($filters['date_from']),
-                fn ($q) => $q->where('opened_at', '>=', Carbon::parse($filters['date_from'], config('app.timezone'))->startOfDay()),
+                fn ($q) => $q->where($dateColumn, '>=', CarbonImmutable::parse($filters['date_from'], $timezone)->startOfDay()->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s')),
             )
             ->when(
                 isset($filters['date_to']),
-                fn ($q) => $q->where('opened_at', '<=', Carbon::parse($filters['date_to'], config('app.timezone'))->endOfDay()),
+                fn ($q) => $q->where($dateColumn, '<', CarbonImmutable::parse($filters['date_to'], $timezone)->addDay()->startOfDay()->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s')),
             )
+            ->when(! empty($filters['report_to']), fn ($q) => $q->where($dateColumn, '<', CarbonImmutable::parse($filters['report_to'])->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s')))
             ->orderBy('opened_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();

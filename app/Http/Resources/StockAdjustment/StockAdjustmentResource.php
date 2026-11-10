@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\StockAdjustment;
 
 use App\Models\StockAdjustment;
+use App\Services\ReportingScopeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -48,6 +49,7 @@ final class StockAdjustmentResource extends JsonResource
             ]),
             'batch' => $this->whenLoaded('batch', fn () => [
                 'id' => $adjustment->batch?->id,
+                'unit_cost' => $this->when($request->user() !== null && app(ReportingScopeService::class)->canViewCost($request->user(), $adjustment->store_id), fn () => $adjustment->batch?->unit_cost),
                 'initial_quantity' => $adjustment->batch?->initial_quantity,
                 'remaining_quantity' => $adjustment->batch?->remaining_quantity,
                 'batch_identifier' => $adjustment->batch?->batch_identifier,

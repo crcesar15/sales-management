@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('sales_order_item_id')->constrained()->cascadeOnDelete();
             $table->foreignId('batch_id')->constrained()->cascadeOnDelete();
             $table->unsignedInteger('quantity');
+            $table->decimal('unit_cost', 24, 12)->nullable();
             $table->timestamps();
 
             $table->unique(['sales_order_item_id', 'batch_id'], 'so_stock_allocations_item_batch_unique');

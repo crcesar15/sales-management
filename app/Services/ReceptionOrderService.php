@@ -18,6 +18,8 @@ use InvalidArgumentException;
 
 final class ReceptionOrderService
 {
+    public function __construct(private readonly InventoryCostService $inventoryCostService) {}
+
     /**
      * @param  array{status?: string|null, purchase_order_id?: int|null, vendor_id?: int|null, store_id?: int|null, from?: string|null, to?: string|null}  $filters
      * @return LengthAwarePaginator<int, ReceptionOrder>
@@ -113,12 +115,15 @@ final class ReceptionOrderService
             $stockChanges = [];
 
             foreach ($receptionOrder->lineItems as $lineItem) {
+                $unitCost = $this->inventoryCostService->receiptUnitCost($lineItem, $purchaseOrder);
                 foreach ($lineItem->batchAllocations as $allocation) {
                     Batch::create([
                         'product_variant_id' => $lineItem->product_variant_id,
                         'reception_order_id' => $receptionOrder->id,
                         'reception_order_batch_allocation_id' => $allocation->id,
                         'store_id' => $receptionOrder->store_id,
+                        'unit_cost' => $unitCost,
+                        'cost_source' => 'purchase_receipt',
                         'expiry_date' => $allocation->expiry_date,
                         'batch_identifier' => $allocation->batch_identifier,
                         'initial_quantity' => $allocation->base_quantity,

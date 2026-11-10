@@ -36,6 +36,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['store_id', 'status']);
+            $table->index(['store_id', 'fulfilled_at']);
             $table->index('payment_status');
             $table->index('user_id');
             $table->index('fulfilled_by');

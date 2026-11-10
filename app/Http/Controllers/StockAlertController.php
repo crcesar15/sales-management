@@ -6,10 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
 use App\Enums\RolesEnum;
+use App\Http\Requests\Inventory\IndexStockAlertRequest;
 use App\Http\Resources\Inventory\ExpiryAlertCollection;
 use App\Http\Resources\Inventory\LowStockAlertCollection;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\ReportingScopeService;
 use App\Services\StockAlertService;
 use Illuminate\Database\Eloquent\Collection;
 use Inertia\Inertia;
@@ -21,20 +23,22 @@ final class StockAlertController extends Controller
         private readonly StockAlertService $stockAlertService,
     ) {}
 
-    public function index(): InertiaResponse
+    public function index(IndexStockAlertRequest $request): InertiaResponse
     {
         $this->authorize(PermissionsEnum::STOCK_ALERTS_VIEW);
 
         /** @var User $user */
         $user = auth()->user();
         [$stores, $storeIds, $storeId] = $this->resolveStoreScope($user);
-        $lowStockAlerts = $this->stockAlertService->getLowStockAlerts(
+        $perStore = $request->boolean('per_store');
+        $lowStockAlerts = $perStore ? $this->stockAlertService->getStoreLowStockAlerts(array_values($storeIds ?? []), $request->integer('low_stock_per_page', 20)) : $this->stockAlertService->getLowStockAlerts(
             $storeIds,
             $this->boundedPerPage(request()->integer('low_stock_per_page', 20)),
         );
         $expiryAlerts = $this->stockAlertService->getExpiryAlerts(
             $storeIds,
             $this->boundedPerPage(request()->integer('expiry_per_page', 20)),
+            includeExpiredWhenDisabled: $perStore,
         );
         $lowStockCount = $lowStockAlerts->total();
         $expiryCount = $expiryAlerts->total();
@@ -51,6 +55,7 @@ final class StockAlertController extends Controller
             'stores' => $stores,
             'filters' => [
                 'store_id' => $storeId,
+                'per_store' => $perStore,
                 'tab' => in_array($activeTab, ['low-stock', 'expiry'], true) ? $activeTab : 'low-stock',
             ],
         ]);
@@ -61,6 +66,13 @@ final class StockAlertController extends Controller
      */
     private function resolveStoreScope(User $user): array
     {
+        if (request()->boolean('per_store')) {
+            $scope = app(ReportingScopeService::class);
+            $storeId = request()->integer('store_id') ?: null;
+
+            return [$scope->stores($user), $scope->storeIds($user, $storeId), $storeId];
+        }
+
         $isAdministrator = $user->hasRole(RolesEnum::ADMIN->value);
         $storesQuery = Store::query()->where('status', 'active');
 

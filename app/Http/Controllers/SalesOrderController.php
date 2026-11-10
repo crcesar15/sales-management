@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\PermissionsEnum;
 use App\Http\Requests\SalesOrders\CancelSalesOrderRequest;
 use App\Http\Requests\SalesOrders\FulfillSalesOrderRequest;
+use App\Http\Requests\SalesOrders\IndexSalesOrderRequest;
 use App\Http\Requests\SalesOrders\PaySalesOrderRequest;
 use App\Http\Requests\SalesOrders\ReopenSalesOrderRequest;
 use App\Http\Requests\SalesOrders\StoreSalesOrderRequest;
@@ -16,6 +17,7 @@ use App\Http\Resources\SalesOrder\SalesOrderCollection;
 use App\Http\Resources\SalesOrder\SalesOrderResource;
 use App\Models\SalesOrder;
 use App\Models\Store;
+use App\Services\ReportingScopeService;
 use App\Services\SalesOrderService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
@@ -31,20 +33,14 @@ final class SalesOrderController extends Controller
         private readonly SalesOrderService $salesOrderService,
     ) {}
 
-    public function index(Request $request): InertiaResponse
+    public function index(IndexSalesOrderRequest $request): InertiaResponse
     {
         $this->authorize(PermissionsEnum::SALES_VIEW);
 
         $actor = $request->user() ?? throw new RuntimeException('Unauthenticated.');
 
         $orders = $this->salesOrderService->list(
-            filters: [
-                'search' => $request->string('search', '')->toString() ?: null,
-                'status' => $request->string('status', '')->toString() ?: null,
-                'payment_status' => $request->string('payment_status', '')->toString() ?: null,
-                'from' => $request->string('from', '')->toString() ?: null,
-                'to' => $request->string('to', '')->toString() ?: null,
-            ],
+            filters: $request->validated(),
             actor: $actor,
             perPage: $request->integer('per_page', 20),
         );
@@ -57,7 +53,11 @@ final class SalesOrderController extends Controller
                 'payment_status' => $request->string('payment_status', '')->toString(),
                 'from' => $request->string('from', '')->toString(),
                 'to' => $request->string('to', '')->toString(),
+                'store_id' => $request->integer('store_id') ?: null,
+                'date_basis' => $request->string('date_basis', 'created')->toString(),
+                'report_to' => $request->string('report_to')->toString(),
             ],
+            'stores' => app(ReportingScopeService::class)->stores($actor)->map->only(['id', 'name']),
             'canViewAll' => $actor->can(PermissionsEnum::SALES_VIEW_ALL->value),
         ]);
     }
@@ -96,8 +96,9 @@ final class SalesOrderController extends Controller
     public function show(SalesOrder $salesOrder): InertiaResponse|RedirectResponse
     {
         $this->authorize(PermissionsEnum::SALES_VIEW);
+        app(ReportingScopeService::class)->assertSale(auth()->user() ?? abort(401), $salesOrder);
 
-        if (! in_array($salesOrder->status->value, ['completed', 'cancelled'], true)) {
+        if (! in_array($salesOrder->status->value, ['fulfilled', 'completed', 'cancelled'], true)) {
             return redirect()->route('sales-orders.edit', $salesOrder);
         }
 

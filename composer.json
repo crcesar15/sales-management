@@ -8,6 +8,7 @@
   ],
   "license": "MIT",
   "require": {
+    "brick/math": "^0.18",
     "php": "^8.3",
     "guzzlehttp/guzzle": "^7.2",
     "inertiajs/inertia-laravel": "^2.0",

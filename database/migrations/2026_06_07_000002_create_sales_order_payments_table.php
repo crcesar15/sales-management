@@ -23,6 +23,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('sales_order_id');
+            $table->index(['created_at', 'sales_order_id']);
             $table->index('user_id');
             $table->index('cash_register_shift_id');
         });

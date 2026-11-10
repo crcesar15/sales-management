@@ -69,6 +69,7 @@ final class StockAdjustmentService
                 reason: $reason,
                 expiryDate: $data['expiry_date'] ?? null,
                 batchIdentifier: $data['batch_identifier'] ?? null,
+                unitCost: isset($data['unit_cost']) ? (string) $data['unit_cost'] : null,
             );
 
             if ($delta < 0 && ($batch->remaining_quantity + $delta) < 0) {
@@ -159,6 +160,7 @@ final class StockAdjustmentService
         string $reason,
         ?string $expiryDate = null,
         ?string $batchIdentifier = null,
+        ?string $unitCost = null,
     ): Batch {
         if ($reason === AdjustmentReason::INITIAL_STOCK->value) {
             if ($batchId !== null) {
@@ -169,6 +171,8 @@ final class StockAdjustmentService
                 'product_variant_id' => $variantId,
                 'reception_order_id' => null,
                 'store_id' => $storeId,
+                'unit_cost' => $unitCost,
+                'cost_source' => 'opening_inventory',
                 'expiry_date' => $expiryDate,
                 'batch_identifier' => $batchIdentifier,
                 'initial_quantity' => $delta,

@@ -23,6 +23,9 @@ return new class extends Migration
                 ->on('reception_order_batch_allocations')
                 ->cascadeOnDelete();
             $table->foreignId('store_id')->constrained()->onDelete('cascade');
+            $table->decimal('unit_cost', 24, 12)->nullable();
+            $table->string('cost_source', 30)->nullable();
+            $table->foreignId('source_batch_id')->nullable()->constrained('batches')->nullOnDelete();
             $table->date('expiry_date')->nullable();
             $table->string('batch_identifier')->nullable();
             $table->integer('initial_quantity');

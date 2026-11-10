@@ -8,6 +8,7 @@ use App\Enums\PermissionsEnum;
 use App\Http\Requests\CashRegisterMovements\StoreMovementRequest;
 use App\Http\Requests\CashRegisterShifts\CloseShiftRequest;
 use App\Http\Requests\CashRegisterShifts\ForceCloseShiftRequest;
+use App\Http\Requests\CashRegisterShifts\IndexShiftRequest;
 use App\Http\Requests\CashRegisterShifts\OpenShiftRequest;
 use App\Http\Resources\CashRegisterShift\CashRegisterShiftCollection;
 use App\Http\Resources\CashRegisterShift\CashRegisterShiftResource;
@@ -15,6 +16,7 @@ use App\Models\CashRegister;
 use App\Models\CashRegisterShift;
 use App\Models\User;
 use App\Services\CashRegisterShiftService;
+use App\Services\ReportingScopeService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -29,11 +31,16 @@ final class CashRegisterShiftController extends Controller
         $this->shiftService = $shiftService;
     }
 
-    public function index(): InertiaResponse
+    public function index(IndexShiftRequest $request): InertiaResponse
     {
         $this->authorize(PermissionsEnum::SHIFTS_VIEW);
 
+        $actor = $request->user() ?? abort(401);
+        $storeIds = app(ReportingScopeService::class)->storeIds($actor, $request->integer('store_id') ?: null);
         $filters = [
+            'store_id' => $request->integer('store_id') ?: null,
+            'date_basis' => $request->string('date_basis', 'opened')->toString(),
+            'report_to' => $request->string('report_to')->toString() ?: null,
             'cash_register_id' => request()->integer('cash_register_id') ?: null,
             'user_id' => request()->integer('user_id') ?: null,
             'status' => request()->string('status')->value() ?: null,
@@ -44,9 +51,11 @@ final class CashRegisterShiftController extends Controller
         $shifts = $this->shiftService->list(
             filters: $filters,
             perPage: request()->integer('per_page', 20),
+            actor: $actor,
         );
 
         $registers = CashRegister::query()
+            ->whereIn('store_id', $storeIds)
             ->with('store')
             ->where('status', 'active')
             ->withExists('currentShift as has_open_shift')
@@ -63,7 +72,8 @@ final class CashRegisterShiftController extends Controller
         return Inertia::render('CashRegisterShifts/Index', [
             'shifts' => new CashRegisterShiftCollection($shifts),
             'registers' => $registers,
-            'cashiers' => User::orderBy('first_name')->get(['id', 'first_name', 'last_name'])->map(fn (User $u) => ['id' => $u->id, 'full_name' => $u->first_name . ' ' . $u->last_name]),
+            'stores' => app(ReportingScopeService::class)->stores($actor)->map->only(['id', 'name']),
+            'cashiers' => User::whereHas('shifts.register', fn ($q) => $q->whereIn('store_id', $storeIds))->orderBy('first_name')->get(['id', 'first_name', 'last_name'])->map(fn (User $u) => ['id' => $u->id, 'full_name' => $u->first_name . ' ' . $u->last_name]),
             'filters' => array_merge($filters, ['per_page' => request()->integer('per_page', 20)]),
         ]);
     }
@@ -137,6 +147,7 @@ final class CashRegisterShiftController extends Controller
     {
         $this->authorize(PermissionsEnum::SHIFTS_VIEW);
 
+        abort_unless(in_array($shift->register?->store_id, app(ReportingScopeService::class)->storeIds(auth()->user() ?? abort(401)), true), 403);
         $shift->load(['register.store', 'cashier', 'movements.user']);
 
         return Inertia::render('CashRegisterShifts/Show/Index', [

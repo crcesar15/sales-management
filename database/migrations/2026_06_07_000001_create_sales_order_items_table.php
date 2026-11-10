@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('line_discount', 12, 2)->default(0);
             $table->unsignedInteger('conversion_factor')->default(1);
             $table->decimal('line_total', 12, 2);
+            $table->decimal('net_sales_amount', 12, 2)->nullable();
             $table->timestamps();
 
             $table->index('sales_order_id');

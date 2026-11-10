@@ -60,6 +60,7 @@ final class FifoStockDeductionService
                     'sales_order_item_id' => $item->id,
                     'batch_id' => $batch->id,
                     'quantity' => $deduct,
+                    'unit_cost' => $batch->unit_cost,
                 ]);
                 $remaining -= $deduct;
 
@@ -90,7 +91,7 @@ final class FifoStockDeductionService
      * Deduct stock for a transfer using FIFO.
      * Opens its own DB::transaction.
      *
-     * @return array<int, array{quantity: int, batch_identifier: string|null, expiry_date: \Carbon\CarbonInterface|null}>
+     * @return array<int, array{quantity: int, batch_identifier: string|null, expiry_date: \Carbon\CarbonInterface|null, source_batch_id: int, unit_cost: string|null}>
      *
      * @throws InvalidArgumentException if insufficient stock is available
      */
@@ -131,6 +132,8 @@ final class FifoStockDeductionService
                     'quantity' => $deduct,
                     'batch_identifier' => $batch->batch_identifier,
                     'expiry_date' => $batch->expiry_date,
+                    'source_batch_id' => $batch->id,
+                    'unit_cost' => $batch->unit_cost,
                 ];
                 $remaining -= $deduct;
 

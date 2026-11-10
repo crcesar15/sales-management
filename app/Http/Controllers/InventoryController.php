@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionsEnum;
+use App\Http\Requests\Inventory\ShowInventoryRequest;
 use App\Http\Requests\Inventory\UpdateVariantDetailRequest;
 use App\Http\Resources\Inventory\StockOverviewCollection;
 use App\Models\Brand;
@@ -13,6 +14,7 @@ use App\Models\MeasurementUnit;
 use App\Models\ProductVariant;
 use App\Models\Store;
 use App\Services\ProductVariantService;
+use App\Services\ReportingScopeService;
 use App\Services\StockService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -64,7 +66,7 @@ final class InventoryController extends Controller
         ]);
     }
 
-    public function show(ProductVariant $variant): InertiaResponse
+    public function show(ShowInventoryRequest $request, ProductVariant $variant): InertiaResponse
     {
         $this->authorize(PermissionsEnum::INVENTORY_VIEW, auth()->user());
 
@@ -75,7 +77,8 @@ final class InventoryController extends Controller
             'purchaseUnits',
         ]);
 
-        $breakdown = $this->stockService->getVariantStockBreakdown($variant);
+        $storeIds = app(ReportingScopeService::class)->storeIds($request->user() ?? abort(401), $request->integer('store_id') ?: null);
+        $breakdown = $this->stockService->getVariantStockBreakdown($variant, $storeIds);
 
         $product = $variant->product()->firstOrFail();
         $product->load(['brand', 'categories', 'measurementUnit', 'media']);

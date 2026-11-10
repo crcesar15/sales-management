@@ -26,6 +26,7 @@ final class BatchFactory extends Factory
             'product_variant_id' => ProductVariant::factory(),
             'reception_order_id' => ReceptionOrder::factory(),
             'store_id' => Store::factory(),
+            'unit_cost' => null,
             'expiry_date' => fake()->dateTimeBetween('now', '+1 year')->format('Y-m-d'),
             'initial_quantity' => fake()->numberBetween(1, 100),
             'remaining_quantity' => fake()->numberBetween(1, 100),

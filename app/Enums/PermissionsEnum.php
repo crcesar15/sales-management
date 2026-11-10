@@ -6,6 +6,8 @@ namespace App\Enums;
 
 enum PermissionsEnum: string
 {
+    case DASHBOARD_PROFIT_VIEW = 'dashboard.profit.view';
+
     case BRANDS_VIEW = 'brand.view';
     case BRANDS_CREATE = 'brand.create';
     case BRANDS_EDIT = 'brand.edit';

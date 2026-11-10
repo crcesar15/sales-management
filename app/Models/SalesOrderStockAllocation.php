@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/** @property string|null $unit_cost */
 final class SalesOrderStockAllocation extends Model
 {
     /** @use HasFactory<\Database\Factories\SalesOrderStockAllocationFactory> */
@@ -17,7 +18,9 @@ final class SalesOrderStockAllocation extends Model
 
     use LogsActivity;
 
-    protected $fillable = ['sales_order_item_id', 'batch_id', 'quantity'];
+    protected $fillable = ['sales_order_item_id', 'batch_id', 'quantity', 'unit_cost'];
+
+    protected $hidden = ['unit_cost'];
 
     /** @return BelongsTo<SalesOrderItem, $this> */
     public function salesOrderItem(): BelongsTo
@@ -35,6 +38,7 @@ final class SalesOrderStockAllocation extends Model
     {
         return LogOptions::defaults()
             ->logFillable()
+            ->logExcept(['unit_cost'])
             ->logOnlyDirty()
             ->useLogName('sales_order_stock_allocation')
             ->dontSubmitEmptyLogs();
@@ -42,6 +46,6 @@ final class SalesOrderStockAllocation extends Model
 
     protected function casts(): array
     {
-        return ['quantity' => 'integer'];
+        return ['quantity' => 'integer', 'unit_cost' => 'decimal:12'];
     }
 }

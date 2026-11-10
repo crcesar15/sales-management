@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\Batches;
 
 use App\Models\Batch;
+use App\Services\ReportingScopeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,6 +22,7 @@ final class BatchResource extends JsonResource
 
         return [
             'id' => $batch->id,
+            'unit_cost' => $this->when($request->user() !== null && app(ReportingScopeService::class)->canViewCost($request->user(), $batch->store_id), fn () => $batch->unit_cost),
             'batch_identifier' => $batch->batch_identifier,
             'status' => $batch->status,
             'product' => $this->whenLoaded('productVariant', fn () => [

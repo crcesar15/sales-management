@@ -77,19 +77,21 @@ final class StockService
                     ->orWhere('products.name', 'like', "%{$search}%")
             ))
             ->when($status && $status !== 'all', fn ($q) => $q->where('product_variants.status', $status))
-            ->orderBy($sortColumn, $orderDirection)
+            ->orderBy($sortColumn, $orderDirection === 'desc' ? 'desc' : 'asc')
             ->paginate($perPage)
             ->withQueryString();
     }
 
     /**
+     * @param  list<int>|null  $storeIds
      * @return array{variant: ProductVariant, stores: \Illuminate\Support\Collection<int, array{store: \App\Models\Store|null, quantity: int}>, total_quantity: int}
      */
-    public function getVariantStockBreakdown(ProductVariant $variant): array
+    public function getVariantStockBreakdown(ProductVariant $variant, ?array $storeIds = null): array
     {
         $variant->load(['product.brand', 'product.categories', 'values.option']);
 
         $perStoreStock = Batch::query()
+            ->when($storeIds !== null, fn ($q) => $q->whereIn('store_id', $storeIds))
             ->select('store_id', DB::raw('SUM(remaining_quantity) as quantity'))
             ->where('product_variant_id', $variant->id)
             ->active()
@@ -160,7 +162,7 @@ final class StockService
                     ->orWhere('products.name', 'like', "%{$search}%")
             ))
             ->when($status && $status !== 'all', fn ($q) => $q->where('product_variants.status', $status))
-            ->orderBy($sortColumn, $orderDirection)
+            ->orderBy($sortColumn, $orderDirection === 'desc' ? 'desc' : 'asc')
             ->paginate($perPage)
             ->withQueryString();
     }
