@@ -34,6 +34,10 @@ const { formatDateOnly } = useDatetimeFormatter();
           </div>
 
           <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+            <div class="col-span-2 min-w-0">
+              <span class="block text-surface-500 dark:text-surface-400">{{ t("Location") }}</span>
+              <span class="break-all text-lg font-bold text-surface-900 dark:text-surface-50">{{ allocation.location_code ?? t("Not assigned") }}</span>
+            </div>
             <div class="min-w-0">
               <span class="block text-surface-500 dark:text-surface-400">{{ t("Quantity") }}</span>
               <span class="font-medium text-surface-900 dark:text-surface-50">{{ allocation.quantity }} {{ allocation.base_unit }}</span>
@@ -64,6 +68,9 @@ const { formatDateOnly } = useDatetimeFormatter();
           </template>
         </Column>
         <Column field="brand" :header="t('Brand')" :pt="{ headerCell: { class: '!bg-surface-200 dark:!bg-surface-800' } }" />
+        <Column :header="t('Location')" :pt="{ headerCell: { class: '!bg-surface-200 dark:!bg-surface-800' } }">
+          <template #body="{ data }"><span class="break-all font-semibold">{{ data.location_code ?? t("Not assigned") }}</span></template>
+        </Column>
         <Column :header="t('Quantity')" :pt="{ headerCell: { class: '!bg-surface-200 dark:!bg-surface-800' } }">
           <template #body="{ data }">
             {{ data.quantity }}

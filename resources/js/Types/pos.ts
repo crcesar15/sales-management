@@ -133,6 +133,7 @@ export interface PosProductInfo {
   base_unit_name: string | null;
   sale_unit_name: string | null;
   conversion_factor: number;
+  location_code?: string | null;
 }
 
 export type PosCustomer = CustomerOption;

@@ -15,14 +15,14 @@ export function useSalesOrderClient() {
     filter: string,
     storeId?: number | null,
     signal?: AbortSignal,
-    options: { withThumbnail?: boolean } = {},
+    options: { withThumbnail?: boolean; withLocation?: boolean } = {},
   ) => {
     if (!filter || filter.length < 2) return { data: [] };
     return await apiClient.get(route("api.v1.variants.search"), {
       signal,
       params: {
         filter,
-        includes: options.withThumbnail ? "saleUnits,thumbnail" : "saleUnits",
+        includes: ["saleUnits", ...(options.withThumbnail ? ["thumbnail"] : []), ...(options.withLocation ? ["location"] : [])].join(","),
         ...(storeId ? { store_id: storeId } : {}),
       },
     });

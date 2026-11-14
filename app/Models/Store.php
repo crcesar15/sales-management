@@ -58,6 +58,12 @@ final class Store extends Model
         return $this->hasMany(Batch::class);
     }
 
+    /** @return HasMany<VariantStoreLocation, $this> */
+    public function variantLocations(): HasMany
+    {
+        return $this->hasMany(VariantStoreLocation::class);
+    }
+
     /** @return HasMany<ReceptionOrder, $this> */
     public function receptionOrders(): HasMany
     {

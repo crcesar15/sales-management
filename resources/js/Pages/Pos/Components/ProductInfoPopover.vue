@@ -40,6 +40,10 @@ watch(
       <div v-if="info.brand_name" class="mt-0.5 text-surface-500 dark:text-surface-400">{{ t("Brand") }}: {{ info.brand_name }}</div>
 
       <div class="mt-3 flex flex-col gap-2 border-t border-surface-200 pt-3 dark:border-surface-700">
+        <div class="flex items-start justify-between gap-3">
+          <span class="text-surface-500 dark:text-surface-400">{{ t("Location") }}</span>
+          <span class="break-all text-right font-semibold">{{ info.location_code ?? t("Not assigned") }}</span>
+        </div>
         <div class="flex items-center justify-between gap-3">
           <span class="text-surface-500 dark:text-surface-400">{{ t("Unit Price") }}</span>
           <span class="font-semibold tabular-nums">{{ formatCurrency(String(info.unit_price)) }}</span>

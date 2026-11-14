@@ -21,6 +21,7 @@ use App\Models\SalesOrderPayment;
 use App\Models\SalesOrderStockAllocation;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\VariantStoreLocation;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,7 +42,8 @@ use InvalidArgumentException;
  *     brand: string|null,
  *     base_unit: string,
  *     batch_identifier: string,
- *     expiry_date: string|null
+ *     expiry_date: string|null,
+ *     location_code: string|null
  * }
  * @phpstan-type HandoverPreview array{token: string, allocations: list<HandoverAllocation>}
  */
@@ -472,7 +474,8 @@ final class SalesOrderService
      *         brand: string|null,
      *         base_unit: string,
      *         batch_identifier: string,
-     *         expiry_date: string|null
+     *         expiry_date: string|null,
+     *         location_code: string|null
      *     }>
      * }
      */
@@ -813,6 +816,8 @@ final class SalesOrderService
     {
         $order->loadMissing(['items.productVariant.product.brand', 'items.productVariant.product.measurementUnit']);
         $variantIds = $order->items->pluck('product_variant_id')->unique();
+        $locations = VariantStoreLocation::query()->where('store_id', $order->store_id)
+            ->whereIn('product_variant_id', $variantIds)->pluck('location_code', 'product_variant_id');
         $batchesByVariant = Batch::query()
             ->whereIn('product_variant_id', $variantIds)
             ->fulfillableAt($order->store_id)
@@ -854,6 +859,7 @@ final class SalesOrderService
                     'base_unit' => $measurementUnit instanceof MeasurementUnit ? $measurementUnit->name : 'Unit',
                     'batch_identifier' => $batch->batch_identifier ?? "#{$batch->id}",
                     'expiry_date' => $batch->expiry_date?->toDateString(),
+                    'location_code' => $locations->get($item->product_variant_id),
                 ];
                 $remainingQuantity -= $quantity;
                 $virtualRemaining[$batch->id] = $availableQuantity - $quantity;
@@ -952,6 +958,7 @@ final class SalesOrderService
             'items.productVariant.product.measurementUnit',
             'items.productVariant.values',
             'items.productVariant.activeSaleUnits',
+            'items.productVariant.storeLocations' => fn (HasMany $query): HasMany => $query->where('store_id', $order->store_id),
             'items.productVariant.batches' => fn (HasMany $query): HasMany => $query
                 ->where('store_id', $order->store_id)
                 ->where('status', 'active')

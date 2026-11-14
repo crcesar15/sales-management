@@ -110,6 +110,7 @@ const infoData = computed<PosProductInfo | null>(() => {
   return {
     product_name: unit.variant.product?.name ?? "—",
     brand_name: unit.variant.product?.brand?.name ?? null,
+    location_code: unit.variant.location_code ?? null,
     unit_price: unit.unitPrice,
     base_unit_name: unit.variant.product?.measurement_unit?.name ?? null,
     sale_unit_name: unit.saleUnitId !== null ? unit.saleUnitName : null,
@@ -146,7 +147,7 @@ async function searchProducts(filterValue: string, options: ProductSearchOptions
   const currentRequest = ++requestId;
 
   try {
-    const response = await searchVariantsApi(filter, props.storeId, controller.signal, { withThumbnail: true });
+    const response = await searchVariantsApi(filter, props.storeId, controller.signal, { withThumbnail: true, withLocation: true });
     if (controller.signal.aborted || currentRequest !== requestId) return "cancelled";
 
     const data = response.data?.data ?? [];
@@ -306,6 +307,7 @@ function addUnit(unit: PosSellableUnit, options?: PosAddItemOptions): void {
       product_variant_id: variant.id,
       product_name: variant.product?.name ?? "—",
       brand_name: variant.product?.brand?.name ?? null,
+      location_code: variant.location_code ?? null,
       base_unit_name: variant.product?.measurement_unit?.name ?? null,
       variant_identity: variant.option_values,
       variant_label: variant.option_values ?? unit.saleUnitName,

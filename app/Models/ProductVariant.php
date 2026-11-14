@@ -97,6 +97,12 @@ final class ProductVariant extends Model
         return $this->hasMany(Batch::class);
     }
 
+    /** @return HasMany<VariantStoreLocation, $this> */
+    public function storeLocations(): HasMany
+    {
+        return $this->hasMany(VariantStoreLocation::class);
+    }
+
     /** @return HasMany<StockTransferItem, $this> */
     public function stockTransferItems(): HasMany
     {

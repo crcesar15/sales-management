@@ -43,6 +43,11 @@ final class ProductGalleryVariantDetailResource extends JsonResource
             'unit_name' => $product?->measurementUnit?->name,
             'is_available' => (bool) $variant->getAttribute('is_available'),
             'images' => $this->images($variant),
+            'locations' => $variant->relationLoaded('storeLocations') ? $variant->storeLocations->filter(fn ($location) => $location->store !== null)->map(fn ($location) => [
+                'store_id' => $location->store_id,
+                'store_name' => $location->store?->name,
+                'location_code' => $location->location_code,
+            ])->values()->all() : [],
             'sale_units' => $variant->activeSaleUnits
                 ->map(fn ($unit) => [
                     'id' => $unit->id,

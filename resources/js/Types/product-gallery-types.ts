@@ -33,6 +33,7 @@ export interface ProductGalleryVariantDetail {
   unit_name: string | null;
   is_available: boolean;
   images: ProductGalleryImage[];
+  locations: Array<{ store_id: number; store_name: string; location_code: string }>;
   sale_units: Array<{
     id: number;
     name: string;

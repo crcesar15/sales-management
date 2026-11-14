@@ -10,10 +10,12 @@ import { useAuth } from "@composables/useAuth";
 import type { InventoryProductDetail, InventoryVariantDetail, VariantNavigationItem } from "@app-types/inventory-variant-types";
 import type { MeasurementUnitResponse } from "@app-types/measurement-unit-types";
 import type { StockStoreBreakdown } from "@app-types/stock-overview-types";
+import type { VariantLocationStore } from "@app-types/inventory-variant-types";
 import ImagesTab from "./Components/ImagesTab.vue";
 import OverviewTab from "./Components/OverviewTab.vue";
 import UnitsTab from "./Components/UnitsTab.vue";
 import VariantContextPanel from "./Components/VariantContextPanel.vue";
+import LocationsTab from "./Components/LocationsTab.vue";
 
 defineOptions({ layout: AppLayout });
 
@@ -22,17 +24,19 @@ const props = defineProps<{
   variant: InventoryVariantDetail;
   siblings: VariantNavigationItem[];
   stores: StockStoreBreakdown[];
+  locationStores: VariantLocationStore[];
   measurementUnits: Pick<MeasurementUnitResponse, "id" | "name" | "abbreviation">[];
 }>();
 const { t } = useI18n();
 const { can } = useAuth();
 
-const activeTab = ref<"overview" | "units" | "images">("overview");
+const activeTab = ref<"overview" | "units" | "images" | "locations">("overview");
 const overviewDirty = ref(false);
 const imagesDirty = ref(false);
+const locationsDirty = ref(false);
 const canEdit = computed(() => can("inventory.edit"));
 const canEditProduct = computed(() => can("product.edit"));
-const isPageDirty = computed(() => overviewDirty.value || imagesDirty.value);
+const isPageDirty = computed(() => overviewDirty.value || imagesDirty.value || locationsDirty.value);
 const currentSiblingIndex = computed(() => props.siblings.findIndex((sibling) => sibling.id === props.variant.id));
 const previousSibling = computed(() => props.siblings[currentSiblingIndex.value - 1] ?? null);
 const nextSibling = computed(() => props.siblings[currentSiblingIndex.value + 1] ?? null);
@@ -136,6 +140,9 @@ onUnmounted(() => {
                   </span>
                 </Tab>
                 <Tab value="units">{{ t("Units") }}</Tab>
+                <Tab value="locations">
+                  <span class="flex items-center gap-2">{{ t("Locations") }} <i v-if="locationsDirty" class="fa fa-circle text-[0.45rem] text-primary" :title="t('Unsaved changes')" aria-hidden="true" /></span>
+                </Tab>
                 <Tab v-if="product.has_variants" value="images">
                   <span class="flex items-center gap-2">
                     {{ t("Images") }}
@@ -155,6 +162,9 @@ onUnmounted(() => {
                 </TabPanel>
                 <TabPanel value="units">
                   <UnitsTab :product="product" :variant="variant" :measurement-units="measurementUnits" :sibling-count="siblings.length - 1" />
+                </TabPanel>
+                <TabPanel value="locations">
+                  <LocationsTab :variant-id="variant.id" :stores="locationStores" :can-edit="canEdit" :sibling-count="siblings.length - 1" @update:dirty="locationsDirty = $event" />
                 </TabPanel>
                 <TabPanel v-if="product.has_variants" value="images">
                   <ImagesTab

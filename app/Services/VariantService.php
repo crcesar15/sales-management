@@ -162,6 +162,9 @@ final class VariantService
             $query->withSum([
                 'batches as fulfillable_stock' => fn ($query) => $query->fulfillableAt($storeId),
             ], 'remaining_quantity');
+            if (in_array('location', $includes, true)) {
+                $query->with(['storeLocations' => fn ($query) => $query->where('store_id', $storeId)]);
+            }
         }
 
         return $query

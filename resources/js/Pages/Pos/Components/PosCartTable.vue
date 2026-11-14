@@ -31,6 +31,7 @@ const infoData = computed<PosProductInfo | null>(() => {
   return {
     product_name: item.product_name,
     brand_name: item.brand_name,
+    location_code: item.location_code ?? null,
     unit_price: item.unit_price,
     base_unit_name: item.base_unit_name ?? null,
     sale_unit_name: item.sale_unit?.name ?? null,

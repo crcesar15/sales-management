@@ -167,6 +167,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.variants');
     Route::get('/inventory/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
     Route::put('/inventory/variants/{variant}', [InventoryController::class, 'update'])->name('inventory.variant.update');
+    Route::put('/inventory/variants/{variant}/locations', [InventoryController::class, 'updateLocations'])->name('inventory.variants.locations.update');
 
     // Stock Alert Routes
     Route::get('/inventory/alerts', [StockAlertController::class, 'index'])->name('inventory.alerts');

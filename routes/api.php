@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\BatchesController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
+use App\Http\Controllers\Api\Inventory\LocationCodeController;
 use App\Http\Controllers\Api\MeasurementUnitController;
 use App\Http\Controllers\Api\PermissionsController;
 use App\Http\Controllers\Api\PosSaleHandoverController;
@@ -26,6 +27,7 @@ Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $reques
 
 // API v1 Routes
 Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.'], function (): void {
+    Route::get('stores/{store}/location-codes', [LocationCodeController::class, 'index'])->name('stores.location-codes.index');
     // POS session routes
     Route::get('pos/session', [PosSessionController::class, 'session'])->name('pos.session');
     Route::get('pos/registers', [PosSessionController::class, 'registers'])->name('pos.registers');

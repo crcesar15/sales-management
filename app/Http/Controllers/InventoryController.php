@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\PermissionsEnum;
 use App\Http\Requests\Inventory\ShowInventoryRequest;
 use App\Http\Requests\Inventory\UpdateVariantDetailRequest;
+use App\Http\Requests\Inventory\UpdateVariantLocationsRequest;
 use App\Http\Resources\Inventory\StockOverviewCollection;
 use App\Models\Brand;
 use App\Models\Category;
@@ -16,6 +17,7 @@ use App\Models\Store;
 use App\Services\ProductVariantService;
 use App\Services\ReportingScopeService;
 use App\Services\StockService;
+use App\Services\VariantLocationService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -79,6 +81,8 @@ final class InventoryController extends Controller
 
         $storeIds = app(ReportingScopeService::class)->storeIds($request->user() ?? abort(401), $request->integer('store_id') ?: null);
         $breakdown = $this->stockService->getVariantStockBreakdown($variant, $storeIds);
+        $locationStoreIds = app(ReportingScopeService::class)->storeIds($request->user());
+        $locations = $variant->storeLocations()->whereIn('store_id', $locationStoreIds)->pluck('location_code', 'store_id');
 
         $product = $variant->product()->firstOrFail();
         $product->load(['brand', 'categories', 'measurementUnit', 'media']);
@@ -89,6 +93,8 @@ final class InventoryController extends Controller
             ->get();
 
         return Inertia::render('Inventory/Show/Index', [
+            'locationStores' => Store::query()->whereIn('id', $locationStoreIds)->where('status', 'active')->orderBy('name')->get(['id', 'name', 'code'])
+                ->map(fn (Store $store) => ['store_id' => $store->id, 'store_name' => $store->name, 'store_code' => $store->code, 'location_code' => $locations->get($store->id)]),
             'measurementUnits' => MeasurementUnit::query()->orderBy('name')->get(['id', 'name', 'abbreviation']),
             'product' => [
                 'id' => $product->id,
@@ -182,6 +188,13 @@ final class InventoryController extends Controller
             'replicate_pricing' => $request->boolean('replicate_pricing'),
             'replicate_inventory_policy' => $request->boolean('replicate_inventory_policy'),
         ]);
+
+        return redirect()->back();
+    }
+
+    public function updateLocations(UpdateVariantLocationsRequest $request, ProductVariant $variant, VariantLocationService $service): RedirectResponse
+    {
+        $service->update($variant, $request->validated('locations'), $request->boolean('replicate_locations'));
 
         return redirect()->back();
     }

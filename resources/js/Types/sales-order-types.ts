@@ -25,6 +25,7 @@ export interface SalesOrderItem {
     barcode?: string | null;
     option_values?: string | null;
     minimum_stock_level?: number | null;
+    location_code?: string | null;
     sale_units?: Array<{
       id: number;
       name: string;
@@ -67,6 +68,7 @@ export interface SalesOrderHandoverAllocation {
   base_unit: string;
   batch_identifier: string;
   expiry_date: string | null;
+  location_code: string | null;
 }
 
 export interface SalesOrderHandoverPreview {
@@ -206,6 +208,7 @@ export interface SalesOrderLineItemForm {
   product_name: string;
   brand_name: string | null;
   base_unit_name?: string | null;
+  location_code?: string | null;
   variant_identity?: string | null;
   variant_label: string | null;
   identifier?: string | null;
@@ -249,6 +252,7 @@ export interface VariantSearchResult {
   option_values: string | null;
   price: number;
   stock: number | null;
+  location_code?: string | null;
   minimum_stock_level: number | null;
   thumbnail_url?: string | null;
   product?: {

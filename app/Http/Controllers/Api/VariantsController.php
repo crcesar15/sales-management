@@ -97,9 +97,15 @@ final class VariantsController extends Controller
 
     public function search(Request $request, VariantService $variantService): JsonResponse
     {
+        $includes = array_filter(explode(',', $request->string('includes', '')->value()));
+        if (in_array('location', $includes, true)) {
+            $this->authorize(PermissionsEnum::POS_ACCESS->value, $request->user());
+            abort_unless($request->integer('store_id') > 0, 422);
+            app(\App\Services\ReportingScopeService::class)->storeIds($request->user() ?? abort(401), $request->integer('store_id'));
+        }
         $variants = $variantService->search([
             'filter' => $request->string('filter', '')->value(),
-            'includes' => array_filter(explode(',', $request->string('includes', '')->value())),
+            'includes' => $includes,
             'store_id' => $request->integer('store_id', 0),
         ]);
 

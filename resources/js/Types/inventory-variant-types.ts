@@ -1,6 +1,13 @@
 import type { MeasurementUnit } from "./measurement-unit-types";
 import type { VariantOptionValue, ProductMedia } from "./product-types";
 
+export interface VariantLocationStore {
+  store_id: number;
+  store_name: string;
+  store_code: string;
+  location_code: string | null;
+}
+
 export interface InventoryVariantListItem {
   id: number;
   product_id: number;

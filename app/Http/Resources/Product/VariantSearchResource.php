@@ -38,6 +38,7 @@ final class VariantSearchResource extends JsonResource
                 ->toArray(),
             'price' => (float) $variant->price,
             'stock' => $this->resolveStock($variant),
+            'location_code' => $this->when($variant->relationLoaded('storeLocations'), fn () => $variant->storeLocations->first()?->location_code),
             'minimum_stock_level' => $variant->minimum_stock_level,
             'has_expiration' => $variant->has_expiration,
             'product' => $product !== null ? [

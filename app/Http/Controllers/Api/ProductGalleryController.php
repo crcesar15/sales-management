@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductGallery\ProductGalleryVariantDetailResource;
 use App\Models\ProductVariant;
 use App\Services\ProductGalleryService;
+use App\Services\ReportingScopeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,7 +21,11 @@ final class ProductGalleryController extends Controller
     {
         $this->authorize(PermissionsEnum::POS_ACCESS->value, $request->user());
 
-        return (new ProductGalleryVariantDetailResource($this->productGalleryService->find($variant->id)))
+        $detail = $this->productGalleryService->find($variant->id);
+        $storeIds = app(ReportingScopeService::class)->storeIds($request->user() ?? abort(401));
+        $detail->load(['storeLocations' => fn ($query) => $query->whereIn('store_id', $storeIds)->with('store')]);
+
+        return (new ProductGalleryVariantDetailResource($detail))
             ->response()
             ->setStatusCode(200);
     }

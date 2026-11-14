@@ -113,6 +113,15 @@ const title = computed(() => props.detail?.product_name ?? t("Product details"))
           </div>
         </div>
 
+        <div v-if="detail.locations.length">
+          <h3 class="m-0 mb-2 text-base font-semibold">{{ t("Locations by Store") }}</h3>
+          <ul class="m-0 space-y-2 p-0">
+            <li v-for="location in detail.locations" :key="location.store_id" class="flex justify-between gap-3">
+              <span>{{ location.store_name }}</span><span class="break-all font-semibold">{{ location.location_code }}</span>
+            </li>
+          </ul>
+        </div>
+
         <div v-if="detail.sale_units.length">
           <h3 class="m-0 mb-2 text-base font-semibold">{{ t("Additional sale units") }}</h3>
           <ul class="m-0 space-y-2 p-0">

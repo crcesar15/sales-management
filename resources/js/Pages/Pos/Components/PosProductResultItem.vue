@@ -72,6 +72,7 @@ function showInfo(event: Event): void {
       <span v-if="unit.variant.product?.brand?.name" class="truncate text-xs text-surface-600 dark:text-surface-200">
         {{ unit.variant.product.brand.name }}
       </span>
+      <span class="break-words text-sm">{{ t("Location") }}: {{ unit.variant.location_code ?? t("Not assigned") }}</span>
       <span class="truncate text-xs text-surface-600 dark:text-surface-200">
         {{ unit.saleUnitName }}
         <template v-if="unit.conversionFactor !== 1">
@@ -121,6 +122,7 @@ function showInfo(event: Event): void {
         <span class="font-semibold tabular-nums">{{ formatCurrency(String(unit.unitPrice)) }}</span>
         <Tag :value="stockLabel(unit)" :severity="stockSeverity(unit)" rounded />
       </div>
+      <p class="mb-0 mt-2 break-words">{{ t("Location") }}: {{ unit.variant.location_code ?? t("Not assigned") }}</p>
     </div>
     <Button
       icon="fa fa-plus"
