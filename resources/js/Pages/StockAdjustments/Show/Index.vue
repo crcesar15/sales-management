@@ -1,9 +1,8 @@
 <script setup lang="ts">
+import { goBack } from "@composables/goBack";
 import { Card, Button } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
-import { router } from "@inertiajs/vue3";
-import { route } from "ziggy-js";
 import { computed } from "vue";
 import type { StockAdjustmentResponse } from "@/Types/stock-adjustment-types";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
@@ -30,7 +29,7 @@ const formattedQuantity = computed(() => {
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
-        <Button icon="fa fa-arrow-left" text rounded @click="router.visit(route('stock-adjustments'))" />
+        <Button icon="fa fa-arrow-left" text rounded :aria-label="t('Back')" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Adjustment Details") }}</h2>
         <AdjustmentReasonTag :reason="adjustment.reason" />
       </div>

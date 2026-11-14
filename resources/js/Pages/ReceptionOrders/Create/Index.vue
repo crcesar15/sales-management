@@ -148,7 +148,7 @@ const submit = handleSubmit((formValues) => {
 });
 
 function goBack() {
-  router.visit(route("reception-orders"));
+  window.history.back();
 }
 </script>
 
@@ -156,7 +156,7 @@ function goBack() {
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
-        <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
+        <Button icon="fa fa-arrow-left" text rounded severity="secondary" :aria-label="t('Back')" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Create Reception Order") }}</h2>
       </div>
       <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" :loading="processing" :disabled="processing" @click="submit" />

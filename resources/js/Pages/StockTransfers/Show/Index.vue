@@ -1,9 +1,8 @@
 <script setup lang="ts">
+import { goBack } from "@composables/goBack";
 import { Card, Button, DataTable, Column, Stepper, StepList, Step } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
-import { router } from "@inertiajs/vue3";
-import { route } from "ziggy-js";
 import { ref, computed } from "vue";
 import type { StockTransferResponse } from "@/Types/stock-transfer-types";
 import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
@@ -83,7 +82,7 @@ function discrepancy(item: { quantity_sent: number; quantity_received: number })
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
-        <Button icon="fa fa-arrow-left" text rounded @click="router.visit(route('stock-transfers'))" />
+        <Button icon="fa fa-arrow-left" text rounded :aria-label="t('Back')" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Transfer Details") }}</h2>
         <TransferStatusTag :status="transfer.status" />
       </div>

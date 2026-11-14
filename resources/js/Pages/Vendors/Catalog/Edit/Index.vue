@@ -38,7 +38,7 @@ const handleSubmit = (payload: CatalogPayload) => {
 };
 
 const goBack = () => {
-  router.visit(route("vendors.catalog", props.vendor.id));
+  window.history.back();
 };
 </script>
 
@@ -46,7 +46,7 @@ const goBack = () => {
   <div>
     <div class="flex items-center justify-between gap-2 mb-3">
       <div class="flex min-w-0 items-center gap-2 sm:gap-3">
-        <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="goBack" />
+        <Button icon="fa fa-arrow-left" text rounded severity="secondary" :aria-label="t('Back')" @click="goBack" />
         <h2 class="m-0 min-w-0 text-2xl font-bold leading-tight sm:text-2xl sm:leading-normal">
           <span class="hidden sm:inline">{{ vendor.fullname }} —</span>
           {{ t("Edit Catalog Entry") }}

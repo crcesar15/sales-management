@@ -44,7 +44,9 @@ const visitVariant = (variantId: number) => {
 };
 
 const goBack = () => {
-  router.visit(route("inventory.variants"));
+  if (isPageDirty.value && !window.confirm(t("You have unsaved changes. Leave this page without saving?"))) return;
+
+  window.history.back();
 };
 
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -77,7 +79,7 @@ onUnmounted(() => {
 
     <header class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div class="flex min-w-0 items-center gap-2">
-        <Button icon="fa fa-arrow-left" text rounded :aria-label="t('Back to inventory')" @click="goBack" />
+        <Button icon="fa fa-arrow-left" text rounded :aria-label="t('Back')" @click="goBack" />
         <div class="min-w-0">
           <h1 class="m-0 truncate text-2xl font-bold">{{ product.name }}</h1>
         </div>

@@ -91,7 +91,7 @@ const submit = handleSubmit((formValues) => {
 });
 
 function goBack() {
-  router.visit(route("stock-transfers"));
+  window.history.back();
 }
 
 function updateFromStore(storeId: number | null) {

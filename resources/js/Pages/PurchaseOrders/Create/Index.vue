@@ -147,7 +147,7 @@ const submit = handleSubmit((formValues) => {
 });
 
 function goBack() {
-  router.visit(route("purchase-orders"));
+  window.history.back();
 }
 </script>
 

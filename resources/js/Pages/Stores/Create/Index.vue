@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { goBack } from "@composables/goBack";
 import { Button, Card, InputText, Select, useToast } from "primevue";
 
 import { router } from "@inertiajs/vue3";
@@ -68,7 +69,7 @@ const submit = handleSubmit((values) => {
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex">
-        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="router.visit(route('stores'))" />
+        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" :aria-label="t('Back')" @click="goBack" />
         <h4 class="text-2xl font-bold flex items-center m-0">
           {{ t("Add Store") }}
         </h4>

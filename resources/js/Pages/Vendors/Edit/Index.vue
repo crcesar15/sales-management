@@ -60,7 +60,7 @@ const [address, addressAttrs] = defineField("address");
 const [details, detailsAttrs] = defineField("details");
 const [status, statusAttrs] = defineField("status");
 
-const goBack = () => router.visit(route("vendors"));
+const goBack = () => window.history.back();
 
 const submit = handleSubmit((formValues) => {
   const payload = {
@@ -102,7 +102,7 @@ const submit = handleSubmit((formValues) => {
   <div>
     <div class="flex flex-row justify-between mb-3">
       <div class="flex">
-        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="goBack" />
+        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" :aria-label="t('Back')" @click="goBack" />
         <h2 class="text-2xl font-bold flex items-center m-0">
           {{ t("Edit Vendor") }}
         </h2>

@@ -209,6 +209,9 @@ export default {
       this.showProductEditor = false;
       this.selectedProduct = {};
     },
+    goBack() {
+      window.history.back();
+    },
   },
 };
 </script>
@@ -222,7 +225,8 @@ export default {
           text
           severity="secondary"
           class="hover:shadow-md mr-2 uppercase"
-          @click="$inertia.visit(route('vendors'))"
+          :aria-label="$t('Back')"
+          @click="goBack"
         />
         <h4 class="text-2xl font-bold flex items-center m-0">{{ $t("Product Catalog") }} - {{ vendor.fullname }}</h4>
       </div>

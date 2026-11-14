@@ -238,7 +238,7 @@ const submit = handleSubmit((formValues) => {
 });
 
 function goBack() {
-  router.visit(route("sales-orders"));
+  window.history.back();
 }
 
 function runAction(method: "patch" | "post", routeName: string, data: Record<string, FormDataConvertible>, message: string): void {

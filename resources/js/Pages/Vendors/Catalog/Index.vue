@@ -159,7 +159,7 @@ const deleteEntry = (entry: CatalogResponse) => {
 };
 
 const goBack = () => {
-  router.visit(route("vendors"));
+  window.history.back();
 };
 </script>
 
@@ -167,7 +167,7 @@ const goBack = () => {
   <div>
     <div class="flex items-center justify-between gap-2 mb-3">
       <div class="flex min-w-0 items-center gap-2 sm:gap-3">
-        <Button icon="fa fa-arrow-left" text severity="secondary" class="shrink-0 hover:shadow-md" @click="goBack" />
+        <Button icon="fa fa-arrow-left" text severity="secondary" class="shrink-0 hover:shadow-md" :aria-label="t('Back')" @click="goBack" />
         <h2 class="m-0 min-w-0 text-2xl font-bold leading-tight sm:text-2xl sm:leading-normal">
           <span class="hidden sm:inline">{{ vendor.fullname }} —</span>
           {{ t("Catalog") }}

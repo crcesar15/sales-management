@@ -117,7 +117,7 @@ const submit = handleSubmit(() => {
 });
 
 function goBack() {
-  router.visit(route("sales-orders"));
+  window.history.back();
 }
 </script>
 

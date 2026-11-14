@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { goBack } from "@composables/goBack";
 import { Card, InputText, AutoComplete, Avatar, Badge, useToast, Button } from "primevue";
 
 import { useI18n } from "vue-i18n";
@@ -115,7 +116,7 @@ const submit = handleSubmit((values) => {
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex">
-        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" @click="router.visit(route('roles'))" />
+        <Button icon="fa fa-arrow-left" text severity="secondary" class="hover:shadow-md mr-2" :aria-label="t('Back')" @click="goBack" />
         <h4 class="text-2xl font-bold flex items-center m-0 capitalize">
           {{ t("add role") }}
         </h4>

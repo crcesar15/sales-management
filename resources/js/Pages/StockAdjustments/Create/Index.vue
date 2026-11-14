@@ -1,5 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
+import { goBack } from "@composables/goBack";
 import { Button, Card, Select, InputNumber, InputText, Textarea, DatePicker, useToast } from "primevue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
@@ -237,7 +238,7 @@ const submit = handleSubmit((formValues) => {
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
-        <Button icon="fa fa-arrow-left" text rounded severity="secondary" @click="router.visit(route('stock-adjustments'))" />
+        <Button icon="fa fa-arrow-left" text rounded severity="secondary" :aria-label="t('Back')" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Create Adjustment") }}</h2>
       </div>
       <Button icon="fa fa-save" :label="t('Save')" raised class="uppercase" @click="submit()" />

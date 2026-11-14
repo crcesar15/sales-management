@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { router } from "@inertiajs/vue3";
+import { goBack } from "@composables/goBack";
 import { Button, Card } from "primevue";
 import { useI18n } from "vue-i18n";
-import { route } from "ziggy-js";
 import PosLayout from "@layouts/pos.vue";
 import OrderItemsTable from "@pages/SalesOrders/Components/OrderItemsTable.vue";
 import OrderPaymentsTable from "@pages/SalesOrders/Components/OrderPaymentsTable.vue";
@@ -27,7 +26,7 @@ const { t } = useI18n();
         text
         rounded
         severity="secondary"
-        @click="router.visit(route('pos.sales.index'))"
+        @click="goBack"
       />
       <h1 class="m-0 text-2xl font-bold">{{ t("Sales Order") }} #{{ order.id }}</h1>
     </div>

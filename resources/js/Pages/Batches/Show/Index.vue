@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { goBack } from "@composables/goBack";
 import { Card, Button, Message, Tag } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
@@ -44,7 +45,7 @@ const missingPercent = computed(() => {
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
-        <Button icon="fa fa-arrow-left" text rounded :aria-label="t('Back')" @click="router.visit(route('batches'))" />
+        <Button icon="fa fa-arrow-left" text rounded :aria-label="t('Back')" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Batch Details") }}</h2>
         <BatchStatusTag :status="batch.status" />
       </div>

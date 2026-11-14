@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { goBack } from "@composables/goBack";
 import { Badge, Button, Card, Divider, Popover } from "primevue";
 import AppLayout from "@layouts/admin.vue";
 import { useI18n } from "vue-i18n";
@@ -73,7 +74,7 @@ function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): st
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
-        <Button icon="fa fa-arrow-left" text severity="secondary" @click="router.visit(route('reception-orders'))" />
+        <Button icon="fa fa-arrow-left" text severity="secondary" :aria-label="t('Back')" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Reception Order") }} #{{ receptionOrder.id }}</h2>
       </div>
       <div v-if="canComplete" v-can="'reception_order.manage'" class="flex items-center gap-2">

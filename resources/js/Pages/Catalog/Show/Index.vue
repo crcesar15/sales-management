@@ -47,7 +47,7 @@ const filteredEntries = computed(() => {
   return props.catalogEntries.filter((entry) => entry.purchase_unit?.id === selectedUnit.value);
 });
 
-const goBack = () => router.visit(route("catalog"));
+const goBack = () => window.history.back();
 
 const editEntry = (entry: CatalogResponse) => {
   router.visit(route("vendors.catalog.edit", [entry.vendor_id, entry.id]));
@@ -101,7 +101,7 @@ const formatPaymentTerms = (terms: string | null): string => {
   <div>
     <div class="flex justify-between mb-3">
       <div class="flex items-center gap-3">
-        <Button icon="fa fa-arrow-left" text rounded @click="goBack" />
+        <Button icon="fa fa-arrow-left" text rounded :aria-label="t('Back')" @click="goBack" />
         <h2 class="text-2xl font-bold m-0">{{ t("Vendors") }}</h2>
       </div>
       <div class="flex flex-col justify-center">
