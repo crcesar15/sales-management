@@ -13,6 +13,7 @@ use App\Models\ProductVariant;
 use App\Models\SalesOrder;
 use App\Models\Store;
 use App\Models\User;
+use App\Models\VariantStoreLocation;
 use App\Services\SalesOrderService;
 
 beforeEach(function (): void {
@@ -50,6 +51,7 @@ beforeEach(function (): void {
 });
 
 it('previews POS fulfillment in FEFO order without changing inventory', function (): void {
+    VariantStoreLocation::factory()->create(['product_variant_id' => $this->variant->id, 'store_id' => $this->store->id, 'location_code' => 'A-03']);
     $order = createPosOrder($this->cashier, $this->variant, 7);
 
     $response = $this->actingAs($this->cashier, 'sanctum')
@@ -58,6 +60,8 @@ it('previews POS fulfillment in FEFO order without changing inventory', function
     $response->assertOk()
         ->assertJsonPath('data.allocations.0.batch_id', $this->firstBatch->id)
         ->assertJsonPath('data.allocations.0.quantity', 5)
+        ->assertJsonPath('data.allocations.0.location_code', 'A-03')
+        ->assertJsonPath('data.allocations.1.location_code', 'A-03')
         ->assertJsonPath('data.allocations.1.batch_id', $this->secondBatch->id)
         ->assertJsonPath('data.allocations.1.quantity', 2)
         ->assertJsonStructure(['data' => ['token', 'allocations' => [['product', 'variant', 'batch_identifier']]]]);
@@ -111,13 +115,16 @@ it('tracks remaining stock across duplicate variant lines', function (): void {
 });
 
 it('reports only fulfillable stock in POS product search', function (): void {
+    VariantStoreLocation::factory()->create(['product_variant_id' => $this->variant->id, 'store_id' => $this->store->id, 'location_code' => 'B-12']);
     $this->actingAs($this->cashier, 'sanctum')
         ->getJson(route('api.v1.variants.search', [
             'filter' => $this->variant->identifier,
             'store_id' => $this->store->id,
+            'includes' => 'location',
         ]))
         ->assertOk()
-        ->assertJsonPath('data.0.stock', 10);
+        ->assertJsonPath('data.0.stock', 10)
+        ->assertJsonPath('data.0.location_code', 'B-12');
 });
 
 function createPosOrder(User $cashier, ProductVariant $variant, int $quantity, bool $duplicateLines = false): SalesOrder
