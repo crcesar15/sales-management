@@ -76,7 +76,7 @@ it('updates variant overview fields with nullable purchase pricing', function ()
         ->and($variant->has_expiration)->toBeTrue();
 });
 
-it('replicates exact pricing to sibling variants only', function () {
+it('replicates selling prices and targets while preserving sibling purchase references', function () {
     $product = Product::factory()->create();
     $source = ProductVariant::factory()->create([
         'product_id' => $product->id,
@@ -118,7 +118,7 @@ it('replicates exact pricing to sibling variants only', function () {
     $sibling->refresh();
     $otherProductVariant->refresh();
 
-    expect((float) $sibling->purchase_price)->toBe(10.0)
+    expect((float) $sibling->purchase_price)->toBe(20.0)
         ->and($sibling->margin_type->value)->toBe('percent')
         ->and((float) $sibling->margin_value)->toBe(20.0)
         ->and((float) $sibling->price)->toBe(12.5)

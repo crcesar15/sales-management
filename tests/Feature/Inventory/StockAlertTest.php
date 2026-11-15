@@ -60,6 +60,7 @@ function createActiveBatch(ProductVariant $variant, Store $store, int $remaining
         'remaining_quantity' => $remaining,
         'initial_quantity' => $remaining,
         'status' => 'active',
+        'expiry_date' => null,
         ...$overrides,
     ]);
 
@@ -218,7 +219,8 @@ it('derives the summary from all matching alerts', function () {
         ->assertInertia(fn ($page) => $page
             ->where('summary.low_stock_count', 1)
             ->where('summary.expiry_count', 1)
-            ->where('summary.total', 2)
+            ->where('summary.price_review_count', 2)
+            ->where('summary.total', 4)
         );
 });
 
@@ -319,7 +321,7 @@ it('includes batch at exact threshold boundary', function () {
 
     $variant = createVariantWithMinimumStock(10);
     createActiveBatch($variant, $this->store, 10, [
-        'expiry_date' => now()->addDays(30)->toDateString(),
+        'expiry_date' => now((string) Setting::get('timezone', config('app.timezone')))->addDays(30)->toDateString(),
     ]);
 
     actingAs($this->admin)
