@@ -2,7 +2,7 @@
 import { Card, InputNumber, Textarea, Select, ToggleSwitch, useToast } from "primevue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
-import { mixed, number, object, string } from "yup";
+import { boolean, mixed, number, object, string } from "yup";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import CatalogProductPicker from "./CatalogProductPicker.vue";
@@ -41,6 +41,7 @@ const schema = toTypedSchema(
     product_variant_id: number().required(t("Product is required")),
     unit_id: number().required(t("Purchase unit is required")),
     price: number().required(t("Price is required")).min(0, t("Price must be at least 0")),
+    is_outdated: boolean().required(),
     payment_terms: mixed<CatalogPaymentTerms>().nullable().optional().oneOf(["immediate", "credit", "both"]),
     details: string().nullable().optional().max(300, t("Details must not exceed 300 characters")),
     status: string().required(t("Status is required")).oneOf(["active", "inactive"]),
@@ -56,6 +57,7 @@ const { handleSubmit, errors, defineField, setFieldValue, setErrors, submitCount
     product_variant_id: props.initialValues?.product_variant_id ?? undefined,
     unit_id: props.initialValues?.unit_id ?? BASE_UNIT_ID,
     price: props.initialValues?.price ?? 0,
+    is_outdated: props.initialValues?.is_outdated ?? false,
     payment_terms: props.initialValues?.payment_terms === "debit" ? "immediate" : (props.initialValues?.payment_terms ?? null),
     details: props.initialValues?.details ?? "",
     status: props.initialValues?.status ?? "active",
@@ -65,6 +67,7 @@ const { handleSubmit, errors, defineField, setFieldValue, setErrors, submitCount
 });
 
 const [price, priceAttrs] = defineField("price");
+const [isOutdated] = defineField("is_outdated");
 const [paymentTerms, paymentTermsAttrs] = defineField("payment_terms");
 const [details, detailsAttrs] = defineField("details");
 const [status, statusAttrs] = defineField("status");
@@ -113,6 +116,7 @@ const submit = handleSubmit((formValues) => {
     product_variant_id: formValues.product_variant_id as number,
     unit_id: formValues.unit_id === BASE_UNIT_ID ? null : (formValues.unit_id ?? null),
     price: formValues.price as number,
+    is_outdated: formValues.is_outdated,
     payment_terms: formValues.payment_terms || null,
     details: formValues.details || null,
     status: formValues.status as "active" | "inactive",
@@ -166,6 +170,10 @@ defineExpose({
               </small>
             </div>
 
+            <div v-if="isEditing" class="mb-4 flex items-center gap-3">
+              <ToggleSwitch input-id="catalog-price-outdated" v-model="isOutdated" />
+              <label for="catalog-price-outdated">{{ t("Supplier price is outdated") }}</label>
+            </div>
             <!-- Price -->
             <div class="flex flex-col gap-1 mb-4">
               <label for="price">

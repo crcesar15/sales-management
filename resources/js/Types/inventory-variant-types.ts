@@ -1,5 +1,6 @@
 import type { MeasurementUnit } from "./measurement-unit-types";
 import type { VariantOptionValue, ProductMedia } from "./product-types";
+import type { ReplacementPricing, ActualStockCosts } from "./pricing-types";
 
 export interface VariantLocationStore {
   store_id: number;
@@ -42,6 +43,8 @@ export interface InventoryFilters {
 }
 
 export interface InventoryVariantDetail {
+  pricing: ReplacementPricing;
+  actual_costs: ActualStockCosts | null;
   id: number;
   product_id: number;
   identifier: string | null;
@@ -83,18 +86,27 @@ export interface VariantNavigationItem {
 export interface VariantOverviewPayload {
   identifier: string | null;
   barcode: string | null;
-  purchase_price: number | null;
-  margin_type: "percent" | "amount";
-  margin_value: number | null;
-  price: number;
   minimum_stock_level: number | null;
   has_expiration: boolean;
   status: "active" | "inactive" | "archived";
 }
 
 export interface VariantOverviewUpdatePayload extends VariantOverviewPayload {
-  replicate_pricing: boolean;
+  section: "overview";
   replicate_inventory_policy: boolean;
+}
+
+export interface VariantPricingPayload {
+  pricing_catalog_id: number | null;
+  reference_id: number | null;
+  margin_type: "percent" | "amount";
+  margin_value: number | null;
+  price: number;
+}
+
+export interface VariantPricingUpdatePayload extends VariantPricingPayload {
+  section: "pricing";
+  replicate_pricing: boolean;
 }
 
 export interface VariantUnitResource {
@@ -108,10 +120,12 @@ export interface VariantUnitResource {
 }
 
 export interface PurchasePriceHistoryEntry {
-  date: string;
+  date: string | null;
   price: number;
-  po_id: number;
+  po_id: number | null;
   vendor_name: string | null;
+  source: string;
+  conversion_factor: number;
 }
 
 export interface PurchasePriceStats {
@@ -122,6 +136,7 @@ export interface PurchasePriceStats {
 }
 
 export interface PurchasePriceHistory {
+  basis: "normal_replacement_cost_per_base_unit";
   latest_purchase_price: number | null;
   latest_po_date: string | null;
   latest_vendor_name: string | null;

@@ -31,6 +31,7 @@ import type { AutoCompleteOptionSelectEvent } from "primevue/autocomplete";
 import type { InventoryVariantDetail, InventoryProductDetail, VariantUnitResource } from "@/Types/inventory-variant-types";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { useAuth } from "@/Composables/useAuth";
+import { usePricingPreview } from "@composables/usePricingPreview";
 import type { MeasurementUnitResponse } from "@/Types/measurement-unit-types";
 
 const props = defineProps<{
@@ -88,8 +89,8 @@ interface BaseUnitRow {
 type VariantUnitRow = VariantUnitResource & { isBase?: false };
 
 const saleUnitsWithBase = computed<Array<BaseUnitRow | VariantUnitRow>>(() => {
-    const base: BaseUnitRow = {
-      id: 0,
+  const base: BaseUnitRow = {
+    id: 0,
     isBase: true,
     name: `${baseUnitName.value} (${t("Base").toLowerCase()})`,
     conversion_factor: 1,
@@ -101,8 +102,8 @@ const saleUnitsWithBase = computed<Array<BaseUnitRow | VariantUnitRow>>(() => {
 });
 
 const purchaseUnitsWithBase = computed<Array<BaseUnitRow | VariantUnitRow>>(() => {
-    const base: BaseUnitRow = {
-      id: 0,
+  const base: BaseUnitRow = {
+    id: 0,
     isBase: true,
     name: `${baseUnitName.value} (${t("Base").toLowerCase()})`,
     conversion_factor: 1,
@@ -173,12 +174,27 @@ const [sortOrderField, sortOrderAttrs] = defineField("sort_order");
 const saleUnitsCount = computed(() => saleUnits.value.length);
 const purchaseUnitsCount = computed(() => purchaseUnits.value.length);
 
-// Suggested price = base variant selling price × conversion factor.
-const suggestedPrice = computed(() => {
-  const factor = conversionField.value;
-  if (!factor || factor <= 0) return null;
-  return Math.round(props.variant.price * factor * 100) / 100;
-});
+const {
+  results: pricingResults,
+  loading: pricingLoading,
+  failed: pricingFailed,
+} = usePricingPreview(() =>
+  !dialogVisible.value ||
+  formType.value !== "sale" ||
+  props.variant.pricing.replacement_cost === null ||
+  !conversionField.value ||
+  conversionField.value < 1
+    ? []
+    : [
+        {
+          product_variant_id: props.variant.id,
+          price: props.variant.pricing.replacement_cost,
+          selling_price: priceField.value ?? 0,
+          sale_factor: conversionField.value,
+        },
+      ],
+);
+const suggestedPrice = computed(() => pricingResults.value[0]?.suggested_price ?? null);
 
 const openCreate = () => {
   editing.value = null;
@@ -226,6 +242,7 @@ const deleteForm = useForm({});
 
 const onSubmit = handleSubmit(async (values) => {
   const payload = {
+    reference_id: props.variant.pricing.reference_id,
     type: formType.value,
     name: values.name,
     conversion_factor: values.conversion_factor,
@@ -400,7 +417,11 @@ watch(formType, () => {
             </DataTable>
           </div>
           <div class="flex flex-col gap-3 md:hidden">
-            <div v-for="unit in saleUnitsWithBase" :key="unit.isBase ? 'sale-base' : unit.id" class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+            <div
+              v-for="unit in saleUnitsWithBase"
+              :key="unit.isBase ? 'sale-base' : unit.id"
+              class="rounded-lg border border-surface-200 p-3 dark:border-surface-700"
+            >
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <p class="m-0 font-medium" :class="{ 'italic text-surface-500 dark:text-surface-400': unit.isBase }">{{ unit.name }}</p>
@@ -410,9 +431,18 @@ watch(formType, () => {
                 <Tag v-else :value="statusLabel(unit.status)" :severity="unit.status === 'active' ? 'success' : 'warn'" />
               </div>
               <div class="mt-3 flex items-center justify-between gap-3">
-                <span class="font-medium">{{ unit.price !== null && unit.price !== undefined ? formatCurrency(String(unit.price)) : "—" }}</span>
+                <span class="font-medium">
+                  {{ unit.price !== null && unit.price !== undefined ? formatCurrency(String(unit.price)) : "—" }}
+                </span>
                 <div v-if="!unit.isBase" class="flex gap-1">
-                  <Button v-can="'inventory.edit'" icon="fa fa-pen" text rounded :aria-label="t('Edit unit')" @click="openEdit(unit as VariantUnitResource)" />
+                  <Button
+                    v-can="'inventory.edit'"
+                    icon="fa fa-pen"
+                    text
+                    rounded
+                    :aria-label="t('Edit unit')"
+                    @click="openEdit(unit as VariantUnitResource)"
+                  />
                   <Button
                     v-can="'inventory.edit'"
                     icon="fa fa-trash"
@@ -490,7 +520,11 @@ watch(formType, () => {
             </DataTable>
           </div>
           <div class="flex flex-col gap-3 md:hidden">
-            <div v-for="unit in purchaseUnitsWithBase" :key="unit.isBase ? 'purchase-base' : unit.id" class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+            <div
+              v-for="unit in purchaseUnitsWithBase"
+              :key="unit.isBase ? 'purchase-base' : unit.id"
+              class="rounded-lg border border-surface-200 p-3 dark:border-surface-700"
+            >
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <p class="m-0 font-medium" :class="{ 'italic text-surface-500 dark:text-surface-400': unit.isBase }">{{ unit.name }}</p>
@@ -500,7 +534,14 @@ watch(formType, () => {
                 <Tag v-else :value="statusLabel(unit.status)" :severity="unit.status === 'active' ? 'success' : 'warn'" />
               </div>
               <div v-if="!unit.isBase" class="mt-3 flex justify-end gap-1">
-                <Button v-can="'inventory.edit'" icon="fa fa-pen" text rounded :aria-label="t('Edit unit')" @click="openEdit(unit as VariantUnitResource)" />
+                <Button
+                  v-can="'inventory.edit'"
+                  icon="fa fa-pen"
+                  text
+                  rounded
+                  :aria-label="t('Edit unit')"
+                  @click="openEdit(unit as VariantUnitResource)"
+                />
                 <Button
                   v-can="'inventory.edit'"
                   icon="fa fa-trash"
@@ -602,19 +643,22 @@ watch(formType, () => {
             :invalid="submitCount > 0 && !!errors.price"
           />
           <div v-if="suggestedPrice !== null" class="flex items-center gap-1">
-            <small class="text-surface-500">
-              {{ t("Suggested price") }}: {{ formatCurrency(String(suggestedPrice)) }}
-              <span class="text-surface-400">({{ formatCurrency(String(props.variant.price)) }} × {{ conversionField }})</span>
-            </small>
+            <small class="text-surface-500">{{ t("Suggested selling price") }}: {{ formatCurrency(String(suggestedPrice)) }}</small>
             <Button
               v-can="'inventory.edit'"
-              v-tooltip.top="t('Apply')"
-              icon="fa fa-circle-info"
+              :label="t('Apply suggested price')"
+              icon="fa fa-check"
               link
               size="small"
               @click="applySuggestedPrice"
             />
           </div>
+          <small v-if="pricingLoading">{{ t("Calculating price impact...") }}</small>
+          <Message v-if="pricingFailed" severity="warn" :closable="false">
+            {{ t("Price impact could not be calculated. Change a value to retry.") }}
+          </Message>
+          <Message v-if="pricingResults[0]?.below_cost" severity="error" :closable="false">{{ t("Below replacement cost") }}</Message>
+          <Message v-else-if="pricingResults[0]?.below_target" severity="warn" :closable="false">{{ t("Below target margin") }}</Message>
           <Message v-if="submitCount > 0 && errors.price" severity="error" size="small" :closable="false">{{ errors.price }}</Message>
         </div>
 

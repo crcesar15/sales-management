@@ -29,6 +29,10 @@ const hasAlerts = computed(() => props.summary.total > 0);
     <div class="hidden h-6 w-px bg-surface-200 sm:block dark:bg-surface-700" aria-hidden="true" />
     <dl class="m-0 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
       <div class="flex items-center gap-2">
+        <dt class="text-surface-600 dark:text-surface-300">{{ t("Price Review") }}</dt>
+        <dd class="m-0 font-semibold text-surface-900 dark:text-surface-0">{{ summary.price_review_count ?? 0 }}</dd>
+      </div>
+      <div class="flex items-center gap-2">
         <span
           class="h-2 w-2 rounded-full"
           :class="summary.low_stock_count > 0 ? 'bg-orange-500' : 'bg-surface-300 dark:bg-surface-600'"

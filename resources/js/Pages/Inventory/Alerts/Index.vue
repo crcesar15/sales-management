@@ -5,7 +5,14 @@ import { useI18n } from "vue-i18n";
 import { computed, shallowRef } from "vue";
 import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import type { AlertsFilters, AlertsSummary, ExpiryAlertCollection, LowStockAlertCollection } from "@/Types/stock-alert-types";
+import type {
+  AlertsFilters,
+  AlertsSummary,
+  ExpiryAlertCollection,
+  LowStockAlertCollection,
+  PriceReviewCollection,
+} from "@/Types/stock-alert-types";
+import PriceReviewList from "./Components/PriceReviewList.vue";
 import LowStockAlertList from "./Components/LowStockAlertList.vue";
 import ExpiryAlertList from "./Components/ExpiryAlertList.vue";
 import StockAlertSummary from "./Components/StockAlertSummary.vue";
@@ -14,6 +21,7 @@ defineOptions({ layout: AppLayout });
 
 const props = defineProps<{
   lowStockAlerts: LowStockAlertCollection;
+  priceReviewAlerts: PriceReviewCollection | null;
   expiryAlerts: ExpiryAlertCollection;
   summary: AlertsSummary;
   stores: Array<{ id: number; name: string; code: string }>;
@@ -25,7 +33,7 @@ const { t } = useI18n();
 const ALL = "__all__";
 
 const storeId = shallowRef<string | number>(props.filters.store_id ?? ALL);
-const activeTab = shallowRef<"low-stock" | "expiry">(props.filters.tab);
+const activeTab = shallowRef<"low-stock" | "expiry" | "price-review">(props.filters.tab);
 
 const storeOptions = computed(() => [{ label: t("All Stores"), value: ALL }, ...props.stores.map((s) => ({ label: s.name, value: s.id }))]);
 
@@ -39,6 +47,11 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
       low_stock_per_page: props.lowStockAlerts.meta.per_page,
       expiry_page: props.expiryAlerts.meta.current_page,
       expiry_per_page: props.expiryAlerts.meta.per_page,
+      price_review_page: props.priceReviewAlerts?.meta.current_page ?? 1,
+      price_review_per_page: props.priceReviewAlerts?.meta.per_page ?? 20,
+      price_review_reason: props.filters.price_review_reason ?? "",
+      price_review_severity: props.filters.price_review_severity ?? "",
+      price_review_state: props.filters.price_review_state ?? "active",
       ...overrides,
     },
     preserveState: true,
@@ -48,11 +61,11 @@ function applyFilters(overrides: Record<string, unknown> = {}) {
 }
 
 function onStoreChange() {
-  applyFilters({ low_stock_page: 1, expiry_page: 1 });
+  applyFilters({ low_stock_page: 1, expiry_page: 1, price_review_page: 1 });
 }
 
 function onTabChange(value: string | number) {
-  if (value !== "low-stock" && value !== "expiry") return;
+  if (value !== "low-stock" && value !== "expiry" && value !== "price-review") return;
 
   activeTab.value = value;
   applyFilters({ tab: value });
@@ -94,8 +107,12 @@ function onExpiryPage(page: number, perPage: number) {
       class="overflow-hidden rounded-lg border border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900"
       :aria-label="t('Stock Alerts')"
     >
-      <Tabs :value="activeTab" @update:value="onTabChange">
+      <Tabs :value="activeTab" scrollable @update:value="onTabChange">
         <TabList>
+          <Tab v-if="priceReviewAlerts" value="price-review">
+            {{ t("Price Review") }}
+            <span class="ml-2">{{ summary.price_review_count }}</span>
+          </Tab>
           <Tab value="low-stock">
             <span class="flex items-center gap-2">
               {{ t("Low Stock") }}
@@ -118,6 +135,18 @@ function onExpiryPage(page: number, perPage: number) {
           </Tab>
         </TabList>
         <TabPanels :pt="{ root: { class: '!p-0' } }">
+          <TabPanel v-if="priceReviewAlerts" value="price-review">
+            <PriceReviewList
+              :alerts="priceReviewAlerts"
+              :reason="filters.price_review_reason ?? null"
+              :severity="filters.price_review_severity ?? null"
+              :review-state="filters.price_review_state ?? 'active'"
+              @page="(page, perPage) => applyFilters({ price_review_page: page, price_review_per_page: perPage })"
+              @filter="(reason) => applyFilters({ price_review_reason: reason ?? '', price_review_page: 1 })"
+              @severity="(severity) => applyFilters({ price_review_severity: severity ?? '', price_review_page: 1 })"
+              @state="(state) => applyFilters({ price_review_state: state, price_review_page: 1 })"
+            />
+          </TabPanel>
           <TabPanel value="low-stock">
             <LowStockAlertList :alerts="lowStockAlerts" @page="onLowStockPage" />
           </TabPanel>

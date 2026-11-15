@@ -2,6 +2,42 @@ import type { UserResponse } from "./user-types";
 import type { VendorResponse } from "./vendor-types";
 import type { ProductVariantResponse } from "./product-variant-types";
 import type { ReceptionOrder } from "./reception-order-types";
+import type { PricingPreview } from "./pricing-types";
+
+export type PurchaseDiscountType = "flat" | "percentage";
+
+export interface PurchaseOrderFormValues {
+  vendor_id: number;
+  order_date: Date;
+  expected_arrival_date: Date | null;
+  discount_type: PurchaseDiscountType;
+  discount_value: number | null;
+  notes: string | null;
+}
+
+export interface PurchaseOrderLineCalculation {
+  gross_total: string;
+  discount_type: PurchaseDiscountType;
+  discount_value: string;
+  discount_amount: string;
+  total: string;
+  allocated_discount: string;
+  final_total: string;
+  actual_unit_cost: number;
+  actual_base_unit_cost: number;
+}
+
+export interface PurchaseOrderFinancialPreview {
+  items: PurchaseOrderLineCalculation[];
+  gross_sub_total: string;
+  line_discount_total: string;
+  sub_total: string;
+  discount_type: PurchaseDiscountType;
+  discount_value: string;
+  discount: string;
+  total: string;
+  replacement_pricing: PricingPreview[];
+}
 
 export type PurchaseOrderStatus = "draft" | "approved" | "closed" | "cancelled";
 
@@ -23,6 +59,11 @@ export interface CatalogEntry {
 }
 
 export interface PurchaseOrderLineItem {
+  discount_type: PurchaseDiscountType;
+  discount_value: number;
+  discount_amount: number;
+  gross_total: number;
+  pricing_reference: boolean;
   id: number;
   purchase_order_id: number;
   product_variant_id: number;
@@ -47,6 +88,10 @@ export interface PurchaseOrderLineItem {
 }
 
 export interface PurchaseOrder {
+  discount_type: PurchaseDiscountType;
+  discount_value: number;
+  gross_sub_total: number;
+  line_discount_total: number;
   id: number;
   user_id: number;
   vendor_id: number;
@@ -112,12 +157,18 @@ export interface PurchaseOrderFilters {
 }
 
 export interface PurchaseOrderPayload {
+  discount_type?: PurchaseDiscountType;
+  discount_value?: number | null;
   vendor_id: number;
   order_date: string;
   expected_arrival_date?: string | null;
   discount?: number | null;
   notes?: string | null;
   items: Array<{
+    id?: number;
+    discount_type?: PurchaseDiscountType;
+    discount_value?: number | null;
+    pricing_reference?: boolean;
     product_variant_id: number;
     catalog_id: number;
     unit_id?: number | null;

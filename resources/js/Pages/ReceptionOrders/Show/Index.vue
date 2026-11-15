@@ -246,8 +246,9 @@ function conversionLabel(item: ReceptionOrderResponse["line_items"][number]): st
                     </div>
 
                     <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
-                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Line Total") }}</span>
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Gross received line amount") }}</span>
                       <span class="block font-semibold tabular-nums">{{ formatCurrency(String(item.total)) }}</span>
+                      <small class="text-surface-500 dark:text-surface-400">{{ t("Before PO and item discounts") }}</small>
                     </div>
                   </div>
                 </li>

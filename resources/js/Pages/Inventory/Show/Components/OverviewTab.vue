@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button, InputNumber, InputText, Message, Select, ToggleSwitch, useToast } from "primevue";
 
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { toTypedSchema } from "@vee-validate/yup";
 import { useForm } from "vee-validate";
@@ -9,7 +9,6 @@ import { boolean, number, object, string } from "yup";
 import { useI18n } from "vue-i18n";
 import { route } from "ziggy-js";
 import type { InventoryVariantDetail, VariantOverviewPayload, VariantOverviewUpdatePayload } from "@app-types/inventory-variant-types";
-import PurchasePriceMargin from "./PurchasePriceMargin.vue";
 
 const props = defineProps<{
   variant: InventoryVariantDetail;
@@ -21,7 +20,7 @@ const emit = defineEmits<{
 }>();
 const { t } = useI18n();
 const toast = useToast();
-const replicatePricing = ref(false);
+const formElement = useTemplateRef<HTMLFormElement>("overviewForm");
 const replicateInventoryPolicy = ref(false);
 const isSaving = ref(false);
 
@@ -32,10 +31,6 @@ const schema = toTypedSchema(
     minimum_stock_level: number().nullable().optional().min(0),
     has_expiration: boolean().required(),
     status: string().required().oneOf(["active", "inactive", "archived"]),
-    purchase_price: number().nullable().optional().min(0),
-    margin_type: string().required().oneOf(["percent", "amount"]),
-    margin_value: number().nullable().optional().min(0),
-    price: number().required().min(0),
   }),
 );
 
@@ -45,10 +40,6 @@ const initialValues = (): VariantOverviewPayload => ({
   minimum_stock_level: props.variant.minimum_stock_level,
   has_expiration: props.variant.has_expiration,
   status: props.variant.status,
-  purchase_price: props.variant.purchase_price,
-  margin_type: props.variant.margin_type,
-  margin_value: props.variant.margin_value,
-  price: props.variant.price,
 });
 
 const { handleSubmit, errors, defineField, setErrors, resetForm, meta, submitCount, isSubmitting } = useForm<VariantOverviewPayload>({
@@ -62,10 +53,6 @@ const [barcode, barcodeAttrs] = defineField("barcode");
 const [minimumStockLevel, minimumStockLevelAttrs] = defineField("minimum_stock_level");
 const [hasExpiration, hasExpirationAttrs] = defineField("has_expiration");
 const [status, statusAttrs] = defineField("status");
-const [purchasePrice] = defineField("purchase_price");
-const [marginType] = defineField("margin_type");
-const [marginValue] = defineField("margin_value");
-const [price] = defineField("price");
 
 const statusOptions = [
   { name: t("Active"), value: "active" },
@@ -73,23 +60,18 @@ const statusOptions = [
   { name: t("Archived"), value: "archived" },
 ];
 
-const isDirty = computed(() => meta.value.dirty || replicatePricing.value || replicateInventoryPolicy.value);
+const isDirty = computed(() => meta.value.dirty || replicateInventoryPolicy.value);
 
 const clearReplication = () => {
-  replicatePricing.value = false;
   replicateInventoryPolicy.value = false;
 };
 
-watch(
-  isDirty,
-  (value) => emit("update:dirty", value),
-  { immediate: true },
-);
+watch(isDirty, (value) => emit("update:dirty", value), { immediate: true });
 
 watch(
   () => props.variant,
   (variant, previousVariant) => {
-    if (variant.id === previousVariant?.id) return;
+    if (variant.id === previousVariant?.id && isDirty.value) return;
 
     resetForm({ values: initialValues() });
     clearReplication();
@@ -102,37 +84,41 @@ const onSubmit = handleSubmit((values) => {
   isSaving.value = true;
   const payload: VariantOverviewUpdatePayload = {
     ...values,
-    replicate_pricing: replicatePricing.value,
+    section: "overview",
     replicate_inventory_policy: replicateInventoryPolicy.value,
   };
 
-  router.put(route("inventory.variant.update", { variant: props.variant.id }), { ...payload }, {
-    preserveScroll: true,
-    onSuccess: () => {
-      resetForm({ values });
-      const replicated = replicatePricing.value || replicateInventoryPolicy.value;
-      clearReplication();
-      toast.add({
-        severity: "success",
-        summary: t("Success"),
-        detail: replicated ? t("Variant configuration applied to all variants") : t("Variant updated successfully"),
-        life: 3000,
-      });
+  router.put(
+    route("inventory.variant.update", { variant: props.variant.id }),
+    { ...payload },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        resetForm({ values: initialValues() });
+        const replicated = replicateInventoryPolicy.value;
+        clearReplication();
+        toast.add({
+          severity: "success",
+          summary: t("Success"),
+          detail: replicated ? t("Variant configuration applied to all variants") : t("Variant updated successfully"),
+          life: 3000,
+        });
+      },
+      onError: (serverErrors) => {
+        setErrors(serverErrors);
+        toast.add({ severity: "error", summary: t("Error"), detail: t("Please review the errors in the form"), life: 3000 });
+        nextTick(() => formElement.value?.querySelector<HTMLInputElement>(".p-invalid")?.focus());
+      },
+      onFinish: () => {
+        isSaving.value = false;
+      },
     },
-    onError: (serverErrors) => {
-      setErrors(serverErrors);
-      toast.add({ severity: "error", summary: t("Error"), detail: t("Please review the errors in the form"), life: 3000 });
-      nextTick(() => document.querySelector<HTMLInputElement>(".p-invalid")?.focus());
-    },
-    onFinish: () => {
-      isSaving.value = false;
-    },
-  });
+  );
 });
 </script>
 
 <template>
-  <form class="flex flex-col gap-8" @submit.prevent="onSubmit">
+  <form ref="overviewForm" class="flex flex-col gap-8" @submit.prevent="onSubmit">
     <section class="flex flex-col gap-4" aria-labelledby="variant-identification-heading">
       <div>
         <h2 id="variant-identification-heading" class="m-0 text-lg font-semibold">{{ t("Identification") }}</h2>
@@ -164,7 +150,7 @@ const onSubmit = handleSubmit((values) => {
         </div>
       </div>
     </section>
-    <hr class="m-0">
+    <hr class="m-0" />
     <section class="flex flex-col gap-4" aria-labelledby="variant-policy-heading">
       <div>
         <h2 id="variant-policy-heading" class="m-0 text-lg font-semibold">{{ t("Inventory Policy") }}</h2>
@@ -227,36 +213,6 @@ const onSubmit = handleSubmit((values) => {
         </Message>
       </div>
     </section>
-    <hr class="m-0">
-    <section class="flex flex-col gap-4" aria-labelledby="variant-pricing-heading">
-      <div>
-        <h2 id="variant-pricing-heading" class="m-0 text-lg font-semibold">{{ t("Pricing") }}</h2>
-      </div>
-      <PurchasePriceMargin
-        v-model:purchase-price="purchasePrice"
-        v-model:margin-type="marginType"
-        v-model:margin-value="marginValue"
-        v-model:price="price"
-        :variant-id="variant.id"
-        :can-edit="canEdit && !isSaving"
-      >
-        <template v-if="siblingCount > 0 && canEdit" #before-history>
-          <div class="flex flex-wrap items-center gap-3 pt-4">
-            <div class="flex items-center gap-3">
-              <ToggleSwitch input-id="replicate-pricing" v-model="replicatePricing" :disabled="isSaving" />
-              <label for="replicate-pricing" class="font-medium">{{ t("Apply to all variants") }}</label>
-            </div>
-            <Message v-if="replicatePricing" severity="warn" icon="fa fa-triangle-exclamation" :closable="false" class="m-0 flex-1">
-              {{ t("Copies pricing to {count} variants.", { count: siblingCount }) }}
-            </Message>
-          </div>
-        </template>
-      </PurchasePriceMargin>
-      <small v-if="submitCount > 0 && (errors.purchase_price || errors.margin_type || errors.margin_value || errors.price)" class="text-red-500 dark:text-red-300">
-        {{ errors.purchase_price ?? errors.margin_type ?? errors.margin_value ?? errors.price }}
-      </small>
-    </section>
-
     <div v-if="canEdit" class="flex justify-end border-t border-surface-200 pt-4 dark:border-surface-700">
       <Button
         type="submit"

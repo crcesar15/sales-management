@@ -13,30 +13,38 @@ import type { StockStoreBreakdown } from "@app-types/stock-overview-types";
 import type { VariantLocationStore } from "@app-types/inventory-variant-types";
 import ImagesTab from "./Components/ImagesTab.vue";
 import OverviewTab from "./Components/OverviewTab.vue";
+import PricingTab from "./Components/PricingTab.vue";
 import UnitsTab from "./Components/UnitsTab.vue";
 import VariantContextPanel from "./Components/VariantContextPanel.vue";
 import LocationsTab from "./Components/LocationsTab.vue";
 
+type ConfigurationTab = "overview" | "pricing" | "units" | "images" | "locations";
+
 defineOptions({ layout: AppLayout });
 
-const props = defineProps<{
-  product: InventoryProductDetail;
-  variant: InventoryVariantDetail;
-  siblings: VariantNavigationItem[];
-  stores: StockStoreBreakdown[];
-  locationStores: VariantLocationStore[];
-  measurementUnits: Pick<MeasurementUnitResponse, "id" | "name" | "abbreviation">[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    product: InventoryProductDetail;
+    variant: InventoryVariantDetail;
+    siblings: VariantNavigationItem[];
+    stores: StockStoreBreakdown[];
+    locationStores: VariantLocationStore[];
+    measurementUnits: Pick<MeasurementUnitResponse, "id" | "name" | "abbreviation">[];
+    initialTab?: ConfigurationTab;
+  }>(),
+  { initialTab: "overview" },
+);
 const { t } = useI18n();
 const { can } = useAuth();
 
-const activeTab = ref<"overview" | "units" | "images" | "locations">("overview");
+const activeTab = ref<ConfigurationTab>(props.initialTab === "images" && !props.product.has_variants ? "overview" : props.initialTab);
 const overviewDirty = ref(false);
+const pricingDirty = ref(false);
 const imagesDirty = ref(false);
 const locationsDirty = ref(false);
 const canEdit = computed(() => can("inventory.edit"));
 const canEditProduct = computed(() => can("product.edit"));
-const isPageDirty = computed(() => overviewDirty.value || imagesDirty.value || locationsDirty.value);
+const isPageDirty = computed(() => overviewDirty.value || pricingDirty.value || imagesDirty.value || locationsDirty.value);
 const currentSiblingIndex = computed(() => props.siblings.findIndex((sibling) => sibling.id === props.variant.id));
 const previousSibling = computed(() => props.siblings[currentSiblingIndex.value - 1] ?? null);
 const nextSibling = computed(() => props.siblings[currentSiblingIndex.value + 1] ?? null);
@@ -44,7 +52,7 @@ const nextSibling = computed(() => props.siblings[currentSiblingIndex.value + 1]
 const visitVariant = (variantId: number) => {
   if (variantId === props.variant.id) return;
 
-  router.visit(route("inventory.variants.show", { variant: variantId }));
+  router.visit(route("inventory.variants.show", { variant: variantId, tab: activeTab.value }));
 };
 
 const goBack = () => {
@@ -125,7 +133,7 @@ onUnmounted(() => {
       <main class="col-span-12 lg:col-span-8" aria-label="Variant configuration">
         <Card>
           <template #content>
-            <Tabs v-model:value="activeTab">
+            <Tabs v-model:value="activeTab" scrollable>
               <TabList
                 :pt="{
                   activeBar: {
@@ -136,17 +144,46 @@ onUnmounted(() => {
                 <Tab value="overview">
                   <span class="flex items-center gap-2">
                     {{ t("Overview") }}
-                    <i v-if="overviewDirty" class="fa fa-circle text-[0.45rem] text-primary" :title="t('Unsaved changes')" aria-hidden="true" />
+                    <i
+                      v-if="overviewDirty"
+                      class="fa fa-circle text-[0.45rem] text-primary"
+                      :title="t('Unsaved changes')"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </Tab>
+                <Tab value="pricing">
+                  <span class="flex items-center gap-2">
+                    {{ t("Pricing") }}
+                    <i
+                      v-if="pricingDirty"
+                      class="fa fa-circle text-[0.45rem] text-primary"
+                      :title="t('Unsaved changes')"
+                      aria-hidden="true"
+                    />
                   </span>
                 </Tab>
                 <Tab value="units">{{ t("Units") }}</Tab>
                 <Tab value="locations">
-                  <span class="flex items-center gap-2">{{ t("Locations") }} <i v-if="locationsDirty" class="fa fa-circle text-[0.45rem] text-primary" :title="t('Unsaved changes')" aria-hidden="true" /></span>
+                  <span class="flex items-center gap-2">
+                    {{ t("Locations") }}
+                    <i
+                      v-if="locationsDirty"
+                      class="fa fa-circle text-[0.45rem] text-primary"
+                      :title="t('Unsaved changes')"
+                      aria-hidden="true"
+                    />
+                  </span>
                 </Tab>
                 <Tab v-if="product.has_variants" value="images">
                   <span class="flex items-center gap-2">
                     {{ t("Images") }}
-                    <i v-if="imagesDirty" class="fa fa-circle text-[0.45rem] text-primary" :title="t('Unsaved changes')" aria-hidden="true" />
+                    <i
+                      v-if="imagesDirty"
+                      class="fa fa-circle text-[0.45rem] text-primary"
+                      :title="t('Unsaved changes')"
+                      aria-hidden="true"
+                    />
                   </span>
                 </Tab>
               </TabList>
@@ -158,13 +195,37 @@ onUnmounted(() => {
                 }"
               >
                 <TabPanel value="overview">
-                  <OverviewTab :variant="variant" :can-edit="canEdit" :sibling-count="siblings.length - 1" @update:dirty="overviewDirty = $event" />
+                  <OverviewTab
+                    :variant="variant"
+                    :can-edit="canEdit"
+                    :sibling-count="siblings.length - 1"
+                    @update:dirty="overviewDirty = $event"
+                  />
+                </TabPanel>
+                <TabPanel value="pricing">
+                  <PricingTab
+                    :variant="variant"
+                    :can-edit="canEdit"
+                    :sibling-count="siblings.length - 1"
+                    @update:dirty="pricingDirty = $event"
+                  />
                 </TabPanel>
                 <TabPanel value="units">
-                  <UnitsTab :product="product" :variant="variant" :measurement-units="measurementUnits" :sibling-count="siblings.length - 1" />
+                  <UnitsTab
+                    :product="product"
+                    :variant="variant"
+                    :measurement-units="measurementUnits"
+                    :sibling-count="siblings.length - 1"
+                  />
                 </TabPanel>
                 <TabPanel value="locations">
-                  <LocationsTab :variant-id="variant.id" :stores="locationStores" :can-edit="canEdit" :sibling-count="siblings.length - 1" @update:dirty="locationsDirty = $event" />
+                  <LocationsTab
+                    :variant-id="variant.id"
+                    :stores="locationStores"
+                    :can-edit="canEdit"
+                    :sibling-count="siblings.length - 1"
+                    @update:dirty="locationsDirty = $event"
+                  />
                 </TabPanel>
                 <TabPanel v-if="product.has_variants" value="images">
                   <ImagesTab

@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import { Badge, Button, InputNumber, Tag, useToast, useConfirm } from "primevue";
+import { Badge, Button, InputNumber, RadioButton, Tag, useToast, useConfirm } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useCurrencyFormatter } from "@/Composables/useCurrencyFormatter";
 import { ref, computed, watch } from "vue";
 import type { VendorCatalogEntry } from "@/Types/catalog-types";
 import POVariantVendorsDialog from "./POVariantVendorsDialog.vue";
 import POProductSearch from "./POProductSearch.vue";
+import POPriceImpact from "./POPriceImpact.vue";
+import POLineDiscount from "./POLineDiscount.vue";
+import type { PurchaseDiscountType, PurchaseOrderFinancialPreview } from "@app-types/purchase-order-types";
 
 export interface LineItem {
+  persisted_id?: number;
+  discount_type: PurchaseDiscountType;
+  discount_value: number | null;
+  pricing_reference?: boolean;
   id: string;
   catalog_id: number;
   product_variant_id: number;
@@ -15,7 +22,6 @@ export interface LineItem {
   variant_label: string;
   quantity: number;
   price: number;
-  total: number;
   stock?: number | null;
   minimum_stock_level?: number | null;
   payment_terms?: string | null;
@@ -30,6 +36,10 @@ export interface LineItem {
 const props = defineProps<{
   vendorId: number | null;
   modelValue: LineItem[];
+  financialPreview: PurchaseOrderFinancialPreview | null;
+  pricingLoading: boolean;
+  pricingFailed: boolean;
+  errors: Record<string, string>;
 }>();
 
 const emit = defineEmits<{
@@ -64,17 +74,23 @@ function toggleItemDetails(itemId: string) {
 }
 
 const items = computed({
-    get: () => props.modelValue,
-    set: (val) => emit("update:modelValue", val),
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
 });
 
-function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" | "secondary" {
+function getStockSeverity(
+  stock: number | null | undefined,
+  minStock: number | null | undefined,
+): "success" | "warn" | "danger" | "secondary" {
   if (stock === null || stock === undefined) return "secondary";
   if (stock === 0) return "danger";
   if (minStock && stock <= minStock) return "warn";
 
   return "success";
 }
+
+const priceImpacts = computed(() => props.financialPreview?.replacement_pricing ?? []);
+const money = (value: string | number | undefined) => (value === undefined ? "—" : formatCurrency(String(value)));
 
 function stockLabel(item: LineItem): string {
   if (item.stock === null || item.stock === undefined || !item.base_unit) return t("Stock unavailable");
@@ -140,7 +156,8 @@ function onEntrySelect(entry: VendorCatalogEntry) {
     variant_label: variantLabel,
     quantity,
     price,
-    total: quantity * price,
+    discount_type: "flat",
+    discount_value: 0,
     stock: variant.stock ?? null,
     minimum_stock_level: variant.minimum_stock_level ?? null,
     payment_terms: getPaymentTermsLabel(entry.payment_terms),
@@ -176,7 +193,6 @@ function updateQuantity(index: number, quantity: number) {
   updated[index] = {
     ...updated[index],
     quantity,
-    total: quantity * updated[index].price,
   };
   emit("update:modelValue", updated);
 }
@@ -186,9 +202,24 @@ function updatePrice(index: number, price: number) {
   updated[index] = {
     ...updated[index],
     price,
-    total: updated[index].quantity * price,
   };
   emit("update:modelValue", updated);
+}
+
+function choosePricingReference(itemId: string, variantId: number) {
+  emit(
+    "update:modelValue",
+    items.value.map((item) => (item.product_variant_id === variantId ? { ...item, pricing_reference: item.id === itemId } : item)),
+  );
+}
+
+function updateDiscount(index: number, key: "discount_type" | "discount_value", value: PurchaseDiscountType | number | null) {
+  emit(
+    "update:modelValue",
+    items.value.map((item, position) =>
+      position === index ? { ...item, [key]: value, ...(key === "discount_type" ? { discount_value: 0 } : {}) } : item,
+    ),
+  );
 }
 
 function removeItem(index: number) {
@@ -264,7 +295,12 @@ watch(
             <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
               <div class="min-w-0">
                 <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">{{ item.product_name }}</span>
-                <Badge v-if="hasVariantLabel(item)" :value="item.variant_label" severity="secondary" class="mt-1 w-fit max-w-full truncate" />
+                <Badge
+                  v-if="hasVariantLabel(item)"
+                  :value="item.variant_label"
+                  severity="secondary"
+                  class="mt-1 w-fit max-w-full truncate"
+                />
               </div>
             </div>
 
@@ -274,14 +310,16 @@ watch(
             </div>
 
             <div class="col-span-2 min-w-0 min-[360px]:col-span-1 2xl:col-span-1">
-              <label :for="`purchase-order-price-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Unit Price") }}</label>
+              <label :for="`purchase-order-price-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">
+                {{ t("Unit Price") }}
+              </label>
               <InputNumber
                 :input-id="`purchase-order-price-${item.id}`"
                 :model-value="item.price"
                 :aria-label="getInputLabel('Unit Price', item)"
-                :min="0.01"
+                :min="0"
                 :min-fraction-digits="2"
-                :max-fraction-digits="4"
+                :max-fraction-digits="2"
                 mode="currency"
                 :currency="currencyCode"
                 show-clear
@@ -292,7 +330,9 @@ watch(
             </div>
 
             <div class="col-span-2 min-w-0 min-[360px]:col-span-1 2xl:col-span-1">
-              <label :for="`purchase-order-quantity-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">{{ t("Quantity") }}</label>
+              <label :for="`purchase-order-quantity-${item.id}`" class="mb-1 block text-base font-medium 2xl:sr-only">
+                {{ t("Quantity") }}
+              </label>
               <InputNumber
                 :input-id="`purchase-order-quantity-${item.id}`"
                 :model-value="item.quantity"
@@ -314,9 +354,9 @@ watch(
               />
             </div>
 
-            <div class="min-w-0 pt-2 2xl:pt-3">
+            <div class="min-w-0 2xl:pt-2">
               <span class="block text-base font-medium 2xl:sr-only">{{ t("Line Total") }}</span>
-              <span class="block font-semibold tabular-nums">{{ formatCurrency(String(item.total)) }}</span>
+              <span class="block font-semibold tabular-nums">{{ money(financialPreview?.items[index]?.total) }}</span>
             </div>
 
             <div class="flex items-center justify-end 2xl:pt-1">
@@ -331,15 +371,91 @@ watch(
                 size="large"
                 @click="toggleItemDetails(item.id)"
               />
-              <Button v-tooltip.top="t('View Vendors')" :aria-label="t('View Vendors')" icon="fa fa-store" text rounded size="large" @click="openVendorsDialog(item)" />
-              <Button v-tooltip.top="t('Delete')" :aria-label="getRemoveLabel(item)" icon="fa fa-trash-can" text rounded size="large" @click="confirmRemoveItem(index)" />
+              <Button
+                v-tooltip.top="t('View Vendors')"
+                :aria-label="t('View Vendors')"
+                icon="fa fa-store"
+                text
+                rounded
+                size="large"
+                @click="openVendorsDialog(item)"
+              />
+              <Button
+                v-tooltip.top="t('Delete')"
+                :aria-label="getRemoveLabel(item)"
+                icon="fa fa-trash-can"
+                text
+                rounded
+                size="large"
+                @click="confirmRemoveItem(index)"
+              />
             </div>
           </div>
-          <div v-if="isItemDetailsExpanded(item.id)" :id="`purchase-order-item-details-${item.id}`" class="mt-4 border-t border-surface-200 pt-3 dark:border-surface-700">
+          <div class="mt-3 grid grid-cols-1 gap-4 border-t border-surface-200 pt-3 sm:grid-cols-2 dark:border-surface-700">
+            <POLineDiscount
+              :input-id="`po-item-discount-${item.id}`"
+              :type="item.discount_type"
+              :value="item.discount_value"
+              :error="errors[`items.${index}.discount_value`] ?? errors[`items.${index}.discount_type`]"
+              @update:type="updateDiscount(index, 'discount_type', $event)"
+              @update:value="updateDiscount(index, 'discount_value', $event)"
+            />
+            <dl class="m-0 flex flex-col justify-center gap-2 text-sm">
+              <div class="flex justify-between gap-2">
+                <dt>{{ t("Gross line total") }}</dt>
+                <dd class="m-0 tabular-nums">{{ money(financialPreview?.items[index]?.gross_total) }}</dd>
+              </div>
+              <div class="flex justify-between gap-2">
+                <dt>{{ t("Item discount") }}</dt>
+                <dd class="m-0 tabular-nums">{{ money(financialPreview?.items[index]?.discount_amount) }}</dd>
+              </div>
+              <div class="flex justify-between gap-2">
+                <dt>{{ t("Net line total") }}</dt>
+                <dd class="m-0 font-semibold tabular-nums">{{ money(financialPreview?.items[index]?.total) }}</dd>
+              </div>
+            </dl>
+          </div>
+          <small
+            v-if="errors[`items.${index}.quantity`] || errors[`items.${index}.price`]"
+            class="mt-2 block text-red-400 dark:text-red-300"
+          >
+            {{ errors[`items.${index}.quantity`] ?? errors[`items.${index}.price`] }}
+          </small>
+          <POPriceImpact
+            :impact="priceImpacts[index] ?? null"
+            :actual-base-cost="financialPreview?.items[index]?.actual_base_unit_cost ?? null"
+            :loading="pricingLoading"
+            :failed="pricingFailed"
+          />
+          <div
+            v-if="items.filter((line) => line.product_variant_id === item.product_variant_id).length > 1"
+            class="mt-3 flex items-center gap-2"
+          >
+            <RadioButton
+              :input-id="`pricing-reference-${item.id}`"
+              :model-value="items.find((line) => line.product_variant_id === item.product_variant_id && line.pricing_reference)?.id"
+              :value="item.id"
+              :name="`pricing-reference-${item.product_variant_id}`"
+              @update:model-value="choosePricingReference(item.id, item.product_variant_id)"
+            />
+            <label :for="`pricing-reference-${item.id}`">{{ t("Use this line as the normal pricing reference") }}</label>
+          </div>
+          <div
+            v-if="isItemDetailsExpanded(item.id)"
+            :id="`purchase-order-item-details-${item.id}`"
+            class="mt-4 border-t border-surface-200 pt-3 dark:border-surface-700"
+          >
             <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm min-[480px]:grid-cols-2 2xl:grid-cols-4">
               <div class="flex items-center justify-between gap-3">
                 <dt class="text-surface-500 dark:text-surface-400">{{ t("Current Stock") }}</dt>
-                <dd class="m-0"><Tag :value="stockLabel(item)" :severity="getStockSeverity(item.stock, item.minimum_stock_level)" class="text-xs" rounded /></dd>
+                <dd class="m-0">
+                  <Tag
+                    :value="stockLabel(item)"
+                    :severity="getStockSeverity(item.stock, item.minimum_stock_level)"
+                    class="text-xs"
+                    rounded
+                  />
+                </dd>
               </div>
               <div v-if="item.minimum_order_quantity" class="flex items-center justify-between gap-3">
                 <dt class="text-surface-500 dark:text-surface-400">{{ t("Min. Order") }}</dt>

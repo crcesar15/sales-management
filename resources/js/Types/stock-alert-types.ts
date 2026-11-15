@@ -61,7 +61,23 @@ export interface ExpiryAlertCollection {
   meta: PaginationMeta;
 }
 
+import type { ReplacementPricing } from "./pricing-types";
+
+export interface PriceReviewAlert {
+  id: number;
+  product_name: string | null;
+  name: string;
+  price: number;
+  pricing: ReplacementPricing;
+}
+
+export interface PriceReviewCollection {
+  data: PriceReviewAlert[];
+  meta: PaginationMeta;
+}
+
 export interface AlertsSummary {
+  price_review_count: number;
   low_stock_count: number;
   expiry_count: number;
   total: number;
@@ -70,5 +86,8 @@ export interface AlertsSummary {
 export interface AlertsFilters {
   per_store?: boolean;
   store_id: number | null;
-  tab: "low-stock" | "expiry";
+  tab: "low-stock" | "expiry" | "price-review";
+  price_review_reason?: "pricing" | "changes" | "setup" | null;
+  price_review_severity?: "critical" | "other" | null;
+  price_review_state?: "active" | "reviewed";
 }

@@ -4,7 +4,7 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/yup";
-import { object, number, string, date } from "yup";
+import { object, number, string, date, mixed } from "yup";
 import { route } from "ziggy-js";
 import { ref, computed, nextTick } from "vue";
 import AppLayout from "@layouts/admin.vue";
@@ -12,6 +12,8 @@ import { useDatetimeFormatter } from "@composables/useDatetimeFormatter";
 import POLineItemsTable from "../Components/POLineItemsTable.vue";
 import POFinancialSummary from "../Components/POFinancialSummary.vue";
 import type { LineItem } from "../Components/POLineItemsTable.vue";
+import type { PurchaseDiscountType, PurchaseOrderFormValues } from "@app-types/purchase-order-types";
+import { usePurchaseOrderPreview } from "@composables/usePurchaseOrderPreview";
 
 defineOptions({ layout: AppLayout });
 
@@ -48,26 +50,32 @@ const schema = toTypedSchema(
     vendor_id: number().required().typeError(t("Vendor is required")),
     order_date: date().required(t("Order date is required")),
     expected_arrival_date: date().nullable().optional(),
-    discount: number().nullable().optional().min(0, t("Discount must be at least 0")),
+    discount_type: mixed<PurchaseDiscountType>().required().oneOf(["flat", "percentage"]),
+    discount_value: number()
+      .nullable()
+      .min(0)
+      .when("discount_type", { is: "percentage", then: (value) => value.max(100) }),
     notes: string().nullable().optional().max(1000, t("Notes must not exceed 1000 characters")),
   }),
 );
 
-const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, submitCount } = useForm({
+const { handleSubmit, errors, values, defineField, setFieldValue, setErrors, submitCount } = useForm<PurchaseOrderFormValues>({
   validationSchema: schema,
   validateOnMount: false,
   initialValues: {
     vendor_id: undefined as unknown as number,
     order_date: new Date(),
     expected_arrival_date: null as Date | null,
-    discount: 0 as number | null,
+    discount_type: "flat" as PurchaseDiscountType,
+    discount_value: 0 as number | null,
     notes: null as string | null,
   },
 });
 
 const [orderDate, orderDateAttrs] = defineField("order_date");
 const [expectedArrivalDate, expectedArrivalDateAttrs] = defineField("expected_arrival_date");
-const [discount, discountAttrs] = defineField("discount");
+const [discountType] = defineField("discount_type");
+const [discountValue] = defineField("discount_value");
 const [notes, notesAttrs] = defineField("notes");
 
 const lineItems = ref<LineItem[]>([]);
@@ -75,15 +83,37 @@ const itemsError = ref("");
 
 const selectedVendor = computed(() => props.vendors.find((v) => v.id === values.vendor_id) ?? null);
 
-const subTotal = computed(() => lineItems.value.reduce((sum, item) => sum + item.total, 0));
-const total = computed(() => subTotal.value - (values.discount ?? 0));
+const {
+  preview,
+  loading: previewLoading,
+  failed: previewFailed,
+  errors: previewErrors,
+} = usePurchaseOrderPreview(
+  () =>
+    lineItems.value.map((item) => ({
+      product_variant_id: item.product_variant_id,
+      unit_id: item.unit_id,
+      quantity: item.quantity,
+      price: item.price,
+      discount_type: item.discount_type,
+      discount_value: item.discount_value,
+    })),
+  discountType,
+  discountValue,
+);
+const fieldErrors = computed<Record<string, string>>(() => {
+  const result = { ...previewErrors.value };
+  for (const [key, message] of Object.entries(errors.value)) if (message) result[key] = message;
+  return result;
+});
 
 function toggleVendorInfo(event: Event) {
   vendorInfoPopover.value.toggle(event);
 }
 
 function onVendorChange(newVendorId: number | undefined) {
-  if (!newVendorId || newVendorId === values.vendor_id) {
+  if (!newVendorId) return;
+  if (newVendorId === values.vendor_id) {
     setFieldValue("vendor_id", newVendorId);
     return;
   }
@@ -118,7 +148,8 @@ const submit = handleSubmit((formValues) => {
     vendor_id: formValues.vendor_id,
     order_date: toDateOnly(formValues.order_date) ?? "",
     expected_arrival_date: toDateOnly(formValues.expected_arrival_date),
-    discount: formValues.discount ?? 0,
+    discount_type: formValues.discount_type,
+    discount_value: formValues.discount_value ?? 0,
     notes: formValues.notes || null,
     items: lineItems.value.map((item) => ({
       product_variant_id: item.product_variant_id,
@@ -126,6 +157,9 @@ const submit = handleSubmit((formValues) => {
       unit_id: item.unit_id ?? null,
       quantity: Number(item.quantity),
       price: Number(item.price),
+      discount_type: item.discount_type,
+      discount_value: item.discount_value ?? 0,
+      pricing_reference: item.pricing_reference ?? false,
     })),
   };
 
@@ -273,8 +307,16 @@ function goBack() {
         <Card class="!border !border-surface-200 !shadow-none dark:!border-surface-700">
           <template #title>{{ t("Products") }}</template>
           <template #content>
-            <POLineItemsTable v-model="lineItems" :vendor-id="selectedVendor?.id ?? null" />
+            <POLineItemsTable
+              v-model="lineItems"
+              :vendor-id="selectedVendor?.id ?? null"
+              :financial-preview="preview"
+              :pricing-loading="previewLoading"
+              :pricing-failed="previewFailed"
+              :errors="fieldErrors"
+            />
             <small v-if="itemsError" class="mt-2 block text-red-400 dark:text-red-300">{{ itemsError }}</small>
+            <small v-if="fieldErrors.items" class="mt-2 block text-red-400 dark:text-red-300">{{ fieldErrors.items }}</small>
           </template>
         </Card>
       </div>
@@ -282,16 +324,15 @@ function goBack() {
       <aside class="col-span-12 lg:col-span-4">
         <div class="lg:sticky lg:top-4">
           <POFinancialSummary
-            :sub-total="subTotal"
-            :total="total"
-            :discount="discount"
-            :discount-attrs="discountAttrs"
-            :max-discount="subTotal"
+            v-model:discount-type="discountType"
+            v-model:discount-value="discountValue"
+            :preview="preview"
+            :loading="previewLoading"
+            :failed="previewFailed"
             :notes="notes"
             :notes-attrs="notesAttrs"
             :submit-count="submitCount"
-            :errors="errors"
-            @update:discount="setFieldValue('discount', $event)"
+            :errors="fieldErrors"
             @update:notes="setFieldValue('notes', $event)"
           />
         </div>

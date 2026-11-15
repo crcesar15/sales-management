@@ -10,6 +10,7 @@ export interface Catalog {
   product_variant_id: number;
   unit_id: number | null;
   price: number;
+  is_outdated?: boolean;
   payment_terms: CatalogPaymentTermsResponse | null;
   details: string | null;
   status: "active" | "inactive";

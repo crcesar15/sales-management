@@ -137,7 +137,10 @@ function toggleItemDetails(itemId: number) {
     : [...expandedItemDetails.value, itemId];
 }
 
-function getStockSeverity(stock: number | null | undefined, minStock: number | null | undefined): "success" | "warn" | "danger" | "secondary" {
+function getStockSeverity(
+  stock: number | null | undefined,
+  minStock: number | null | undefined,
+): "success" | "warn" | "danger" | "secondary" {
   if (stock === null || stock === undefined) return "secondary";
   if (stock === 0) return "danger";
   if (minStock && stock <= minStock) return "warn";
@@ -239,7 +242,7 @@ function formatFileSize(bytes: number): string {
     </Stepper>
 
     <div class="grid grid-cols-12 gap-4">
-      <div class="col-span-12 lg:col-span-8">
+      <div class="col-span-12 min-w-0 lg:col-span-9">
         <Card class="mb-4">
           <template #title>
             <div class="flex items-center gap-2">
@@ -365,13 +368,14 @@ function formatFileSize(bytes: number): string {
             <div v-else class="2xl:border 2xl:border-surface-200 dark:2xl:border-surface-700">
               <div
                 aria-hidden="true"
-                class="hidden 2xl:grid 2xl:grid-cols-[minmax(8rem,1.3fr)_minmax(9rem,1.1fr)_minmax(7rem,0.85fr)_minmax(7rem,0.7fr)_minmax(7rem,0.8fr)_minmax(6rem,0.7fr)_6rem] 2xl:items-center 2xl:gap-3 2xl:border-b 2xl:border-surface-200 2xl:bg-surface-100 2xl:px-3 2xl:py-2 2xl:text-sm 2xl:font-semibold dark:2xl:border-surface-700 dark:2xl:bg-surface-800"
+                class="hidden 2xl:grid 2xl:grid-cols-[minmax(7rem,1.4fr)_minmax(7rem,1.1fr)_minmax(6rem,0.9fr)_minmax(4rem,0.5fr)_minmax(4.5rem,0.6fr)_minmax(6rem,0.85fr)_minmax(6rem,0.9fr)_5rem] 2xl:items-center 2xl:gap-3 2xl:border-b 2xl:border-surface-200 2xl:bg-surface-100 2xl:px-3 2xl:py-2 2xl:text-sm 2xl:font-semibold dark:2xl:border-surface-700 dark:2xl:bg-surface-800"
               >
                 <span>{{ t("Product") }}</span>
                 <span>{{ t("Purchase Unit") }}</span>
                 <span>{{ t("Unit Price") }}</span>
                 <span>{{ t("Quantity") }}</span>
                 <span>{{ t("Received") }}</span>
+                <span>{{ t("Item discount") }}</span>
                 <span>{{ t("Line Total") }}</span>
                 <span></span>
               </div>
@@ -383,16 +387,25 @@ function formatFileSize(bytes: number): string {
                   class="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/60 2xl:rounded-none 2xl:border-0 2xl:bg-transparent 2xl:px-3 2xl:py-3 dark:2xl:bg-transparent"
                 >
                   <div
-                    class="grid grid-cols-2 gap-x-3 gap-y-4 2xl:grid-cols-[minmax(8rem,1.3fr)_minmax(9rem,1.1fr)_minmax(7rem,0.85fr)_minmax(7rem,0.7fr)_minmax(7rem,0.8fr)_minmax(6rem,0.7fr)_6rem] 2xl:items-start 2xl:gap-3"
+                    class="grid grid-cols-2 gap-x-3 gap-y-4 2xl:grid-cols-[minmax(7rem,1.4fr)_minmax(7rem,1.1fr)_minmax(6rem,0.9fr)_minmax(4rem,0.5fr)_minmax(4.5rem,0.6fr)_minmax(6rem,0.85fr)_minmax(6rem,0.9fr)_5rem] 2xl:items-start 2xl:gap-3"
                   >
                     <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
-                      <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">{{ item.product_variant?.product?.name ?? "—" }}</span>
-                      <Badge v-if="hasVariantLabel(item)" :value="variantLabel(item) ?? ''" severity="secondary" class="mt-1 w-fit max-w-full truncate" />
+                      <span class="block truncate text-base font-semibold text-surface-900 dark:text-surface-50">
+                        {{ item.product_variant?.product?.name ?? "—" }}
+                      </span>
+                      <Badge
+                        v-if="hasVariantLabel(item)"
+                        :value="variantLabel(item) ?? ''"
+                        severity="secondary"
+                        class="mt-1 w-fit max-w-full truncate"
+                      />
                     </div>
 
                     <div class="col-span-2 flex min-w-0 flex-col gap-1 2xl:col-span-1 2xl:pt-1">
                       <span class="font-medium">{{ purchaseUnitLabel(item) }}</span>
-                      <span v-if="conversionLabel(item)" class="text-sm text-surface-500 dark:text-surface-400">{{ conversionLabel(item) }}</span>
+                      <span v-if="conversionLabel(item)" class="text-sm text-surface-500 dark:text-surface-400">
+                        {{ conversionLabel(item) }}
+                      </span>
                     </div>
 
                     <div class="col-span-2 min-w-0 min-[360px]:col-span-1 2xl:col-span-1 2xl:pt-2">
@@ -405,7 +418,7 @@ function formatFileSize(bytes: number): string {
                       <span class="block tabular-nums">{{ formatQuantity(item.quantity) }}</span>
                     </div>
 
-                    <div class="col-span-2 min-w-0 2xl:col-span-1 2xl:pt-2">
+                    <div class="col-span-2 min-w-0 min-[360px]:col-span-1 2xl:col-span-1 2xl:pt-2">
                       <span class="block text-base font-medium 2xl:sr-only">{{ t("Received") }}</span>
                       <span
                         class="block tabular-nums"
@@ -419,6 +432,19 @@ function formatFileSize(bytes: number): string {
                       >
                         {{ formatQuantity(item.received_quantity) }} / {{ formatQuantity(item.quantity) }}
                       </span>
+                    </div>
+
+                    <div class="col-span-2 min-w-0 min-[360px]:col-span-1 2xl:col-span-1 2xl:pt-2">
+                      <span class="block text-base font-medium 2xl:sr-only">{{ t("Item discount") }}</span>
+                      <template v-if="Number(item.discount_amount) > 0">
+                        <span class="block font-medium tabular-nums text-red-500 dark:text-red-400">
+                          -{{ formatCurrency(String(item.discount_amount)) }}
+                        </span>
+                        <small v-if="item.discount_type === 'percentage'" class="block tabular-nums text-surface-500 dark:text-surface-400">
+                          {{ formatQuantity(item.discount_value) }}%
+                        </small>
+                      </template>
+                      <span v-else class="text-surface-500 dark:text-surface-400">—</span>
                     </div>
 
                     <div class="min-w-0 pt-2 2xl:pt-3">
@@ -445,16 +471,33 @@ function formatFileSize(bytes: number): string {
                         text
                         rounded
                         size="large"
-                        @click="openVariantVendors(item.product_variant_id, item.product_variant?.product?.name ?? '', variantLabel(item) ?? '')"
+                        @click="
+                          openVariantVendors(item.product_variant_id, item.product_variant?.product?.name ?? '', variantLabel(item) ?? '')
+                        "
                       />
                     </div>
                   </div>
 
-                  <div v-if="isItemDetailsExpanded(item.id)" :id="`purchase-order-item-details-${item.id}`" class="mt-4 border-t border-surface-200 pt-3 dark:border-surface-700">
+                  <div
+                    v-if="isItemDetailsExpanded(item.id)"
+                    :id="`purchase-order-item-details-${item.id}`"
+                    class="mt-4 border-t border-surface-200 pt-3 dark:border-surface-700"
+                  >
                     <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm min-[480px]:grid-cols-2 2xl:grid-cols-4">
+                      <div v-if="Number(item.discount_amount) > 0" class="flex items-center justify-between gap-3">
+                        <dt class="text-surface-500 dark:text-surface-400">{{ t("Gross line total") }}</dt>
+                        <dd class="m-0 tabular-nums">{{ formatCurrency(String(item.gross_total)) }}</dd>
+                      </div>
                       <div class="flex items-center justify-between gap-3">
                         <dt class="text-surface-500 dark:text-surface-400">{{ t("Current Stock") }}</dt>
-                        <dd class="m-0"><Tag :value="stockLabel(item)" :severity="getStockSeverity(item.product_variant?.stock, item.product_variant?.minimum_stock_level)" class="text-xs" rounded /></dd>
+                        <dd class="m-0">
+                          <Tag
+                            :value="stockLabel(item)"
+                            :severity="getStockSeverity(item.product_variant?.stock, item.product_variant?.minimum_stock_level)"
+                            class="text-xs"
+                            rounded
+                          />
+                        </dd>
                       </div>
                       <div v-if="item.catalog_entry?.minimum_order_quantity" class="flex items-center justify-between gap-3">
                         <dt class="text-surface-500 dark:text-surface-400">{{ t("Min. Order") }}</dt>
@@ -561,11 +604,15 @@ function formatFileSize(bytes: number): string {
         </Card>
       </div>
 
-      <div class="col-span-12 lg:col-span-4">
+      <div class="col-span-12 min-w-0 lg:col-span-3">
         <POTotalsPanel
-          :sub-total="purchaseOrder.sub_total ?? 0"
-          :discount="purchaseOrder.discount ?? 0"
-          :total="purchaseOrder.total ?? 0"
+          :sub-total="Number(purchaseOrder.sub_total ?? 0)"
+          :gross-sub-total="Number(purchaseOrder.gross_sub_total ?? 0)"
+          :line-discount-total="Number(purchaseOrder.line_discount_total ?? 0)"
+          :discount-type="purchaseOrder.discount_type"
+          :discount-value="Number(purchaseOrder.discount_value ?? 0)"
+          :discount="Number(purchaseOrder.discount ?? 0)"
+          :total="Number(purchaseOrder.total ?? 0)"
           :can-edit="canEdit"
           :can-cancel="canCancel"
           :can-mark-as-paid="canMarkAsPaid"
