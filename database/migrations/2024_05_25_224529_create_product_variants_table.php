@@ -20,6 +20,10 @@ return new class extends Migration
             $table->string('barcode', 100)->nullable()->index();
             $table->decimal('price', 10, 2);
             $table->decimal('purchase_price', 10, 2)->nullable();
+            $table->decimal('replacement_cost', 20, 12)->nullable();
+            $table->unsignedBigInteger('pricing_catalog_id')->nullable()->index();
+            $table->unsignedBigInteger('replacement_cost_event_id')->nullable();
+            $table->boolean('reference_outdated')->default(false);
             $table->enum('margin_type', ['percent', 'amount'])->default('percent');
             $table->decimal('margin_value', 10, 2)->nullable();
             $table->unsignedInteger('minimum_stock_level')->nullable();

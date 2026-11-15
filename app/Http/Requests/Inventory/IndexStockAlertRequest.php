@@ -29,7 +29,11 @@ final class IndexStockAlertRequest extends FormRequest
         return [
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'per_store' => ['sometimes', 'boolean'],
-            'tab' => ['sometimes', Rule::in(['low-stock', 'expiry'])],
+            'tab' => ['sometimes', Rule::in(['low-stock', 'expiry', 'price-review'])],
+            'price_review_reason' => ['nullable', Rule::in(['pricing', 'changes', 'setup'])],
+            'price_review_severity' => ['nullable', Rule::in(['critical', 'other'])],
+            'price_review_state' => ['sometimes', Rule::in(['active', 'reviewed'])],
+            'price_review_per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'low_stock_per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'expiry_per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ];
@@ -37,7 +41,7 @@ final class IndexStockAlertRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        foreach (['low_stock_per_page', 'expiry_per_page'] as $field) {
+        foreach (['low_stock_per_page', 'expiry_per_page', 'price_review_per_page'] as $field) {
             if ($this->has($field) && filter_var($this->input($field), FILTER_VALIDATE_INT) !== false) {
                 $this->merge([$field => min(100, max(1, $this->integer($field)))]);
             }

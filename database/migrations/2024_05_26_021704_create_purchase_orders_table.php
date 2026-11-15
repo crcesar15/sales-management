@@ -24,6 +24,8 @@ return new class extends Migration
             $table->date('expected_arrival_date')->nullable();
             $table->decimal('sub_total', 10, 2)->nullable();
             $table->decimal('discount', 10, 2)->nullable();
+            $table->enum('discount_type', ['flat', 'percentage'])->default('flat');
+            $table->decimal('discount_value', 10, 2)->default(0);
             $table->decimal('total', 10, 2)->nullable();
             $table->text('notes')->nullable();
             $table->text('completion_notes')->nullable();

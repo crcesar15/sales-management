@@ -164,6 +164,8 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/gallery', fn () => Inertia::render('Gallery/Index'))->name('gallery');
 
     // Inventory Routes
+    Route::post('/inventory/pricing/preview', [App\Http\Controllers\InventoryPricingController::class, 'preview'])->name('inventory.pricing.preview');
+    Route::put('/inventory/variants/{variant}/pricing-reference', [App\Http\Controllers\InventoryPricingController::class, 'update'])->name('inventory.pricing-reference.update');
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.variants');
     Route::get('/inventory/variants/{variant}', [InventoryController::class, 'show'])->name('inventory.variants.show');
     Route::put('/inventory/variants/{variant}', [InventoryController::class, 'update'])->name('inventory.variant.update');

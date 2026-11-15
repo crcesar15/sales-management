@@ -12,7 +12,7 @@ use Brick\Math\RoundingMode;
 
 final class InventoryCostService
 {
-    public function __construct(private readonly AmountAllocationService $allocator) {}
+    public function __construct(private readonly AmountAllocationService $allocator, private readonly PurchaseOrderTotalsService $purchaseTotals) {}
 
     public function receiptUnitCost(ReceptionOrderProduct $line, PurchaseOrder $purchaseOrder): ?string
     {
@@ -26,8 +26,7 @@ final class InventoryCostService
             return null;
         }
 
-        $net = BigDecimal::of((string) $purchaseOrder->sub_total)->minus((string) $purchaseOrder->discount);
-        $amounts = $this->allocator->allocate((string) $net, $weights);
+        $amounts = $this->purchaseTotals->netAmounts($weights, (string) ($purchaseOrder->discount ?? '0'));
 
         return (string) BigDecimal::of($amounts[$purchaseLine->id])
             ->dividedBy(BigDecimal::of((string) $purchaseLine->quantity)->multipliedBy($line->conversion_factor), 12, RoundingMode::HalfUp);

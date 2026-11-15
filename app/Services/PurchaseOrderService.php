@@ -48,7 +48,9 @@ final class PurchaseOrderService
     {
         return DB::transaction(function () use ($data, $actor): PurchaseOrder {
             $vendorId = $data['vendor_id'];
-            $items = $data['items'];
+            $calculator = app(PurchaseOrderTotalsService::class);
+            $items = $calculator->effectiveItems($data);
+            $totals = $calculator->forInput($data);
 
             $po = PurchaseOrder::create([
                 'user_id' => $actor->id,
@@ -56,29 +58,31 @@ final class PurchaseOrderService
                 'status' => PurchaseOrderStatus::DRAFT,
                 'order_date' => $data['order_date'],
                 'expected_arrival_date' => $data['expected_arrival_date'] ?? null,
-                'discount' => $data['discount'] ?? 0,
+                'discount' => $totals['discount'],
+                'discount_type' => $totals['discount_type'],
+                'discount_value' => $totals['discount_value'],
                 'notes' => $data['notes'] ?? null,
-                'sub_total' => 0,
-                'total' => 0,
+                'sub_total' => $totals['sub_total'],
+                'total' => $totals['total'],
             ]);
 
-            foreach ($items as $item) {
-                $price = (float) $item['price'];
-                $quantity = (float) $item['quantity'];
-                $lineTotal = $price * $quantity;
+            foreach ($items as $index => $item) {
+                $line = $totals['items'][$index];
 
                 PurchaseOrderProduct::create([
                     'purchase_order_id' => $po->id,
                     'product_variant_id' => $item['product_variant_id'],
                     'catalog_id' => $item['catalog_id'] ?? null,
                     'unit_id' => $item['unit_id'] ?? null,
-                    'quantity' => $quantity,
-                    'price' => $price,
-                    'total' => $lineTotal,
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'discount_type' => $line['discount_type'],
+                    'discount_value' => $line['discount_value'],
+                    'discount_amount' => $line['discount_amount'],
+                    'pricing_reference' => $item['pricing_reference'] ?? false,
+                    'total' => $line['total'],
                 ]);
             }
-
-            $this->recalculate($po);
 
             activity()
                 ->causedBy($actor)
@@ -101,25 +105,29 @@ final class PurchaseOrderService
                 throw new InvalidArgumentException('Only draft purchase orders can be updated.');
             }
 
-            $items = $data['items'] ?? null;
+            $calculator = app(PurchaseOrderTotalsService::class);
+            $totals = $calculator->forInput($data, $po);
+            $items = array_key_exists('items', $data) ? $calculator->effectiveItems($data, $po) : null;
             $vendorId = $data['vendor_id'] ?? $po->vendor_id;
 
             if ($items !== null) {
                 $po->lineItems()->delete();
 
-                foreach ($items as $item) {
-                    $price = (float) $item['price'];
-                    $quantity = (float) $item['quantity'];
-                    $lineTotal = $price * $quantity;
+                foreach ($items as $index => $item) {
+                    $line = $totals['items'][$index];
 
                     PurchaseOrderProduct::create([
                         'purchase_order_id' => $po->id,
                         'product_variant_id' => $item['product_variant_id'],
                         'catalog_id' => $item['catalog_id'] ?? null,
                         'unit_id' => $item['unit_id'] ?? null,
-                        'quantity' => $quantity,
-                        'price' => $price,
-                        'total' => $lineTotal,
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'discount_type' => $line['discount_type'],
+                        'discount_value' => $line['discount_value'],
+                        'discount_amount' => $line['discount_amount'],
+                        'pricing_reference' => $item['pricing_reference'] ?? false,
+                        'total' => $line['total'],
                     ]);
                 }
             }
@@ -128,11 +136,13 @@ final class PurchaseOrderService
                 'vendor_id' => $vendorId,
                 'order_date' => $data['order_date'] ?? $po->order_date,
                 'expected_arrival_date' => $data['expected_arrival_date'] ?? $po->expected_arrival_date,
-                'discount' => $data['discount'] ?? $po->discount,
+                'discount' => $totals['discount'],
+                'discount_type' => $totals['discount_type'],
+                'discount_value' => $totals['discount_value'],
+                'sub_total' => $totals['sub_total'],
+                'total' => $totals['total'],
                 'notes' => $data['notes'] ?? $po->notes,
             ]);
-
-            $this->recalculate($po);
 
             activity()
                 ->causedBy($actor)
@@ -173,6 +183,7 @@ final class PurchaseOrderService
             $this->validateTransition($po->status, PurchaseOrderStatus::CANCELLED);
             $oldStatus = $po->status;
             $po->update(['status' => PurchaseOrderStatus::CANCELLED]);
+            app(ReplacementCostService::class)->withdrawOrder($po);
 
             activity()
                 ->causedBy($actor)
@@ -218,16 +229,17 @@ final class PurchaseOrderService
 
     public function recalculate(PurchaseOrder $po): void
     {
-        $po->refresh();
-
-        $subTotal = $po->lineItems->sum('total');
-        $discount = (float) $po->discount;
-        $total = $subTotal - $discount;
-
-        $po->update([
-            'sub_total' => $subTotal,
-            'total' => $total,
-        ]);
+        DB::transaction(function () use ($po): void {
+            $locked = PurchaseOrder::query()->lockForUpdate()->whereKey($po->id)->sole();
+            if ($locked->status !== PurchaseOrderStatus::DRAFT) {
+                throw new InvalidArgumentException('Only draft purchase orders can be recalculated.');
+            }
+            $totals = app(PurchaseOrderTotalsService::class)->forInput([], $locked);
+            foreach ($totals['items'] as $id => $line) {
+                $locked->lineItems()->whereKey($id)->update(['discount_amount' => $line['discount_amount'], 'total' => $line['total']]);
+            }
+            $locked->update(collect($totals)->only(['sub_total', 'discount_type', 'discount_value', 'discount', 'total'])->all());
+        });
     }
 
     /**
@@ -270,6 +282,10 @@ final class PurchaseOrderService
             }
 
             $po->update($updateData);
+
+            if ($newStatus === PurchaseOrderStatus::APPROVED) {
+                app(ReplacementCostService::class)->publishOrder($po, $actor);
+            }
 
             $properties = ['from' => $oldStatus->value, 'to' => $newStatus->value];
             if ($completionNotes !== null && $completionNotes !== '') {

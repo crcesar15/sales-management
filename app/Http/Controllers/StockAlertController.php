@@ -11,6 +11,7 @@ use App\Http\Resources\Inventory\ExpiryAlertCollection;
 use App\Http\Resources\Inventory\LowStockAlertCollection;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\PriceReviewService;
 use App\Services\ReportingScopeService;
 use App\Services\StockAlertService;
 use Illuminate\Database\Eloquent\Collection;
@@ -43,20 +44,32 @@ final class StockAlertController extends Controller
         $lowStockCount = $lowStockAlerts->total();
         $expiryCount = $expiryAlerts->total();
         $activeTab = request()->string('tab', 'low-stock')->value();
+        $priceAlerts = $user->can(PermissionsEnum::INVENTORY_VIEW->value)
+            ? app(PriceReviewService::class)->alerts($user->hasRole(RolesEnum::ADMIN->value) && $storeId === null ? null : array_values($storeIds ?? []), $request->integer('price_review_per_page', 20), $request->filled('price_review_reason') ? $request->string('price_review_reason')->value() : null, $request->filled('price_review_severity') ? $request->string('price_review_severity')->value() : null, $request->string('price_review_state', 'active')->value())
+            : null;
+        $priceReviewCount = $priceAlerts?->total() ?? 0;
+        if ($priceAlerts !== null && ($request->filled('price_review_reason') || $request->filled('price_review_severity') || $request->string('price_review_state', 'active')->value() !== 'active')) {
+            $priceReviewCount = app(PriceReviewService::class)->alerts($user->hasRole(RolesEnum::ADMIN->value) && $storeId === null ? null : array_values($storeIds ?? []), 1)->total();
+        }
 
         return Inertia::render('Inventory/Alerts/Index', [
             'lowStockAlerts' => new LowStockAlertCollection($lowStockAlerts),
             'expiryAlerts' => new ExpiryAlertCollection($expiryAlerts),
+            'priceReviewAlerts' => $priceAlerts === null ? null : ['data' => $priceAlerts->items(), 'meta' => ['current_page' => $priceAlerts->currentPage(), 'last_page' => $priceAlerts->lastPage(), 'per_page' => $priceAlerts->perPage(), 'total' => $priceAlerts->total()]],
             'summary' => [
                 'low_stock_count' => $lowStockCount,
                 'expiry_count' => $expiryCount,
-                'total' => $lowStockCount + $expiryCount,
+                'price_review_count' => $priceReviewCount,
+                'total' => $lowStockCount + $expiryCount + $priceReviewCount,
             ],
             'stores' => $stores,
             'filters' => [
                 'store_id' => $storeId,
                 'per_store' => $perStore,
-                'tab' => in_array($activeTab, ['low-stock', 'expiry'], true) ? $activeTab : 'low-stock',
+                'tab' => in_array($activeTab, ['low-stock', 'expiry', 'price-review'], true) ? $activeTab : 'low-stock',
+                'price_review_reason' => $request->input('price_review_reason'),
+                'price_review_severity' => $request->input('price_review_severity'),
+                'price_review_state' => $request->string('price_review_state', 'active')->value(),
             ],
         ]);
     }

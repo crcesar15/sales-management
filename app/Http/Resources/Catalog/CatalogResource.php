@@ -21,6 +21,7 @@ final class CatalogResource extends JsonResource
             'product_variant_id' => $this->product_variant_id,
             'unit_id' => $this->unit_id,
             'price' => (float) $this->price,
+            'is_outdated' => $this->is_outdated,
             'payment_terms' => $this->payment_terms,
             'details' => $this->details,
             'status' => $this->status,

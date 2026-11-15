@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\DiscountType;
 use App\Enums\PaymentMethod;
 use App\Enums\PurchaseOrderReceiptStatus;
 use App\Enums\PurchaseOrderStatus;
 use Database\Factories\PurchaseOrderFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +37,8 @@ final class PurchaseOrder extends Model implements HasMedia
         'expected_arrival_date',
         'sub_total',
         'discount',
+        'discount_type',
+        'discount_value',
         'total',
         'notes',
         'completion_notes',
@@ -42,7 +46,7 @@ final class PurchaseOrder extends Model implements HasMedia
         'proof_of_payment_number',
     ];
 
-    protected $appends = ['receipt_status'];
+    protected $appends = ['receipt_status', 'gross_sub_total', 'line_discount_total'];
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
@@ -125,6 +129,18 @@ final class PurchaseOrder extends Model implements HasMedia
             ->dontSubmitEmptyLogs();
     }
 
+    /** @return Attribute<float, never> */
+    protected function grossSubTotal(): Attribute
+    {
+        return Attribute::make(get: fn (): float => round((float) $this->lineItems->sum('gross_total'), 2));
+    }
+
+    /** @return Attribute<float, never> */
+    protected function lineDiscountTotal(): Attribute
+    {
+        return Attribute::make(get: fn (): float => round((float) $this->lineItems->sum('discount_amount'), 2));
+    }
+
     /**
      * @return array<string, string>
      */
@@ -139,6 +155,8 @@ final class PurchaseOrder extends Model implements HasMedia
             'proof_of_payment_type' => PaymentMethod::class,
             'sub_total' => 'decimal:2',
             'discount' => 'decimal:2',
+            'discount_type' => DiscountType::class,
+            'discount_value' => 'decimal:2',
             'total' => 'decimal:2',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',

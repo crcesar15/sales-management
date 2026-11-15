@@ -28,6 +28,59 @@ final class CatalogService
         'id' => 'catalog.id',
     ];
 
+    /** @param list<array<string, mixed>> $products */
+    public function updateVendorOffers(int $vendorId, array $products): void
+    {
+        DB::transaction(function () use ($vendorId, $products): void {
+            foreach ($products as $product) {
+                $this->saveVendorOffer($vendorId, (int) $product['id'], collect($product)->except('id')->all());
+            }
+        });
+    }
+
+    public function removeVendorOffers(int $vendorId, int $variantId): void
+    {
+        DB::transaction(function () use ($vendorId, $variantId): void {
+            foreach (Catalog::query()->where('vendor_id', $vendorId)->where('product_variant_id', $variantId)->get() as $entry) {
+                $this->delete($entry);
+            }
+        });
+    }
+
+    /** @param array<string, mixed> $data */
+    public function saveVendorOffer(int $vendorId, int $variantId, array $data): Catalog
+    {
+        return DB::transaction(function () use ($vendorId, $variantId, $data): Catalog {
+            if (isset($data['previous_product_id']) && (int) $data['previous_product_id'] !== $variantId) {
+                $this->removeVendorOffers($vendorId, (int) $data['previous_product_id']);
+            }
+            unset($data['previous_product_id']);
+            $entry = Catalog::query()->where('vendor_id', $vendorId)->where('product_variant_id', $variantId)->where('unit_id', $data['unit_id'] ?? null)->first();
+            $payload = [...$data, 'vendor_id' => $vendorId, 'product_variant_id' => $variantId];
+
+            return $entry === null ? $this->create($payload) : $this->update($entry, $payload);
+        });
+    }
+
+    /** @param list<array{id: int, price: float|int|string, payment_terms?: string|null, details?: string|null}> $vendors */
+    public function syncVariantVendors(ProductVariant $variant, array $vendors): void
+    {
+        DB::transaction(function () use ($variant, $vendors): void {
+            foreach ($variant->catalogEntries()->whereNotIn('vendor_id', array_column($vendors, 'id'))->get() as $entry) {
+                $this->delete($entry);
+            }
+            foreach ($vendors as $vendor) {
+                $entry = $variant->catalogEntries()->where('vendor_id', $vendor['id'])->whereNull('unit_id')->first();
+                $data = ['vendor_id' => $vendor['id'], 'product_variant_id' => $variant->id, 'unit_id' => null, 'price' => $vendor['price'], 'payment_terms' => $vendor['payment_terms'] ?? null, 'details' => $vendor['details'] ?? null];
+                if ($entry === null) {
+                    $this->create($data);
+                } else {
+                    $this->update($entry, $data);
+                }
+            }
+        });
+    }
+
     /**
      * @return LengthAwarePaginator<int, Catalog>
      */
@@ -40,7 +93,7 @@ final class CatalogService
         ?int $vendorId = null,
     ): LengthAwarePaginator {
         $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'catalog.created_at';
-        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'desc';
+        $direction = mb_strtolower($orderDirection) === 'asc' ? 'asc' : 'desc';
         $needsProductJoin = $sortColumn === 'products.name';
 
         return Catalog::query()
@@ -75,7 +128,7 @@ final class CatalogService
         ?int $vendorId = null,
     ): LengthAwarePaginator {
         $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'catalog.created_at';
-        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'asc';
+        $direction = mb_strtolower($orderDirection) === 'desc' ? 'desc' : 'asc';
         $needsProductJoin = $sortColumn === 'products.name';
 
         return Catalog::query()
@@ -105,6 +158,15 @@ final class CatalogService
     {
         return DB::transaction(function () use ($data): Catalog {
             $catalog = Catalog::create($data);
+            $actor = auth()->user();
+            $variant = ProductVariant::query()->lockForUpdate()->whereKey($catalog->product_variant_id)->sole();
+            if ($actor !== null && $variant->replacement_cost_event_id === null && $variant->catalogEntries()->where('status', 'active')->where('is_outdated', false)->count() === 1) {
+                $catalog->load(['vendor', 'unit']);
+                if ($catalog->vendor?->status === 'active' && ($catalog->unit_id === null || ($catalog->unit?->type === 'purchase' && $catalog->unit->status === 'active'))) {
+                    app(ReplacementCostService::class)->select($variant, $catalog->id, $actor);
+                    $variant->pendingCostReviews()->update(['reviewed_at' => now(), 'reviewed_by' => $actor->id]);
+                }
+            }
 
             return $catalog->load(['vendor', 'productVariant.product', 'productVariant.values.option', 'unit']);
         });
@@ -129,6 +191,10 @@ final class CatalogService
     {
         return DB::transaction(function () use ($catalog, $data): Catalog {
             $catalog->update($data);
+
+            if (auth()->user() !== null && $catalog->wasChanged(['price', 'unit_id', 'vendor_id', 'product_variant_id', 'status', 'is_outdated'])) {
+                app(ReplacementCostService::class)->refreshCatalog($catalog, auth()->user());
+            }
 
             return $catalog->load(['vendor', 'productVariant.product', 'productVariant.values.option', 'unit']);
         });
@@ -163,7 +229,7 @@ final class CatalogService
         ?int $vendorId = null,
     ): LengthAwarePaginator {
         $sortColumn = self::SORT_COLUMN_MAP[$orderBy] ?? 'product_variants.created_at';
-        $direction = in_array(mb_strtolower($orderDirection), ['asc', 'desc'], true) ? mb_strtolower($orderDirection) : 'asc';
+        $direction = mb_strtolower($orderDirection) === 'desc' ? 'desc' : 'asc';
         $needsProductJoin = in_array($orderBy, ['product_name', 'brand_name'], true);
         $needsBrandJoin = $orderBy === 'brand_name';
 
@@ -203,6 +269,9 @@ final class CatalogService
 
     public function delete(Catalog $catalog): void
     {
-        DB::transaction(fn () => $catalog->delete());
+        DB::transaction(function () use ($catalog): void {
+            ProductVariant::query()->where('pricing_catalog_id', $catalog->id)->update(['reference_outdated' => true, 'pricing_catalog_id' => null]);
+            $catalog->delete();
+        });
     }
 }

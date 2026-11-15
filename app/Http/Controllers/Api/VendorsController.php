@@ -6,12 +6,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Vendors\SaveVendorCatalogRequest;
 use App\Http\Requests\Api\Vendors\StoreVendorRequest;
 use App\Http\Requests\Api\Vendors\UpdateVendorRequest;
 use App\Http\Resources\ApiCollection;
 use App\Http\Resources\Vendor\VendorCatalogCollection;
 use App\Models\ProductVariant;
 use App\Models\Vendor;
+use App\Services\CatalogService;
 use App\Services\VariantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -105,64 +107,29 @@ final class VendorsController extends Controller
         return new VendorCatalogCollection($catalog);
     }
 
-    public function storeProductVariant(Request $request, Vendor $vendor, ProductVariant $variant): JsonResponse
+    public function storeProductVariant(SaveVendorCatalogRequest $request, Vendor $vendor, ProductVariant $variant, CatalogService $service): JsonResponse
     {
-        $this->authorize(PermissionsEnum::CATALOG_CREATE, auth()->user());
+        $this->authorize(PermissionsEnum::CATALOG_CREATE->value, auth()->user());
 
-        $product = $request->array('record');
-
-        // If replacing a previous variant, detach it first
-        if (isset($product['previous_product_id'])) {
-            $vendor->variants()->where('product_variant_id', $product['previous_product_id'])->detach();
-        }
-
-        // Detach existing entry for this variant if present, then attach fresh
-        $vendor->variants()->where('product_variant_id', $variant->id)->detach();
-
-        $vendor->variants()->attach($variant->id, [
-            'price' => $product['price'],
-            'details' => $product['details'] ?? null,
-            'payment_terms' => $product['payment_terms'],
-            'unit_id' => $product['unit_id'] ?? null,
-            'minimum_order_quantity' => $product['minimum_order_quantity'] ?? null,
-            'lead_time_days' => $product['lead_time_days'] ?? null,
-            'status' => $product['status'] ?? 'active',
-        ]);
+        $service->saveVendorOffer($vendor->id, $variant->id, $request->validated('record'));
 
         return new JsonResponse(['data' => $vendor], 201);
     }
 
-    public function updateProductVariants(Request $request, Vendor $vendor): JsonResponse
+    public function updateProductVariants(SaveVendorCatalogRequest $request, Vendor $vendor, CatalogService $service): JsonResponse
     {
-        $this->authorize(PermissionsEnum::CATALOG_EDIT, auth()->user());
+        $this->authorize(PermissionsEnum::CATALOG_EDIT->value, auth()->user());
 
-        /** @var array<array<string,number>>$products */
-        $products = $request->array('variants');
-
-        $formattedProducts = [];
-
-        foreach ($products as $product) {
-            $formattedProducts[$product['id']] = [
-                'price' => $product['price'],
-                'details' => $product['details'] ?? null,
-                'payment_terms' => $product['payment_terms'],
-                'unit_id' => $product['unit_id'] ?? null,
-                'minimum_order_quantity' => $product['minimum_order_quantity'] ?? null,
-                'lead_time_days' => $product['lead_time_days'] ?? null,
-                'status' => $product['status'] ?? 'active',
-            ];
-        }
-
-        $vendor->variants()->syncWithoutDetaching($formattedProducts);
+        $service->updateVendorOffers($vendor->id, $request->validated('variants'));
 
         return response()->json($vendor, 200);
     }
 
-    public function removeProductVariant(Vendor $vendor, ProductVariant $variant): JsonResponse
+    public function removeProductVariant(Vendor $vendor, ProductVariant $variant, CatalogService $service): JsonResponse
     {
-        $this->authorize(PermissionsEnum::CATALOG_DELETE, auth()->user());
+        $this->authorize(PermissionsEnum::CATALOG_DELETE->value, auth()->user());
 
-        $vendor->variants()->detach($variant);
+        $service->removeVendorOffers($vendor->id, $variant->id);
 
         return response()->json(['data' => $vendor], 200);
     }

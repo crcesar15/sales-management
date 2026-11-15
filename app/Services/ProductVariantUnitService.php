@@ -32,6 +32,7 @@ final class ProductVariantUnitService
     public function create(ProductVariant $variant, array $data, bool $replicateToSiblings = false): ProductVariantUnit
     {
         return DB::transaction(function () use ($variant, $data, $replicateToSiblings): ProductVariantUnit {
+            $this->validateReference($variant->id, $data);
             if (! $replicateToSiblings) {
                 return $variant->units()->create($data);
             }
@@ -50,7 +51,11 @@ final class ProductVariantUnitService
     public function update(ProductVariantUnit $unit, array $data, bool $replicateToSiblings = false): ProductVariantUnit
     {
         return DB::transaction(function () use ($unit, $data, $replicateToSiblings): ProductVariantUnit {
+            $this->validateReference($unit->product_variant_id, $data);
             if (! $replicateToSiblings) {
+                if (array_key_exists('conversion_factor', $data) && (int) $data['conversion_factor'] !== $unit->conversion_factor) {
+                    $this->invalidateReferences($unit);
+                }
                 $unit->update($data);
 
                 return $unit->refresh();
@@ -71,7 +76,28 @@ final class ProductVariantUnitService
 
     public function delete(ProductVariantUnit $unit): void
     {
-        DB::transaction(fn () => $unit->delete());
+        DB::transaction(function () use ($unit): void {
+            $this->invalidateReferences($unit);
+            $unit->delete();
+        });
+    }
+
+    private function invalidateReferences(ProductVariantUnit $unit): void
+    {
+        ProductVariant::query()->whereIn('pricing_catalog_id', \App\Models\Catalog::query()->select('id')->where('unit_id', $unit->id))->update(['reference_outdated' => true]);
+    }
+
+    /** @param array<string, mixed> $data */
+    private function validateReference(int $variantId, array &$data): void
+    {
+        if (! array_key_exists('reference_id', $data)) {
+            return;
+        }
+        $variant = ProductVariant::query()->lockForUpdate()->whereKey($variantId)->sole();
+        if ($variant->replacement_cost_event_id !== $data['reference_id']) {
+            throw new InvalidArgumentException('The replacement cost changed. Reload the page before saving pricing.');
+        }
+        unset($data['reference_id']);
     }
 
     /**
@@ -131,6 +157,9 @@ final class ProductVariantUnitService
             $matchingUnit = $units->firstWhere('name', $originalName);
 
             if ($matchingUnit instanceof ProductVariantUnit) {
+                if (isset($data['conversion_factor']) && (int) $data['conversion_factor'] !== $matchingUnit->conversion_factor) {
+                    $this->invalidateReferences($matchingUnit);
+                }
                 $matchingUnit->update($data);
 
                 continue;

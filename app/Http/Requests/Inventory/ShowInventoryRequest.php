@@ -27,6 +27,7 @@ final class ShowInventoryRequest extends FormRequest
     {
         return [
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
+            'tab' => ['sometimes', 'in:overview,pricing,units,locations,images'],
         ];
     }
 }

@@ -46,6 +46,7 @@ final class UpdateProductVariantUnitRequest extends FormRequest
             'status' => ['sometimes', 'required', 'in:active,inactive'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'replicate_to_siblings' => ['sometimes', 'boolean'],
+            'reference_id' => ['sometimes', 'nullable', 'integer'],
         ];
     }
 

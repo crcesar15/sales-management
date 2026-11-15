@@ -21,6 +21,10 @@ return new class extends Migration
             $table->unsignedBigInteger('unit_id')->nullable();
             $table->decimal('quantity', 10, 4);
             $table->decimal('price', 10, 2);
+            $table->enum('discount_type', ['flat', 'percentage'])->default('flat');
+            $table->decimal('discount_value', 10, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
+            $table->boolean('pricing_reference')->default(false);
             $table->decimal('total', 10, 2);
             $table->timestamps();
         });

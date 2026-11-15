@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Requests\PurchaseOrders;
 
 use App\Enums\PermissionsEnum;
+use App\Http\Requests\PurchaseOrders\Concerns\ValidatesPurchaseDiscounts;
 use App\Http\Requests\PurchaseOrders\Concerns\ValidatesPurchaseOrderItems;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StorePurchaseOrderRequest extends FormRequest
 {
+    use ValidatesPurchaseDiscounts;
     use ValidatesPurchaseOrderItems;
 
     public function authorize(): bool
@@ -29,12 +31,14 @@ final class StorePurchaseOrderRequest extends FormRequest
             'expected_arrival_date' => ['nullable', 'date'],
             'discount' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'items' => ['required', 'array', 'min:1'],
+            'items' => ['required', 'array', 'list', 'min:1', 'max:100'],
             'items.*.product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'items.*.catalog_id' => ['required', 'integer', 'exists:catalog,id'],
             'items.*.unit_id' => ['nullable', 'integer', 'exists:product_variant_units,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['required', 'numeric', 'min:0'],
+            'items.*.pricing_reference' => ['sometimes', 'boolean'],
+            ...$this->purchaseDiscountRules(),
         ];
     }
 
@@ -44,6 +48,9 @@ final class StorePurchaseOrderRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
             $vendorId = $this->integer('vendor_id');
             $items = $this->array('items');
 
@@ -53,17 +60,7 @@ final class StorePurchaseOrderRequest extends FormRequest
 
             $this->validatePurchaseOrderItems($validator, $vendorId, $items);
 
-            $discount = $this->input('discount');
-            if ($discount !== null && $discount > 0) {
-                $subTotal = 0;
-                foreach ($items as $item) {
-                    $subTotal += (float) $item['price'] * (float) $item['quantity'];
-                }
-
-                if ((float) $discount > $subTotal) {
-                    $validator->errors()->add('discount', 'Discount cannot exceed the sub total.');
-                }
-            }
+            $this->validatePurchaseDiscounts($validator);
         });
     }
 }

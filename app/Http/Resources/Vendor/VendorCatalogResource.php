@@ -23,6 +23,7 @@ final class VendorCatalogResource extends JsonResource
             'product_variant_id' => $this->product_variant_id,
             'vendor_id' => $this->vendor_id,
             'price' => (float) $this->price,
+            'is_outdated' => $this->is_outdated,
             'payment_terms' => $this->payment_terms,
             'details' => $this->details,
             'status' => $this->status,

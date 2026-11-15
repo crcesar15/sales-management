@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\DiscountType;
+use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 final class PurchaseOrderProduct extends Model
 {
+    use LogsActivity;
+
     protected $table = 'purchase_order_product';
 
     protected $fillable = [
@@ -19,10 +27,19 @@ final class PurchaseOrderProduct extends Model
         'unit_id',
         'quantity',
         'price',
+        'discount_type',
+        'discount_value',
+        'discount_amount',
+        'pricing_reference',
         'total',
     ];
 
-    protected $appends = ['received_quantity', 'remaining_quantity'];
+    protected $appends = ['received_quantity', 'remaining_quantity', 'gross_total'];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()->logFillable()->logOnlyDirty()->useLogName('purchase_order_product')->dontSubmitEmptyLogs();
+    }
 
     /** @return BelongsTo<PurchaseOrder, $this> */
     public function purchaseOrder(): BelongsTo
@@ -77,14 +94,24 @@ final class PurchaseOrderProduct extends Model
         return number_format((float) $this->quantity - $received, 4, '.', '');
     }
 
+    /** @return Attribute<float, never> */
+    protected function grossTotal(): Attribute
+    {
+        return Attribute::make(get: fn (): float => BigDecimal::of((string) $this->price)->multipliedBy((string) $this->quantity)->toScale(2, RoundingMode::HalfUp)->toFloat());
+    }
+
     /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
+            'pricing_reference' => 'boolean',
             'quantity' => 'decimal:4',
             'price' => 'decimal:2',
+            'discount_type' => DiscountType::class,
+            'discount_value' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'total' => 'decimal:2',
             'created_at' => 'datetime:Y-m-d H:i',
             'updated_at' => 'datetime:Y-m-d H:i',

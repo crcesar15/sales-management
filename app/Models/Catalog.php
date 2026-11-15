@@ -26,6 +26,7 @@ final class Catalog extends Model
         'product_variant_id',
         'unit_id',
         'price',
+        'is_outdated',
         'payment_terms',
         'details',
         'status',
@@ -79,6 +80,7 @@ final class Catalog extends Model
     protected function casts(): array
     {
         return [
+            'is_outdated' => 'boolean',
             'price' => 'decimal:2',
             'minimum_order_quantity' => 'integer',
             'lead_time_days' => 'integer',

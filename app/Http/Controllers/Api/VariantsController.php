@@ -6,14 +6,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Variants\UpdateVariantVendorsRequest;
 use App\Http\Resources\Catalog\VariantVendorResource;
 use App\Http\Resources\Product\ProductVariantCollection;
 use App\Http\Resources\Product\VariantSearchCollection;
 use App\Models\ProductVariant;
-use App\Models\PurchaseOrder;
-use App\Models\Vendor;
+use App\Services\CatalogService;
+use App\Services\PurchasePriceHistoryService;
 use App\Services\VariantService;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -74,23 +74,12 @@ final class VariantsController extends Controller
     }
 
     // Update product variant vendors
-    public function updateVendors(Request $request, ProductVariant $variant): JsonResponse
+    public function updateVendors(UpdateVariantVendorsRequest $request, ProductVariant $variant, CatalogService $service): JsonResponse
     {
-        // TODO: Develop formRequest
-        /** @var array<array<string,int>> $vendors */
-        $vendors = $request->array('vendors');
-
-        $variant->vendors()->detach();
-
-        if (count($vendors) > 0) {
-            foreach ($vendors as $vendor) {
-                $variant->vendors()->attach($vendor['id'], [
-                    'price' => $vendor['price'],
-                    'payment_terms' => $vendor['payment_terms'],
-                    'details' => $vendor['details'],
-                ]);
-            }
-        }
+        $this->authorize(PermissionsEnum::CATALOG_EDIT->value, $request->user());
+        /** @var list<array{id: int, price: float|int|string, payment_terms?: string|null, details?: string|null}> $vendors */
+        $vendors = $request->validated('vendors');
+        $service->syncVariantVendors($variant, $vendors);
 
         return response()->json(['data' => $variant], 200);
     }
@@ -125,50 +114,10 @@ final class VariantsController extends Controller
         return response()->json(['data' => $units], 200);
     }
 
-    public function purchasePriceHistory(ProductVariant $variant): JsonResponse
+    public function purchasePriceHistory(ProductVariant $variant, PurchasePriceHistoryService $historyService): JsonResponse
     {
-        $this->authorize(PermissionsEnum::INVENTORY_VIEW, auth()->user());
+        $this->authorize(PermissionsEnum::INVENTORY_VIEW->value, auth()->user());
 
-        $items = $variant->purchaseOrderItems()
-            ->with(['purchaseOrder.vendor'])
-            ->whereHas('purchaseOrder', function ($query): void {
-                $query->whereNotIn('status', ['draft', 'cancelled']);
-            })
-            ->orderByDesc(
-                PurchaseOrder::select('order_date')
-                    ->whereColumn('purchase_orders.id', 'purchase_order_product.purchase_order_id')
-            )
-            ->get();
-
-        $history = $items->map(function ($item) {
-            $po = $item->purchaseOrder;
-            $orderDate = $po instanceof PurchaseOrder ? $po->order_date : null;
-
-            return [
-                'date' => $orderDate !== null ? Carbon::parse((string) $orderDate)->format('Y-m-d') : null,
-                'price' => (float) $item->price,
-                'po_id' => $po instanceof PurchaseOrder ? $po->id : null,
-                'vendor_name' => $po instanceof PurchaseOrder && $po->vendor instanceof Vendor ? $po->vendor->fullname : null,
-            ];
-        });
-
-        $latest = $history->first();
-
-        $prices = $history->pluck('price')->filter(fn ($p) => $p !== null);
-
-        return response()->json([
-            'data' => [
-                'latest_purchase_price' => $latest ? $latest['price'] : null,
-                'latest_po_date' => $latest ? $latest['date'] : null,
-                'latest_vendor_name' => $latest ? $latest['vendor_name'] : null,
-                'history' => $history->toArray(),
-                'stats' => [
-                    'latest' => $prices->count() > 0 ? round((float) $prices->first(), 2) : null,
-                    'average' => $prices->count() > 0 ? round((float) $prices->avg(), 2) : null,
-                    'highest' => $prices->count() > 0 ? round((float) $prices->max(), 2) : null,
-                    'lowest' => $prices->count() > 0 ? round((float) $prices->min(), 2) : null,
-                ],
-            ],
-        ], 200);
+        return response()->json(['data' => $historyService->history($variant)]);
     }
 }

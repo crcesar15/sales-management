@@ -29,7 +29,6 @@ final class ProductVariantService
     ];
 
     private const PRICING_FIELDS = [
-        'purchase_price',
         'margin_type',
         'margin_value',
         'price',
@@ -209,6 +208,12 @@ final class ProductVariantService
 
             /** @var ProductVariant $sourceVariant */
             $sourceVariant = $variants->firstOrFail(fn (ProductVariant $candidate): bool => $candidate->is($variant));
+            if (array_key_exists('reference_id', $data) && $data['reference_id'] !== $sourceVariant->replacement_cost_event_id) {
+                throw new InvalidArgumentException('The replacement cost changed. Reload the page before saving pricing.');
+            }
+            if (array_key_exists('pricing_catalog_id', $data) && $data['pricing_catalog_id'] !== null && $data['pricing_catalog_id'] !== $sourceVariant->pricing_catalog_id) {
+                app(ReplacementCostService::class)->select($sourceVariant, (int) $data['pricing_catalog_id'], auth()->user() ?? throw new InvalidArgumentException('Authentication required.'));
+            }
             $updateData = collect($data)->only(self::VARIANT_UPDATE_FIELDS)->toArray();
 
             $sourceVariant->update($updateData);

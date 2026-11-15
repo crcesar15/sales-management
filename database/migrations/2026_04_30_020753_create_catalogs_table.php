@@ -18,7 +18,8 @@ return new class extends Migration
             $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
             $table->foreignId('unit_id')->nullable()->constrained('product_variant_units')->nullOnDelete();
-            $table->float('price', 8);
+            $table->decimal('price', 14, 2);
+            $table->boolean('is_outdated')->default(false);
             $table->string('payment_terms', 15)->nullable();
             $table->string('details', 300)->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');

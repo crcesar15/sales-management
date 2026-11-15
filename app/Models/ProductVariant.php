@@ -30,6 +30,10 @@ final class ProductVariant extends Model
         'barcode',
         'price',
         'purchase_price',
+        'replacement_cost',
+        'pricing_catalog_id',
+        'replacement_cost_event_id',
+        'reference_outdated',
         'margin_type',
         'margin_value',
         'minimum_stock_level',
@@ -38,16 +42,39 @@ final class ProductVariant extends Model
         'status',
     ];
 
-    protected $casts = [
-        'has_expiration' => 'boolean',
-        'purchase_price' => 'decimal:2',
-        'margin_type' => MarginType::class,
-        'margin_value' => 'decimal:2',
-    ];
-
     protected $appends = [
         'name',
     ];
+
+    /** @return BelongsTo<Catalog, $this> */
+    public function pricingCatalog(): BelongsTo
+    {
+        return $this->belongsTo(Catalog::class, 'pricing_catalog_id');
+    }
+
+    /** @return BelongsTo<ReplacementCostEvent, $this> */
+    public function replacementCostEvent(): BelongsTo
+    {
+        return $this->belongsTo(ReplacementCostEvent::class, 'replacement_cost_event_id');
+    }
+
+    /** @return HasMany<ReplacementCostEvent, $this> */
+    public function replacementCostEvents(): HasMany
+    {
+        return $this->hasMany(ReplacementCostEvent::class);
+    }
+
+    /** @return HasMany<ReplacementCostEvent, $this> */
+    public function pendingCostReviews(): HasMany
+    {
+        return $this->replacementCostEvents()->whereNull('invalidated_at')->whereNull('reviewed_at')->whereNotNull('previous_cost');
+    }
+
+    /** @return HasMany<ReplacementCostEvent, $this> */
+    public function recentCostEvents(): HasMany
+    {
+        return $this->replacementCostEvents()->latest('id')->limit(30);
+    }
 
     /** @return BelongsTo<Product, $this> */
     public function product(): BelongsTo
@@ -174,6 +201,15 @@ final class ProductVariant extends Model
             ->logOnlyDirty()
             ->useLogName('product_variant')
             ->dontSubmitEmptyLogs();
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'has_expiration' => 'boolean', 'purchase_price' => 'decimal:2',
+            'replacement_cost' => 'decimal:12', 'reference_outdated' => 'boolean',
+            'margin_type' => MarginType::class, 'margin_value' => 'decimal:2',
+        ];
     }
 
     /** @return Attribute<string, never> */

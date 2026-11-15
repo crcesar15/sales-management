@@ -14,6 +14,7 @@ use App\Models\Category;
 use App\Models\MeasurementUnit;
 use App\Models\ProductVariant;
 use App\Models\Store;
+use App\Services\PriceReviewService;
 use App\Services\ProductVariantService;
 use App\Services\ReportingScopeService;
 use App\Services\StockService;
@@ -21,6 +22,7 @@ use App\Services\VariantLocationService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use InvalidArgumentException;
 
 final class InventoryController extends Controller
 {
@@ -93,6 +95,7 @@ final class InventoryController extends Controller
             ->get();
 
         return Inertia::render('Inventory/Show/Index', [
+            'initialTab' => $request->string('tab', 'overview')->value(),
             'locationStores' => Store::query()->whereIn('id', $locationStoreIds)->where('status', 'active')->orderBy('name')->get(['id', 'name', 'code'])
                 ->map(fn (Store $store) => ['store_id' => $store->id, 'store_name' => $store->name, 'store_code' => $store->code, 'location_code' => $locations->get($store->id)]),
             'measurementUnits' => MeasurementUnit::query()->orderBy('name')->get(['id', 'name', 'abbreviation']),
@@ -121,6 +124,8 @@ final class InventoryController extends Controller
                 'has_variants' => $product->options()->exists(),
             ],
             'variant' => [
+                'pricing' => app(PriceReviewService::class)->summary($variant),
+                'actual_costs' => $request->user()->can(PermissionsEnum::DASHBOARD_PROFIT_VIEW->value) ? app(PriceReviewService::class)->actualCosts($variant, $storeIds) : null,
                 'id' => $variant->id,
                 'product_id' => $variant->product_id,
                 'identifier' => $variant->identifier,
@@ -183,11 +188,16 @@ final class InventoryController extends Controller
 
     public function update(UpdateVariantDetailRequest $request, ProductVariant $variant): RedirectResponse
     {
-        $this->variantService->update($variant, [
-            ...$request->validated(),
-            'replicate_pricing' => $request->boolean('replicate_pricing'),
-            'replicate_inventory_policy' => $request->boolean('replicate_inventory_policy'),
-        ]);
+        $this->authorize(PermissionsEnum::INVENTORY_EDIT);
+        try {
+            $this->variantService->update($variant, [
+                ...$request->validated(),
+                'replicate_pricing' => $request->boolean('replicate_pricing'),
+                'replicate_inventory_policy' => $request->boolean('replicate_inventory_policy'),
+            ]);
+        } catch (InvalidArgumentException $exception) {
+            return redirect()->back()->withErrors(['price' => $exception->getMessage()]);
+        }
 
         return redirect()->back();
     }

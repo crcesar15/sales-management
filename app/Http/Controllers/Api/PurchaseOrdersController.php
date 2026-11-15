@@ -60,6 +60,7 @@ final class PurchaseOrdersController extends Controller
     public function show(PurchaseOrder $order): JsonResponse
     {
         $this->authorize(PermissionsEnum::PURCHASE_ORDERS_VIEW->value, auth()->user());
+        $order->load(['vendor', 'user', 'lineItems.unit', 'lineItems.productVariant.product', 'lineItems.receptionOrderItems.receptionOrder']);
 
         return (new PurchaseOrderResource($order))->response()->setStatusCode(200);
     }

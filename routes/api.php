@@ -121,6 +121,7 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'v1', 'as' => 'api.v1.
         ->name('variants.vendors.update');
 
     // Routes for purchase orders
+    Route::post('purchase-orders/preview', App\Http\Controllers\Api\PurchaseOrderPreviewController::class)->name('purchase-orders.preview');
     Route::get('purchase-orders', [PurchaseOrdersController::class, 'index'])->name('purchase-orders');
     Route::get('purchase-orders/{order}', [PurchaseOrdersController::class, 'show'])->name('purchase-orders.show');
     Route::post('purchase-orders', [PurchaseOrdersController::class, 'store'])->name('purchase-orders.store');
