@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, shallowRef } from "vue";
+import { computed, onBeforeUnmount, onMounted, shallowRef } from "vue";
 import { Link } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useI18n } from "vue-i18n";
@@ -8,8 +8,11 @@ import { useLayout } from "./Composables/useLayout";
 import { useMenuItems } from "../Composables/useMenuItems";
 import type { SidebarMenuItem } from "../Types/menu";
 import AppUserMenu from "./AppUserMenu.vue";
+import { useAuth } from "@/Composables/useAuth";
 
 const { t } = useI18n();
+const { getSetting } = useAuth();
+const businessName = computed(() => getSetting("general", "business_name", "My Store") ?? "My Store");
 const { isSidebarCollapsed, toggleSidebar, layoutState, onMenuToggle } = useLayout();
 const { directMenuItems, groupedMenuItems, expandedKeys, updateExpandedKeys, isActiveRoute, isActiveGroup } = useMenuItems();
 
@@ -67,8 +70,8 @@ function onPanelClose(event: { item: SidebarMenuItem }): void {
   <aside id="app-sidebar" class="layout-sidebar" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <!-- Header Section: Logo + Toggle -->
     <div class="sidebar-header">
-      <Link :href="route('home')" class="logo-link" @click="onNavigate">
-        <span class="logo-text">SAKAI</span>
+      <Link :href="route('home')" class="logo-link min-w-0" :title="businessName" @click="onNavigate">
+        <span class="logo-text truncate uppercase">{{ businessName }}</span>
       </Link>
       <button
         v-tooltip.right="isMobileViewport ? t('Close navigation') : isSidebarCollapsed ? t('Expand sidebar') : t('Collapse sidebar')"
