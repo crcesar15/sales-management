@@ -6,6 +6,8 @@ import { router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useAuthClient } from "@/Composables/useAuthClient";
 
+defineProps<{ businessName: string }>();
+
 // Set composables
 const { t } = useI18n();
 const { requestResetPasswordApi } = useAuthClient();
@@ -59,9 +61,9 @@ const sentResetLink = async () => {
         </svg>
       </div>
 
-      <!-- Top: Logo -->
-      <div class="relative z-10 invert brightness-0">
-        <img src="/images/logo.png" alt="logo" class="h-40" />
+      <!-- Top: Business name -->
+      <div class="relative z-10">
+        <p class="text-3xl font-bold text-white break-words uppercase">{{ businessName }}</p>
       </div>
 
       <!-- Center: Value proposition -->
@@ -83,9 +85,9 @@ const sentResetLink = async () => {
     <!-- Right Panel: Reset Password Form -->
     <div class="w-full lg:w-7/12 flex items-center justify-center bg-surface-0 px-6 py-12">
       <div class="w-full max-w-md">
-        <!-- Mobile logo (visible only on small screens) -->
-        <div class="flex justify-center mb-8 lg:hidden">
-          <img src="/images/logo.png" alt="logo" class="h-60" />
+        <!-- Mobile business name (visible only on small screens) -->
+        <div class="mb-8 text-center lg:hidden">
+          <p class="text-3xl font-bold text-surface-900 break-words uppercase">{{ businessName }}</p>
         </div>
 
         <!-- Heading -->

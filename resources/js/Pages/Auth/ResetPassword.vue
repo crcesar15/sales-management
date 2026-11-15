@@ -10,6 +10,7 @@ import { useAuthClient } from "@/Composables/useAuthClient";
 const props = defineProps<{
   token: string;
   email: string;
+  businessName: string;
 }>();
 // Set composables
 const { t } = useI18n();
@@ -69,9 +70,9 @@ const resetPassword = async () => {
         </svg>
       </div>
 
-      <!-- Top: Logo -->
+      <!-- Top: Business name -->
       <div class="relative z-10">
-        <img src="/images/logo.png" alt="logo" class="h-40" />
+        <p class="text-3xl font-bold text-white break-words uppercase">{{ businessName }}</p>
       </div>
 
       <!-- Center: Value proposition -->
@@ -93,9 +94,9 @@ const resetPassword = async () => {
     <!-- Right Panel: Reset Password Form -->
     <div class="w-full lg:w-7/12 flex items-center justify-center bg-surface-0 px-6 py-12">
       <div class="w-full max-w-md">
-        <!-- Mobile logo (visible only on small screens) -->
-        <div class="flex justify-center mb-8 lg:hidden">
-          <img src="/images/logo.png" alt="logo" class="h-60" />
+        <!-- Mobile business name (visible only on small screens) -->
+        <div class="mb-8 text-center lg:hidden">
+          <p class="text-3xl font-bold text-surface-900 break-words uppercase">{{ businessName }}</p>
         </div>
 
         <!-- Heading -->

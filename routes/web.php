@@ -37,6 +37,7 @@ use App\Http\Controllers\StoreController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\VendorsController;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -61,7 +62,7 @@ Route::get('/', function () {
     }
 
     // user is not logged in
-    return Inertia::render('Auth/Login');
+    return Inertia::render('Auth/Login', ['businessName' => Setting::get('business_name', 'My Store')]);
 });
 
 // Auth::routes();
@@ -75,15 +76,21 @@ Route::group(['middleware' => ['guest']], function (): void {
         }
 
         // user is not logged in
-        return Inertia::render('Auth/Login');
+        return Inertia::render('Auth/Login', ['businessName' => Setting::get('business_name', 'My Store')]);
     })->name('login');
     Route::post('login', [LoginController::class, 'login'])->name('login');
-    Route::get('password/reset', fn () => Inertia::render('Auth/EmailRequest'))->name('password.reset.request');
+    Route::get('password/reset', fn () => Inertia::render('Auth/EmailRequest', [
+        'businessName' => Setting::get('business_name', 'My Store'),
+    ]))->name('password.reset.request');
     Route::get('password/reset/{token}', function (Request $request) {
         $token = $request->route()?->parameter('token') ?? '';
         $email = $request->query('email', '');
 
-        return Inertia::render('Auth/ResetPassword', ['token' => $token, 'email' => $email]);
+        return Inertia::render('Auth/ResetPassword', [
+            'token' => $token,
+            'email' => $email,
+            'businessName' => Setting::get('business_name', 'My Store'),
+        ]);
     })->name('password.reset');
     Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.reset.update');
     Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
