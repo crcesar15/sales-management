@@ -174,7 +174,6 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         EventServiceProvider::class,
         RouteServiceProvider::class,
-        Fruitcake\LaravelDebugbar\ServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -190,7 +189,6 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
-        'Debugbar' => Fruitcake\LaravelDebugbar\Facades\Debugbar::class,
     ])->toArray(),
 
 ];
