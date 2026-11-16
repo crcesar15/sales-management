@@ -2,7 +2,7 @@
 import { InputText, Button, IconField, InputIcon, Toast, useToast } from "primevue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { router } from "@inertiajs/vue3";
+import { Link } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useAuthClient } from "@/Composables/useAuthClient";
 
@@ -83,11 +83,12 @@ const sentResetLink = async () => {
     </div>
 
     <!-- Right Panel: Reset Password Form -->
-    <div class="w-full lg:w-7/12 flex items-center justify-center bg-surface-0 px-6 py-12">
-      <div class="w-full max-w-md">
+    <div class="w-full lg:w-7/12 flex justify-center bg-gradient-to-b from-surface-100 to-surface-0 px-5 py-8 sm:px-8 lg:items-center lg:px-6 lg:py-12">
+      <div class="my-auto w-full max-w-md">
         <!-- Mobile business name (visible only on small screens) -->
-        <div class="mb-8 text-center lg:hidden">
-          <p class="text-3xl font-bold text-surface-900 break-words uppercase">{{ businessName }}</p>
+        <div class="mb-10 flex items-center gap-3 border-b border-surface-200 pb-6 lg:hidden">
+          <span aria-hidden="true" class="h-9 w-1 shrink-0 rounded-full bg-primary" />
+          <p class="min-w-0 break-words text-xl font-bold text-surface-900 uppercase">{{ businessName }}</p>
         </div>
 
         <!-- Heading -->
@@ -110,7 +111,7 @@ const sentResetLink = async () => {
                 id="email"
                 v-model="email"
                 type="email"
-                class="w-full"
+                class="min-h-12 w-full text-base lg:min-h-0"
                 autocomplete="email"
                 :required="true"
                 :placeholder="t('Enter your email address')"
@@ -120,14 +121,14 @@ const sentResetLink = async () => {
 
           <!-- Submit Button (protagonist) -->
           <div class="mt-6">
-            <Button type="submit" class="w-full" :label="t('Send Password Reset Link')" :loading="btnLoading" raised />
+            <Button type="submit" class="min-h-12 w-full lg:min-h-0" :label="t('Send Password Reset Link')" :loading="btnLoading" raised />
           </div>
 
           <!-- Back to Login -->
-          <div class="flex justify-center mt-4">
-            <a class="text-primary text-sm cursor-pointer hover:underline" @click="router.visit(route('login'))">
+          <div class="flex justify-center mt-2 lg:mt-4">
+            <Link :href="route('login')" class="inline-flex min-h-11 items-center text-primary text-sm hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:min-h-0">
               {{ t("Back to Login") }}
-            </a>
+            </Link>
           </div>
         </form>
       </div>

@@ -2,7 +2,7 @@
 import { InputText, Password, Button, IconField, InputIcon, Toast, useToast } from "primevue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { router } from "@inertiajs/vue3";
+import { Link, router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { useAuthClient } from "@/Composables/useAuthClient";
 
@@ -92,11 +92,12 @@ const resetPassword = async () => {
     </div>
 
     <!-- Right Panel: Reset Password Form -->
-    <div class="w-full lg:w-7/12 flex items-center justify-center bg-surface-0 px-6 py-12">
-      <div class="w-full max-w-md">
+    <div class="w-full lg:w-7/12 flex justify-center bg-gradient-to-b from-surface-100 to-surface-0 px-5 py-8 sm:px-8 lg:items-center lg:px-6 lg:py-12">
+      <div class="my-auto w-full max-w-md">
         <!-- Mobile business name (visible only on small screens) -->
-        <div class="mb-8 text-center lg:hidden">
-          <p class="text-3xl font-bold text-surface-900 break-words uppercase">{{ businessName }}</p>
+        <div class="mb-10 flex items-center gap-3 border-b border-surface-200 pb-6 lg:hidden">
+          <span aria-hidden="true" class="h-9 w-1 shrink-0 rounded-full bg-primary" />
+          <p class="min-w-0 break-words text-xl font-bold text-surface-900 uppercase">{{ businessName }}</p>
         </div>
 
         <!-- Heading -->
@@ -119,7 +120,7 @@ const resetPassword = async () => {
                 id="email"
                 v-model="email"
                 type="email"
-                class="w-full"
+                class="min-h-12 w-full text-base lg:min-h-0"
                 autocomplete="email"
                 :required="true"
                 :placeholder="t('Enter your email address')"
@@ -133,13 +134,25 @@ const resetPassword = async () => {
             <Password
               v-model="password"
               class="w-full"
-              input-class="w-full"
+              input-class="min-h-12 w-full pr-12 text-base lg:min-h-0"
               toggle-mask
               input-id="password"
+              :input-props="{ autocomplete: 'new-password' }"
               :required="true"
               :feedback="false"
               :placeholder="t('Enter your new password')"
-            />
+            >
+              <template #maskicon="{ toggleCallback }">
+                <button type="button" class="password-toggle" :aria-label="t('Hide password')" @click="toggleCallback">
+                  <i class="fa fa-eye-slash" aria-hidden="true" />
+                </button>
+              </template>
+              <template #unmaskicon="{ toggleCallback }">
+                <button type="button" class="password-toggle" :aria-label="t('Show password')" @click="toggleCallback">
+                  <i class="fa fa-eye" aria-hidden="true" />
+                </button>
+              </template>
+            </Password>
           </div>
 
           <!-- Confirm Password -->
@@ -148,25 +161,37 @@ const resetPassword = async () => {
             <Password
               v-model="passwordConfirmation"
               class="w-full"
-              input-class="w-full"
+              input-class="min-h-12 w-full pr-12 text-base lg:min-h-0"
               toggle-mask
               input-id="password-confirm"
+              :input-props="{ autocomplete: 'new-password' }"
               :required="true"
               :feedback="false"
               :placeholder="t('Confirm your new password')"
-            />
+            >
+              <template #maskicon="{ toggleCallback }">
+                <button type="button" class="password-toggle" :aria-label="t('Hide password')" @click="toggleCallback">
+                  <i class="fa fa-eye-slash" aria-hidden="true" />
+                </button>
+              </template>
+              <template #unmaskicon="{ toggleCallback }">
+                <button type="button" class="password-toggle" :aria-label="t('Show password')" @click="toggleCallback">
+                  <i class="fa fa-eye" aria-hidden="true" />
+                </button>
+              </template>
+            </Password>
           </div>
 
           <!-- Submit Button (protagonist) -->
           <div class="mt-6">
-            <Button type="submit" class="w-full" :label="t('Reset Password')" :loading="btnLoading" raised />
+            <Button type="submit" class="min-h-12 w-full lg:min-h-0" :label="t('Reset Password')" :loading="btnLoading" raised />
           </div>
 
           <!-- Back to Login -->
-          <div class="flex justify-center mt-4">
-            <a class="text-primary text-sm cursor-pointer hover:underline" @click="router.visit(route('login'))">
+          <div class="flex justify-center mt-2 lg:mt-4">
+            <Link :href="route('login')" class="inline-flex min-h-11 items-center text-primary text-sm hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:min-h-0">
               {{ t("Back to Login") }}
-            </a>
+            </Link>
           </div>
         </form>
       </div>
@@ -175,3 +200,23 @@ const resetPassword = async () => {
     <Toast />
   </div>
 </template>
+
+<style scoped>
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: flex;
+  width: 3rem;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  color: var(--p-surface-600);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: -4px;
+}
+</style>

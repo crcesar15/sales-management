@@ -794,6 +794,8 @@
   "Partially Received": "Partially Received",
   "Fully Received": "Fully Received",
   "Password": "Password",
+  "Show password": "Show password",
+  "Hide password": "Hide password",
   "Pay": "Pay",
   "Payment": "Payment",
   "Payment is required for walk-in customers": "Payment is required for walk-in customers",

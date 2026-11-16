@@ -794,6 +794,8 @@
   "Partially Received": "Parcialmente Recibido",
   "Fully Received": "Recibido por Completo",
   "Password": "Contraseña",
+  "Show password": "Mostrar contraseña",
+  "Hide password": "Ocultar contraseña",
   "Pay": "Pagar",
   "Payment": "Pago",
   "Payment is required for walk-in customers": "Se requiere el pago para los clientes sin registro",
