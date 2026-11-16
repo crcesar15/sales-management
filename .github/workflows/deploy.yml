@@ -1,0 +1,147 @@
+name: Deploy Laravel to Hostinger
+
+on:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    environment: production
+
+    env:
+      SSH_HOST: ${{ secrets.HOSTINGER_HOST }}
+      SSH_USER: ${{ secrets.HOSTINGER_USER }}
+      SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_KNOWN_HOSTS }}
+
+      SSH_PORT: "65002"
+
+      APP_DIR: ${{ vars.HOSTINGER_APP_DIR }}
+      WEB_DIR: ${{ vars.HOSTINGER_WEB_DIR }}
+
+    steps:
+      # 1. Download source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configure PHP
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      # 3. Install PHP dependencies for the build
+      - name: Install Composer dependencies
+        run: |
+          composer install \
+            --no-interaction \
+            --prefer-dist \
+            --no-progress
+
+      # 4. Configure Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # 5. Install JavaScript dependencies
+      - name: Install NPM dependencies
+        run: npm ci
+
+      # 6. Build Vue + Inertia
+      - name: Build frontend
+        run: npm run build
+
+      # 7. Configure SSH
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" \
+            > ~/.ssh/id_ed25519
+
+          chmod 600 ~/.ssh/id_ed25519
+
+          printf '%s\n' "$SSH_KNOWN_HOSTS" \
+            > ~/.ssh/known_hosts
+
+          chmod 600 ~/.ssh/known_hosts
+
+      # 8. Publish application
+      - name: Deploy to Hostinger
+        run: |
+          set -euo pipefail
+
+          RSYNC_SSH="ssh -i $HOME/.ssh/id_ed25519 -p $SSH_PORT -o StrictHostKeyChecking=yes"
+
+          # Ensure target directories exist
+          ssh -i ~/.ssh/id_ed25519 \
+            -p "$SSH_PORT" \
+            -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" \
+            "mkdir -p '$APP_DIR' '$WEB_DIR'"
+
+          # Upload Laravel application
+          rsync -az \
+            -e "$RSYNC_SSH" \
+            --exclude='/.git/' \
+            --exclude='/.github/' \
+            --exclude='/.agents' \
+            --exclude='/.claude' \
+            --exclude='/.codex' \
+            --exclude='/.cursor' \
+            --exclude='/.impeccable' \
+            --exclude='/.opencode' \
+            --exclude='/.planning' \
+            --exclude='/.env' \
+            --exclude='/.env.*' \
+            --exclude='/node_modules/' \
+            --exclude='/vendor/' \
+            --exclude='/storage/' \
+            --exclude='/bootstrap/cache/' \
+            --exclude='/public/hot' \
+            ./ "$SSH_USER@$SSH_HOST:$APP_DIR/"
+
+          # Publish browser-accessible files
+          rsync -az \
+            -e "$RSYNC_SSH" \
+            --exclude='/index.php' \
+            --exclude='/hot' \
+            --exclude='/storage/' \
+            public/ "$SSH_USER@$SSH_HOST:$WEB_DIR/"
+
+          # Adjust Laravel's public entry point
+          sed \
+            "s#__DIR__.'/../#__DIR__.'/../laravel-app/#g" \
+            public/index.php > /tmp/hostinger-index.php
+
+          # Deploy adjusted entry point
+          rsync -az \
+            -e "$RSYNC_SSH" \
+            /tmp/hostinger-index.php \
+            "$SSH_USER@$SSH_HOST:$WEB_DIR/index.php"
+
+          # Run Laravel production commands
+          ssh -i ~/.ssh/id_ed25519 \
+            -p "$SSH_PORT" \
+            -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" \
+            "cd '$APP_DIR' && \
+             composer2 install --no-dev --prefer-dist --optimize-autoloader --no-interaction && \
+             php artisan migrate --force && \
+             php artisan optimize"
