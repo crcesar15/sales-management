@@ -55,8 +55,15 @@ const deleteOption = (index: number) => {
   options.value.splice(index, 1);
 };
 
-const onValueChange = () => {
-  emit("update:modelValue", options.value);
+const addOptionValue = (event: Event, option: LocalOption) => {
+  const input = event.target as HTMLInputElement;
+  const value = input.value.trim();
+
+  if (value.length > 0 && !option.values.includes(value)) {
+    option.values.push(value);
+  }
+
+  input.value = "";
 };
 
 const hasDuplicateName = (index: number) => {
@@ -118,8 +125,8 @@ const unlockOptions = () => {
               :input-id="`values-${index}`"
               :disabled="option.name.length === 0 || confirmed"
               class="w-full block"
-              @option-select="onValueChange"
-              @option-unselect="onValueChange"
+              @keydown.enter.prevent="addOptionValue($event, option)"
+              @blur="addOptionValue($event, option)"
             />
           </div>
         </div>
