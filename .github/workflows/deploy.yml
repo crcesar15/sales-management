@@ -138,11 +138,18 @@ jobs:
           "$SSH_USER@$SSH_HOST:$WEB_DIR/index.php"
 
         # Run Laravel production commands
-        ssh -i ~/.ssh/id_ed2551ssh -i ~/.ssh/id_ed25519 \
+        ssh -i ~/.ssh/id_ed25519 \
           -p "$SSH_PORT" \
           -o StrictHostKeyChecking=yes \
           "$SSH_USER@$SSH_HOST" \
           "cd '$APP_DIR' && \
+          mkdir -p storage/framework/views \
+                    storage/framework/cache/data \
+                    storage/framework/sessions \
+                    storage/app/public \
+                    storage/logs \
+                    bootstrap/cache && \
           /opt/alt/php85/usr/bin/php /usr/local/bin/composer2 install --no-dev --prefer-dist --optimize-autoloader --no-interaction && \
+          /opt/alt/php85/usr/bin/php artisan config:clear && \
           /opt/alt/php85/usr/bin/php artisan migrate --force && \
           /opt/alt/php85/usr/bin/php artisan optimize"
