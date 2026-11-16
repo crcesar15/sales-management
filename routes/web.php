@@ -78,7 +78,7 @@ Route::group(['middleware' => ['guest']], function (): void {
         // user is not logged in
         return Inertia::render('Auth/Login', ['businessName' => Setting::get('business_name', 'My Store')]);
     })->name('login');
-    Route::post('login', [LoginController::class, 'login'])->name('login');
+    Route::post('login', [LoginController::class, 'login'])->name('login.store');
     Route::get('password/reset', fn () => Inertia::render('Auth/EmailRequest', [
         'businessName' => Setting::get('business_name', 'My Store'),
     ]))->name('password.reset.request');
