@@ -4,7 +4,6 @@ on:
   push:
     branches:
     - master
-
   workflow_dispatch:
 
 
@@ -18,7 +17,6 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     environment: production
 
     env:
@@ -26,130 +24,74 @@ jobs:
       SSH_USER: ${{ secrets.HOSTINGER_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
       SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_KNOWN_HOSTS }}
-
       SSH_PORT: "65002"
-
       APP_DIR: ${{ vars.HOSTINGER_APP_DIR }}
       WEB_DIR: ${{ vars.HOSTINGER_WEB_DIR }}
 
     steps:
-    # 1. Download source code
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 2. Configure PHP
-    - name: Setup PHP
+    - name: Setup PHP 8.5
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.5'
         tools: composer:v2
         coverage: none
 
-    # 3. Install PHP dependencies for the build
-    - name: Install Composer dependencies
-      run: |
-        composer install \
-          --no-interaction \
-          --prefer-dist \
-          --no-progress
+    - name: Install Composer dependencies for build
+      run: composer install --no-interaction --prefer-dist --no-progress
 
-    # 4. Configure Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '22'
         cache: npm
 
-    # 5. Install JavaScript dependencies
-    - name: Install NPM dependencies
+    - name: Install JavaScript dependencies
       run: npm ci
 
-    # 6. Build Vue + Inertia
-    - name: Build frontend
+    - name: Build Vue and Inertia assets
       run: npm run build
 
-    # 7. Configure SSH
     - name: Configure SSH
       run: |
-        mkdir -p ~/.ssh
+        mkdir -p "$HOME/.ssh"
+        printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+        chmod 600 "$HOME/.ssh/id_ed25519"
+        printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+        chmod 600 "$HOME/.ssh/known_hosts"
 
-        printf '%s\n' "$SSH_PRIVATE_KEY" \
-          > ~/.ssh/id_ed25519
+    - name: Prepare Hostinger public index.php
+      run: |
+        set -euo pipefail
 
-        chmod 600 ~/.ssh/id_ed25519
+        # The Laravel project is deployed to a sibling directory named "sales".
+        # Keep the repository's original public/index.php unchanged.
+        sed \
+          -e "s#__DIR__.'/../vendor/autoload.php#__DIR__.'/../sales/vendor/autoload.php#g" \
+          -e "s#__DIR__.'/../bootstrap/app.php#__DIR__.'/../sales/bootstrap/app.php#g" \
+          -e "s#__DIR__.'/../storage/framework/maintenance.php#__DIR__.'/../sales/storage/framework/maintenance.php#g" \
+          public/index.php > /tmp/hostinger-index.php
 
-        printf '%s\n' "$SSH_KNOWN_HOSTS" \
-          > ~/.ssh/known_hosts
+        # Fail before deployment if Laravel's required references weren't updated.
+        grep -Fq "__DIR__.'/../sales/vendor/autoload.php'" /tmp/hostinger-index.php
+        grep -Fq "__DIR__.'/../sales/bootstrap/app.php'" /tmp/hostinger-index.php
+        php -l /tmp/hostinger-index.php
 
-        chmod 600 ~/.ssh/known_hosts
-
-    # 8. Publish application
     - name: Deploy to Hostinger
       run: |
         set -euo pipefail
 
-        RSYNC_SSH="ssh -i $HOME/.ssh/id_ed25519 -p $SSH_PORT -o StrictHostKeyChecking=yes"
+        # Prevent deployment to an unexpected directory.
+        if [[ "$APP_DIR" != */sales || "$WEB_DIR" != */public_html ]]; then
+          echo 'Unexpected Hostinger paths. Check HOSTINGER_APP_DIR and HOSTINGER_WEB_DIR.' >&2
+          exit 1
+        fi
 
-        # Ensure target directories exist
-        ssh -i ~/.ssh/id_ed25519 \
+        RSYNC_SSH="ssh -i $HOME/.ssh/id_ed25519 -p $SSH_PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+
+        ssh -i "$HOME/.ssh/id_ed25519" \
           -p "$SSH_PORT" \
-          -o StrictHostKeyChecking=yes \
-          "$SSH_USER@$SSH_HOST" \
-          "mkdir -p '$APP_DIR' '$WEB_DIR'"
-
-        # Upload Laravel application
-        rsync -az \
-          -e "$RSYNC_SSH" \
-          --exclude='/.git/' \
-          --exclude='/.github/' \
-          --exclude='/.agents' \
-          --exclude='/.claude' \
-          --exclude='/.codex' \
-          --exclude='/.cursor' \
-          --exclude='/.impeccable' \
-          --exclude='/.opencode' \
-          --exclude='/.planning' \
-          --exclude='/.env' \
-          --exclude='/.env.*' \
-          --exclude='/node_modules/' \
-          --exclude='/vendor/' \
-          --exclude='/storage/' \
-          --exclude='/bootstrap/cache/' \
-          --exclude='/public/hot' \
-          ./ "$SSH_USER@$SSH_HOST:$APP_DIR/"
-
-        # Publish browser-accessible files
-        rsync -az \
-          -e "$RSYNC_SSH" \
-          --exclude='/index.php' \
-          --exclude='/hot' \
-          --exclude='/storage/' \
-          public/ "$SSH_USER@$SSH_HOST:$WEB_DIR/"
-
-        # Adjust Laravel's public entry point
-        sed \
-          "s#__DIR__.'/../#__DIR__.'/../sales/#g" \
-          public/index.php > /tmp/hostinger-index.php
-
-        # Deploy adjusted entry point
-        rsync -az \
-          -e "$RSYNC_SSH" \
-          /tmp/hostinger-index.php \
-          "$SSH_USER@$SSH_HOST:$WEB_DIR/index.php"
-
-        # Run Laravel production commands
-        ssh -i ~/.ssh/id_ed25519 \
-          -p "$SSH_PORT" \
-          -o StrictHostKeyChecking=yes \
-          "$SSH_USER@$SSH_HOST" \
-          "cd '$APP_DIR' && \
-          mkdir -p storage/framework/views \
-                    storage/framework/cache/data \
-                    storage/framework/sessions \
-                    storage/app/public \
-                    storage/logs \
-                    bootstrap/cache && \
-          /opt/alt/php85/usr/bin/php /usr/local/bin/composer2 install --no-dev --prefer-dist --optimize-autoloader --no-interaction && \
-          /opt/alt/php85/usr/bin/php artisan config:clear && \
-          /opt/alt/php85/usr/bin/php artisan migrate --force && \
-          /opt/alt/php85/usr/bin/php artisan optimize"
+          -o BatchMode=yes \
+          -o IdentitiesOnly=yes \
