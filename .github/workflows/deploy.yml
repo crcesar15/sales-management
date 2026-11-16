@@ -128,7 +128,7 @@ jobs:
 
         # Adjust Laravel's public entry point
         sed \
-          "s#__DIR__.'/../#__DIR__.'/../laravel-app/#g" \
+          "s#__DIR__.'/../#__DIR__.'/../sales/#g" \
           public/index.php > /tmp/hostinger-index.php
 
         # Deploy adjusted entry point
