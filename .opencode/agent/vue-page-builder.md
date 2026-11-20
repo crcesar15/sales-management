@@ -17,8 +17,8 @@ You create Inertia.js Vue 3 page components following the project's established 
 ## Project Rules (read before starting)
 
 Read these rule files to understand project-specific frontend conventions:
-1. `.claude/rules/vue-frontend.md` — page structure, Inertia props, forms (VeeValidate + Yup), composables, PrimeVue, i18n, TypeScript types
-2. `.claude/rules/routes-and-api.md` — route naming, Ziggy usage on frontend
+1. `.opencode/rules/vue-frontend.md` — page structure, Inertia props, forms (VeeValidate + Yup), PrimeVue, i18n, TypeScript types
+2. `.opencode/rules/routes-and-api.md` — route naming, Ziggy usage on frontend
 
 ## Before Creating Pages
 

@@ -296,7 +296,7 @@
 
 **What happens:** New code might reach for Inertia's `useForm` for create/edit forms.
 **Why it's wrong:** Project standardizes on VeeValidate + Yup for validation UX; Inertia `useForm` lacks the field-level error display and Yup schema integration the project relies on.
-**Do this instead:** Use `useForm` from `vee-validate` with `toTypedSchema()` from `@vee-validate/yup`. Reserve Inertia `useForm` exclusively for delete/restore with empty body. See `resources/js/Pages/Brands/Index.vue` and `.claude/rules/vue-frontend.md`.
+**Do this instead:** Use `useForm` from `vee-validate` with `toTypedSchema()` from `@vee-validate/yup`. Reserve Inertia `useForm` exclusively for delete/restore with empty body. See `resources/js/Pages/Brands/Index.vue` and `.opencode/rules/vue-frontend.md`.
 
 ### Hardcoding URLs
 

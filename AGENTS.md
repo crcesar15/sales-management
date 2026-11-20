@@ -1,15 +1,15 @@
 # AGENTS.md
 
-This is a sales management application. Codex loads this file automatically as project instructions. The full project guide lives in `CLAUDE.md` and the detailed rules live in `.claude/rules/`; read them before making changes. The same files remain available for Claude Code and OpenCode.
+This is a sales management application. OpenCode loads this file automatically as project instructions. Read `.opencode/rules/*.md` before making changes.
 
 ## Stack
 
-- Laravel 12 (kept Laravel 10 directory structure)
+- Laravel 13 (kept Laravel 10 directory structure)
 - Inertia.js v1 server + v2 client
 - Vue 3 + TypeScript
 - PrimeVue 4
 - Tailwind CSS 3
-- Pest 3
+- Pest 4
 - spatie/laravel-permission + spatie/laravel-activitylog + spatie/laravel-medialibrary
 
 ## Module Pattern
@@ -48,8 +48,7 @@ Every module follows the same full-stack pattern. When working on a feature, che
 
 ## Documentation
 
-- Read `CLAUDE.md` for the full project guide.
-- Read `.claude/rules/*.md` for the detailed, per-layer conventions:
+- Read `.opencode/rules/*.md` for the detailed, per-layer conventions:
   - `laravel-backend.md` — controllers, services, form requests, resources, models, migrations, factories, policies, enums
   - `vue-frontend.md` — page structure, Inertia props, forms, composables, PrimeVue, i18n, TypeScript, styling
   - `routes-and-api.md` — web/API route naming, API response format, Ziggy usage
@@ -59,9 +58,9 @@ Every module follows the same full-stack pattern. When working on a feature, che
 
 ## Skills and subagents
 
-Codex discovers reusable project skills from `.agents/skills/`. The repository's Codex skill directory contains the shared frontend, Laravel, testing, dashboard, and design workflows. Claude-specific skills in `.claude/skills/` are bridged there when they are also needed by Codex.
+OpenCode discovers project-specific agents from `.opencode/agent/`. Downloaded skills are restored to `.agents/skills/` by `npm run ai:setup`; they are dependencies and must not be committed.
 
-The project-specific subagent workflows are defined in `.claude/agents/` and are also registered as Codex custom agents under `.codex/agents/`. Use the matching Codex agent name when delegation is available:
+Use the matching project-specific subagent when delegation is available:
 
 - `crud-generator` — scaffold a full CRUD stack for a model
 - `module-scaffold` — scaffold a complete Inertia module from scratch
@@ -70,8 +69,6 @@ The project-specific subagent workflows are defined in `.claude/agents/` and are
 - `test-writer` — write Pest 3 feature tests for a module
 - `vue-page-builder` — build Inertia Vue 3 pages with PrimeVue + Tailwind
 
-The original Claude `@mention` form remains documented in .claude/AGENTS.md for Claude Code users.
-
 ## MCP
 
-The `laravel-boost` MCP server (database schema, query, docs search, logs) is configured for OpenCode in `opencode.json` and for Codex in `.codex/config.toml`; both run it via `php artisan boost:mcp`.
+The `laravel-boost` MCP server (database schema, query, docs search, logs) is configured in `opencode.json` and runs via `php artisan boost:mcp`.

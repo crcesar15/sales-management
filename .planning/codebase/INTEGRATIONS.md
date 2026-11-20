@@ -58,7 +58,7 @@ This application is a self-contained sales management system. All "API" calls ar
 **Logs:**
 - Laravel logging via Monolog; config `config/logging.php`. Default channel `stack`. Supports `single`, `daily`, `slack`, `syslog`, `errorlog`, `null` drivers.
 - **Activity log** — `spatie/laravel-activitylog` 4.12.3 stores audit trail in `activity_log` table (migrations `database/migrations/2026_02_08_002614_create_activity_log_table.php` and additions). All models use `LogsActivity` trait with standardized `getActivitylogOptions()` (`logFillable`, `logOnlyDirty`, `useLogName`, `dontSubmitEmptyLogs`). Services log explicit events via `activity()` helper (e.g., `app/Services/PurchaseOrderService.php`, `app/Services/BatchService.php`, `app/Services/StockAdjustmentService.php`, `app/Services/CashRegisterShiftService.php`).
-- Known issue: `storage/logs/laravel.log` has permission issues — testing rules advise using `getJson()` instead of `get()` for forbidden assertions to avoid log write failures (see `.claude/rules/testing.md`).
+- Known issue: `storage/logs/laravel.log` has permission issues — testing rules advise using `getJson()` instead of `get()` for forbidden assertions to avoid log write failures (see `.opencode/rules/testing.md`).
 
 ## CI/CD & Deployment
 
@@ -68,7 +68,7 @@ This application is a self-contained sales management system. All "API" calls ar
 **CI Pipeline:**
 - None configured. No `.github/workflows/`, no `.gitlab-ci.yml`, no `Jenkinsfile`. A `.github/` directory exists but contains no CI workflows (verified by absence of workflow files).
 - Lint commands run manually: `composer lint` (Pint + PHPStan), `npm run lint`, `npm run type-check`, `npm run format`.
-- PostToolUse hooks auto-run linting on file edits (Pint+PHPStan on PHP, `npx lint --fix` on JS/TS/Vue) per `.claude/rules/commands.md`.
+- PostToolUse hooks auto-run linting on file edits (Pint+PHPStan on PHP, `npx lint --fix` on JS/TS/Vue) per `.opencode/rules/commands.md`.
 
 ## Environment Configuration
 

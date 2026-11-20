@@ -17,7 +17,7 @@ You set up the complete permission and role workflow for a module. This includes
 ## Project Rules (read before starting)
 
 Read this rule file to understand project-specific authorization conventions:
-1. `.claude/rules/authorization.md` — permission enum format, enforcement points, how to add new module permissions
+1. `.opencode/rules/authorization.md` — permission enum format, enforcement points, how to add new module permissions
 
 ## Input Required
 

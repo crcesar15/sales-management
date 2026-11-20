@@ -136,9 +136,9 @@ Phases likely needing deeper research during planning (`/gsd-plan-phase --resear
 
 Phases with standard patterns (skip research-phase):
 - **Phase 2 (API Removal):** Mechanical deletion with grep verification — well-documented in `ARCHITECTURE.md` §Safe Deletion Order.
-- **Phase 3 (Convention Alignment):** Direct application of `.claude/rules/*` — no novel decisions.
+- **Phase 3 (Convention Alignment):** Direct application of `.opencode/rules/*` — no novel decisions.
 - **Phase 5 (Dashboard):** Standard aggregate-query + PrimeVue Chart pattern; two existing chart pages to mirror.
-- **Phase 7 (Tests):** Pest 3 conventions are fully documented in `.claude/rules/testing.md`.
+- **Phase 7 (Tests):** Pest 3 conventions are fully documented in `.opencode/rules/testing.md`.
 
 ## Confidence Assessment
 
@@ -166,7 +166,7 @@ Phases with standard patterns (skip research-phase):
 - Codebase inspection (authoritative for this project): `package.json`, `composer.json`, `node_modules/primevue/package.json`, `node_modules/chart.js/package.json`, `app/Models/*` (SalesOrder, SalesOrderItem, SalesOrderPayment, CashRegisterShift, CashRegisterMovement, Batch, ProductVariant), `app/Services/*` (SalesOrderService, FifoStockDeductionService, BatchService, CashRegisterShiftService, StockAlertService, StockTransferService), `app/Models/Setting.php`, `app/Http/Resources/CashRegisterShift/*` + `StockTransfer/*` (broken lines), `resources/js/Pages/SalesOrders/Create/Index.vue` (tax bug), `resources/js/Composables/useApi.ts` (CSRF bug), `resources/js/Composables/usePosStore.ts`, `resources/js/Composables/usePosClient.ts`, `resources/js/Composables/useCurrencyFormatter.ts`, `app/Http/Controllers/Pos/PosController.php`, `app/Http/Controllers/HomeController.php`, `app/Enums/PermissionsEnum.php`, `routes/web.php`, `routes/api.php`.
 - `.planning/codebase/STACK.md`, `STRUCTURE.md`, `ARCHITECTURE.md`, `CONVENTIONS.md`, `CONCERNS.md` — full codebase audit.
 - `.planning/PROJECT.md` — Core Value, constraints (read-only reports, ~10 API endpoints, no Docker/CI).
-- `.claude/rules/*.md` — all project conventions (laravel-backend, vue-frontend, routes-and-api, authorization, testing, commands).
+- `.opencode/rules/*.md` — all project conventions (laravel-backend, vue-frontend, routes-and-api, authorization, testing, commands).
 - PrimeVue 4.5.5 Chart component docs (primevue.org/chart/) — Chart.js 4.x wrapper confirmation.
 - Inertia.js v1 documentation — partial reloads, lazy props, `router.reload({ only: [...] })`.
 - Laravel 12 documentation — `response()->streamDownload()`.

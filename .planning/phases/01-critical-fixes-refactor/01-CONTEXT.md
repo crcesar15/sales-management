@@ -39,7 +39,7 @@ Out of scope (handled in other phases):
 - **D-07 — `recalculateStock()` integration:** The consolidated service calls `recalculateStock()` on the affected variant(s) at the end of each deduction, mirroring the current behavior of both methods. The variant-resolution style (re-query vs. passed-in model) is decided under FIX-21, not here — but whatever FIX-21 decides applies uniformly to both `deductForOrder()` and `deductForTransfer()`.
 
 ### the agent's Discretion
-The following FIX-01..FIX-22 items were **not** selected for discussion — the user has no specific preference on HOW to implement them, so the researcher and planner should follow the fix approach documented in `.planning/codebase/CONCERNS.md` and `.claude/rules/*.md` directly:
+The following FIX-01..FIX-22 items were **not** selected for discussion — the user has no specific preference on HOW to implement them, so the researcher and planner should follow the fix approach documented in `.planning/codebase/CONCERNS.md` and `.opencode/rules/*.md` directly:
 - **FIX-01 (mass-assignment):** Create API Form Requests mirroring web ones; replace `$request->all()` with `$request->validated()`. Note: `Api/PurchaseOrdersController` is deleted in Phase 2 — the requirements still list FIX-01 for it, so fix it in Phase 1 anyway (the requirements are the contract).
 - **FIX-02 (missing authorize):** Add `$this->authorize(PermissionsEnum::X->value, auth()->user())` per API controller action. Same Phase-2 deletion note applies to PurchaseOrders/Permissions/Settings.
 - **FIX-03, FIX-04, FIX-05 (broken resources):** Use `$this->resource->relationLoaded(...)` / `$this->whenLoaded(...)`; fix date casts to plain `'datetime'` or wrap with Carbon; use `ProductVariant::identifier` (the actual field) — do not add a fake `sku` accessor.
@@ -81,11 +81,11 @@ No todos were folded into scope — `todo.match-phase` returned zero matches for
 - `.planning/codebase/STACK.md` §Code Quality — Pint/PHPStan/Rector configs that the fixed code must satisfy (modulo the Phase-3 baseline)
 
 ### Convention rules (the target state)
-- `.claude/rules/laravel-backend.md` — Services (`final`, `TRANSITION_MAP`, `InvalidArgumentException`, `DB::transaction`, `lockForUpdate`, `SORT_COLUMN_MAP`, `list()` signature), Resources (`whenLoaded`, manual `meta`, `->value`, `(float)`), Models (`casts()` method, `LogsActivity`), Form Requests, Policies
-- `.claude/rules/routes-and-api.md` §API Response Format — `JsonResource` + `ResourceCollection` with `meta` shape that FIX-09/FIX-10 must produce
-- `.claude/rules/authorization.md` §Enforcement Points — API controller `$this->authorize(PermissionsEnum::X->value, auth()->user())` pattern for FIX-02
-- `.claude/rules/testing.md` §Known Issues — `getJson()` for forbidden assertions (relevant if Phase 1 touches tests; main test fixes are Phase 3)
-- `.claude/rules/commands.md` §Code Quality — `composer lint` / `npm run lint` / `npm run type-check` must pass after changes (run after all PHP changes complete, not mid-implementation)
+- `.opencode/rules/laravel-backend.md` — Services (`final`, `TRANSITION_MAP`, `InvalidArgumentException`, `DB::transaction`, `lockForUpdate`, `SORT_COLUMN_MAP`, `list()` signature), Resources (`whenLoaded`, manual `meta`, `->value`, `(float)`), Models (`casts()` method, `LogsActivity`), Form Requests, Policies
+- `.opencode/rules/routes-and-api.md` §API Response Format — `JsonResource` + `ResourceCollection` with `meta` shape that FIX-09/FIX-10 must produce
+- `.opencode/rules/authorization.md` §Enforcement Points — API controller `$this->authorize(PermissionsEnum::X->value, auth()->user())` pattern for FIX-02
+- `.opencode/rules/testing.md` §Known Issues — `getJson()` for forbidden assertions (relevant if Phase 1 touches tests; main test fixes are Phase 3)
+- `.opencode/rules/commands.md` §Code Quality — `composer lint` / `npm run lint` / `npm run type-check` must pass after changes (run after all PHP changes complete, not mid-implementation)
 
 ### Source files named in CONCERNS.md (researcher/planner should read these to ground each fix)
 - `app/Services/FifoStockDeductionService.php` — Canonical FIFO (FIX-11 target — gets `deductForTransfer` added, `deductForOrder` gap fixed)
@@ -154,7 +154,7 @@ No todos were folded into scope — `todo.match-phase` returned zero matches for
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope. The user selected only the FIFO area for discussion; all other FIX-01..FIX-22 items are left to the researcher/planner's discretion guided by CONCERNS.md and `.claude/rules/*.md` (captured in the "the agent's Discretion" section above).
+None — discussion stayed within phase scope. The user selected only the FIFO area for discussion; all other FIX-01..FIX-22 items are left to the researcher/planner's discretion guided by CONCERNS.md and `.opencode/rules/*.md` (captured in the "the agent's Discretion" section above).
 
 ### Reviewed Todos (not folded)
 None — `todo.match-phase` returned zero matches for Phase 1.

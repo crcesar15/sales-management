@@ -66,7 +66,7 @@ Four questions were asked in sequence about the FIFO consolidation. The alternat
 
 ## the agent's Discretion
 
-The user selected only the FIFO consolidation area for discussion. All other FIX-01..FIX-22 items (mass-assignment, missing authorize, broken resources, status comparison, tax frontend, CSRF header, raw model return, ApiCollection meta, TRANSITION_MAP, SORT_COLUMN_MAP, narrow catch, AuthServiceProvider, claimed-quantities extraction, dead validated calls, Setting cache, N+1 fixes, recalculateStock re-query, log rotation) were **not** selected — the user deferred them to the researcher/planner's discretion, guided by `.planning/codebase/CONCERNS.md` (which documents the fix approach for each) and `.claude/rules/*.md` (the convention target). CONTEXT.md's "the agent's Discretion" section captures the recommended approach for each so downstream agents can act without re-asking.
+The user selected only the FIFO consolidation area for discussion. All other FIX-01..FIX-22 items (mass-assignment, missing authorize, broken resources, status comparison, tax frontend, CSRF header, raw model return, ApiCollection meta, TRANSITION_MAP, SORT_COLUMN_MAP, narrow catch, AuthServiceProvider, claimed-quantities extraction, dead validated calls, Setting cache, N+1 fixes, recalculateStock re-query, log rotation) were **not** selected — the user deferred them to the researcher/planner's discretion, guided by `.planning/codebase/CONCERNS.md` (which documents the fix approach for each) and `.opencode/rules/*.md` (the convention target). CONTEXT.md's "the agent's Discretion" section captures the recommended approach for each so downstream agents can act without re-asking.
 
 ## Deferred Ideas
 

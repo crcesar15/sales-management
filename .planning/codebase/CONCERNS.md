@@ -50,7 +50,7 @@
 
 ### Models Using `$casts` Property Instead of `casts()` Method
 
-- Issue: `.claude/rules/laravel-backend.md` mandates the `casts()` method (not the `$casts` property), but two models still use the deprecated property form.
+- Issue: `.opencode/rules/laravel-backend.md` mandates the `casts()` method (not the `$casts` property), but two models still use the deprecated property form.
 - Files: `app/Models/ProductVariant.php:41` (`protected $casts = [...]`), `app/Models/ProductVariantUnit.php:27` (`protected $casts = [...]`)
 - Impact: Inconsistent with the other 28 models; violates the documented convention. Both are also flagged because `ProductVariant` is a high-traffic model.
 - Fix approach: Convert each `protected $casts = [...]` to `protected function casts(): array { return [...]; }` mirroring `app/Models/User.php:99` and siblings.
@@ -164,7 +164,7 @@
 - Symptoms: Tests using `get()`/`post()` (non-JSON) for forbidden assertions can fail because Laravel attempts to write to `storage/logs/laravel.log` during the request lifecycle and the file is not writable by the test process.
 - Files: `tests/Feature/BrandTest.php`, `tests/Feature/CategoryTest.php`, `tests/Feature/MeasurementUnitTest.php`, `tests/Feature/CatalogTest.php` (mix of `getJson()` for `index` forbidden, but `post()`/`put()`/`delete()` for store/update/destroy forbidden)
 - Trigger: Running the test suite when `storage/logs/laravel.log` is owned by `www-data` and the test runs as another user.
-- Workaround: Documented in `.claude/rules/testing.md` — use `getJson()`/`postJson()` etc. for forbidden assertions. Many tests still use non-JSON verbs.
+- Workaround: Documented in `.opencode/rules/testing.md` — use `getJson()`/`postJson()` etc. for forbidden assertions. Many tests still use non-JSON verbs.
 - Fix approach: Convert all `assertForbidden()` assertions to use the `*Json()` variants of the HTTP methods.
 
 ### Gigantic Log Files

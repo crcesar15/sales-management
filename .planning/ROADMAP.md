@@ -64,7 +64,7 @@ Plans:
 
 ### Phase 3: Convention Alignment
 
-**Goal**: The codebase is consistent with `.claude/rules/*` — all models use `casts()` + `LogsActivity`, controllers narrow catches to `InvalidArgumentException`, TS errors are resolved, and a PHPStan baseline isolates new violations — so new modules inherit clean conventions.
+**Goal**: The codebase is consistent with `.opencode/rules/*` — all models use `casts()` + `LogsActivity`, controllers narrow catches to `InvalidArgumentException`, TS errors are resolved, and a PHPStan baseline isolates new violations — so new modules inherit clean conventions.
 **Depends on**: Phase 1, Phase 2
 **Requirements**: CONV-01, CONV-02, CONV-03, CONV-04, CONV-05, CONV-06, CONV-07
 **Success Criteria** (what must be TRUE):

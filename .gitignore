@@ -24,14 +24,25 @@ yarn-error.log
 /.windsurf
 docs/.obsidian/workspace.json
 .playwright-cli
+/.ai/skills
 /.impeccable
+/.planning/research/.cache
 
-# Codex bridges for Claude project skills
-!/.agents/
-/.agents/*
-!/.agents/skills/
-/.agents/skills/*
-!/.agents/skills/commit
-!/.agents/skills/medialibrary-development
-!/.agents/skills/playwright-cli
-!/.agents/skills/tailwindcss-development
+# OpenCode dependencies restored by npm run ai:setup
+/.opencode/skills/*
+!/.opencode/skills/commit/
+!/.opencode/skills/commit/**
+/.opencode/commands/impeccable.md
+
+# Retired AI harness configuration
+/.cursorignore
+/.cursorrules
+/CLAUDE.md
+/.claude/
+/.codex/
+/.cursor/
+/.github/agents/
+/.github/hooks/
+/.github/skills/
+/.github/copilot-instructions.md
+/.mcp.json

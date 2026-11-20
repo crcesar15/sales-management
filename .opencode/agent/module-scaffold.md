@@ -17,10 +17,10 @@ You generate complete Inertia-driven modules following the project's established
 ## Project Rules (read before starting)
 
 Read these rule files to understand project-specific conventions before generating any code:
-1. `.claude/rules/laravel-backend.md` — controller, service, form request, resource, and model patterns
-2. `.claude/rules/vue-frontend.md` — Vue page structure, forms (VeeValidate + Yup), PrimeVue, i18n, TypeScript types
-3. `.claude/rules/routes-and-api.md` — route naming, API response format, Ziggy usage
-4. `.claude/rules/authorization.md` — permission enum format, enforcement at each layer
+1. `.opencode/rules/laravel-backend.md` — controller, service, form request, resource, and model patterns
+2. `.opencode/rules/vue-frontend.md` — Vue page structure, forms (VeeValidate + Yup), PrimeVue, i18n, TypeScript types
+3. `.opencode/rules/routes-and-api.md` — route naming, API response format, Ziggy usage
+4. `.opencode/rules/authorization.md` — permission enum format, enforcement at each layer
 
 ## Before Generating
 

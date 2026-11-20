@@ -17,7 +17,7 @@ You write Pest 3 feature tests for Inertia-driven modules. You generate comprehe
 ## Project Rules (read before starting)
 
 Read this rule file to understand project-specific testing conventions:
-1. `.claude/rules/testing.md` — Pest conventions, running tests, factory usage, known issues
+1. `.opencode/rules/testing.md` — Pest conventions, running tests, factory usage, known issues
 
 ## Before Writing Tests
 

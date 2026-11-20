@@ -27,7 +27,7 @@
 | Versions verified | primevue 4.5.5, chart.js 4.5.1 (installed in `node_modules`, confirmed) |
 
 **Why for THIS codebase:**
-- PrimeVue Chart is already used in two existing pages (`Pages/Inventory/Show/Components/PurchasePriceMargin.vue` and `Pages/Batches/Show/Components/QuantityDoughnut.vue`), so the project already has a working chart pattern to mirror. Convention (`.claude/rules/vue-frontend.md`: "PrimeVue components are imported directly from `primevue`") is satisfied — `import Chart from "primevue/chart"`.
+- PrimeVue Chart is already used in two existing pages (`Pages/Inventory/Show/Components/PurchasePriceMargin.vue` and `Pages/Batches/Show/Components/QuantityDoughnut.vue`), so the project already has a working chart pattern to mirror. Convention (`.opencode/rules/vue-frontend.md`: "PrimeVue components are imported directly from `primevue`") is satisfied — `import Chart from "primevue/chart"`.
 - Chart.js 4.x covers every chart type the dashboard needs: `line` (sales trend, last 7/30 days), `doughnut`/`pie` (top products share), `bar` (top products by revenue, transactions per day), stacked bar (sales by store/day). PrimeVue's Chart wrapper passes `type`, `data`, `options`, `plugins`, and `canvasProps` straight through to Chart.js, so no PrimeVue limitation blocks the dashboard. Multi-axis, stacked, and combo charts are all supported per the official PrimeVue 4.5.5 docs.
 - Theme consistency: the dashboard must match the app's Aura blue palette (`#00539b`). With Chart.js options we set `backgroundColor`/`borderColor` arrays directly (as `QuantityDoughnut.vue` already does), keeping styling in the same Tailwind/PrimeVue token family. ApexCharts/ECharts would each need a separate theme config.
 - Bundle size: Chart.js is already in the bundle. Adding ApexCharts (~450KB min) or ECharts (~1MB min) would roughly double or triple the charting payload for zero UX gain on a 3-chart manager dashboard.
@@ -207,7 +207,7 @@ The service uses `SimpleExcelWriter` and writes to `php://output`.
 | Install | None |
 
 **Why for THIS codebase:**
-- **Inertia is for page navigation, not file downloads.** Inertia intercepts responses expecting JSON (the Inertia protocol). A CSV/PDF binary response must bypass Inertia — either by hitting a non-Inertia route (regular GET that returns a `StreamedResponse`/`BinaryFileResponse`) or by triggering the request outside Inertia's axios client. The cleanest pattern, matching the existing resource-style route naming (`.claude/rules/routes-and-api.md`), is:
+- **Inertia is for page navigation, not file downloads.** Inertia intercepts responses expecting JSON (the Inertia protocol). A CSV/PDF binary response must bypass Inertia — either by hitting a non-Inertia route (regular GET that returns a `StreamedResponse`/`BinaryFileResponse`) or by triggering the request outside Inertia's axios client. The cleanest pattern, matching the existing resource-style route naming (`.opencode/rules/routes-and-api.md`), is:
   ```php
   Route::get('reports/sales', [ReportController::class, 'index'])->name('reports.sales');
   Route::get('reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales.export');
@@ -215,7 +215,7 @@ The service uses `SimpleExcelWriter` and writes to `php://output`.
   The `index` action renders `Inertia::render('Reports/Sales/Index', $data)`; the `exportSales` action returns `response()->streamDownload(...)` (CSV) or `Pdf::loadView(...)->download(...)` (PDF). Same filters are passed as query params.
 - **Frontend triggers a normal browser navigation for exports.** Use a plain `<a :href="route('reports.sales.export', filters)" download>` link or `window.location.href = route(...)`. Do NOT use Inertia `router.visit()` for the download — Inertia would try to parse the binary as JSON and error. This is the documented Inertia pattern for file downloads.
 - **Authorization via PermissionsEnum.** Both `index` and `exportSales` call `$this->authorize(PermissionsEnum::REPORTS_VIEW)` (new permission case to add). Form Request validation for filters (`app/Http/Requests/Reports/SalesReportRequest`) with date-range + store + user rules.
-- **Services own aggregation.** `ReportService` (final, `app/Services/`) methods like `salesReport(array $filters): array` return view data; `exportSalesCsv(array $filters)` writes to a stream; `exportSalesPdf(array $filters): string` returns PDF bytes via dompdf. No business logic in controllers, matching `.claude/rules/laravel-backend.md`.
+- **Services own aggregation.** `ReportService` (final, `app/Services/`) methods like `salesReport(array $filters): array` return view data; `exportSalesCsv(array $filters)` writes to a stream; `exportSalesPdf(array $filters): string` returns PDF bytes via dompdf. No business logic in controllers, matching `.opencode/rules/laravel-backend.md`.
 - **No new API endpoints.** PROJECT.md constraint: "Only the ~10 endpoints actually used by Inertia pages may remain after refactor. New dynamic fetches should prefer Inertia partial-reload / deferred props over new API endpoints." Reports are server-rendered; filters re-trigger `router.visit(route('reports.sales'), { data: filters, preserveState: true })` — an Inertia partial reload, not an API call.
 
 **Anti-pattern to avoid (flagged in PITFALLS):**

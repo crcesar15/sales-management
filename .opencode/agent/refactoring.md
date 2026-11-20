@@ -17,8 +17,8 @@ You refactor existing modules to align with the project's established Inertia pa
 ## Project Rules (read before starting)
 
 Read these rule files to understand the target conventions you're refactoring toward:
-1. `.claude/rules/laravel-backend.md` — controller, service, form request, resource, and model patterns
-2. `.claude/rules/vue-frontend.md` — Vue page structure, forms (VeeValidate + Yup), PrimeVue, i18n, TypeScript types
+1. `.opencode/rules/laravel-backend.md` — controller, service, form request, resource, and model patterns
+2. `.opencode/rules/vue-frontend.md` — Vue page structure, forms (VeeValidate + Yup), PrimeVue, i18n, TypeScript types
 
 ## Before Refactoring
 

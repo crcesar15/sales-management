@@ -289,7 +289,7 @@ Apply the CONCERNS.md fix verbatim: **delete the `headers` block entirely** and 
 ### Pitfall 14: New POS/dashboard/reports code uses Inertia `useForm` for a cart/form (convention violation)
 
 **What goes wrong:**
-`.claude/rules/vue-frontend.md` mandates VeeValidate + Yup for create/edit forms; Inertia `useForm` is ONLY for delete/restore with empty body. The POS cart is a complex form. A developer (especially one used to other Inertia apps) will reach for `useForm` from `@inertiajs/vue3` for the cart because it has `processing` and `reset()` helpers. This violates the convention, breaks the VeeValidate validation schema pattern, and means field-level errors from the backend won't map cleanly to `setErrors()` (the VeeValidate path). The cart validation (quantities, payment amounts) needs Yup's `number().positive().required()` — `useForm` doesn't provide that.
+`.opencode/rules/vue-frontend.md` mandates VeeValidate + Yup for create/edit forms; Inertia `useForm` is ONLY for delete/restore with empty body. The POS cart is a complex form. A developer (especially one used to other Inertia apps) will reach for `useForm` from `@inertiajs/vue3` for the cart because it has `processing` and `reset()` helpers. This violates the convention, breaks the VeeValidate validation schema pattern, and means field-level errors from the backend won't map cleanly to `setErrors()` (the VeeValidate path). The cart validation (quantities, payment amounts) needs Yup's `number().positive().required()` — `useForm` doesn't provide that.
 
 **Why it happens:**
 Inertia's `useForm` is the first result in the Inertia docs. The convention to prefer VeeValidate is project-specific and not obvious to a new contributor. The existing sales-order create page shows the correct pattern (`useForm` from `vee-validate`, line 5) but it's easy to miss.
@@ -565,10 +565,10 @@ How roadmap phases should address these pitfalls. Assumes the milestone ordering
 - `.planning/codebase/CONCERNS.md` — full audit of existing defects (the pitfalls are grounded in this)
 - `.planning/codebase/CONCERNS.md` Fragile Areas section — Sales Order Tax Calculation (Frontend/Backend Drift), Cache Configuration Mismatch, ReceptionOrder claimed quantities
 - Direct file reads: `app/Services/SalesOrderService.php` (calculateTotals line 269, TRANSITION_MAP, holdOrder line 239), `app/Services/FifoStockDeductionService.php` (no auto-close), `app/Services/BatchService.php` (deductFIFO/deductFIFOForTransfer with auto-close + RuntimeException), `app/Models/Setting.php` (Cache::tags lines 41,59,69), `app/Http/Resources/CashRegisterShift/CashRegisterShiftResource.php` (broken line 37), `app/Http/Resources/StockTransfer/StockTransferResource.php` (toISOString on string dates), `resources/js/Pages/SalesOrders/Create/Index.vue` (taxRate=0 line 53, payment validation line 67-70), `resources/js/Composables/useApi.ts` (CSRF header line 12), `app/Services/CashRegisterShiftService.php` (inline status checks, no TRANSITION_MAP), `app/Services/StockTransferService.php` (uses BatchService::deductFIFOForTransfer)
-- `.claude/rules/laravel-backend.md` — TRANSITION_MAP requirement, InvalidArgumentException convention, LogsActivity mandate
-- `.claude/rules/vue-frontend.md` — VeeValidate + Yup mandate, Inertia useForm only for delete/restore
-- `.claude/rules/authorization.md` — four-step permission addition process, enforcement points
-- `.claude/rules/routes-and-api.md` — API response format, Ziggy usage
+- `.opencode/rules/laravel-backend.md` — TRANSITION_MAP requirement, InvalidArgumentException convention, LogsActivity mandate
+- `.opencode/rules/vue-frontend.md` — VeeValidate + Yup mandate, Inertia useForm only for delete/restore
+- `.opencode/rules/authorization.md` — four-step permission addition process, enforcement points
+- `.opencode/rules/routes-and-api.md` — API response format, Ziggy usage
 - OWASP CSV Injection guidance (formula injection via `=`,`+`,`-`,`@` prefixes)
 - Common Laravel POS/dashboard/reports domain knowledge: browser receipt printing limitations, timezone drift in KPIs, FIFO stock reservation semantics, CSV memory exhaustion on large exports
 

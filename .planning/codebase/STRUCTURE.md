@@ -98,7 +98,7 @@ sales-management/
 ├── storage/                      # Logs, uploads, framework cache
 ├── tests/                        # Pest 3 tests
 │   └── Pest.php                  # Auto-seeds RoleSeeder + PermissionSeeder
-├── .claude/rules/                # Per-layer convention rules
+├── .opencode/rules/                # Per-layer convention rules
 ├── composer.json                 # PHP dependencies
 ├── package.json                  # JS dependencies
 ├── vite.config.ts                # Two Vite entry points
@@ -331,7 +331,7 @@ sales-management/
 
 ## Special Directories
 
-**`.claude/rules/`:**
+**`.opencode/rules/`:**
 - Purpose: Per-layer convention rules loaded as project instructions
 - Contains: `laravel-backend.md`, `vue-frontend.md`, `routes-and-api.md`, `authorization.md`, `testing.md`, `commands.md`
 - Generated: No

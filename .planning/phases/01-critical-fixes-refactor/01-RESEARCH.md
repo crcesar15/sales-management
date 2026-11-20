@@ -39,7 +39,7 @@ Research grounded every fix in source code, conventions, and the current runtime
 
 ### the agent's Discretion
 
-For all FIX items not explicitly decided above, follow the fix approach in `.planning/codebase/CONCERNS.md` and `.claude/rules/*.md` directly. This includes:
+For all FIX items not explicitly decided above, follow the fix approach in `.planning/codebase/CONCERNS.md` and `.opencode/rules/*.md` directly. This includes:
 - Creating API Form Requests for Vendors/PurchaseOrders and returning `PurchaseOrderResource` (FIX-01, FIX-09), even though those controllers are deleted in Phase 2.
 - Adding `$this->authorize(PermissionsEnum::X->value, auth()->user())` to the 5 API controllers with no authorization (FIX-02), even though some are deleted in Phase 2.
 - Fixing `CashRegisterShiftResource` with `$this->whenLoaded(...)` (FIX-03), `StockTransferResource` date/`identifier` handling (FIX-04/05), status enum comparisons (FIX-06), `ApiCollection` pagination meta (FIX-10), `TRANSITION_MAP` in `CashRegisterShiftService` (FIX-12), per-service `SORT_COLUMN_MAP` (FIX-13), narrow catches (FIX-14), claimed-quantities extraction (FIX-16), dead `validated()` removal (FIX-17), and N+1 eager loads (FIX-19/20).
@@ -563,11 +563,11 @@ Phase 1's requirements are mostly bug fixes; the existing test suite is thin for
 - `01-CONTEXT.md` — Locked decisions for FIX-11 and all discretion-area fix approaches.
 - `.planning/REQUIREMENTS.md` — Canonical FIX-01..FIX-22 requirement text.
 - `.planning/codebase/CONCERNS.md` — Detailed bug descriptions, file references, and fix approaches.
-- `.claude/rules/laravel-backend.md` — Service conventions (`final`, `TRANSITION_MAP`, `InvalidArgumentException`, `DB::transaction`, `SORT_COLUMN_MAP`, `list()` signature, Resources).
-- `.claude/rules/routes-and-api.md` — API response format and `authorize()` pattern.
-- `.claude/rules/authorization.md` — `PermissionsEnum` enforcement points.
-- `.claude/rules/vue-frontend.md` — `useAuth().getSetting()`, form patterns, Inertia usage.
-- `.claude/rules/testing.md` — Pest conventions and `getJson()` guidance.
+- `.opencode/rules/laravel-backend.md` — Service conventions (`final`, `TRANSITION_MAP`, `InvalidArgumentException`, `DB::transaction`, `SORT_COLUMN_MAP`, `list()` signature, Resources).
+- `.opencode/rules/routes-and-api.md` — API response format and `authorize()` pattern.
+- `.opencode/rules/authorization.md` — `PermissionsEnum` enforcement points.
+- `.opencode/rules/vue-frontend.md` — `useAuth().getSetting()`, form patterns, Inertia usage.
+- `.opencode/rules/testing.md` — Pest conventions and `getJson()` guidance.
 - Source files read by the explore agent: `FifoStockDeductionService.php`, `BatchService.php`, `StockTransferService.php`, `SalesOrderService.php`, `CashRegisterShiftService.php`, `Setting.php`, `CashRegisterShiftResource.php`, `StockTransferResource.php`, `ApiCollection.php`, `UserCollection.php`, `useApi.ts`, `SalesOrders/Create/Index.vue`, `SalesOrders/Edit/Index.vue`, `AuthServiceProvider.php`, etc.
 
 ### Secondary (MEDIUM confidence)
@@ -582,7 +582,7 @@ Phase 1's requirements are mostly bug fixes; the existing test suite is thin for
 
 **Confidence breakdown:**
 - Standard stack: **HIGH** — all packages are project baseline and verified via `composer.json`/`package.json`/`composer.lock`.
-- Architecture: **HIGH** — patterns are explicitly documented in `.claude/rules/*.md` and already implemented in sibling files (`StockService`, `UserCollection`, `PurchaseOrderService`).
+- Architecture: **HIGH** — patterns are explicitly documented in `.opencode/rules/*.md` and already implemented in sibling files (`StockService`, `UserCollection`, `PurchaseOrderService`).
 - Pitfalls: **HIGH** — derived from direct source inspection and one experimental verification of `Cache::tags()` failure on the `file` driver.
 
 **Research date:** 2026-06-21

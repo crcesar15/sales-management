@@ -132,7 +132,7 @@ Phase 1 — Critical Fixes & Refactor (UAT 19/19 passed, 2026-06-22):
 ## Constraints
 
 - **Tech stack**: Keep Laravel 12 (Laravel 10 directory structure) + Inertia + Vue 3 + PrimeVue 4 + Tailwind 3. Do not migrate to Laravel 12 streamlined structure.
-- **Conventions**: All new/changed code must follow `.claude/rules/*.md` (final classes, Form Requests, PermissionsEnum authorization, casts() method, LogsActivity trait, VeeValidate + Yup, PrimeVue direct imports, Ziggy `route()`).
+- **Conventions**: All new/changed code must follow `.opencode/rules/*.md` (final classes, Form Requests, PermissionsEnum authorization, casts() method, LogsActivity trait, VeeValidate + Yup, PrimeVue direct imports, Ziggy `route()`).
 - **No new migrations for modifications**: Modify existing migrations during development and use `migrate:fresh`. New migrations only for genuinely new tables (e.g. report snapshots if needed).
 - **API surface**: Only the ~10 endpoints actually used by Inertia pages may remain after refactor. New dynamic fetches should prefer Inertia partial-reload / deferred props over new API endpoints where feasible.
 - **POS UX**: Must use `PosLayout`, `usePosStore` (Pinia), and integrate with the existing `CashRegisterShiftService` / `CashRegisterService` backend — not reimplement them.
