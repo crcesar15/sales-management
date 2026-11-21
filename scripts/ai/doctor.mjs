@@ -24,6 +24,10 @@ requirePath(".opencode/agent");
 requirePath(".opencode/skills/commit/SKILL.md");
 requirePath(".opencode/skills/impeccable/SKILL.md");
 requirePath("node_modules/.bin/skills");
+requirePath("node_modules/.bin/openspec");
+requirePath("openspec/config.yaml");
+requirePath(".opencode/commands/opsx-explore.md");
+requirePath(".opencode/skills/openspec-explore/SKILL.md");
 requirePath("vendor/autoload.php");
 
 if (existsSync("opencode.json")) {
@@ -42,6 +46,7 @@ for (const path of [".agents/skills", ".ai/skills"]) {
 
 requireCommand("npx", ["--no-install", "skills", "list"]);
 requireCommand("php", ["artisan", "boost:list-skills"]);
+requireCommand("npx", ["--no-install", "openspec", "list", "--json"]);
 
 if (failures.length > 0) {
   console.error("AI setup is incomplete:");

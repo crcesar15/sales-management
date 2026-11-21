@@ -24,3 +24,4 @@ if (!existsSync("vendor/autoload.php")) {
 run("npx", ["--no-install", "skills", "install", "--agent", "opencode", "--frozen-lockfile"]);
 run("npx", ["--no-install", "impeccable", "install", "--providers=opencode", "--project", "--no-hooks", "--yes", "--force"]);
 run("php", ["artisan", "boost:install", "--skills", "--no-interaction"]);
+run("npx", ["--no-install", "openspec", "init", "--tools", "opencode", "--profile", "core", "--no-animation"]);

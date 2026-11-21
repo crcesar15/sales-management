@@ -48,6 +48,7 @@ Every module follows the same full-stack pattern. When working on a feature, che
 
 ## Documentation
 
+- Read `.opencode/rules/product-workflow.md` for Kanban, OpenSpec, decision records, skill selection, and existing-product discovery.
 - Read `.opencode/rules/*.md` for the detailed, per-layer conventions:
   - `laravel-backend.md` — controllers, services, form requests, resources, models, migrations, factories, policies, enums
   - `vue-frontend.md` — page structure, Inertia props, forms, composables, PrimeVue, i18n, TypeScript, styling

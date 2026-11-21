@@ -1,0 +1,39 @@
+schema: spec-driven
+context: |
+  Existing sales management product, undergoing incremental improvements.
+  Laravel 13 with Laravel 10 directory structure, PHP, MySQL, Inertia, Vue 3,
+  TypeScript, PrimeVue 4, Tailwind CSS 3, Pest, and Spatie packages.
+  Read AGENTS.md and .opencode/rules/*.md before planning or implementing.
+  See .opencode/rules/product-workflow.md for tool responsibilities, mandatory
+  skill selection, module-by-module discovery, and PrimeVue-first design.
+  Business scope and rules are not yet baselined. Do not invent them from module
+  names or silently approve current code behavior. Cite evidence, interview the
+  user about intent, and obtain confirmation before publishing baseline specs.
+  Kanban is the overall backlog; OpenSpec owns substantial change artifacts;
+  Worktree Decisions retains reasons and rejected alternatives.
+  Default UI locale is Spanish; use existing English translation keys and i18n.
+rules:
+  proposal:
+    - State the outcome, scope, non-goals, and affected workflows.
+    - Separate code observations, user-confirmed requirements, and open questions.
+    - Do not turn discovery into an implementation request.
+  specs:
+    - Write concrete scenarios, including relevant permission and failure cases.
+    - Do not present inferred business rules as user-confirmed requirements.
+    - Clearly separate intended behavior from known deviations.
+  design:
+    - Follow the existing architecture, validation, authorization, and form conventions.
+    - Prefer PrimeVue configuration and existing components over custom wrappers.
+    - Explain business-sensitive trade-offs and reference relevant decision records.
+  tasks:
+    - Name required skills when a task needs explicit routing; preserve mandatory triggers.
+    - Include focused regression checks and applicable project lint/type checks.
+    - Do not mark tasks complete based only on an agent report or an idle session.
+operations:
+  apply:
+    guidance:
+      - Load relevant implementation skills in addition to the OpenSpec workflow skill.
+      - Do not reset databases, change production data, or expand scope without authorization.
+  archive:
+    guidance:
+      - Require user acceptance before archiving; summarize verification and remaining gaps.
